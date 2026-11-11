@@ -23,6 +23,7 @@
 #include "init.h"
 #include "mon-desc.h"
 #include "monster.h"
+#include "mon-predicate.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
@@ -59,6 +60,23 @@ static struct {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
 	.answered_cv = PTHREAD_COND_INITIALIZER,
 };
+
+/*
+ * The textui's own hooks, captured when ours are installed.  While a keymap is
+ * expanding (inkey_next), its remaining keys answer the prompt, exactly as the
+ * textui would read them: e.g. the original keyset maps '6' to walk + '6'.
+ */
+static struct {
+	bool (*get_item)(struct object **, const char *, const char *, cmd_code, item_tester, int);
+	bool (*get_check)(const char *);
+	bool (*get_aim_dir)(int *, int);
+	bool (*get_rep_dir)(int *, bool);
+} textui;
+
+static bool keymap_pending(void)
+{
+	return inkey_next && inkey_next->code;
+}
 
 /* ------------------------------------------------------------------------
  * Ask and wait (game thread)
@@ -295,6 +313,7 @@ static bool run_action(struct object *obj)
 static bool native_get_item(struct object **choice, const char *pmt, const char *str,
 		cmd_code cmd, item_tester tester, int mode)
 {
+	if (keymap_pending()) return textui.get_item(choice, pmt, str, cmd, tester, mode);
 	candidate c[MAX_ITEMS];
 
 	event_signal(EVENT_MESSAGE_FLUSH);
@@ -330,6 +349,7 @@ static bool native_get_item(struct object **choice, const char *pmt, const char 
 
 static bool native_get_check(const char *prompt)
 {
+	if (keymap_pending()) return textui.get_check(prompt);
 	event_signal(EVENT_MESSAGE_FLUSH);
 	pthread_mutex_lock(&shared.lock);
 	text_reset();
@@ -385,6 +405,7 @@ static bool aim_or_head_towards(int *dp, int range, struct loc g)
 
 static bool native_get_aim_dir(int *dp, int range)
 {
+	if (keymap_pending()) return textui.get_aim_dir(dp, range);
 	*dp = 0;
 	event_signal(EVENT_MESSAGE_FLUSH);
 	publish_aim(range);
@@ -415,14 +436,95 @@ static bool native_get_aim_dir(int *dp, int range)
 }
 
 /* ------------------------------------------------------------------------
+ * Adjacent direction (open, close, disarm, tunnel, bash, exchange, walk...)
+ * ------------------------------------------------------------------------ */
+
+static const char *neighbour_kind(struct loc n)
+{
+	if (!square_in_bounds(cave, n) || !square_isknown(cave, n)) return NULL;
+	if (square_monster(cave, n) && monster_is_visible(square_monster(cave, n))) return "monster";
+	if (square_iscloseddoor(cave, n)) return "door";
+	if (square_isopendoor(cave, n)) return "open door";
+	if (square_isrubble(cave, n)) return "rubble";
+	if (square_isdisarmabletrap(cave, n) && square_isvisibletrap(cave, n)) return "trap";
+	return NULL;
+}
+
+static int rep_dir_intent = -1;
+
+void native_prompt_set_intent(int nb_action)
+{
+	rep_dir_intent = nb_action;
+}
+
+/* Does neighbour n suit the action that opened this prompt? */
+static bool fits_intent(int intent, struct loc n)
+{
+	if (!square_in_bounds(cave, n) || !square_isknown(cave, n)) return false;
+	switch (intent) {
+		case NB_ACT_CLOSE: return square_isopendoor(cave, n);
+		case NB_ACT_OPEN:
+		case NB_ACT_BASH: return square_iscloseddoor(cave, n);
+		case NB_ACT_TUNNEL: return square_isrubble(cave, n);
+		case NB_ACT_DISARM: return square_isdisarmabletrap(cave, n) && square_isvisibletrap(cave, n);
+		default: return false;
+	}
+}
+
+static int sole_fitting_dir(int intent)
+{
+	int found = 0;
+	for (int dir = 1; dir <= 9; dir++) {
+		if (dir == 5 || !fits_intent(intent, loc_sum(player->grid, ddgrid[dir]))) continue;
+		if (found) return 0;
+		found = dir;
+	}
+	return found;
+}
+
+static bool native_get_rep_dir(int *dp, bool allow_5)
+{
+	if (keymap_pending()) return textui.get_rep_dir(dp, allow_5);
+	*dp = 0;
+	const int intent = rep_dir_intent;
+	rep_dir_intent = -1;
+	const int sole = sole_fitting_dir(intent);
+	if (sole) { *dp = sole; return true; }
+
+	event_signal(EVENT_MESSAGE_FLUSH);
+	pthread_mutex_lock(&shared.lock);
+	text_reset();
+	text_add("Direction\n%d\n", allow_5 ? 1 : 0);
+	for (int dir = 1; dir <= 9; dir++) {
+		if (dir == 5) continue;
+		const struct loc n = loc_sum(player->grid, ddgrid[dir]);
+		const char *const what = neighbour_kind(n);
+		if (what) text_add("%d\t%d\t%d\t%s\n", dir, n.x, n.y, what);
+	}
+	pthread_mutex_unlock(&shared.lock);
+
+	const int32_t a = ask(NB_PROMPT_DIRECTION);
+	if (a < 1 || a > 9 || (a == 5 && !allow_5)) return false;
+	*dp = a;
+	return true;
+}
+
+/* ------------------------------------------------------------------------
  * Install / public API
  * ------------------------------------------------------------------------ */
 
 void native_prompt_init(void)
 {
+	/* Called often (textui_init() resets the hooks); capture the textui's only once they are its. */
+	if (get_item_hook != native_get_item) textui.get_item = get_item_hook;
+	if (get_check_hook != native_get_check) textui.get_check = get_check_hook;
+	if (get_aim_dir_hook != native_get_aim_dir) textui.get_aim_dir = get_aim_dir_hook;
+	if (get_rep_dir_hook != native_get_rep_dir) textui.get_rep_dir = get_rep_dir_hook;
+	assert(textui.get_item && textui.get_check && textui.get_aim_dir && textui.get_rep_dir);
 	get_item_hook = native_get_item;
 	get_check_hook = native_get_check;
 	get_aim_dir_hook = native_get_aim_dir;
+	get_rep_dir_hook = native_get_rep_dir;
 }
 
 uint64_t nb_prompt_generation(void)

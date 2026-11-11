@@ -56,10 +56,15 @@ class GameState {
                            val description: String) : Prompt
         data class Check(val question: String) : Prompt
         data class Aim(val range: Int, val current: Pair<Int, Int>?, val targets: List<Target>) : Prompt
+        data class Direction(val allowHere: Boolean, val neighbours: List<Neighbour>) : Prompt
     }
 
+    data class Neighbour(val dir: Int, val x: Int, val y: Int, val what: String)
+
     data class Status(val hp: Int = 0, val maxHp: Int = 0, val voice: Int = 0, val maxVoice: Int = 0,
-                      val depth: Int = 0, val exp: Int = 0)
+                      val depth: Int = 0, val exp: Int = 0, val context: Int = 0) {
+        fun has(flag: Int) = context and flag != 0
+    }
 
     private var termGen = 0L
     private var mapGen = 0L
@@ -128,6 +133,8 @@ class GameState {
                 Prompt.Aim(range, if (cx >= 0) cx to cy else null,
                     lines.drop(2).filter { it.isNotEmpty() }.map { fields(it, 4).let { f -> Target(f[0].toInt(), f[1].toInt(), f[2] == "1", f[3]) } })
             }
+            N.PROMPT_DIRECTION -> Prompt.Direction(lines.getOrNull(1)?.trim() == "1",
+                lines.drop(2).filter { it.isNotEmpty() }.map { fields(it, 4).let { f -> Neighbour(f[0].toInt(), f[1].toInt(), f[2].toInt(), f[3]) } })
             else -> null
         }
     }
@@ -150,7 +157,7 @@ class GameState {
         mapMode = meta[N.META_MAP_MODE] != 0
         atPrompt = meta[N.META_AT_PROMPT] != 0
         status = Status(meta[N.META_HP], meta[N.META_MAX_HP], meta[N.META_VOICE], meta[N.META_MAX_VOICE],
-                        meta[N.META_DEPTH], meta[N.META_EXP])
+                        meta[N.META_DEPTH], meta[N.META_EXP], meta[N.META_CONTEXT])
         return true
     }
 

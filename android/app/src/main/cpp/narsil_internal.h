@@ -20,6 +20,13 @@ void bridge_set_idle(bool idle);
 /* Implemented by narsil_prompt.c (game thread): install the native prompt hooks. */
 void native_prompt_init(void);
 
+/*
+ * Implemented by narsil_prompt.c (game thread): the next direction prompt was
+ * started by this native action; if exactly one neighbour fits it, answer
+ * without asking.  Cleared by the prompt, or by the next command prompt.
+ */
+void native_prompt_set_intent(int nb_action);
+
 /* Implemented by narsil_native.c; all game-thread only. */
 void native_init(void);
 

@@ -12,6 +12,8 @@
  *   @tap@DX,DY                                    tap relative to the player's '@'
  *   @where                                        print the player's screen position
  *   @prompt                                       print the open native prompt
+ *   @act=N                                        native action (enum nb_action)
+ *   @ctx                                          print the context flags
  *   @answer=N                                     answer any native prompt (see nb_answer)
  *   @aim@DX,DY                                    answer an aim prompt with a grid relative to the player
  *   @messages                                     print the recent message log
@@ -169,6 +171,16 @@ static int run_token(const char *tok)
 		printf("aim at (%d,%d)\n", gx, gy);
 		nb_answer(NB_AIM_GRID_BASE + gy * NB_AIM_GRID_STRIDE + gx);
 		return settle() ? 0 : 1;
+	}
+	if (sscanf(tok, "@act=%d%c", &mx, &tail) == 1) {
+		nb_request_action((enum nb_action)mx);
+		return settle() ? 0 : 1;
+	}
+	if (strcmp(tok, "@ctx") == 0) {
+		int32_t meta[NB_META_COUNT];
+		nb_map_snapshot(meta, NULL, 0);
+		printf("context=0x%x\n", (unsigned)meta[NB_META_CONTEXT]);
+		return 0;
 	}
 	if (sscanf(tok, "@answer=%d%c", &mx, &tail) == 1) {
 		nb_answer(mx);

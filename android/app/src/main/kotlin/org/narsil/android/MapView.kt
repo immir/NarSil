@@ -131,6 +131,19 @@ class MapView(context: Context, private val state: GameState, private val router
     }
 
     private val aim get() = state.prompt as? GameState.Prompt.Aim
+    private val direction get() = state.prompt as? GameState.Prompt.Direction
+
+    /** Direction mode: outline all eight neighbours; fill the interesting ones. */
+    private fun drawDirection(canvas: Canvas, d: GameState.Prompt.Direction, ox: Float, oy: Float, cw: Float, ch: Float) {
+        val (px, py) = player
+        for (dy in -1..1) for (dx in -1..1) {
+            if (dx == 0 && dy == 0 && !d.allowHere) continue
+            val x = px + dx
+            val y = py + dy
+            canvas.drawRect(ox + x * cw, oy + y * ch, ox + (x + 1) * cw, oy + (y + 1) * ch, targetPaint)
+        }
+        d.neighbours.forEach { n -> canvas.drawRect(ox + n.x * cw, oy + n.y * ch, ox + (n.x + 1) * cw, oy + (n.y + 1) * ch, pathPaint) }
+    }
 
     /** Aim mode: ring every targetable monster; outline the current target. */
     private fun drawAim(canvas: Canvas, aim: GameState.Prompt.Aim, ox: Float, oy: Float, cw: Float, ch: Float) {
@@ -143,6 +156,7 @@ class MapView(context: Context, private val state: GameState, private val router
 
     private fun drawPath(canvas: Canvas, ox: Float, oy: Float, cw: Float, ch: Float) {
         aim?.let { drawAim(canvas, it, ox, oy, cw, ch); return }
+        direction?.let { drawDirection(canvas, it, ox, oy, cw, ch); return }
         val path = state.path
         for (k in 1 until state.pathPairs) {
             val x = path[2 * k]
@@ -162,6 +176,13 @@ class MapView(context: Context, private val state: GameState, private val router
 
     private fun onTap(g: Pair<Int, Int>) {
         if (aim != null) { N.nativeAnswer(aimAt(g.first, g.second)); return }
+        direction?.let { d ->
+            val (px, py) = player
+            val dx = g.first - px
+            val dy = g.second - py
+            if (abs(dx) <= 1 && abs(dy) <= 1 && (dx != 0 || dy != 0 || d.allowHere)) N.nativeAnswer(keypadDir(dx, dy))
+            return
+        }
         if (!state.atPrompt) return
         val (px, py) = player
         val adjacent = abs(g.first - px) <= 1 && abs(g.second - py) <= 1 && g != player
@@ -181,7 +202,7 @@ class MapView(context: Context, private val state: GameState, private val router
         }
 
         override fun onLongPress(e: MotionEvent) {
-            if (multiTouch || !state.atPrompt || aim != null) return
+            if (multiTouch || !state.atPrompt || aim != null || direction != null) return
             gridAt(e.x, e.y)?.let {
                 performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                 inspecting = true
@@ -196,7 +217,7 @@ class MapView(context: Context, private val state: GameState, private val router
             val dy = e2.y - start.y
             if (hypot(dx, dy) < 2f * painter.cellW) return false
             val o = octant(dx, dy)
-            if (aim != null) N.nativeAnswer(OCTANT_TO_DIR[o]) else router.direction(o)
+            if (aim != null || direction != null) N.nativeAnswer(OCTANT_TO_DIR[o]) else router.direction(o)
             return true
         }
     })

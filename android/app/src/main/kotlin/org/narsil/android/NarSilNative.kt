@@ -36,7 +36,49 @@ object NarSilNative {
     const val META_MAX_VOICE = 9
     const val META_DEPTH = 10
     const val META_EXP = 11
-    const val META_COUNT = 12
+    const val META_CONTEXT = 12
+    const val META_COUNT = 13
+
+    // enum nb_context
+    const val CTX_UP_STAIRS = 1 shl 0
+    const val CTX_DOWN_STAIRS = 1 shl 1
+    const val CTX_FLOOR_ITEMS = 1 shl 2
+    const val CTX_CAN_FIRE = 1 shl 3
+    const val CTX_CAN_THROW = 1 shl 4
+    const val CTX_STEALTH = 1 shl 5
+    const val CTX_SINGING = 1 shl 6
+    const val CTX_ADJ_CLOSED_DOOR = 1 shl 7
+    const val CTX_ADJ_OPEN_DOOR = 1 shl 8
+    const val CTX_ADJ_RUBBLE = 1 shl 9
+    const val CTX_ADJ_TRAP = 1 shl 10
+
+    // enum nb_action (order matters)
+    const val ACT_REST = 0
+    const val ACT_HOLD = 1
+    const val ACT_GO_DOWN = 2
+    const val ACT_GO_UP = 3
+    const val ACT_PICKUP = 4
+    const val ACT_STEALTH = 5
+    const val ACT_SONG = 6
+    const val ACT_FIRE_NEAREST = 7
+    const val ACT_THROW_NEAREST = 8
+    const val ACT_OPEN = 9
+    const val ACT_CLOSE = 10
+    const val ACT_DISARM = 11
+    const val ACT_TUNNEL = 12
+    const val ACT_BASH = 13
+    const val ACT_EXCHANGE = 14
+    const val ACT_INVENTORY = 15
+    const val ACT_EQUIPMENT = 16
+    const val ACT_MAP = 17
+    const val ACT_LOOK = 18
+    const val ACT_MESSAGES = 19
+    const val ACT_CHARACTER = 20
+    const val ACT_ABILITIES = 21
+    const val ACT_HELP = 22
+
+    /** Only honoured at the command prompt. */
+    @JvmStatic external fun nativeRequestAction(action: Int)
 
     const val CELL_IN_VIEW = 1 shl 0
     const val CELL_PLAYER = 1 shl 1
@@ -59,6 +101,7 @@ object NarSilNative {
     const val PROMPT_ACTIONS = 2
     const val PROMPT_CHECK = 3
     const val PROMPT_AIM = 4
+    const val PROMPT_DIRECTION = 5
 
     const val AIM_CURRENT = 100
     const val AIM_NEAREST = 101

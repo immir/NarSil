@@ -120,3 +120,28 @@ fun aimAt(x: Int, y: Int): Int = N.AIM_GRID_BASE + y * N.AIM_GRID_STRIDE + x
 
 /** Swipe octant (0 = east, anticlockwise) -> Angband keypad direction. */
 val OCTANT_TO_DIR = intArrayOf(6, 9, 8, 7, 4, 1, 2, 3)
+
+/** Grid offset (each -1..1) -> Angband keypad direction. */
+fun keypadDir(dx: Int, dy: Int): Int = 5 - 3 * dy + dx
+
+private val DIR_ARROWS = mapOf(1 to "↙", 2 to "↓", 3 to "↘", 4 to "←", 6 to "→", 7 to "↖", 8 to "↑", 9 to "↗")
+
+/** Adjacent-direction prompt: the map stays live (tap a neighbour or swipe); chips for interesting neighbours. */
+@Composable
+fun DirectionBar(prompt: GameState.Prompt.Direction, onAnswer: (Int) -> Unit) {
+    Surface(color = Color(0xEE1C1C1E), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Which way? Tap a neighbouring square or swipe", color = Color.White, fontSize = 14.sp)
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                prompt.neighbours.forEach { n ->
+                    FilledTonalButton(onClick = { onAnswer(n.dir) }, contentPadding = PaddingValues(horizontal = 12.dp)) {
+                        Text("${n.what} ${DIR_ARROWS[n.dir] ?: ""}")
+                    }
+                }
+                if (prompt.allowHere)
+                    FilledTonalButton(onClick = { onAnswer(5) }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("Here") }
+                OutlinedButton(onClick = { onAnswer(-1) }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("Cancel") }
+            }
+        }
+    }
+}

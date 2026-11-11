@@ -17,9 +17,16 @@
 #include "cmd-core.h"
 #include "game-event.h"
 #include "game-world.h"
+#include "obj-gear.h"
+#include "player-attack.h"
 #include "player-path.h"
+#include "player-util.h"
 #include "player-timed.h"
+#include "ui-abilities.h"
+#include "ui-help.h"
+#include "ui-knowledge.h"
 #include "ui-map.h"
+#include "ui-player.h"
 #include "message.h"
 #include "ui-output.h"
 
@@ -31,8 +38,8 @@ enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 6, MESSAGES_CAP = 4096 };
 
 typedef struct { int32_t cp, attr_flags; } map_cell;
 
-enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL };
-typedef struct { enum request_kind kind; struct loc grid; } request;
+enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION };
+typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; } request;
 
 /* Game thread only. */
 static struct {
@@ -142,6 +149,29 @@ static void build_map(void)
 	}
 }
 
+/* What is around the player, for context actions.  Only what the player knows. */
+static int32_t context_flags(void)
+{
+	int32_t f = 0;
+	const struct loc g = player->grid;
+	if (square_isupstairs(cave, g)) f |= NB_CTX_UP_STAIRS;
+	if (square_isdownstairs(cave, g)) f |= NB_CTX_DOWN_STAIRS;
+	if (square_object(cave, g)) f |= NB_CTX_FLOOR_ITEMS;
+	if (player_can_fire_quiver1(player, false)) f |= NB_CTX_CAN_FIRE;
+	if (player_has_throwable(player, false)) f |= NB_CTX_CAN_THROW;
+	if (player->stealth_mode) f |= NB_CTX_STEALTH;
+	if (player->song[SONG_MAIN]) f |= NB_CTX_SINGING;
+	for (int d = 0; d < 8; d++) {
+		const struct loc n = loc_sum(g, ddgrid_ddd[d]);
+		if (!square_in_bounds(cave, n) || !square_isknown(cave, n)) continue;
+		if (square_iscloseddoor(cave, n)) f |= NB_CTX_ADJ_CLOSED_DOOR;
+		if (square_isopendoor(cave, n)) f |= NB_CTX_ADJ_OPEN_DOOR;
+		if (square_isrubble(cave, n)) f |= NB_CTX_ADJ_RUBBLE;
+		if (square_isdisarmabletrap(cave, n) && square_isvisibletrap(cave, n)) f |= NB_CTX_ADJ_TRAP;
+	}
+	return f;
+}
+
 void native_publish(bool at_prompt)
 {
 	if (game.messages_dirty) {
@@ -167,6 +197,7 @@ void native_publish(bool at_prompt)
 		meta[NB_META_MAX_VOICE] = player->msp;
 		meta[NB_META_DEPTH] = player->depth;
 		meta[NB_META_EXP] = player->exp;
+		meta[NB_META_CONTEXT] = context_flags();
 	}
 
 	pthread_mutex_lock(&shared.lock);
@@ -238,7 +269,8 @@ bool native_service(bool at_prompt)
 	switch (r.kind) {
 		case REQ_PREVIEW: preview_path(r.grid); return false;
 		case REQ_CLEAR_PREVIEW: publish_path(r.grid, NULL, 0); return false;
-		case REQ_TRAVEL: game.stashed = r; return true;
+		case REQ_TRAVEL:
+		case REQ_ACTION: game.stashed = r; return true;
 		case REQ_NONE: return false;
 	}
 	return false;
@@ -263,13 +295,60 @@ static void push_travel(struct loc target)
 	}
 }
 
+static void push_choice(cmd_code cmd, int choice)
+{
+	cmdq_push(cmd);
+	cmd_set_arg_choice(cmdq_peek(), "choice", choice);
+}
+
+/*
+ * Runs at the command prompt, as the corresponding key would: game commands
+ * are queued, textui screens are opened in place (they are UI commands).
+ */
+static void run_action(enum nb_action a)
+{
+	native_prompt_set_intent(a);
+	switch (a) {
+		case NB_ACT_REST: push_choice(CMD_REST, REST_COMPLETE); break;
+		case NB_ACT_HOLD: cmdq_push(CMD_HOLD); break;
+		case NB_ACT_GO_DOWN: cmdq_push(CMD_GO_DOWN); break;
+		case NB_ACT_GO_UP: cmdq_push(CMD_GO_UP); break;
+		case NB_ACT_PICKUP: cmdq_push(CMD_PICKUP); break;
+		case NB_ACT_STEALTH: cmdq_push(CMD_TOGGLE_STEALTH); break;
+		case NB_ACT_SONG: cmdq_push(CMD_SING); break;
+		case NB_ACT_FIRE_NEAREST: if (player_can_fire_quiver1(player, true)) do_cmd_fire_at_nearest(); break;
+		case NB_ACT_THROW_NEAREST: if (player_has_throwable(player, true)) do_cmd_automatic_throw(); break;
+		case NB_ACT_OPEN: cmdq_push(CMD_OPEN); break;
+		case NB_ACT_CLOSE: cmdq_push(CMD_CLOSE); break;
+		case NB_ACT_DISARM: cmdq_push(CMD_DISARM); break;
+		case NB_ACT_TUNNEL: cmdq_push(CMD_TUNNEL); break;
+		case NB_ACT_BASH: cmdq_push(CMD_BASH); break;
+		case NB_ACT_EXCHANGE: cmdq_push(CMD_EXCHANGE); break;
+		case NB_ACT_INVENTORY: do_cmd_inven(); break;
+		case NB_ACT_EQUIPMENT: do_cmd_equip(); break;
+		case NB_ACT_MAP: do_cmd_view_map(); break;
+		case NB_ACT_LOOK: do_cmd_look(); break;
+		case NB_ACT_MESSAGES: do_cmd_messages(); break;
+		case NB_ACT_CHARACTER: do_cmd_change_name(); break;
+		case NB_ACT_ABILITIES: do_cmd_abilities(); break;
+		case NB_ACT_HELP: do_cmd_help(); break;
+		case NB_ACT_COUNT: break;
+	}
+}
+
 void native_run_stashed(void)
 {
+	native_prompt_set_intent(-1);
 	const request r = game.stashed;
 	game.stashed.kind = REQ_NONE;
-	if (r.kind != REQ_TRAVEL || !map_visible()) return;
-	publish_path(r.grid, NULL, 0);
-	push_travel(r.grid);
+	if (!map_visible()) return;
+	if (r.kind == REQ_TRAVEL) {
+		publish_path(r.grid, NULL, 0);
+		push_travel(r.grid);
+	} else if (r.kind == REQ_ACTION) {
+		publish_path(r.grid, NULL, 0);
+		run_action(r.action);
+	}
 }
 
 /* ------------------------------------------------------------------------
@@ -292,6 +371,12 @@ void nb_request_preview(int x, int y)
 void nb_clear_preview(void)
 {
 	post((request){ .kind = REQ_CLEAR_PREVIEW });
+}
+
+void nb_request_action(enum nb_action a)
+{
+	if (a < 0 || a >= NB_ACT_COUNT) return;
+	post((request){ .kind = REQ_ACTION, .action = a });
 }
 
 void nb_request_travel(int x, int y)

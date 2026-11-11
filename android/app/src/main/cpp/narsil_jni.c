@@ -227,3 +227,9 @@ JNIEXPORT jstring JNICALL JNI_FN(nativeMessages)(JNIEnv *env, jclass cls)
 	nb_messages(text, sizeof(text));
 	return (*env)->NewStringUTF(env, text);
 }
+
+JNIEXPORT void JNICALL JNI_FN(nativeRequestAction)(JNIEnv *env, jclass cls, jint action)
+{
+	(void)env; (void)cls;
+	if (action >= 0 && action < NB_ACT_COUNT) nb_request_action((enum nb_action)action);
+}

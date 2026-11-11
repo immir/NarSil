@@ -58,4 +58,11 @@ out=$(run "${birth[@]}" t @pick=0 @aim@-9,0 @messages ^x @enter @esc)
 ! echo "$out" | grep -q 'roll beneath your feet'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
+echo "== autosave on first prompt; stealth action toggles; close opens the direction prompt"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @ctx @act=5 @ctx @act=10 @prompt @answer=-1 @act=0 @act=1 2>&1)
+test -s "$work/data/save/Harness"
+echo "$out" | grep -q 'autosave: done'
+[ "$(echo "$out" | grep -o 'context=0x[0-9a-f]*' | sed -n 2p)" != "$(echo "$out" | grep -o 'context=0x[0-9a-f]*' | sed -n 1p)" ]
+
 echo "PASS ($san) work=$work"

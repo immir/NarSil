@@ -82,8 +82,41 @@ enum nb_meta {
 	NB_META_VOICE, NB_META_MAX_VOICE,
 	NB_META_DEPTH,      /* dungeon level; 50 ft each */
 	NB_META_EXP,
+	NB_META_CONTEXT,    /* enum nb_context flags */
 	NB_META_COUNT
 };
+
+/* What the player is standing on / next to, for context actions. */
+enum nb_context {
+	NB_CTX_UP_STAIRS       = 1 << 0,
+	NB_CTX_DOWN_STAIRS     = 1 << 1,
+	NB_CTX_FLOOR_ITEMS     = 1 << 2,
+	NB_CTX_CAN_FIRE        = 1 << 3,  /* bow and ammunition in the first quiver */
+	NB_CTX_CAN_THROW       = 1 << 4,  /* a throwing weapon to hand */
+	NB_CTX_STEALTH         = 1 << 5,  /* stealth mode on */
+	NB_CTX_SINGING         = 1 << 6,
+	NB_CTX_ADJ_CLOSED_DOOR = 1 << 7,
+	NB_CTX_ADJ_OPEN_DOOR   = 1 << 8,
+	NB_CTX_ADJ_RUBBLE      = 1 << 9,
+	NB_CTX_ADJ_TRAP        = 1 << 10, /* known, disarmable */
+};
+
+/* One-tap actions; each does what its key would at the command prompt. */
+enum nb_action {
+	NB_ACT_REST,          /* rest as needed */
+	NB_ACT_HOLD,          /* pass a turn (stealth bonus) */
+	NB_ACT_GO_DOWN, NB_ACT_GO_UP, NB_ACT_PICKUP,
+	NB_ACT_STEALTH,       /* toggle stealth mode */
+	NB_ACT_SONG,          /* change song */
+	NB_ACT_FIRE_NEAREST, NB_ACT_THROW_NEAREST,
+	NB_ACT_OPEN, NB_ACT_CLOSE, NB_ACT_DISARM, NB_ACT_TUNNEL, NB_ACT_BASH, NB_ACT_EXCHANGE,
+	NB_ACT_INVENTORY, NB_ACT_EQUIPMENT, NB_ACT_MAP, NB_ACT_LOOK, NB_ACT_MESSAGES,
+	NB_ACT_CHARACTER, NB_ACT_ABILITIES, NB_ACT_HELP,
+	NB_ACT_COUNT
+};
+
+/* Only at the command prompt, like travel. */
+void nb_request_action(enum nb_action a);
 
 enum nb_cell_flag {
 	NB_CELL_IN_VIEW = 1 << 0,
@@ -126,6 +159,7 @@ enum nb_prompt_kind {
 	NB_PROMPT_ACTIONS = 2, /* answer: action line index, -1 back to the item list */
 	NB_PROMPT_CHECK = 3,   /* answer: 1 yes, 0 no */
 	NB_PROMPT_AIM = 4,     /* answer: 1-9 direction, NB_AIM_*, or a grid; -1 cancel */
+	NB_PROMPT_DIRECTION = 5, /* adjacent direction: answer 1-9 (5 only if allowed), -1 cancel */
 };
 
 /* Aim answers besides directions 1-9 (5 excluded). */
@@ -149,6 +183,8 @@ uint64_t nb_prompt_generation(void);
  *  CHECK:   the question
  *  AIM:     "Aim"; range, current target x, y (-1 if none); per targetable
  *           monster, nearest first: x, y, in range (0/1), name
+ *  DIRECTION: "Direction"; 5 allowed (0/1); per neighbour of interest:
+ *           direction, x, y, what (door/open door/rubble/trap/monster)
  */
 enum nb_prompt_kind nb_prompt(char *text, size_t cap);
 

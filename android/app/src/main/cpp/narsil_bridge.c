@@ -33,6 +33,9 @@
 
 enum { KEY_QUEUE_CAP = 256, PATH_CAP = 512 };
 
+/* Autosave at the command prompt on every new level and after this many prompts. */
+enum { AUTOSAVE_EVERY_PROMPTS = 100 };
+
 typedef struct { int32_t cp, attr; } cell;
 /* A key (code = keycode) or a mouse press (code = button, at x, y). */
 typedef struct { bool mouse; uint32_t code; uint8_t mods; int16_t x, y; } queued_key;
@@ -55,7 +58,10 @@ static struct {
 	int cur_x, cur_y;
 	bool cur_visible;
 	bool at_command_prompt;
-} game;
+	int saved_depth;
+	int prompts_since_save;
+	uint64_t autosaves;
+} game = { .saved_depth = -1 };
 
 /* Shared between threads; guarded by `lock`. */
 static struct {
@@ -267,11 +273,30 @@ static void init_main_term(void)
  * Game thread
  * ------------------------------------------------------------------------ */
 
+/*
+ * Android may kill a backgrounded process without warning, and onStop saves
+ * are only as good as the last time the app left the foreground.  Save
+ * quietly whenever the level changes and every so many command prompts.
+ */
+static void autosave_if_due(void)
+{
+	if (!safe_to_save()) return;
+	game.prompts_since_save++;
+	if (player->depth == game.saved_depth && game.prompts_since_save < AUTOSAVE_EVERY_PROMPTS)
+		return;
+	const bool ok = save_quietly();
+	game.saved_depth = player->depth;
+	game.prompts_since_save = 0;
+	game.autosaves++;
+	log_line(ok ? "autosave: done" : "autosave: FAILED");
+}
+
 static errr get_cmd(cmd_context ctx)
 {
 	/* textui_init() (also re-run after death, after reinit_hook) resets the prompt hooks. */
 	native_prompt_init();
 	game.at_command_prompt = ctx == CTX_GAME;
+	autosave_if_due();
 	const errr r = textui_get_cmd(ctx);
 	game.at_command_prompt = false;
 	if (ctx == CTX_GAME) native_run_stashed();

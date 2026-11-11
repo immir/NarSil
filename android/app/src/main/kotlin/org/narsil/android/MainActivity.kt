@@ -57,6 +57,7 @@ class MainActivity : ComponentActivity() {
     private val router = KeyRouter()
     private var terminal: TerminalView? = null
     private var game: GameState? = null
+    private var showMore by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,9 +123,10 @@ class MainActivity : ComponentActivity() {
                     is GameState.Prompt.Items -> ItemSheet(prompt, state::colour, answer)
                     is GameState.Prompt.Actions -> ActionSheet(prompt, state::colour, answer)
                     is GameState.Prompt.Check -> CheckDialog(prompt, answer)
-                    is GameState.Prompt.Aim -> Unit  // drawn by GameLayers over the map
+                    is GameState.Prompt.Aim, is GameState.Prompt.Direction -> Unit  // drawn by GameLayers over the map
                 }
             }
+            if (showMore) MoreSheet(moreActions(router) { terminal?.toggleKeyboard() }) { showMore = false }
         }
     }
 
@@ -140,6 +142,15 @@ class MainActivity : ComponentActivity() {
         is GameState.Prompt.Check -> when (code) {
             'y'.code, 'Y'.code -> 1
             'n'.code, 'N'.code, Keys.ESCAPE -> 0
+            else -> null
+        }
+        is GameState.Prompt.Direction -> when (code) {
+            Keys.ESCAPE -> -1
+            in '1'.code..'9'.code -> (code - '0'.code).takeIf { it != 5 || prompt.allowHere }
+            Keys.ARROW_UP -> 8
+            Keys.ARROW_DOWN -> 2
+            Keys.ARROW_LEFT -> 4
+            Keys.ARROW_RIGHT -> 6
             else -> null
         }
         is GameState.Prompt.Aim -> when (code) {
@@ -172,9 +183,13 @@ class MainActivity : ComponentActivity() {
                 (state.prompt as? GameState.Prompt.Aim)?.let { aim ->
                     Box(Modifier.align(Alignment.BottomCenter)) { AimBar(aim, NarSilNative::nativeAnswer) }
                 }
+                (state.prompt as? GameState.Prompt.Direction)?.let { d ->
+                    Box(Modifier.align(Alignment.BottomCenter)) { DirectionBar(d, NarSilNative::nativeAnswer) }
+                }
             }
             if (state.mapMode) StatusStrip(state.status, state.statusLine)
-            KeyBar()
+            if (state.mapMode) ActionBar(contextActions(state.status) + coreActions(state.status)) { showMore = true }
+            else KeyBar()
         }
     }
 
