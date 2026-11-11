@@ -175,6 +175,8 @@ class MapView(context: Context, private val state: GameState, private val router
 
     private fun onTap(g: Pair<Int, Int>) {
         if (aim != null) { N.nativeAnswer(aimAt(g.first, g.second)); return }
+        /* In a fight -more- comes often and the eyes are on the map: any tap continues. */
+        if (!state.atPrompt && state.prompt == null && state.messageLine.contains("-more-")) { router.special(Keys.ENTER); return }
         direction?.let { d ->
             val (px, py) = player
             val dx = g.first - px

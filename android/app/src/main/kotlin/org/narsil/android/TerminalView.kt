@@ -10,6 +10,7 @@ import android.view.GestureDetector
 import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
@@ -35,6 +36,13 @@ class TerminalView(context: Context, private val state: GameState, private val r
     private var originX = 0f
     private var originY = 0f
 
+    /* Pinch-zoom for reading textui screens on a phone: screen = pan + zoom * content. */
+    private var zoom = 1f
+    private var panX = 0f
+    private var panY = 0f
+    private var multiTouch = false
+    private var lastFocus = 0f to 0f
+
     init {
         isFocusable = true
         isFocusableInTouchMode = true
@@ -58,6 +66,8 @@ class TerminalView(context: Context, private val state: GameState, private val r
         canvas.clipRect(0, 0, width, height)
         canvas.drawColor(Color.BLACK)
         if (state.palette.isEmpty()) return
+        canvas.translate(panX, panY)
+        canvas.scale(zoom, zoom)
         val cells = state.term
         for (y in 0 until rows) for (x in 0 until cols) {
             val i = 2 * (y * cols + x)
@@ -71,11 +81,11 @@ class TerminalView(context: Context, private val state: GameState, private val r
         }
     }
 
-    /** Screen point -> term cell, or null outside the grid. */
+    /** Screen point -> term cell (through the zoom), or null outside the grid. */
     private fun cellAt(px: Float, py: Float): Pair<Int, Int>? {
         if (cellW <= 0f || cellH <= 0f) return null
-        val x = floor((px - originX) / cellW).toInt()
-        val y = floor((py - originY) / cellH).toInt()
+        val x = floor(((px - panX) / zoom - originX) / cellW).toInt()
+        val y = floor(((py - panY) / zoom - originY) / cellH).toInt()
         return if (x in 0 until cols && y in 0 until rows) x to y else null
     }
 
@@ -88,11 +98,13 @@ class TerminalView(context: Context, private val state: GameState, private val r
         override fun onDown(e: MotionEvent) = true
 
         override fun onSingleTapUp(e: MotionEvent): Boolean {
+            if (multiTouch) return true
             cellAt(e.x, e.y)?.let { (x, y) -> router.mouse(x, y, MOUSE_LEFT) }
             return true
         }
 
         override fun onLongPress(e: MotionEvent) {
+            if (multiTouch) return
             cellAt(e.x, e.y)?.let { (x, y) ->
                 performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                 router.mouse(x, y, MOUSE_RIGHT)
@@ -101,6 +113,7 @@ class TerminalView(context: Context, private val state: GameState, private val r
 
         override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
             val start = e1 ?: return false
+            if (multiTouch) return false
             val dx = e2.x - start.x
             val dy = e2.y - start.y
             if (hypot(dx, dy) < 2f * cellW) return false
@@ -109,8 +122,52 @@ class TerminalView(context: Context, private val state: GameState, private val r
         }
     })
 
+    private val scaler = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+        override fun onScale(d: ScaleGestureDetector): Boolean {
+            val z = (zoom * d.scaleFactor).coerceIn(1f, 4f)
+            panX = d.focusX - (d.focusX - panX) * (z / zoom)
+            panY = d.focusY - (d.focusY - panY) * (z / zoom)
+            zoom = z
+            clampPan()
+            invalidate()
+            return true
+        }
+    })
+
+    /** Keep the zoomed screen covering the view; at zoom 1 there is nothing to pan. */
+    private fun clampPan() {
+        panX = panX.coerceIn(width * (1 - zoom), 0f)
+        panY = panY.coerceIn(height * (1 - zoom), 0f)
+    }
+
+    private fun focus(e: MotionEvent, excluding: Int = -1): Pair<Float, Float> {
+        val ids = (0 until e.pointerCount).filter { it != excluding }
+        return ids.map { e.getX(it) }.average().toFloat() to ids.map { e.getY(it) }.average().toFloat()
+    }
+
+    /**
+     * One finger: tap / long press / fling as before.  Two fingers: pinch to zoom
+     * and drag to pan, for reading the textui's screens on a phone.
+     */
     @SuppressLint("ClickableViewAccessibility")
-    override fun onTouchEvent(event: MotionEvent): Boolean = gestures.onTouchEvent(event)
+    override fun onTouchEvent(e: MotionEvent): Boolean {
+        scaler.onTouchEvent(e)
+        when (e.actionMasked) {
+            MotionEvent.ACTION_DOWN -> multiTouch = false
+            MotionEvent.ACTION_POINTER_DOWN -> { multiTouch = true; lastFocus = focus(e) }
+            MotionEvent.ACTION_POINTER_UP -> lastFocus = focus(e, excluding = e.actionIndex)
+            MotionEvent.ACTION_MOVE -> if (multiTouch && e.pointerCount >= 2) {
+                val f = focus(e)
+                panX += f.first - lastFocus.first
+                panY += f.second - lastFocus.second
+                lastFocus = f
+                clampPan()
+                invalidate()
+            }
+        }
+        gestures.onTouchEvent(e)
+        return true
+    }
 
     fun toggleKeyboard() {
         val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager

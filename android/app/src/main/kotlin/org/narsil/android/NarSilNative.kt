@@ -108,6 +108,7 @@ object NarSilNative {
     const val PROMPT_CHECK = 3
     const val PROMPT_AIM = 4
     const val PROMPT_DIRECTION = 5
+    const val PROMPT_CHOICE = 6
 
     const val AIM_CURRENT = 100
     const val AIM_NEAREST = 101

@@ -123,6 +123,7 @@ class MainActivity : ComponentActivity() {
                     is GameState.Prompt.Items -> ItemSheet(prompt, state::colour, answer)
                     is GameState.Prompt.Actions -> ActionSheet(prompt, state::colour, answer)
                     is GameState.Prompt.Check -> CheckDialog(prompt, answer)
+                    is GameState.Prompt.Choice -> ChoiceSheet(prompt, answer)
                     is GameState.Prompt.Aim, is GameState.Prompt.Direction -> Unit  // drawn by GameLayers over the map
                 }
             }
@@ -155,6 +156,8 @@ class MainActivity : ComponentActivity() {
             'n'.code, 'N'.code, Keys.ESCAPE -> 0
             else -> null
         }
+        is GameState.Prompt.Choice -> if (code == Keys.ESCAPE) -1
+            else (code - 'a'.code).takeIf { it in prompt.options.indices }
         is GameState.Prompt.Direction -> when (code) {
             Keys.ESCAPE -> -1
             in '1'.code..'9'.code -> (code - '0'.code).takeIf { it != 5 || prompt.allowHere }

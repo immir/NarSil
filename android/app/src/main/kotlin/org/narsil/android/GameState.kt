@@ -57,9 +57,11 @@ class GameState {
         data class Check(val question: String) : Prompt
         data class Aim(val range: Int, val current: Pair<Int, Int>?, val targets: List<Target>) : Prompt
         data class Direction(val allowHere: Boolean, val neighbours: List<Neighbour>) : Prompt
+        data class Choice(val title: String, val options: List<Option>) : Prompt
     }
 
     data class Neighbour(val dir: Int, val x: Int, val y: Int, val what: String)
+    data class Option(val index: Int, val label: String, val description: String)
 
     /** Read-only descriptions the player asked for; dismissable, the game is not waiting on them. */
     sealed interface Info {
@@ -157,6 +159,9 @@ class GameState {
                 Prompt.Aim(range, if (cx >= 0) cx to cy else null,
                     lines.drop(2).filter { it.isNotEmpty() }.map { fields(it, 4).let { f -> Target(f[0].toInt(), f[1].toInt(), f[2] == "1", f[3]) } })
             }
+            N.PROMPT_CHOICE -> Prompt.Choice(lines[0].trim(), lines.drop(1).filter { it.isNotEmpty() }.mapIndexed { i, l ->
+                fields(l, 2).let { f -> Option(i, f[0], f.getOrElse(1) { "" }) }
+            })
             N.PROMPT_DIRECTION -> Prompt.Direction(lines.getOrNull(1)?.trim() == "1",
                 lines.drop(2).filter { it.isNotEmpty() }.map { fields(it, 4).let { f -> Neighbour(f[0].toInt(), f[1].toInt(), f[2].toInt(), f[3]) } })
             else -> null

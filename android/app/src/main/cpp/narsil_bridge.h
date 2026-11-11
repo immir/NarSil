@@ -173,6 +173,7 @@ enum nb_prompt_kind {
 	NB_PROMPT_CHECK = 3,   /* answer: 1 yes, 0 no */
 	NB_PROMPT_AIM = 4,     /* answer: 1-9 direction, NB_AIM_*, or a grid; -1 cancel */
 	NB_PROMPT_DIRECTION = 5, /* adjacent direction: answer 1-9 (5 only if allowed), -1 cancel */
+	NB_PROMPT_CHOICE = 6,  /* pick one option: answer its index, -1 cancel */
 };
 
 /* Aim answers besides directions 1-9 (5 excluded). */
@@ -196,6 +197,7 @@ uint64_t nb_prompt_generation(void);
  *  CHECK:   the question
  *  AIM:     "Aim"; range, current target x, y (-1 if none); per targetable
  *           monster, nearest first: x, y, in range (0/1), name
+ *  CHOICE:  title; per option: label, description (may be empty)
  *  DIRECTION: "Direction"; 5 allowed (0/1); per neighbour of interest:
  *           direction, x, y, what (door/open door/rubble/trap/monster)
  */

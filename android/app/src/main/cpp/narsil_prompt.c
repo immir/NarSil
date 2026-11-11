@@ -31,7 +31,9 @@
 #include "obj-pile.h"
 #include "obj-tval.h"
 #include "obj-util.h"
+#include "player-abilities.h"
 #include "player-calcs.h"
+#include "songs.h"
 #include "player-path.h"
 #include "target.h"
 #include "ui-game.h"
@@ -510,6 +512,54 @@ static bool native_get_rep_dir(int *dp, bool allow_5)
 }
 
 /* ------------------------------------------------------------------------
+ * Songs (change_song_hook): the textui's song menu as a native choice
+ * ------------------------------------------------------------------------ */
+
+typedef struct { struct song *song; bool swap; } song_option;
+
+/* Mirrors get_songs() in ui-songs.c. */
+static int song_options(song_option *o, int max)
+{
+	int n = 0;
+	for (struct ability *a = abilities; a && n < max; a = a->next)
+		if (a->skill == SKILL_SONG && strstr(a->name, "Song of") && player_active_ability(player, a->name))
+			o[n++] = (song_option){ lookup_song(a->name + strlen("Song of ")), false };
+	if (player->song[SONG_MAIN] && n < max) o[n++] = (song_option){ NULL, false };
+	if (player->song[SONG_MINOR] && n < max) o[n++] = (song_option){ NULL, true };
+	return n;
+}
+
+/* Serialised: title; then per option: label \t description. */
+static void native_change_song(void)
+{
+	song_option o[32];
+	const int n = song_options(o, (int)N_ELEMENTS(o));
+	if (n == 0) {
+		msg("You do not know any songs of power.");
+		return;
+	}
+	pthread_mutex_lock(&shared.lock);
+	text_reset();
+	text_add("Songs\n");
+	for (int i = 0; i < n; i++) {
+		char desc[400] = "";
+		if (o[i].song) {
+			my_strcpy(desc, o[i].song->desc ? o[i].song->desc : "", sizeof(desc));
+			sanitise(desc);
+			const bool current = player->song[SONG_MAIN] == o[i].song;
+			text_add("Song of %s%s\t%s\n", o[i].song->name, current ? " (singing)" : "", desc);
+		} else {
+			text_add("%s\t\n", o[i].swap ? "Exchange themes" : "Stop singing");
+		}
+	}
+	pthread_mutex_unlock(&shared.lock);
+
+	const int32_t pick = ask(NB_PROMPT_CHOICE);
+	if (pick < 0 || pick >= n) return;
+	player_change_song(player, o[pick].song, o[pick].swap);
+}
+
+/* ------------------------------------------------------------------------
  * Install / public API
  * ------------------------------------------------------------------------ */
 
@@ -520,6 +570,7 @@ void native_prompt_init(void)
 	if (get_check_hook != native_get_check) textui.get_check = get_check_hook;
 	if (get_aim_dir_hook != native_get_aim_dir) textui.get_aim_dir = get_aim_dir_hook;
 	if (get_rep_dir_hook != native_get_rep_dir) textui.get_rep_dir = get_rep_dir_hook;
+	change_song_hook = native_change_song;
 	assert(textui.get_item && textui.get_check && textui.get_aim_dir && textui.get_rep_dir);
 	get_item_hook = native_get_item;
 	get_check_hook = native_get_check;

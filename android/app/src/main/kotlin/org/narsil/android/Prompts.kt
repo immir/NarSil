@@ -145,3 +145,33 @@ fun DirectionBar(prompt: GameState.Prompt.Direction, onAnswer: (Int) -> Unit) {
         }
     }
 }
+
+/** Pick one of several options (songs, ...): big rows with their descriptions. */
+@Composable
+fun ChoiceSheet(prompt: GameState.Prompt.Choice, onAnswer: (Int) -> Unit) {
+    Box(
+        Modifier.fillMaxSize().background(Color(0x99000000))
+            .clickable(remember { MutableInteractionSource() }, indication = null) { onAnswer(-1) },
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Surface(
+            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+            color = Color(0xFF1C1C1E),
+            modifier = Modifier.fillMaxWidth().heightIn(max = 600.dp)
+                .clickable(remember { MutableInteractionSource() }, indication = null) {},
+        ) {
+            Column(Modifier.padding(vertical = 12.dp).verticalScroll(rememberScrollState())) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(prompt.title, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { onAnswer(-1) }) { Text("Cancel") }
+                }
+                prompt.options.forEach { o ->
+                    Column(Modifier.fillMaxWidth().clickable { onAnswer(o.index) }.padding(horizontal = 16.dp, vertical = 10.dp)) {
+                        Text(o.label, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                        if (o.description.isNotEmpty()) Text(o.description, color = Color(0xFFB0B0B5), fontSize = 13.sp)
+                    }
+                }
+            }
+        }
+    }
+}
