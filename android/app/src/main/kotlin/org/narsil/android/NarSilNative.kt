@@ -56,12 +56,25 @@ object NarSilNative {
 
     const val PROMPT_NONE = 0
     const val PROMPT_ITEM = 1
+    const val PROMPT_ACTIONS = 2
+    const val PROMPT_CHECK = 3
+    const val PROMPT_AIM = 4
+
+    const val AIM_CURRENT = 100
+    const val AIM_NEAREST = 101
+    const val AIM_GRID_BASE = 1 shl 20
+    const val AIM_GRID_STRIDE = 1024
 
     @JvmStatic external fun nativePromptGeneration(): Long
     /** "<kind>\n<text>"; see nb_prompt() in narsil_bridge.h for the item format. */
     @JvmStatic external fun nativePrompt(): String
     /** Index of the chosen item line, or -1 to cancel. */
     @JvmStatic external fun nativeAnswerItem(index: Int)
+    /** Answer the open prompt; values per kind as in enum nb_prompt_kind. */
+    @JvmStatic external fun nativeAnswer(value: Int)
+    @JvmStatic external fun nativeMessagesGeneration(): Long
+    /** attr \t count \t text per line, oldest first. */
+    @JvmStatic external fun nativeMessages(): String
 
     @JvmStatic external fun nativeState(): Int
     @JvmStatic external fun nativeExitMessage(): String

@@ -112,26 +112,53 @@ class MainActivity : ComponentActivity() {
     private fun GameScreen(state: GameState) {
         Box(Modifier.fillMaxSize()) {
             GameLayers(state)
-            state.itemPrompt?.let { prompt ->
+            val answer: (Int) -> Unit = NarSilNative::nativeAnswer
+            state.prompt?.let { prompt ->
                 DisposableEffect(prompt) {
-                    router.intercept = { code -> answerByKey(prompt, code); true }
+                    router.intercept = { code -> answerByKey(prompt, code)?.let(answer); true }
                     onDispose { router.intercept = null }
                 }
-                ItemSheet(prompt, state::colour) { NarSilNative.nativeAnswerItem(it) }
+                when (prompt) {
+                    is GameState.Prompt.Items -> ItemSheet(prompt, state::colour, answer)
+                    is GameState.Prompt.Actions -> ActionSheet(prompt, state::colour, answer)
+                    is GameState.Prompt.Check -> CheckDialog(prompt, answer)
+                    is GameState.Prompt.Aim -> Unit  // drawn by GameLayers over the map
+                }
             }
         }
     }
 
-    /** Esc cancels; a letter picks the item with that label, as in the textui menu; anything else is swallowed. */
-    private fun answerByKey(prompt: GameState.ItemPrompt, code: Int) {
-        if (code == Keys.ESCAPE) { NarSilNative.nativeAnswerItem(-1); return }
-        prompt.items.firstOrNull { it.label != '-' && it.label.code == code }?.let { NarSilNative.nativeAnswerItem(it.index) }
+    /**
+     * Keyboard answers while a native prompt is open (all other keys are swallowed):
+     * Esc cancels; item letters pick by label; y/n answer checks; keypad digits,
+     * arrows, ' (nearest) and t/5 (current target) answer aims.
+     */
+    private fun answerByKey(prompt: GameState.Prompt, code: Int): Int? = when (prompt) {
+        is GameState.Prompt.Items -> if (code == Keys.ESCAPE) -1
+            else prompt.items.firstOrNull { it.label != '-' && it.label.code == code }?.index
+        is GameState.Prompt.Actions -> if (code == Keys.ESCAPE) -1 else null
+        is GameState.Prompt.Check -> when (code) {
+            'y'.code, 'Y'.code -> 1
+            'n'.code, 'N'.code, Keys.ESCAPE -> 0
+            else -> null
+        }
+        is GameState.Prompt.Aim -> when (code) {
+            Keys.ESCAPE -> -1
+            in '1'.code..'9'.code -> (code - '0'.code).takeIf { it != 5 } ?: NarSilNative.AIM_CURRENT
+            Keys.ARROW_UP -> 8
+            Keys.ARROW_DOWN -> 2
+            Keys.ARROW_LEFT -> 4
+            Keys.ARROW_RIGHT -> 6
+            '\''.code -> NarSilNative.AIM_NEAREST
+            't'.code -> NarSilNative.AIM_CURRENT
+            else -> null
+        }
     }
 
     @Composable
     private fun GameLayers(state: GameState) {
         Column(Modifier.fillMaxSize()) {
-            if (state.mapMode) MessageStrip(state.messageLine) { router.special(Keys.ENTER) }
+            if (state.mapMode) MessageStrip(state) { router.special(Keys.ENTER) }
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 AndroidView(
                     factory = { ctx -> TerminalView(ctx, state, router).also { terminal = it } },
@@ -142,23 +169,37 @@ class MainActivity : ComponentActivity() {
                     update = { it.visibility = if (state.mapMode) View.VISIBLE else View.GONE },
                     modifier = Modifier.fillMaxSize(),
                 )
+                (state.prompt as? GameState.Prompt.Aim)?.let { aim ->
+                    Box(Modifier.align(Alignment.BottomCenter)) { AimBar(aim, NarSilNative::nativeAnswer) }
+                }
             }
             if (state.mapMode) StatusStrip(state.status, state.statusLine)
             KeyBar()
         }
     }
 
+    /**
+     * The last few messages (older ones dimmer, in their game colours), plus the
+     * textui's top line when it holds something else: a prompt, or -more- (tap = Enter).
+     */
     @Composable
-    private fun MessageStrip(text: String, onTap: () -> Unit) {
-        Text(
-            text.ifEmpty { " " },
-            color = Color(0xFFE0E0E0),
-            fontFamily = FontFamily.Monospace,
-            fontSize = 14.sp,
-            maxLines = 2,
-            modifier = Modifier.fillMaxWidth().background(Color(0xFF141414)).clickable(onClick = onTap)
-                .padding(horizontal = 8.dp, vertical = 6.dp),
-        )
+    private fun MessageStrip(state: GameState, onTap: () -> Unit) {
+        val recent = state.messages.takeLast(3)
+        val line0 = state.messageLine
+        val more = line0.contains("-more-")
+        /* The textui joins several messages on its top line; only show it when it is something else (a prompt). */
+        val banner = line0.takeIf { it.isNotEmpty() && !more && state.messages.none { m -> line0.contains(m.text) } }
+        Column(Modifier.fillMaxWidth().background(Color(0xFF141414)).clickable(onClick = onTap)
+            .padding(horizontal = 10.dp, vertical = 6.dp)) {
+            recent.forEachIndexed { i, m ->
+                val alpha = 0.45f + 0.55f * (i + 1) / recent.size
+                Text(if (m.count > 1) "${m.text} (x${m.count})" else m.text,
+                     color = Color(state.colour(m.attr)).copy(alpha = alpha), fontSize = 14.sp, maxLines = 2)
+            }
+            if (banner != null) Text(banner, color = Color(0xFFFFD54F), fontSize = 14.sp, maxLines = 2)
+            if (more) Text("▸ tap to continue", color = Color(0xFFFFD54F), fontSize = 13.sp)
+            if (recent.isEmpty() && banner == null && !more) Text(" ", fontSize = 14.sp)
+        }
     }
 
     @Composable

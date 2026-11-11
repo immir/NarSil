@@ -204,3 +204,26 @@ JNIEXPORT void JNICALL JNI_FN(nativeAnswerItem)(JNIEnv *env, jclass cls, jint in
 	(void)env; (void)cls;
 	nb_answer_item(index);
 }
+
+JNIEXPORT void JNICALL JNI_FN(nativeAnswer)(JNIEnv *env, jclass cls, jint value)
+{
+	(void)env; (void)cls;
+	nb_answer(value);
+}
+
+/* ---- Message log ---- */
+
+JNIEXPORT jlong JNICALL JNI_FN(nativeMessagesGeneration)(JNIEnv *env, jclass cls)
+{
+	(void)env; (void)cls;
+	return (jlong)nb_messages_generation();
+}
+
+/* attr \t count \t text per line, oldest first. */
+JNIEXPORT jstring JNICALL JNI_FN(nativeMessages)(JNIEnv *env, jclass cls)
+{
+	(void)cls;
+	static char text[8192];
+	nb_messages(text, sizeof(text));
+	return (*env)->NewStringUTF(env, text);
+}

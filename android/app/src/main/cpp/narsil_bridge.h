@@ -120,7 +120,21 @@ size_t nb_path(int32_t *xy, size_t max_pairs);
  * answers; nb_prompt_generation() moves on both open and close.
  * ------------------------------------------------------------------------ */
 
-enum nb_prompt_kind { NB_PROMPT_NONE = 0, NB_PROMPT_ITEM = 1 };
+enum nb_prompt_kind {
+	NB_PROMPT_NONE = 0,
+	NB_PROMPT_ITEM = 1,    /* answer: item line index, -1 cancel */
+	NB_PROMPT_ACTIONS = 2, /* answer: action line index, -1 back to the item list */
+	NB_PROMPT_CHECK = 3,   /* answer: 1 yes, 0 no */
+	NB_PROMPT_AIM = 4,     /* answer: 1-9 direction, NB_AIM_*, or a grid; -1 cancel */
+};
+
+/* Aim answers besides directions 1-9 (5 excluded). */
+enum {
+	NB_AIM_CURRENT = 100,       /* the existing target */
+	NB_AIM_NEAREST = 101,       /* closest targetable monster */
+	NB_AIM_GRID_BASE = 1 << 20, /* + y * NB_AIM_GRID_STRIDE + x: target that grid */
+	NB_AIM_GRID_STRIDE = 1024,
+};
 
 enum nb_item_section {
 	NB_ITEM_INVENTORY = 0, NB_ITEM_EQUIPMENT = 1, NB_ITEM_FLOOR = 2, NB_ITEM_THROWING = 3,
@@ -129,14 +143,27 @@ enum nb_item_section {
 uint64_t nb_prompt_generation(void);
 
 /*
- * The open prompt, if any, serialised as UTF-8 lines with tab-separated
- * fields.  NB_PROMPT_ITEM: line 0 is the prompt; each further line is
- * section, label, glyph codepoint, attr, weight (1/10 lb), name.
+ * The open prompt, if any, serialised as UTF-8 lines with tab-separated fields:
+ *  ITEM:    prompt; then per item: section, label, glyph, attr, weight (1/10 lb), name
+ *  ACTIONS: item name; glyph, attr; per action: valid (0/1), label; "--"; description
+ *  CHECK:   the question
+ *  AIM:     "Aim"; range, current target x, y (-1 if none); per targetable
+ *           monster, nearest first: x, y, in range (0/1), name
  */
 enum nb_prompt_kind nb_prompt(char *text, size_t cap);
 
+/* Answer the open prompt; see enum nb_prompt_kind for each kind's values. */
+void nb_answer(int32_t value);
+
 /* Answer an item prompt with the index of an item line (0-based), or -1 to cancel. */
 void nb_answer_item(int index);
+
+/*
+ * Recent messages, oldest first, one per line: attr \t repeat count \t text.
+ * The generation moves whenever a message is added.
+ */
+uint64_t nb_messages_generation(void);
+size_t nb_messages(char *text, size_t cap);
 
 enum nb_state nb_state(void);
 const char *nb_exit_message(void); /* valid once state is NB_EXITED */

@@ -40,7 +40,7 @@ private val SECTION_ORDER = listOf(3, 0, 1, 2)
  * item index, or -1 to cancel (scrim tap, Cancel, Back/Esc via the key router).
  */
 @Composable
-fun ItemSheet(prompt: GameState.ItemPrompt, colour: (Int) -> Int, onAnswer: (Int) -> Unit) {
+fun ItemSheet(prompt: GameState.Prompt.Items, colour: (Int) -> Int, onAnswer: (Int) -> Unit) {
     val sections = remember(prompt) {
         prompt.items.groupBy { it.section }.toList().sortedBy { (s, _) -> SECTION_ORDER.indexOf(s) }
     }

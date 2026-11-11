@@ -38,12 +38,25 @@ class GameState {
     var statusLine by mutableStateOf("")
         private set
 
-    var itemPrompt by mutableStateOf<ItemPrompt?>(null)
+    var prompt by mutableStateOf<Prompt?>(null)
+        private set
+    var messages by mutableStateOf<List<Message>>(emptyList())
         private set
 
     data class Item(val index: Int, val section: Int, val label: Char, val glyph: Int, val attr: Int,
                     val weightTenthsLb: Int, val name: String)
-    data class ItemPrompt(val title: String, val items: List<Item>)
+    data class Action(val index: Int, val valid: Boolean, val label: String)
+    data class Target(val x: Int, val y: Int, val inRange: Boolean, val name: String)
+    data class Message(val attr: Int, val count: Int, val text: String)
+
+    /** The game's open question; mirrors enum nb_prompt_kind. */
+    sealed interface Prompt {
+        data class Items(val title: String, val items: List<Item>) : Prompt
+        data class Actions(val name: String, val glyph: Int, val attr: Int, val actions: List<Action>,
+                           val description: String) : Prompt
+        data class Check(val question: String) : Prompt
+        data class Aim(val range: Int, val current: Pair<Int, Int>?, val targets: List<Target>) : Prompt
+    }
 
     data class Status(val hp: Int = 0, val maxHp: Int = 0, val voice: Int = 0, val maxVoice: Int = 0,
                       val depth: Int = 0, val exp: Int = 0)
@@ -52,6 +65,7 @@ class GameState {
     private var mapGen = 0L
     private var pathGen = 0L
     private var promptGen = 0L
+    private var messagesGen = 0L
     private val termListeners = mutableListOf<() -> Unit>()
     private val mapListeners = mutableListOf<() -> Unit>()
 
@@ -81,18 +95,48 @@ class GameState {
             if (gen == pathGen) false else { pathGen = gen; pathPairs = N.nativePath(path); true }
         }
         if (mapChanged || pathChanged) mapListeners.forEach { it() }
-        N.nativePromptGeneration().let { gen -> if (gen != promptGen) { promptGen = gen; itemPrompt = parsePrompt(N.nativePrompt()) } }
+        N.nativePromptGeneration().let { gen ->
+            if (gen != promptGen) {
+                promptGen = gen
+                prompt = parsePrompt(N.nativePrompt())
+                mapListeners.forEach { it() }  // the map draws aim targets
+            }
+        }
+        N.nativeMessagesGeneration().let { gen -> if (gen != messagesGen) { messagesGen = gen; messages = parseMessages(N.nativeMessages()) } }
     }
 
-    /** See nb_prompt(): kind line, prompt line, then tab-separated item records. */
-    private fun parsePrompt(raw: String): ItemPrompt? {
-        val lines = raw.split('\n')
-        if (lines.firstOrNull()?.toIntOrNull() != N.PROMPT_ITEM) return null
-        val items = lines.drop(2).filter { it.isNotEmpty() }.mapIndexed { i, line ->
-            val f = line.split('\t', limit = 6)
-            Item(i, f[0].toInt(), f[1].first(), f[2].toInt(), f[3].toInt(), f[4].toInt(), f[5])
+    /** See nb_prompt() in narsil_bridge.h for each kind's layout. */
+    private fun parsePrompt(raw: String): Prompt? {
+        val kind = raw.substringBefore('\n').toIntOrNull() ?: return null
+        val lines = raw.substringAfter('\n').split('\n')
+        fun fields(line: String, n: Int) = line.split('\t', limit = n)
+        return when (kind) {
+            N.PROMPT_ITEM -> Prompt.Items(lines[0].trim(), lines.drop(1).filter { it.isNotEmpty() }.mapIndexed { i, line ->
+                val f = fields(line, 6)
+                Item(i, f[0].toInt(), f[1].first(), f[2].toInt(), f[3].toInt(), f[4].toInt(), f[5])
+            })
+            N.PROMPT_ACTIONS -> {
+                val split = lines.indexOf("--").takeIf { it >= 0 } ?: lines.size
+                val (glyph, attr) = fields(lines[1], 2).map(String::toInt)
+                Prompt.Actions(lines[0], glyph, attr,
+                    lines.subList(2, split).mapIndexed { i, line -> fields(line, 2).let { Action(i, it[0] == "1", it[1]) } },
+                    lines.drop(split + 1).joinToString("\n").trim())
+            }
+            N.PROMPT_CHECK -> Prompt.Check(lines.joinToString(" ").trim())
+            N.PROMPT_AIM -> {
+                val (range, cx, cy) = fields(lines[1], 3).map(String::toInt)
+                Prompt.Aim(range, if (cx >= 0) cx to cy else null,
+                    lines.drop(2).filter { it.isNotEmpty() }.map { fields(it, 4).let { f -> Target(f[0].toInt(), f[1].toInt(), f[2] == "1", f[3]) } })
+            }
+            else -> null
         }
-        return ItemPrompt(lines.getOrElse(1) { "" }.trim(), items)
+    }
+
+    /** Drops the textui's blank and "=====" separator lines. */
+    private fun parseMessages(raw: String): List<Message> = raw.split('\n').mapNotNull { line ->
+        val f = line.split('\t', limit = 3)
+        val text = f.getOrNull(2)?.trim().orEmpty()
+        if (text.isEmpty() || text.all { it == '=' }) null else Message(f[0].toInt(), f[1].toInt(), text)
     }
 
     private fun pollMap(): Boolean {

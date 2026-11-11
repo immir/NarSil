@@ -20,13 +20,14 @@
 #include "player-path.h"
 #include "player-timed.h"
 #include "ui-map.h"
+#include "message.h"
 #include "ui-output.h"
 
 #include <assert.h>
 #include <pthread.h>
 #include <string.h>
 
-enum { PATH_MAX_STEPS = 500 };
+enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 6, MESSAGES_CAP = 4096 };
 
 typedef struct { int32_t cp, attr_flags; } map_cell;
 
@@ -38,6 +39,7 @@ static struct {
 	map_cell *work;
 	size_t work_cap;
 	bool dirty;
+	bool messages_dirty;
 	request stashed;
 } game;
 
@@ -52,6 +54,8 @@ static struct {
 	size_t path_pairs;
 	uint64_t path_gen;
 	request pending;
+	char messages[MESSAGES_CAP];
+	uint64_t messages_gen;
 } shared = { .lock = PTHREAD_MUTEX_INITIALIZER };
 
 /* ------------------------------------------------------------------------
@@ -64,8 +68,35 @@ static void mark_dirty(game_event_type type, game_event_data *data, void *user)
 	game.dirty = true;
 }
 
+static void mark_messages(game_event_type type, game_event_data *data, void *user)
+{
+	(void)type; (void)data; (void)user;
+	game.messages_dirty = true;
+}
+
+/* Oldest first; tabs/newlines in message text flattened so records stay one per line. */
+static void publish_messages(void)
+{
+	char buf[MESSAGES_CAP];
+	size_t len = 0;
+	const int n = MIN((int)messages_num(), MESSAGES_SHOWN);
+	for (int age = n - 1; age >= 0; age--) {
+		char text[512];
+		my_strcpy(text, message_str((uint16_t)age), sizeof(text));
+		for (char *p = text; *p; p++) if (*p == '\t' || *p == '\n') *p = ' ';
+		len += (size_t)strnfmt(buf + len, sizeof(buf) - len, "%d\t%d\t%s\n",
+			(int)message_color((uint16_t)age), (int)message_count((uint16_t)age), text);
+	}
+	pthread_mutex_lock(&shared.lock);
+	memcpy(shared.messages, buf, len + 1);
+	shared.messages_gen++;
+	pthread_mutex_unlock(&shared.lock);
+}
+
 void native_init(void)
 {
+	event_add_handler(EVENT_MESSAGE, mark_messages, NULL);
+	game.messages_dirty = true;
 	static game_event_type dirtying[] = {
 		EVENT_MAP, EVENT_PLAYERMOVED, EVENT_NEW_LEVEL_DISPLAY,
 	};
@@ -113,6 +144,11 @@ static void build_map(void)
 
 void native_publish(bool at_prompt)
 {
+	if (game.messages_dirty) {
+		game.messages_dirty = false;
+		publish_messages();
+	}
+
 	const bool visible = map_visible();
 	const bool rebuild = visible && game.dirty;
 	if (rebuild) build_map();
@@ -298,4 +334,21 @@ size_t nb_path(int32_t *xy, size_t max_pairs)
 	memcpy(xy, shared.path, 2 * n * sizeof(int32_t));
 	pthread_mutex_unlock(&shared.lock);
 	return n;
+}
+
+uint64_t nb_messages_generation(void)
+{
+	pthread_mutex_lock(&shared.lock);
+	const uint64_t gen = shared.messages_gen;
+	pthread_mutex_unlock(&shared.lock);
+	return gen;
+}
+
+size_t nb_messages(char *text, size_t cap)
+{
+	assert(cap > 0);
+	pthread_mutex_lock(&shared.lock);
+	my_strcpy(text, shared.messages, cap);
+	pthread_mutex_unlock(&shared.lock);
+	return strlen(text);
 }

@@ -12,6 +12,9 @@
  *   @tap@DX,DY                                    tap relative to the player's '@'
  *   @where                                        print the player's screen position
  *   @prompt                                       print the open native prompt
+ *   @answer=N                                     answer any native prompt (see nb_answer)
+ *   @aim@DX,DY                                    answer an aim prompt with a grid relative to the player
+ *   @messages                                     print the recent message log
  *   @pick=N                                       answer an item prompt (-1 cancels)
  *   @map                                          print the native map around the player
  *   @preview@DX,DY @travel@DX,DY                  native path preview / travel, relative to player grid
@@ -157,6 +160,24 @@ static int run_token(const char *tok)
 		static char text[32 * 1024];
 		const enum nb_prompt_kind kind = nb_prompt(text, sizeof(text));
 		printf("prompt kind=%d\n%s", (int)kind, text);
+		return 0;
+	}
+	if (sscanf(tok, "@aim@%d,%d%c", &mx, &my, &tail) == 2) {
+		int32_t meta[NB_META_COUNT];
+		nb_map_snapshot(meta, NULL, 0);
+		const int gx = meta[NB_META_PLAYER_X] + mx, gy = meta[NB_META_PLAYER_Y] + my;
+		printf("aim at (%d,%d)\n", gx, gy);
+		nb_answer(NB_AIM_GRID_BASE + gy * NB_AIM_GRID_STRIDE + gx);
+		return settle() ? 0 : 1;
+	}
+	if (sscanf(tok, "@answer=%d%c", &mx, &tail) == 1) {
+		nb_answer(mx);
+		return settle() ? 0 : 1;
+	}
+	if (strcmp(tok, "@messages") == 0) {
+		static char text[8192];
+		nb_messages(text, sizeof(text));
+		printf("messages:\n%s", text);
 		return 0;
 	}
 	if (sscanf(tok, "@pick=%d%c", &mx, &tail) == 1) {

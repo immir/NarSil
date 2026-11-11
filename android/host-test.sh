@@ -43,4 +43,19 @@ echo "$out" | grep -q 'Lembas'
 echo "$out" | grep -q 'Eat which food'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
+echo "== browse actions (eat from 'i'), yes/no (retire? no), throw (first item) + aim east"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" i @pick=0 @prompt @answer=0 @expect='renewed energy' \
+      Q @prompt @answer=0 t @prompt @pick=0 @prompt @answer=6 @messages ^x @enter @esc)
+echo "$out" | grep -q 'prompt kind=2'
+echo "$out" | grep -q 'Do you really want to retire'
+echo "$out" | grep -q 'prompt kind=4'
+echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
+
+echo "== aiming beyond range throws that way instead of dropping at your feet"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" t @pick=0 @aim@-9,0 @messages ^x @enter @esc)
+! echo "$out" | grep -q 'roll beneath your feet'
+echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
+
 echo "PASS ($san) work=$work"

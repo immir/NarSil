@@ -1,0 +1,122 @@
+package org.narsil.android
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import org.narsil.android.NarSilNative as N
+
+/** What can be done with an item picked while browsing; the description replaces Inspect. */
+@Composable
+fun ActionSheet(prompt: GameState.Prompt.Actions, colour: (Int) -> Int, onAnswer: (Int) -> Unit) {
+    Box(
+        Modifier.fillMaxSize().background(Color(0x99000000))
+            .clickable(remember { MutableInteractionSource() }, indication = null) { onAnswer(-1) },
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Surface(
+            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+            color = Color(0xFF1C1C1E),
+            modifier = Modifier.fillMaxWidth()
+                .clickable(remember { MutableInteractionSource() }, indication = null) {},
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(String(Character.toChars(prompt.glyph)), color = Color(colour(prompt.attr)),
+                         fontFamily = FontFamily.Monospace, fontSize = 28.sp)
+                    Text(prompt.name, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold,
+                         modifier = Modifier.weight(1f))
+                }
+                if (prompt.description.isNotEmpty())
+                    Text(prompt.description, color = Color(0xFFC8C8CC), fontSize = 14.sp,
+                         modifier = Modifier.heightIn(max = 220.dp).verticalScroll(rememberScrollState()))
+                prompt.actions.chunked(2).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        row.forEach { a ->
+                            FilledTonalButton(onClick = { onAnswer(a.index) }, enabled = a.valid,
+                                              modifier = Modifier.weight(1f)) { Text(a.label, maxLines = 1) }
+                        }
+                        repeat(2 - row.size) { Spacer(Modifier.weight(1f)) }
+                    }
+                }
+                TextButton(onClick = { onAnswer(-1) }, modifier = Modifier.align(Alignment.End)) { Text("Back") }
+            }
+        }
+    }
+}
+
+/** get_check: yes/no.  Dismissal counts as no, as Escape does in the textui. */
+@Composable
+fun CheckDialog(prompt: GameState.Prompt.Check, onAnswer: (Int) -> Unit) {
+    AlertDialog(
+        onDismissRequest = { onAnswer(0) },
+        text = { Text(prompt.question.removeSuffix("[y/n]").trim(), fontSize = 17.sp) },
+        confirmButton = { Button(onClick = { onAnswer(1) }) { Text("Yes") } },
+        dismissButton = { OutlinedButton(onClick = { onAnswer(0) }) { Text("No") } },
+    )
+}
+
+/**
+ * Non-modal: the map stays live underneath (tap a monster or any grid, swipe a
+ * direction).  Chips list targetable monsters nearest first.
+ */
+@Composable
+fun AimBar(prompt: GameState.Prompt.Aim, onAnswer: (Int) -> Unit) {
+    Surface(color = Color(0xEE1C1C1E), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(if (prompt.targets.isEmpty()) "Aim: swipe a direction or tap a grid" else "Aim: tap a target, or swipe a direction",
+                 color = Color.White, fontSize = 14.sp)
+            if (prompt.targets.isNotEmpty())
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    prompt.targets.forEach { t ->
+                        AssistChip(onClick = { onAnswer(aimAt(t.x, t.y)) }, label = { Text(t.name, maxLines = 1) },
+                                   colors = AssistChipDefaults.assistChipColors(
+                                       labelColor = if (t.inRange) Color(0xFFFF8A80) else Color(0x80FF8A80)))
+                    }
+                }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (prompt.current != null)
+                    FilledTonalButton(onClick = { onAnswer(N.AIM_CURRENT) }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("Target") }
+                if (prompt.targets.isNotEmpty())
+                    FilledTonalButton(onClick = { onAnswer(N.AIM_NEAREST) }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("Nearest") }
+                OutlinedButton(onClick = { onAnswer(-1) }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("Cancel") }
+            }
+        }
+    }
+}
+
+fun aimAt(x: Int, y: Int): Int = N.AIM_GRID_BASE + y * N.AIM_GRID_STRIDE + x
+
+/** Swipe octant (0 = east, anticlockwise) -> Angband keypad direction. */
+val OCTANT_TO_DIR = intArrayOf(6, 9, 8, 7, 4, 1, 2, 3)
