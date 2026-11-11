@@ -3,6 +3,7 @@
  * \brief Drives the bridge from a key script, without Android.
  *
  * usage: narsil_host <lib_dir> <data_dir> [token...]
+ * (NARSIL_PLAYER selects the savefile name; default "Harness".)
  *
  * Tokens run in order; after each key token the harness waits for the game
  * to block on input again:
@@ -203,6 +204,8 @@ static int run_token(const char *tok)
 		static char text[8192];
 		nb_messages(text, sizeof(text));
 		printf("messages:\n%s", text);
+		for (const unsigned char *p = (const unsigned char *)text; *p; p++)
+			if (*p >= 0x80) printf("non-ascii byte 0x%02x at %ld (next 0x%02x)\n", *p, (long)(p - (const unsigned char *)text), p[1]);
 		return 0;
 	}
 	if (sscanf(tok, "@pick=%d%c", &mx, &tail) == 1) {
@@ -268,7 +271,8 @@ int main(int argc, char **argv)
 		return 2;
 	}
 	const nb_config cfg = {
-		.lib_dir = argv[1], .data_dir = argv[2], .player_name = "Harness",
+		.lib_dir = argv[1], .data_dir = argv[2],
+		.player_name = getenv("NARSIL_PLAYER") ? getenv("NARSIL_PLAYER") : "Harness",
 		.cols = 80, .rows = 24, .log = log_stderr,
 	};
 	if (!nb_start(&cfg)) { fprintf(stderr, "nb_start failed\n"); return 1; }

@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
-# Builds the bridge for the host (ASan+UBSan, or TSan with TSAN=1) and runs
+# Builds the bridge for the host (ASan+UBSan; TSan with TSAN=1; MSan with
+# MSAN=1, which needs clang) and runs
 # scripted end-to-end scenarios against the real game data in ../lib.
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(dirname "$here")
 work=${WORK:-$(mktemp -d)}
 san=${TSAN:+thread}
+san=${san:-${MSAN:+memory}}
 san=${san:-address,undefined}
 build="$work/build-$san"
+cc=${MSAN:+clang}
 
-cmake -S "$here/app/src/main/cpp" -B "$build" -DCMAKE_BUILD_TYPE=Debug \
+cmake -S "$here/app/src/main/cpp" -B "$build" -DCMAKE_BUILD_TYPE=Debug ${cc:+-DCMAKE_C_COMPILER=$cc} \
     -DCMAKE_C_FLAGS="-fsanitize=$san -fno-omit-frame-pointer -g" >/dev/null
 cmake --build "$build" -j"$(nproc)" >/dev/null
 
@@ -17,6 +20,10 @@ run() { timeout 120 "$build/narsil_host" "$root/lib" "$work/data" "$@"; }
 birth=(@enter @enter @enter @enter @enter @enter @enter y y @esc)
 
 rm -rf "$work/data"
+echo "== empty message log at startup is published cleanly (MSan catches the old bug)"
+rm -rf "$work/data"
+run @messages | grep -q '^messages:'
+
 echo "== new game; save requested during birth is deferred to first command prompt"
 run @enter @save-async "${birth[@]:1}" @expect=Harness 6 4 @save ^x @enter @esc | tail -1 \
     | grep -qx 'state=2 exit="" saves=2'

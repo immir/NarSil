@@ -82,8 +82,11 @@ class GameState {
         return map[i] to (map[i + 1] and 0xFFFF)
     }
 
+    /** The monster being fought or targeted, as the textui sidebar tracks it. */
+    data class Foe(val x: Int, val y: Int, val name: String, val healthPct: Int, val stance: Int, val morale: Int)
+
     data class Status(val hp: Int = 0, val maxHp: Int = 0, val voice: Int = 0, val maxVoice: Int = 0,
-                      val depth: Int = 0, val exp: Int = 0, val context: Int = 0) {
+                      val depth: Int = 0, val exp: Int = 0, val context: Int = 0, val foe: Foe? = null) {
         fun has(flag: Int) = context and flag != 0
     }
 
@@ -218,7 +221,9 @@ class GameState {
         mapMode = meta[N.META_MAP_MODE] != 0
         atPrompt = meta[N.META_AT_PROMPT] != 0
         status = Status(meta[N.META_HP], meta[N.META_MAX_HP], meta[N.META_VOICE], meta[N.META_MAX_VOICE],
-                        meta[N.META_DEPTH], meta[N.META_EXP], meta[N.META_CONTEXT])
+                        meta[N.META_DEPTH], meta[N.META_EXP], meta[N.META_CONTEXT],
+                        if (meta[N.META_FOE_X] < 0) null else Foe(meta[N.META_FOE_X], meta[N.META_FOE_Y], N.nativeFoeName(),
+                            meta[N.META_FOE_HEALTH], meta[N.META_FOE_STANCE], meta[N.META_FOE_MORALE]))
         return true
     }
 

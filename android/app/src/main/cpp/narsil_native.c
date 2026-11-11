@@ -31,6 +31,7 @@
 #include "message.h"
 #include "mon-desc.h"
 #include "mon-lore.h"
+#include "mon-move.h"
 #include "mon-predicate.h"
 #include "monster.h"
 #include "obj-desc.h"
@@ -76,6 +77,7 @@ static struct {
 	uint64_t messages_gen;
 	char info[INFO_CAP];
 	uint64_t info_gen;
+	char foe_name[80];
 } shared = { .lock = PTHREAD_MUTEX_INITIALIZER };
 
 /* ------------------------------------------------------------------------
@@ -99,6 +101,7 @@ static void publish_messages(void)
 {
 	char buf[MESSAGES_CAP];
 	size_t len = 0;
+	buf[0] = '\0';  /* the log is empty at startup, before a savefile loads */
 	const int n = MIN((int)messages_num(), MESSAGES_SHOWN);
 	for (int age = n - 1; age >= 0; age--) {
 		char text[512];
@@ -185,6 +188,27 @@ static int32_t context_flags(void)
 	return f;
 }
 
+/* Mirrors prt_health_aux() in ui-display.c: only a visible, living, real monster. */
+static struct monster *tracked_foe(void)
+{
+	struct monster *const mon = player->upkeep->health_who;
+	if (!mon || !mon->race || mon->hp <= 0 || !monster_is_visible(mon) || player->timed[TMD_IMAGE]) return NULL;
+	return mon;
+}
+
+static enum nb_stance foe_stance(const struct monster *mon)
+{
+	if (mon->alertness < ALERTNESS_UNWARY) return NB_STANCE_SLEEPING;
+	if (mon->alertness < ALERTNESS_ALERT) return NB_STANCE_UNWARY;
+	if (rf_has(mon->race->flags, RF_MINDLESS)) return NB_STANCE_MINDLESS;
+	switch (mon->stance) {
+		case STANCE_FLEEING: return NB_STANCE_FLEEING;
+		case STANCE_CONFIDENT: return NB_STANCE_CONFIDENT;
+		case STANCE_AGGRESSIVE: return NB_STANCE_AGGRESSIVE;
+		default: return NB_STANCE_NONE;
+	}
+}
+
 void native_publish(bool at_prompt)
 {
 	if (game.messages_dirty) {
@@ -212,6 +236,17 @@ void native_publish(bool at_prompt)
 		meta[NB_META_EXP] = player->exp;
 		meta[NB_META_CONTEXT] = context_flags();
 	}
+	struct monster *const foe = visible ? tracked_foe() : NULL;
+	char foe_name[80] = "";
+	meta[NB_META_FOE_X] = meta[NB_META_FOE_Y] = -1;
+	if (foe) {
+		meta[NB_META_FOE_X] = foe->grid.x;
+		meta[NB_META_FOE_Y] = foe->grid.y;
+		meta[NB_META_FOE_HEALTH] = (100 * foe->hp + foe->maxhp - 1) / foe->maxhp;
+		meta[NB_META_FOE_STANCE] = foe_stance(foe);
+		meta[NB_META_FOE_MORALE] = foe->morale >= 0 ? (foe->morale + 9) / 10 : foe->morale / 10;
+		monster_desc(foe_name, sizeof(foe_name), foe, MDESC_CAPITAL);
+	}
 
 	pthread_mutex_lock(&shared.lock);
 	const bool meta_changed = memcmp(meta, shared.meta, sizeof(meta)) != 0;
@@ -223,8 +258,9 @@ void native_publish(bool at_prompt)
 		}
 		memcpy(shared.front, game.work, n * sizeof(map_cell));
 	}
-	if (rebuild || meta_changed) {
+	if (rebuild || meta_changed || strcmp(foe_name, shared.foe_name) != 0) {
 		memcpy(shared.meta, meta, sizeof(meta));
+		my_strcpy(shared.foe_name, foe_name, sizeof(shared.foe_name));
 		shared.map_gen++;
 	}
 	pthread_mutex_unlock(&shared.lock);
@@ -550,6 +586,15 @@ void nb_request_inspect(int x, int y)
 void nb_request_look_list(void)
 {
 	post((request){ .kind = REQ_LOOK_LIST });
+}
+
+size_t nb_foe_name(char *text, size_t cap)
+{
+	assert(cap > 0);
+	pthread_mutex_lock(&shared.lock);
+	my_strcpy(text, shared.foe_name, cap);
+	pthread_mutex_unlock(&shared.lock);
+	return strlen(text);
 }
 
 uint64_t nb_info_generation(void)

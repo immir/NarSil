@@ -37,7 +37,17 @@ object NarSilNative {
     const val META_DEPTH = 10
     const val META_EXP = 11
     const val META_CONTEXT = 12
-    const val META_COUNT = 13
+    const val META_FOE_X = 13
+    const val META_FOE_Y = 14
+    const val META_FOE_HEALTH = 15
+    const val META_FOE_STANCE = 16
+    const val META_FOE_MORALE = 17
+    const val META_COUNT = 18
+
+    /** enum nb_stance, as sidebar text. */
+    val STANCE_NAMES = arrayOf("", "Sleeping", "Unwary", "Mindless", "Fleeing", "Confident", "Aggressive")
+
+    @JvmStatic external fun nativeFoeName(): String
 
     // enum nb_context
     const val CTX_UP_STAIRS = 1 shl 0

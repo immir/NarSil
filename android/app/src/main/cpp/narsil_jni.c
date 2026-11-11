@@ -6,8 +6,51 @@
 
 #include <android/log.h>
 #include <jni.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define JNI_FN(name) Java_org_narsil_android_NarSilNative_##name
+
+/*
+ * NewStringUTF() aborts the process on anything that is not valid *modified*
+ * UTF-8 (e.g. a multi-byte character cut off by a buffer limit, or a 4-byte
+ * sequence).  Decode ourselves, replacing what is invalid with U+FFFD.
+ */
+static jstring new_string(JNIEnv *env, const char *s)
+{
+	const size_t n = strlen(s);
+	jchar *const out = malloc((n + 1) * sizeof(jchar) * 2);
+	if (!out) return (*env)->NewStringUTF(env, "");
+	size_t len = 0;
+	for (size_t i = 0; i < n;) {
+		const unsigned char c = (unsigned char)s[i];
+		uint32_t cp;
+		size_t k;
+		if (c < 0x80) { cp = c; k = 1; }
+		else if ((c & 0xE0) == 0xC0) { cp = c & 0x1F; k = 2; }
+		else if ((c & 0xF0) == 0xE0) { cp = c & 0x0F; k = 3; }
+		else if ((c & 0xF8) == 0xF0) { cp = c & 0x07; k = 4; }
+		else { out[len++] = 0xFFFD; i++; continue; }
+		bool ok = i + k <= n;
+		for (size_t j = 1; ok && j < k; j++) {
+			const unsigned char cc = (unsigned char)s[i + j];
+			ok = (cc & 0xC0) == 0x80;
+			cp = (cp << 6) | (cc & 0x3F);
+		}
+		if (!ok || cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF)) { out[len++] = 0xFFFD; i++; continue; }
+		if (cp >= 0x10000) {
+			cp -= 0x10000;
+			out[len++] = (jchar)(0xD800 | (cp >> 10));
+			out[len++] = (jchar)(0xDC00 | (cp & 0x3FF));
+		} else {
+			out[len++] = (jchar)cp;
+		}
+		i += k;
+	}
+	const jstring str = (*env)->NewString(env, out, (jsize)len);
+	free(out);
+	return str;
+}
 
 static void log_android(const char *msg)
 {
@@ -120,7 +163,7 @@ JNIEXPORT jint JNICALL JNI_FN(nativeState)(JNIEnv *env, jclass cls)
 JNIEXPORT jstring JNICALL JNI_FN(nativeExitMessage)(JNIEnv *env, jclass cls)
 {
 	(void)cls;
-	return (*env)->NewStringUTF(env, nb_state() == NB_EXITED ? nb_exit_message() : "");
+	return new_string(env, nb_state() == NB_EXITED ? nb_exit_message() : "");
 }
 
 /* ---- Native map / commands ---- */
@@ -196,7 +239,7 @@ JNIEXPORT jstring JNICALL JNI_FN(nativePrompt)(JNIEnv *env, jclass cls)
 	static char text[32 * 1024];
 	text[0] = '0' + (char)nb_prompt(text + 2, sizeof(text) - 2);
 	text[1] = '\n';
-	return (*env)->NewStringUTF(env, text);
+	return new_string(env, text);
 }
 
 JNIEXPORT void JNICALL JNI_FN(nativeAnswerItem)(JNIEnv *env, jclass cls, jint index)
@@ -225,7 +268,7 @@ JNIEXPORT jstring JNICALL JNI_FN(nativeMessages)(JNIEnv *env, jclass cls)
 	(void)cls;
 	static char text[8192];
 	nb_messages(text, sizeof(text));
-	return (*env)->NewStringUTF(env, text);
+	return new_string(env, text);
 }
 
 JNIEXPORT void JNICALL JNI_FN(nativeRequestAction)(JNIEnv *env, jclass cls, jint action)
@@ -259,5 +302,13 @@ JNIEXPORT jstring JNICALL JNI_FN(nativeInfo)(JNIEnv *env, jclass cls)
 	(void)cls;
 	static char text[32 * 1024];
 	nb_info(text, sizeof(text));
-	return (*env)->NewStringUTF(env, text);
+	return new_string(env, text);
+}
+
+JNIEXPORT jstring JNICALL JNI_FN(nativeFoeName)(JNIEnv *env, jclass cls)
+{
+	(void)cls;
+	char name[80];
+	nb_foe_name(name, sizeof(name));
+	return new_string(env, name);
 }

@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.sp
@@ -241,6 +242,30 @@ class MainActivity : ComponentActivity() {
             }
             if (line.isNotEmpty())
                 Text(line.replace(Regex("\\s{2,}"), "  ·  "), color = Color(0xFFB0B0B0), fontSize = 12.sp, maxLines = 1)
+            s.foe?.let { FoeLine(it) }
+        }
+    }
+
+    /** Tracked monster: glyph, name, health, alertness/morale; tap to inspect. */
+    @Composable
+    private fun FoeLine(f: GameState.Foe) {
+        val state = checkNotNull(game)
+        val cell = state.mapCell(f.x, f.y)
+        val stance = NarSilNative.STANCE_NAMES.getOrElse(f.stance) { "" }
+        val healthColour = when {
+            f.healthPct >= 60 -> Color(0xFF66BB6A)
+            f.healthPct >= 25 -> Color(0xFFFFCA28)
+            else -> Color(0xFFEF5350)
+        }
+        Row(Modifier.fillMaxWidth().clickable { NarSilNative.nativeRequestInspect(f.x, f.y) }.padding(top = 4.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(cell?.let { String(Character.toChars(it.first)) } ?: "?", fontFamily = FontFamily.Monospace,
+                 color = Color(cell?.let { state.colour(it.second) } ?: 0xFFFFFFFF.toInt()), fontSize = 16.sp)
+            Text(f.name, color = Color.White, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1f))
+            LinearProgressIndicator(progress = f.healthPct / 100f, color = healthColour, trackColor = healthColour.copy(alpha = 0.25f),
+                                    modifier = Modifier.width(80.dp).height(6.dp))
+            val morale = if (f.stance >= 4) " ${f.morale}" else ""
+            Text("$stance$morale", color = Color(0xFF90CAF9), fontSize = 12.sp)
         }
     }
 

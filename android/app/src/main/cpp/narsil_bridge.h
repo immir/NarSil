@@ -83,8 +83,21 @@ enum nb_meta {
 	NB_META_DEPTH,      /* dungeon level; 50 ft each */
 	NB_META_EXP,
 	NB_META_CONTEXT,    /* enum nb_context flags */
+	NB_META_FOE_X, NB_META_FOE_Y, /* tracked monster (attacked/targeted), -1 if none or unseen */
+	NB_META_FOE_HEALTH, /* percent */
+	NB_META_FOE_STANCE, /* enum nb_stance */
+	NB_META_FOE_MORALE, /* as the sidebar shows it */
 	NB_META_COUNT
 };
+
+/* Tracked monster's alertness / morale, as the textui sidebar shows it. */
+enum nb_stance {
+	NB_STANCE_NONE, NB_STANCE_SLEEPING, NB_STANCE_UNWARY, NB_STANCE_MINDLESS,
+	NB_STANCE_FLEEING, NB_STANCE_CONFIDENT, NB_STANCE_AGGRESSIVE,
+};
+
+/* Name of the tracked monster ("" if none); changes with the map generation. */
+size_t nb_foe_name(char *text, size_t cap);
 
 /* What the player is standing on / next to, for context actions. */
 enum nb_context {
