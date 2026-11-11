@@ -15,6 +15,9 @@ import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.view.inputmethod.InputMethodManager
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 
 /**
  * Fallback renderer for any textui screen: draws the published Term grid and turns
@@ -30,14 +33,17 @@ class TerminalView(context: Context, private val router: KeyRouter) : View(conte
     private var palette = IntArray(0)
     private var shownGeneration = 0L
 
-    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Typeface.MONOSPACE }
+    /** Bundled: the platform MONOSPACE typeface is proportional on some devices. */
+    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        typeface = ResourcesCompat.getFont(context, R.font.dejavu_sans_mono) ?: Typeface.MONOSPACE
+    }
     private val fillPaint = Paint()
+    private val glyph = CharArray(2)
     private var cellW = 0f
     private var cellH = 0f
     private var baseline = 0f
     private var originX = 0f
     private var originY = 0f
-    private var keyboardShown = false
 
     private val frameCallback = object : Choreographer.FrameCallback {
         override fun doFrame(frameTimeNanos: Long) {
@@ -71,17 +77,20 @@ class TerminalView(context: Context, private val router: KeyRouter) : View(conte
         val probe = 100f
         textPaint.textSize = probe
         val fm = textPaint.fontMetrics
-        val probeW = textPaint.measureText("M")
+        val probeW = widestGlyph()
         val probeH = fm.descent - fm.ascent
         val size = probe * minOf(w / (cols * probeW), h / (rows * probeH))
         textPaint.textSize = size
         val m = textPaint.fontMetrics
-        cellW = textPaint.measureText("M")
+        cellW = widestGlyph()
         cellH = m.descent - m.ascent
         baseline = -m.ascent
         originX = (w - cols * cellW) / 2f
         originY = (h - rows * cellH) / 2f
     }
+
+    /** Size cells to the widest ASCII glyph, in case the fallback typeface is proportional. */
+    private fun widestGlyph(): Float = (0x21..0x7E).maxOf { textPaint.measureText(it.toChar().toString()) }
 
     private fun colour(index: Int): Int =
         if (index in palette.indices) palette[index] else Color.WHITE
@@ -89,25 +98,20 @@ class TerminalView(context: Context, private val router: KeyRouter) : View(conte
     override fun onDraw(canvas: Canvas) {
         canvas.drawColor(Color.BLACK)
         if (palette.isEmpty()) return
-        val run = StringBuilder(cols)
         for (y in 0 until rows) {
             var x = 0
             while (x < cols) {
                 val attr = cells[2 * (y * cols + x) + 1]
                 val start = x
-                run.setLength(0)
-                while (x < cols && cells[2 * (y * cols + x) + 1] == attr) {
-                    run.appendCodePoint(cells[2 * (y * cols + x)])
-                    x++
-                }
-                drawRun(canvas, start, y, x - start, attr, run)
+                while (x < cols && cells[2 * (y * cols + x) + 1] == attr) x++
+                drawRun(canvas, start, y, x - start, attr)
             }
         }
         if (cursor[2] != 0) drawCursor(canvas, cursor[0], cursor[1])
     }
 
     /** attr = colour + 256 * background mode (z-color.h: BG_BLACK, BG_SAME, BG_DARK). */
-    private fun drawRun(canvas: Canvas, x: Int, y: Int, n: Int, attr: Int, text: CharSequence) {
+    private fun drawRun(canvas: Canvas, x: Int, y: Int, n: Int, attr: Int) {
         val fg = colour(attr % 256 % MAX_COLORS)
         val left = originX + x * cellW
         val top = originY + y * cellH
@@ -119,7 +123,13 @@ class TerminalView(context: Context, private val router: KeyRouter) : View(conte
         if (fillPaint.color != Color.TRANSPARENT)
             canvas.drawRect(left, top, left + n * cellW, top + cellH, fillPaint)
         textPaint.color = fg
-        canvas.drawText(text, 0, text.length, left, top + baseline, textPaint)
+        for (i in 0 until n) {
+            val cp = cells[2 * (y * cols + x + i)]
+            if (cp == ' '.code) continue
+            val len = Character.toChars(cp, glyph, 0)
+            val cx = left + i * cellW + (cellW - textPaint.measureText(glyph, 0, len)) / 2f
+            canvas.drawText(glyph, 0, len, cx, top + baseline, textPaint)
+        }
     }
 
     private fun drawCursor(canvas: Canvas, x: Int, y: Int) {
@@ -137,8 +147,8 @@ class TerminalView(context: Context, private val router: KeyRouter) : View(conte
     fun toggleKeyboard() {
         val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         requestFocus()
-        keyboardShown = !keyboardShown
-        if (keyboardShown) imm.showSoftInput(this, 0) else imm.hideSoftInputFromWindow(windowToken, 0)
+        val shown = ViewCompat.getRootWindowInsets(this)?.isVisible(WindowInsetsCompat.Type.ime()) == true
+        if (shown) imm.hideSoftInputFromWindow(windowToken, 0) else imm.showSoftInput(this, 0)
     }
 
     override fun onCheckIsTextEditor() = true

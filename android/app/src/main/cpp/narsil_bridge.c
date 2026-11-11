@@ -262,6 +262,22 @@ static void with_trailing_sep(char *dst, size_t cap, const char *src)
 
 static void no_reinit(void) {}
 
+/*
+ * config.h hardwires PRIVATE_USER_PATH ("~/.angband") on UNIX, which on Android
+ * is unwritable and on a desktop is the player's real profile.  Keep the user
+ * dir (prefs, lore, char dumps) and its archive under our data dir instead.
+ */
+static void use_private_user_dir(const char *data)
+{
+	char buf[PATH_CAP];
+	path_build(buf, sizeof(buf), data, "user");
+	string_free(ANGBAND_DIR_USER);
+	ANGBAND_DIR_USER = string_make(buf);
+	path_build(buf, sizeof(buf), ANGBAND_DIR_USER, "archive");
+	string_free(ANGBAND_DIR_ARCHIVE);
+	ANGBAND_DIR_ARCHIVE = string_make(buf);
+}
+
 static void *game_main(void *unused)
 {
 	(void)unused;
@@ -274,6 +290,7 @@ static void *game_main(void *unused)
 	plog_aux = log_line;
 
 	init_file_paths(lib, lib, data);
+	use_private_user_dir(data);
 	my_strcpy(arg_name, cfg.player_name, sizeof(arg_name));
 	savefile_set_name(cfg.player_name, true, false);
 	create_needed_dirs();
