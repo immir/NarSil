@@ -122,3 +122,61 @@ JNIEXPORT jstring JNICALL JNI_FN(nativeExitMessage)(JNIEnv *env, jclass cls)
 	(void)cls;
 	return (*env)->NewStringUTF(env, nb_state() == NB_EXITED ? nb_exit_message() : "");
 }
+
+/* ---- Native map / commands ---- */
+
+JNIEXPORT jlong JNICALL JNI_FN(nativeMapGeneration)(JNIEnv *env, jclass cls)
+{
+	(void)env; (void)cls;
+	return (jlong)nb_map_generation();
+}
+
+/* meta: NB_META_COUNT ints; cells: 2 * width * height ints, or null for meta only. */
+JNIEXPORT jlong JNICALL JNI_FN(nativeMapSnapshot)(JNIEnv *env, jclass cls,
+		jintArray meta, jintArray cells)
+{
+	(void)cls;
+	if ((*env)->GetArrayLength(env, meta) < NB_META_COUNT) return -1;
+	int32_t m[NB_META_COUNT];
+	jint *const buf = cells ? (*env)->GetIntArrayElements(env, cells, NULL) : NULL;
+	const size_t n = cells ? (size_t)(*env)->GetArrayLength(env, cells) : 0;
+	const uint64_t gen = nb_map_snapshot(m, buf, n);
+	if (buf) (*env)->ReleaseIntArrayElements(env, cells, buf, 0);
+	(*env)->SetIntArrayRegion(env, meta, 0, NB_META_COUNT, m);
+	return (jlong)gen;
+}
+
+JNIEXPORT void JNICALL JNI_FN(nativeRequestPreview)(JNIEnv *env, jclass cls, jint x, jint y)
+{
+	(void)env; (void)cls;
+	nb_request_preview(x, y);
+}
+
+JNIEXPORT void JNICALL JNI_FN(nativeClearPreview)(JNIEnv *env, jclass cls)
+{
+	(void)env; (void)cls;
+	nb_clear_preview();
+}
+
+JNIEXPORT void JNICALL JNI_FN(nativeRequestTravel)(JNIEnv *env, jclass cls, jint x, jint y)
+{
+	(void)env; (void)cls;
+	nb_request_travel(x, y);
+}
+
+JNIEXPORT jlong JNICALL JNI_FN(nativePathGeneration)(JNIEnv *env, jclass cls)
+{
+	(void)env; (void)cls;
+	return (jlong)nb_path_generation();
+}
+
+/* xy: (x, y) pairs, target first; returns the number of pairs written. */
+JNIEXPORT jint JNICALL JNI_FN(nativePath)(JNIEnv *env, jclass cls, jintArray xy)
+{
+	(void)cls;
+	const jsize len = (*env)->GetArrayLength(env, xy);
+	jint *const buf = (*env)->GetIntArrayElements(env, xy, NULL);
+	const size_t n = nb_path(buf, (size_t)len / 2);
+	(*env)->ReleaseIntArrayElements(env, xy, buf, 0);
+	return (jint)n;
+}

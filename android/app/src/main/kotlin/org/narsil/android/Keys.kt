@@ -3,6 +3,12 @@ package org.narsil.android
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import kotlin.math.PI
+import kotlin.math.atan2
+
+/** Screen-space swipe -> octant: 0 = east, counting anticlockwise in 45-degree steps (y grows downward). */
+fun octant(dx: Float, dy: Float): Int =
+    Math.floorMod(Math.round(atan2(-dy, dx) / (PI / 4).toFloat()), 8)
 
 /** Angband keycodes from src/ui-event.h. */
 object Keys {

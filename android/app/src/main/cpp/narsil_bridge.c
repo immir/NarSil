@@ -7,6 +7,7 @@
  * of `shared`.
  */
 #include "narsil_bridge.h"
+#include "narsil_internal.h"
 
 #include "angband.h"
 #include "cmd-core.h"
@@ -19,6 +20,7 @@
 #include "ui-game.h"
 #include "ui-init.h"
 #include "ui-input.h"
+#include "ui-output.h"
 #include "ui-prefs.h"
 #include "ui-term.h"
 #include "z-color.h"
@@ -153,7 +155,17 @@ static bool save_quietly(void)
 	return savefile_save(savefile);
 }
 
-/* Returns 0 if any keys were delivered, 1 otherwise (Term_xtra convention). */
+/* At the top-level command prompt with the map showing (no overlay screen). */
+static bool at_map_prompt(void)
+{
+	return game.at_command_prompt && screen_save_depth == 0;
+}
+
+/*
+ * Returns 0 if any keys were delivered, 1 otherwise (Term_xtra convention).
+ * Lock order: shared.lock may be held while taking the native layer's lock,
+ * never the reverse.
+ */
 static errr term_event(bool wait)
 {
 	queued_key batch[KEY_QUEUE_CAP];
@@ -161,6 +173,16 @@ static errr term_event(bool wait)
 
 	pthread_mutex_lock(&shared.lock);
 	for (;;) {
+		if (native_has_request()) {
+			pthread_mutex_unlock(&shared.lock);
+			if (native_service(at_map_prompt())) {
+				/* Null command: textui_get_cmd returns, get_cmd runs the stash. */
+				Term_keypress(ESCAPE, 0);
+				return 0;
+			}
+			pthread_mutex_lock(&shared.lock);
+			continue;
+		}
 		if (shared.save_requested && safe_to_save()) {
 			shared.save_requested = false;
 			pthread_mutex_unlock(&shared.lock);
@@ -172,6 +194,15 @@ static errr term_event(bool wait)
 			continue;
 		}
 		if (shared.key_len > 0 || !wait) break;
+
+		/* About to block: make sure the UI sees the current map/status. */
+		pthread_mutex_unlock(&shared.lock);
+		native_publish(at_map_prompt());
+		pthread_mutex_lock(&shared.lock);
+		if (shared.key_len > 0 || native_has_request()
+				|| (shared.save_requested && safe_to_save()))
+			continue;
+
 		shared.waiting = true;
 		pthread_cond_broadcast(&shared.idle_cv);
 		pthread_cond_wait(&shared.input_cv, &shared.lock);
@@ -213,7 +244,7 @@ static errr term_xtra(int n, int v)
 		case TERM_XTRA_FLUSH: discard_keys(); return 0;
 		case TERM_XTRA_CLEAR: wipe_cells(game.work, n_cells()); return 0;
 		case TERM_XTRA_SHAPE: game.cur_visible = v != 0; return 0;
-		case TERM_XTRA_FRESH: publish_frame(); return 0;
+		case TERM_XTRA_FRESH: publish_frame(); native_publish(at_map_prompt()); return 0;
 		case TERM_XTRA_DELAY: sleep_ms(v); return 0;
 		default: return 0;
 	}
@@ -241,6 +272,7 @@ static errr get_cmd(cmd_context ctx)
 	game.at_command_prompt = ctx == CTX_GAME;
 	const errr r = textui_get_cmd(ctx);
 	game.at_command_prompt = false;
+	if (ctx == CTX_GAME) native_run_stashed();
 	return r;
 }
 
@@ -266,7 +298,11 @@ static void with_trailing_sep(char *dst, size_t cap, const char *src)
 	if (!suffix(dst, PATH_SEP)) my_strcat(dst, PATH_SEP, cap);
 }
 
-static void no_reinit(void) {}
+/* play_game() re-runs init after death/new game; cleanup_angband() dropped our handlers. */
+static void reinit(void)
+{
+	native_init();
+}
 
 /*
  * config.h hardwires PRIVATE_USER_PATH ("~/.angband") on UNIX, which on Android
@@ -304,11 +340,12 @@ static void *game_main(void *unused)
 	ANGBAND_SYS = "android";
 	init_main_term();
 	cmd_get_hook = get_cmd;
-	reinit_hook = no_reinit;
+	reinit_hook = reinit;
 
 	init_display();
 	init_angband();
 	textui_init();
+	native_init();
 	pause_line(Term);
 	play_game(GAME_LOAD);
 
@@ -379,6 +416,15 @@ void nb_push_mouse(int x, int y, int button, uint8_t mods)
 	if (x < 0 || y < 0 || x >= cfg.cols || y >= cfg.rows) return;
 	enqueue((queued_key){ .mouse = true, .code = (uint32_t)button, .mods = mods,
 		.x = (int16_t)x, .y = (int16_t)y });
+}
+
+void bridge_wake_game(void)
+{
+	pthread_mutex_lock(&shared.lock);
+	/* Not idle until the game thread has seen whatever woke it. */
+	shared.waiting = false;
+	pthread_cond_signal(&shared.input_cv);
+	pthread_mutex_unlock(&shared.lock);
 }
 
 void nb_request_save(void)

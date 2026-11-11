@@ -252,6 +252,21 @@ bool find_path(struct loc grid)
 }
 
 /**
+ * Copy the steps of the path computed by the last successful find_path(),
+ * in walking order (first step from the player first), without moving.
+ * \param dirs receives up to max directions (in the 123456789 sense)
+ * \return the number of directions written
+ */
+int path_copy_steps(int *dirs, int max)
+{
+	int n = MIN(path_step_idx + 1, max);
+
+	assert(max >= 0);
+	for (int i = 0; i < n; i++) dirs[i] = path_step_dir[path_step_idx - i];
+	return MAX(n, 0);
+}
+
+/**
  * Compute the direction (in the angband 123456789 sense) from a point to a
  * point. We decide to use diagonals if dx and dy are within a factor of two of
  * each other; otherwise we choose a cardinal direction.

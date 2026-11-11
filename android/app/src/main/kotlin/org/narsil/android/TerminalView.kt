@@ -5,9 +5,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Typeface
 import android.text.InputType
-import android.view.Choreographer
 import android.view.GestureDetector
 import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
@@ -17,132 +15,58 @@ import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.view.inputmethod.InputMethodManager
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import kotlin.math.PI
-import kotlin.math.atan2
 import kotlin.math.floor
 import kotlin.math.hypot
 
 /**
- * Fallback renderer for any textui screen: draws the published Term grid and turns
- * IME / hardware key input into Angband keycodes.  Polls the bridge once per vsync
- * and only copies a frame when its generation changes.
+ * Fallback renderer for any textui screen: draws the published Term grid from
+ * [state] and turns IME / hardware key input and gestures into Angband input.
  */
 @SuppressLint("ViewConstructor")
-class TerminalView(context: Context, private val router: KeyRouter) : View(context) {
-    private val cols = NarSilNative.nativeCols()
-    private val rows = NarSilNative.nativeRows()
-    private val cells = IntArray(2 * cols * rows)
-    private val cursor = IntArray(3)
-    private var palette = IntArray(0)
-    private var shownGeneration = 0L
-
-    /** Bundled: the platform MONOSPACE typeface is proportional on some devices. */
-    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        typeface = ResourcesCompat.getFont(context, R.font.dejavu_sans_mono) ?: Typeface.MONOSPACE
-    }
-    private val fillPaint = Paint()
-    private val glyph = CharArray(2)
-    private var cellW = 0f
-    private var cellH = 0f
-    private var baseline = 0f
+class TerminalView(context: Context, private val state: GameState, private val router: KeyRouter) : View(context) {
+    private val cols = state.cols
+    private val rows = state.rows
+    private val painter = GlyphPainter(context, state::colour)
+    private val cursorPaint = Paint().apply { color = Color.YELLOW }
+    private val cellW get() = painter.cellW
+    private val cellH get() = painter.cellH
     private var originX = 0f
     private var originY = 0f
-
-    private val frameCallback = object : Choreographer.FrameCallback {
-        override fun doFrame(frameTimeNanos: Long) {
-            if (NarSilNative.nativeGeneration() != shownGeneration) {
-                shownGeneration = NarSilNative.nativeSnapshot(cells, cursor)
-                palette = NarSilNative.nativePalette()
-                invalidate()
-            }
-            Choreographer.getInstance().postFrameCallback(this)
-        }
-    }
 
     init {
         isFocusable = true
         isFocusableInTouchMode = true
+        state.onTermChanged { if (isShown) invalidate() }
     }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        Choreographer.getInstance().postFrameCallback(frameCallback)
         requestFocus()
     }
 
-    override fun onDetachedFromWindow() {
-        Choreographer.getInstance().removeFrameCallback(frameCallback)
-        super.onDetachedFromWindow()
-    }
-
-    /** Largest monospace font for which cols x rows cells fit; grid is centred. */
+    /** Largest font for which cols x rows cells fit; grid is centred. */
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        val probe = 100f
-        textPaint.textSize = probe
-        val fm = textPaint.fontMetrics
-        val probeW = widestGlyph()
-        val probeH = fm.descent - fm.ascent
-        val size = probe * minOf(w / (cols * probeW), h / (rows * probeH))
-        textPaint.textSize = size
-        val m = textPaint.fontMetrics
-        cellW = widestGlyph()
-        cellH = m.descent - m.ascent
-        baseline = -m.ascent
+        painter.fitCells(cols, rows, w.toFloat(), h.toFloat())
         originX = (w - cols * cellW) / 2f
         originY = (h - rows * cellH) / 2f
     }
 
-    /** Size cells to the widest ASCII glyph, in case the fallback typeface is proportional. */
-    private fun widestGlyph(): Float = (0x21..0x7E).maxOf { textPaint.measureText(it.toChar().toString()) }
-
-    private fun colour(index: Int): Int =
-        if (index in palette.indices) palette[index] else Color.WHITE
-
     override fun onDraw(canvas: Canvas) {
         canvas.drawColor(Color.BLACK)
-        if (palette.isEmpty()) return
-        for (y in 0 until rows) {
-            var x = 0
-            while (x < cols) {
-                val attr = cells[2 * (y * cols + x) + 1]
-                val start = x
-                while (x < cols && cells[2 * (y * cols + x) + 1] == attr) x++
-                drawRun(canvas, start, y, x - start, attr)
-            }
+        if (state.palette.isEmpty()) return
+        val cells = state.term
+        for (y in 0 until rows) for (x in 0 until cols) {
+            val i = 2 * (y * cols + x)
+            painter.drawCell(canvas, originX + x * cellW, originY + y * cellH, cells[i], cells[i + 1])
         }
-        if (cursor[2] != 0) drawCursor(canvas, cursor[0], cursor[1])
-    }
-
-    /** attr = colour + 256 * background mode (z-color.h: BG_BLACK, BG_SAME, BG_DARK). */
-    private fun drawRun(canvas: Canvas, x: Int, y: Int, n: Int, attr: Int) {
-        val fg = colour(attr % 256 % MAX_COLORS)
-        val left = originX + x * cellW
-        val top = originY + y * cellH
-        when (attr / 256) {
-            BG_SAME -> fillPaint.color = fg
-            BG_DARK -> fillPaint.color = colour(COLOUR_SHADE)
-            else -> fillPaint.color = Color.TRANSPARENT
+        val cursor = state.termCursor
+        if (cursor[2] != 0) {
+            val left = originX + cursor[0] * cellW
+            val bottom = originY + (cursor[1] + 1) * cellH
+            canvas.drawRect(left, bottom - cellH / 8f, left + cellW, bottom, cursorPaint)
         }
-        if (fillPaint.color != Color.TRANSPARENT)
-            canvas.drawRect(left, top, left + n * cellW, top + cellH, fillPaint)
-        textPaint.color = fg
-        for (i in 0 until n) {
-            val cp = cells[2 * (y * cols + x + i)]
-            if (cp == ' '.code) continue
-            val len = Character.toChars(cp, glyph, 0)
-            val cx = left + i * cellW + (cellW - textPaint.measureText(glyph, 0, len)) / 2f
-            canvas.drawText(glyph, 0, len, cx, top + baseline, textPaint)
-        }
-    }
-
-    private fun drawCursor(canvas: Canvas, x: Int, y: Int) {
-        fillPaint.color = Color.YELLOW
-        val left = originX + x * cellW
-        val bottom = originY + (y + 1) * cellH
-        canvas.drawRect(left, bottom - cellH / 8f, left + cellW, bottom, fillPaint)
     }
 
     /** Screen point -> term cell, or null outside the grid. */
@@ -239,13 +163,5 @@ class TerminalView(context: Context, private val router: KeyRouter) : View(conte
         const val MOUSE_LEFT = 1
         const val MOUSE_RIGHT = 2
 
-        /** 0 = east, counting anticlockwise in 45-degree steps (screen y grows downward). */
-        fun octant(dx: Float, dy: Float): Int =
-            Math.floorMod(Math.round(atan2(-dy, dx) / (PI / 4).toFloat()), 8)
-
-        const val MAX_COLORS = 32
-        const val COLOUR_SHADE = 28
-        const val BG_SAME = 1
-        const val BG_DARK = 2
     }
 }

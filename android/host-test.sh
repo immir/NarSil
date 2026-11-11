@@ -29,4 +29,11 @@ echo "== touch: first tap highlights a menu item, second selects it"
 rm -rf "$work/data"
 run @enter @tap=4,12 @expect=Edain @tap=4,12 @expect='House affects' | tail -1 | grep -q 'state=1'
 
+echo "== native map, path preview and travel"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @map @preview@1,0 @travel@1,0 @map ^x @enter @esc)
+echo "$out" | grep -q 'mode=1 prompt=1'
+echo "$out" | grep -qE '^travel -> '
+echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
+
 echo "PASS ($san) work=$work"

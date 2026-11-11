@@ -6,6 +6,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.sp
+import android.view.View
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,6 +55,7 @@ private sealed interface Phase {
 class MainActivity : ComponentActivity() {
     private val router = KeyRouter()
     private var terminal: TerminalView? = null
+    private var game: GameState? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +66,11 @@ class MainActivity : ComponentActivity() {
     }
 
     /** Runs at the game's next safe point (top-level command prompt). */
+    override fun onDestroy() {
+        game?.stop()
+        super.onDestroy()
+    }
+
     override fun onStop() {
         super.onStop()
         if (NarSilNative.nativeState() == NarSilNative.STATE_RUNNING) NarSilNative.nativeRequestSave()
@@ -70,7 +82,7 @@ class MainActivity : ComponentActivity() {
 
         LaunchedEffect(Unit) {
             phase = runCatching { withContext(Dispatchers.IO) { GameLauncher.ensureStarted(applicationContext) } }
-                .fold({ Phase.Running }, { Phase.Failed(it.message ?: it.toString()) })
+                .fold({ game = GameState().also { it.start() }; Phase.Running }, { Phase.Failed(it.message ?: it.toString()) })
         }
         LaunchedEffect(phase) {
             while (phase == Phase.Running) {
@@ -85,14 +97,72 @@ class MainActivity : ComponentActivity() {
                 Phase.Loading -> Centered("Installing game data…")
                 is Phase.Failed -> Centered("Failed to start: ${p.reason}")
                 is Phase.Exited -> Centered(p.message.ifEmpty { "The game has ended." }, "Close") { exitApp() }
-                Phase.Running -> Column(Modifier.fillMaxSize()) {
-                    AndroidView(
-                        factory = { ctx -> TerminalView(ctx, router).also { terminal = it } },
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                    )
-                    KeyBar()
-                }
+                Phase.Running -> GameScreen(checkNotNull(game))
             }
+        }
+    }
+
+    /**
+     * Map mode: message strip, native map, status strip.  Otherwise the terminal
+     * fallback shows whatever textui screen is up.  The terminal stays underneath
+     * the map so it keeps keyboard focus in both modes.
+     */
+    @Composable
+    private fun GameScreen(state: GameState) {
+        Column(Modifier.fillMaxSize()) {
+            if (state.mapMode) MessageStrip(state.messageLine) { router.special(Keys.ENTER) }
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                AndroidView(
+                    factory = { ctx -> TerminalView(ctx, state, router).also { terminal = it } },
+                    modifier = Modifier.fillMaxSize(),
+                )
+                AndroidView(
+                    factory = { ctx -> MapView(ctx, state, router) },
+                    update = { it.visibility = if (state.mapMode) View.VISIBLE else View.GONE },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+            if (state.mapMode) StatusStrip(state.status, state.statusLine)
+            KeyBar()
+        }
+    }
+
+    @Composable
+    private fun MessageStrip(text: String, onTap: () -> Unit) {
+        Text(
+            text.ifEmpty { " " },
+            color = Color(0xFFE0E0E0),
+            fontFamily = FontFamily.Monospace,
+            fontSize = 14.sp,
+            maxLines = 2,
+            modifier = Modifier.fillMaxWidth().background(Color(0xFF141414)).clickable(onClick = onTap)
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+        )
+    }
+
+    @Composable
+    private fun StatusStrip(s: GameState.Status, line: String) {
+        Column(Modifier.fillMaxWidth().background(Color(0xFF141414)).padding(horizontal = 8.dp, vertical = 4.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Meter("HP", s.hp, s.maxHp, Color(0xFFD04040), Modifier.weight(1f))
+                Meter("Voice", s.voice, s.maxVoice, Color(0xFF4080E0), Modifier.weight(1f))
+                Text("${s.depth * 50} ft", color = Color.White, fontSize = 13.sp)
+            }
+            if (line.isNotEmpty())
+                Text(line.replace(Regex("\\s{2,}"), "  ·  "), color = Color(0xFFB0B0B0), fontSize = 12.sp, maxLines = 1)
+        }
+    }
+
+    @Composable
+    private fun Meter(label: String, value: Int, max: Int, colour: Color, modifier: Modifier) {
+        Column(modifier) {
+            Text("$label $value/$max", color = Color.White, fontSize = 12.sp)
+            LinearProgressIndicator(
+                progress = if (max > 0) value.toFloat() / max else 0f,
+                color = colour,
+                trackColor = colour.copy(alpha = 0.25f),
+                modifier = Modifier.fillMaxWidth().height(6.dp),
+            )
         }
     }
 

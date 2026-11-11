@@ -11,6 +11,8 @@
  *   @tap=X,Y @hold=X,Y                            left / right mouse press on a cell
  *   @tap@DX,DY                                    tap relative to the player's '@'
  *   @where                                        print the player's screen position
+ *   @map                                          print the native map around the player
+ *   @preview@DX,DY @travel@DX,DY                  native path preview / travel, relative to player grid
  *   @dump                                         print the current frame
  *   @save                                         request a save and wait for it
  *   @save-async                                   request a save; it runs at the next safe point
@@ -132,6 +134,44 @@ static int run_token(const char *tok)
 		printf("tap @(%d,%d)%+d%+d\n", px, py, mx, my);
 		nb_push_mouse(px + mx, py + my, 1, 0);
 		return settle() ? 0 : 1;
+	}
+	if (sscanf(tok, "@preview@%d,%d%c", &mx, &my, &tail) == 2
+			|| sscanf(tok, "@travel@%d,%d%c", &mx, &my, &tail) == 2) {
+		int32_t meta[NB_META_COUNT];
+		nb_map_snapshot(meta, NULL, 0);
+		if (!meta[NB_META_AT_PROMPT]) { fprintf(stderr, "%s: not at prompt\n", tok); return 1; }
+		const int gx = meta[NB_META_PLAYER_X] + mx, gy = meta[NB_META_PLAYER_Y] + my;
+		const bool travel = tok[1] == 't';
+		if (travel) nb_request_travel(gx, gy); else nb_request_preview(gx, gy);
+		if (!settle()) return 1;
+		int32_t xy[2 * 600];
+		const size_t n = nb_path(xy, 600);
+		nb_map_snapshot(meta, NULL, 0);
+		printf("%s -> (%d,%d): path=%zu player now (%d,%d)\n", travel ? "travel" : "preview",
+			gx, gy, n ? n - 1 : 0, meta[NB_META_PLAYER_X], meta[NB_META_PLAYER_Y]);
+		return 0;
+	}
+	if (strcmp(tok, "@map") == 0) {
+		int32_t meta[NB_META_COUNT];
+		nb_map_snapshot(meta, NULL, 0);
+		const size_t w = (size_t)meta[NB_META_WIDTH], h = (size_t)meta[NB_META_HEIGHT];
+		int32_t *const cells = malloc(sizeof(int32_t) * 2 * w * h);
+		nb_map_snapshot(meta, cells, 2 * w * h);
+		printf("map %zux%zu player (%d,%d) hp %d/%d voice %d/%d depth %d mode=%d prompt=%d\n",
+			w, h, meta[NB_META_PLAYER_X], meta[NB_META_PLAYER_Y], meta[NB_META_HP],
+			meta[NB_META_MAX_HP], meta[NB_META_VOICE], meta[NB_META_MAX_VOICE],
+			meta[NB_META_DEPTH], meta[NB_META_MAP_MODE], meta[NB_META_AT_PROMPT]);
+		const int px = meta[NB_META_PLAYER_X], py = meta[NB_META_PLAYER_Y];
+		for (int y = py - 6; y <= py + 6; y++) {
+			for (int x = px - 20; x <= px + 20; x++) {
+				const bool in = x >= 0 && y >= 0 && (size_t)x < w && (size_t)y < h;
+				const int32_t cp = in ? cells[2 * ((size_t)y * w + (size_t)x)] : ' ';
+				putchar(cp >= 32 && cp < 127 ? (int)cp : '?');
+			}
+			putchar('\n');
+		}
+		free(cells);
+		return 0;
 	}
 	if (strncmp(tok, "@where", 6) == 0) {
 		int px, py;

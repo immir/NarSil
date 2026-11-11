@@ -24,6 +24,7 @@
 
 int pathfind_direction_to(struct loc from, struct loc to);
 bool find_path(struct loc grid);
+int path_copy_steps(int *dirs, int max);
 void run_step(int dir);
 
 #endif /* !PLAYER_PATH_H */
