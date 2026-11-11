@@ -42,7 +42,8 @@ object NarSilNative {
     const val META_FOE_HEALTH = 15
     const val META_FOE_STANCE = 16
     const val META_FOE_MORALE = 17
-    const val META_COUNT = 18
+    const val META_NEW_EXP = 18
+    const val META_COUNT = 19
 
     /** enum nb_stance, as sidebar text. */
     val STANCE_NAMES = arrayOf("", "Sleeping", "Unwary", "Mindless", "Fleeing", "Confident", "Aggressive")
@@ -86,6 +87,7 @@ object NarSilNative {
     const val ACT_CHARACTER = 20
     const val ACT_ABILITIES = 21
     const val ACT_HELP = 22
+    const val ACT_SKILLS = 23
 
     /** Only honoured at the command prompt. */
     @JvmStatic external fun nativeRequestAction(action: Int)
@@ -119,6 +121,12 @@ object NarSilNative {
     const val PROMPT_AIM = 4
     const val PROMPT_DIRECTION = 5
     const val PROMPT_CHOICE = 6
+    const val PROMPT_SKILLS = 7
+
+    const val SKILL_RESET = 1
+    const val SKILL_ACCEPT = 2
+    const val SKILL_BUY = 100
+    const val SKILL_SELL = 200
 
     const val AIM_CURRENT = 100
     const val AIM_NEAREST = 101

@@ -175,3 +175,39 @@ fun ChoiceSheet(prompt: GameState.Prompt.Choice, onAnswer: (Int) -> Unit) {
         }
     }
 }
+
+/**
+ * Spend experience on skills.  Every change is the game's own buy/sell command;
+ * Cancel undoes this session, Accept keeps it.
+ */
+@Composable
+fun SkillsSheet(prompt: GameState.Prompt.Skills, onAnswer: (Int) -> Unit) {
+    Box(Modifier.fillMaxSize().background(Color(0x99000000)), contentAlignment = Alignment.BottomCenter) {
+        Surface(shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp), color = Color(0xFF1C1C1E),
+                modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("Skills", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Text("Experience to spend: ${prompt.expLeft}", color = Color(0xFFFFD54F), fontSize = 14.sp)
+                prompt.skills.forEach { sk ->
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(Modifier.weight(1f)) {
+                            Text(sk.name, color = Color.White, fontSize = 16.sp)
+                            Text("base ${sk.base}" + if (sk.spent > 0) "  (+${sk.spent} exp)" else "", color = Color(0xFF9A9AA0), fontSize = 12.sp)
+                        }
+                        Text("${sk.total}", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
+                             modifier = Modifier.padding(end = 4.dp))
+                        OutlinedButton(onClick = { onAnswer(N.SKILL_SELL + sk.index) }, enabled = sk.spent > 0,
+                                       contentPadding = PaddingValues(horizontal = 10.dp)) { Text("−") }
+                        FilledTonalButton(onClick = { onAnswer(N.SKILL_BUY + sk.index) }, enabled = sk.nextCost <= prompt.expLeft,
+                                          contentPadding = PaddingValues(horizontal = 10.dp)) { Text("+ ${sk.nextCost}") }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.End)) {
+                    TextButton(onClick = { onAnswer(N.SKILL_RESET) }) { Text("Reset") }
+                    OutlinedButton(onClick = { onAnswer(-1) }) { Text("Cancel") }
+                    Button(onClick = { onAnswer(N.SKILL_ACCEPT) }) { Text("Accept") }
+                }
+            }
+        }
+    }
+}

@@ -235,6 +235,7 @@ void native_publish(bool at_prompt)
 		meta[NB_META_DEPTH] = player->depth;
 		meta[NB_META_EXP] = player->exp;
 		meta[NB_META_CONTEXT] = context_flags();
+		meta[NB_META_NEW_EXP] = player->new_exp;
 	}
 	struct monster *const foe = visible ? tracked_foe() : NULL;
 	char foe_name[80] = "";
@@ -531,6 +532,7 @@ static void run_action(enum nb_action a)
 		case NB_ACT_CHARACTER: do_cmd_change_name(); break;
 		case NB_ACT_ABILITIES: do_cmd_abilities(); break;
 		case NB_ACT_HELP: do_cmd_help(); break;
+		case NB_ACT_SKILLS: native_gain_skills(); break;
 		case NB_ACT_COUNT: break;
 	}
 }

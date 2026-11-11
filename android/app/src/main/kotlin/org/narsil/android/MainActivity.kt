@@ -125,6 +125,7 @@ class MainActivity : ComponentActivity() {
                     is GameState.Prompt.Actions -> ActionSheet(prompt, state::colour, answer)
                     is GameState.Prompt.Check -> CheckDialog(prompt, answer)
                     is GameState.Prompt.Choice -> ChoiceSheet(prompt, answer)
+                    is GameState.Prompt.Skills -> SkillsSheet(prompt, answer)
                     is GameState.Prompt.Aim, is GameState.Prompt.Direction -> Unit  // drawn by GameLayers over the map
                 }
             }
@@ -155,6 +156,11 @@ class MainActivity : ComponentActivity() {
         is GameState.Prompt.Check -> when (code) {
             'y'.code, 'Y'.code -> 1
             'n'.code, 'N'.code, Keys.ESCAPE -> 0
+            else -> null
+        }
+        is GameState.Prompt.Skills -> when (code) {
+            Keys.ESCAPE -> -1
+            Keys.ENTER -> NarSilNative.SKILL_ACCEPT
             else -> null
         }
         is GameState.Prompt.Choice -> if (code == Keys.ESCAPE) -1

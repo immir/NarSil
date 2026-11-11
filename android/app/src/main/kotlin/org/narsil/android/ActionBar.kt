@@ -49,6 +49,8 @@ fun contextActions(s: GameState.Status): List<BarAction> = buildList {
     if (s.has(N.CTX_ADJ_OPEN_DOOR)) add(BarAction("Close", emphasised = true, run = act(N.ACT_CLOSE)))
     if (s.has(N.CTX_ADJ_TRAP)) add(BarAction("Disarm", emphasised = true, run = act(N.ACT_DISARM)))
     if (s.has(N.CTX_ADJ_RUBBLE)) add(BarAction("Tunnel", emphasised = true, run = act(N.ACT_TUNNEL)))
+    /* Sil does not level you up: experience waits to be spent.  The cheapest point costs 100. */
+    if (s.newExp >= 100) add(BarAction("Skills (${s.newExp})", emphasised = true, run = act(N.ACT_SKILLS)))
 }
 
 /** Always present: the turn-by-turn Sil toolkit.  Look is the native list of what is in view. */
@@ -66,6 +68,7 @@ fun moreActions(router: KeyRouter, toggleKeyboard: () -> Unit): List<BarAction> 
     BarAction("Gear", run = act(N.ACT_EQUIPMENT)),
     BarAction("Map", run = act(N.ACT_MAP)),
     BarAction("Messages", run = act(N.ACT_MESSAGES)),
+    BarAction("Skills", run = act(N.ACT_SKILLS)),
     BarAction("Character", run = act(N.ACT_CHARACTER)),
     BarAction("Abilities", run = act(N.ACT_ABILITIES)),
     BarAction("Bash", run = act(N.ACT_BASH)),

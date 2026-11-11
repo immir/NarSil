@@ -45,16 +45,18 @@ echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
 echo "== native item prompt: browse + cancel, then eat via the prompt"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" i @prompt @pick=-1 E @prompt @pick=0 @expect='renewed energy' ^x @enter @esc)
+out=$(run "${birth[@]}" i @prompt @pick=-1 E @prompt @pick=0 @messages ^x @enter @esc)
 echo "$out" | grep -q 'Lembas'
+echo "$out" | grep -q 'renewed energy'
 echo "$out" | grep -q 'Eat which food'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
 echo "== browse actions (eat from 'i'), yes/no (retire? no), throw (first item) + aim east"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" i @pick=0 @prompt @answer=0 @expect='renewed energy' \
+out=$(run "${birth[@]}" i @pick=0 @prompt @answer=0 @messages \
       Q @prompt @answer=0 t @prompt @pick=0 @prompt @answer=6 @messages ^x @enter @esc)
 echo "$out" | grep -q 'prompt kind=2'
+echo "$out" | grep -q 'renewed energy'
 echo "$out" | grep -q 'Do you really want to retire'
 echo "$out" | grep -q 'prompt kind=4'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
@@ -78,6 +80,13 @@ rm -rf "$work/data"
 out=$(run "${birth[@]}" @look @inspect@0,0 ^x @enter @esc)
 echo "$out" | grep -q '^Look'
 echo "$out" | grep -qP '^Inspect\t'
+echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
+
+echo "== spend experience: buy, buy, sell, accept persists; cancel undoes"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=23 @answer=100 @answer=100 @answer=200 @answer=2 @act=23 @prompt @answer=-1 ^x @enter @esc)
+echo "$out" | grep -qP '^Skills\t4900$'
+echo "$out" | grep -qP '^Melee\t1\t'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
 echo "PASS ($san) work=$work"

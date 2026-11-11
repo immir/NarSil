@@ -87,6 +87,7 @@ enum nb_meta {
 	NB_META_FOE_HEALTH, /* percent */
 	NB_META_FOE_STANCE, /* enum nb_stance */
 	NB_META_FOE_MORALE, /* as the sidebar shows it */
+	NB_META_NEW_EXP,    /* experience available to spend */
 	NB_META_COUNT
 };
 
@@ -125,6 +126,7 @@ enum nb_action {
 	NB_ACT_OPEN, NB_ACT_CLOSE, NB_ACT_DISARM, NB_ACT_TUNNEL, NB_ACT_BASH, NB_ACT_EXCHANGE,
 	NB_ACT_INVENTORY, NB_ACT_EQUIPMENT, NB_ACT_MAP, NB_ACT_LOOK, NB_ACT_MESSAGES,
 	NB_ACT_CHARACTER, NB_ACT_ABILITIES, NB_ACT_HELP,
+	NB_ACT_SKILLS,        /* spend experience on skills */
 	NB_ACT_COUNT
 };
 
@@ -187,7 +189,11 @@ enum nb_prompt_kind {
 	NB_PROMPT_AIM = 4,     /* answer: 1-9 direction, NB_AIM_*, or a grid; -1 cancel */
 	NB_PROMPT_DIRECTION = 5, /* adjacent direction: answer 1-9 (5 only if allowed), -1 cancel */
 	NB_PROMPT_CHOICE = 6,  /* pick one option: answer its index, -1 cancel */
+	NB_PROMPT_SKILLS = 7,  /* spend experience: answer NB_SKILL_*, -1 cancel (undo) */
 };
+
+/* Skill answers: buy/sell a point in skill i, reset this session, or accept. */
+enum { NB_SKILL_RESET = 1, NB_SKILL_ACCEPT = 2, NB_SKILL_BUY = 100, NB_SKILL_SELL = 200 };
 
 /* Aim answers besides directions 1-9 (5 excluded). */
 enum {
@@ -211,6 +217,8 @@ uint64_t nb_prompt_generation(void);
  *  AIM:     "Aim"; range, current target x, y (-1 if none); per targetable
  *           monster, nearest first: x, y, in range (0/1), name
  *  CHOICE:  title; per option: label, description (may be empty)
+ *  SKILLS:  "Skills", experience left; per skill: name, base, total, spent
+ *           this session, cost of the next point
  *  DIRECTION: "Direction"; 5 allowed (0/1); per neighbour of interest:
  *           direction, x, y, what (door/open door/rubble/trap/monster)
  */

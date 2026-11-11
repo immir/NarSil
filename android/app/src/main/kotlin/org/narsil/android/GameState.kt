@@ -58,10 +58,12 @@ class GameState {
         data class Aim(val range: Int, val current: Pair<Int, Int>?, val targets: List<Target>) : Prompt
         data class Direction(val allowHere: Boolean, val neighbours: List<Neighbour>) : Prompt
         data class Choice(val title: String, val options: List<Option>) : Prompt
+        data class Skills(val expLeft: Int, val skills: List<Skill>) : Prompt
     }
 
     data class Neighbour(val dir: Int, val x: Int, val y: Int, val what: String)
     data class Option(val index: Int, val label: String, val description: String)
+    data class Skill(val index: Int, val name: String, val base: Int, val total: Int, val spent: Int, val nextCost: Int)
 
     /** Read-only descriptions the player asked for; dismissable, the game is not waiting on them. */
     sealed interface Info {
@@ -86,7 +88,8 @@ class GameState {
     data class Foe(val x: Int, val y: Int, val name: String, val healthPct: Int, val stance: Int, val morale: Int)
 
     data class Status(val hp: Int = 0, val maxHp: Int = 0, val voice: Int = 0, val maxVoice: Int = 0,
-                      val depth: Int = 0, val exp: Int = 0, val context: Int = 0, val foe: Foe? = null) {
+                      val depth: Int = 0, val exp: Int = 0, val context: Int = 0, val foe: Foe? = null,
+                      val newExp: Int = 0) {
         fun has(flag: Int) = context and flag != 0
     }
 
@@ -165,6 +168,10 @@ class GameState {
             N.PROMPT_CHOICE -> Prompt.Choice(lines[0].trim(), lines.drop(1).filter { it.isNotEmpty() }.mapIndexed { i, l ->
                 fields(l, 2).let { f -> Option(i, f[0], f.getOrElse(1) { "" }) }
             })
+            N.PROMPT_SKILLS -> Prompt.Skills(fields(lines[0], 2).getOrNull(1)?.toIntOrNull() ?: 0,
+                lines.drop(1).filter { it.isNotEmpty() }.mapIndexed { i, l ->
+                    fields(l, 5).let { f -> Skill(i, f[0], f[1].toInt(), f[2].toInt(), f[3].toInt(), f[4].toInt()) }
+                })
             N.PROMPT_DIRECTION -> Prompt.Direction(lines.getOrNull(1)?.trim() == "1",
                 lines.drop(2).filter { it.isNotEmpty() }.map { fields(it, 4).let { f -> Neighbour(f[0].toInt(), f[1].toInt(), f[2].toInt(), f[3]) } })
             else -> null
@@ -223,7 +230,8 @@ class GameState {
         status = Status(meta[N.META_HP], meta[N.META_MAX_HP], meta[N.META_VOICE], meta[N.META_MAX_VOICE],
                         meta[N.META_DEPTH], meta[N.META_EXP], meta[N.META_CONTEXT],
                         if (meta[N.META_FOE_X] < 0) null else Foe(meta[N.META_FOE_X], meta[N.META_FOE_Y], N.nativeFoeName(),
-                            meta[N.META_FOE_HEALTH], meta[N.META_FOE_STANCE], meta[N.META_FOE_MORALE]))
+                            meta[N.META_FOE_HEALTH], meta[N.META_FOE_STANCE], meta[N.META_FOE_MORALE]),
+                        meta[N.META_NEW_EXP])
         return true
     }
 

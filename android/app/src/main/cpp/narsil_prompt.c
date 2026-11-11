@@ -33,6 +33,7 @@
 #include "obj-util.h"
 #include "player-abilities.h"
 #include "player-calcs.h"
+#include "player-skills.h"
 #include "songs.h"
 #include "player-path.h"
 #include "target.h"
@@ -557,6 +558,72 @@ static void native_change_song(void)
 	const int32_t pick = ask(NB_PROMPT_CHOICE);
 	if (pick < 0 || pick >= n) return;
 	player_change_song(player, o[pick].song, o[pick].swap);
+}
+
+/* ------------------------------------------------------------------------
+ * Spending experience on skills: gain_skills(CTX_GAME, true) with a native
+ * prompt in place of the textui's skill screen.  The arithmetic, validation
+ * and commands are the game's own (CMD_BUY/SELL/RESET/REFRESH_SKILLS).
+ * ------------------------------------------------------------------------ */
+
+static const char *skill_names[] = {
+	#define SKILL(a, b) b,
+	#include "list-skills.h"
+	#undef SKILL
+};
+
+static struct { int spent[SKILL_MAX], inc[SKILL_MAX], left; } skill_points;
+
+static void on_skill_points(game_event_type type, game_event_data *data, void *user)
+{
+	(void)type; (void)user;
+	memcpy(skill_points.spent, data->exp.exp, sizeof(skill_points.spent));
+	memcpy(skill_points.inc, data->exp.inc_exp, sizeof(skill_points.inc));
+	skill_points.left = data->exp.remaining;
+}
+
+/*
+ * Serialised: "Skills" \t experience left; then per skill:
+ * name \t base \t total (with modifiers) \t experience spent this session \t cost of the next point.
+ */
+static void publish_skills(void)
+{
+	pthread_mutex_lock(&shared.lock);
+	text_reset();
+	text_add("Skills\t%d\n", skill_points.left);
+	for (int i = 0; i < SKILL_MAX; i++)
+		text_add("%s\t%d\t%d\t%d\t%d\n", skill_names[i], player->skill_base[i],
+			player->state.skill_use[i], skill_points.spent[i], skill_points.inc[i]);
+	pthread_mutex_unlock(&shared.lock);
+}
+
+void native_gain_skills(void)
+{
+	event_add_handler(EVENT_SKILLPOINTS, on_skill_points, NULL);
+	init_skills(false, true);
+	for (int next = 0; !next;) {
+		publish_skills();
+		const int32_t a = ask(NB_PROMPT_SKILLS);
+		if (a >= NB_SKILL_BUY && a < NB_SKILL_BUY + SKILL_MAX) {
+			cmdq_push(CMD_BUY_SKILL);
+			cmd_set_arg_choice(cmdq_peek(), "choice", a - NB_SKILL_BUY);
+		} else if (a >= NB_SKILL_SELL && a < NB_SKILL_SELL + SKILL_MAX) {
+			cmdq_push(CMD_SELL_SKILL);
+			cmd_set_arg_choice(cmdq_peek(), "choice", a - NB_SKILL_SELL);
+		} else if (a == NB_SKILL_ACCEPT) {
+			next = 1;
+		} else {
+			/* Reset, or cancel (which undoes this session's changes). */
+			cmdq_push(CMD_RESET_SKILLS);
+			cmd_set_arg_choice(cmdq_peek(), "choice", false);
+			if (a != NB_SKILL_RESET) next = -1;
+		}
+		cmdq_push(CMD_REFRESH_SKILLS);
+		cmdq_execute(CTX_GAME);
+	}
+	event_remove_handler(EVENT_SKILLPOINTS, on_skill_points, NULL);
+	finalise_skills();
+	player->upkeep->redraw |= PR_EXP;
 }
 
 /* ------------------------------------------------------------------------

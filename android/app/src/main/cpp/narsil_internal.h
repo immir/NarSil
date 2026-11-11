@@ -27,6 +27,9 @@ void native_prompt_init(void);
  */
 void native_prompt_set_intent(int nb_action);
 
+/* Implemented by narsil_prompt.c (game thread, command prompt): spend experience on skills. */
+void native_gain_skills(void);
+
 /* Implemented by narsil_native.c; all game-thread only. */
 void native_init(void);
 
