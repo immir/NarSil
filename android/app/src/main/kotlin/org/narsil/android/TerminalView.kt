@@ -8,6 +8,8 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.text.InputType
 import android.view.Choreographer
+import android.view.GestureDetector
+import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
@@ -18,6 +20,10 @@ import android.view.inputmethod.InputMethodManager
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import kotlin.math.PI
+import kotlin.math.atan2
+import kotlin.math.floor
+import kotlin.math.hypot
 
 /**
  * Fallback renderer for any textui screen: draws the published Term grid and turns
@@ -139,10 +145,46 @@ class TerminalView(context: Context, private val router: KeyRouter) : View(conte
         canvas.drawRect(left, bottom - cellH / 8f, left + cellW, bottom, fillPaint)
     }
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (event.action == MotionEvent.ACTION_UP) toggleKeyboard()
-        return true
+    /** Screen point -> term cell, or null outside the grid. */
+    private fun cellAt(px: Float, py: Float): Pair<Int, Int>? {
+        if (cellW <= 0f || cellH <= 0f) return null
+        val x = floor((px - originX) / cellW).toInt()
+        val y = floor((py - originY) / cellH).toInt()
+        return if (x in 0 until cols && y in 0 until rows) x to y else null
     }
+
+    /**
+     * Tap = left click (walk/pathfind, select menu item); long press = right click
+     * (context menu, target); fling = a direction (arrows for cardinals, so menus
+     * scroll; keypad digits for diagonals).
+     */
+    private val gestures = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+        override fun onDown(e: MotionEvent) = true
+
+        override fun onSingleTapUp(e: MotionEvent): Boolean {
+            cellAt(e.x, e.y)?.let { (x, y) -> router.mouse(x, y, MOUSE_LEFT) }
+            return true
+        }
+
+        override fun onLongPress(e: MotionEvent) {
+            cellAt(e.x, e.y)?.let { (x, y) ->
+                performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                router.mouse(x, y, MOUSE_RIGHT)
+            }
+        }
+
+        override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
+            val start = e1 ?: return false
+            val dx = e2.x - start.x
+            val dy = e2.y - start.y
+            if (hypot(dx, dy) < 2f * cellW) return false
+            router.direction(octant(dx, dy))
+            return true
+        }
+    })
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent): Boolean = gestures.onTouchEvent(event)
 
     fun toggleKeyboard() {
         val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -194,6 +236,13 @@ class TerminalView(context: Context, private val router: KeyRouter) : View(conte
     }
 
     private companion object {
+        const val MOUSE_LEFT = 1
+        const val MOUSE_RIGHT = 2
+
+        /** 0 = east, counting anticlockwise in 45-degree steps (screen y grows downward). */
+        fun octant(dx: Float, dy: Float): Int =
+            Math.floorMod(Math.round(atan2(-dy, dx) / (PI / 4).toFloat()), 8)
+
         const val MAX_COLORS = 32
         const val COLOUR_SHADE = 28
         const val BG_SAME = 1

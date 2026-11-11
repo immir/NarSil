@@ -12,6 +12,8 @@ object NarSilNative {
 
     @JvmStatic external fun nativeStart(libDir: String, dataDir: String, playerName: String, cols: Int, rows: Int): Boolean
     @JvmStatic external fun nativePushKey(code: Int, mods: Int)
+    /** button 1 = left, 2 = right; mods are KC_MOD_* flags. */
+    @JvmStatic external fun nativePushMouse(x: Int, y: Int, button: Int, mods: Int)
     @JvmStatic external fun nativeRequestSave()
     @JvmStatic external fun nativeSaveCount(): Long
     @JvmStatic external fun nativeGeneration(): Long

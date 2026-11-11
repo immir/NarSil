@@ -32,7 +32,8 @@
 enum { KEY_QUEUE_CAP = 256, PATH_CAP = 512 };
 
 typedef struct { int32_t cp, attr; } cell;
-typedef struct { uint32_t code; uint8_t mods; } queued_key;
+/* A key (code = keycode) or a mouse press (code = button, at x, y). */
+typedef struct { bool mouse; uint32_t code; uint8_t mods; int16_t x, y; } queued_key;
 
 /* Fixed at start; read-only afterwards. */
 static struct {
@@ -182,7 +183,12 @@ static errr term_event(bool wait)
 	}
 	pthread_mutex_unlock(&shared.lock);
 
-	for (size_t i = 0; i < n; i++) Term_keypress(batch[i].code, batch[i].mods);
+	for (size_t i = 0; i < n; i++) {
+		const queued_key *const k = &batch[i];
+		/* Term_mousepress packs the modifiers into the button's high nibble. */
+		if (k->mouse) Term_mousepress(k->x, k->y, (char)((k->code & 0x0F) | ((k->mods & 0x0F) << 4)));
+		else Term_keypress(k->code, k->mods);
+	}
 	return n > 0 ? 0 : 1;
 }
 
@@ -351,16 +357,28 @@ bool nb_start(const nb_config *c)
 	return rc == 0;
 }
 
-void nb_push_key(uint32_t code, uint8_t mods)
+static void enqueue(queued_key k)
 {
 	pthread_mutex_lock(&shared.lock);
 	if (shared.key_len < KEY_QUEUE_CAP) {
-		shared.keys[(shared.key_head + shared.key_len) % KEY_QUEUE_CAP] =
-			(queued_key){ .code = code, .mods = mods };
+		shared.keys[(shared.key_head + shared.key_len) % KEY_QUEUE_CAP] = k;
 		shared.key_len++;
 		pthread_cond_signal(&shared.input_cv);
 	}
 	pthread_mutex_unlock(&shared.lock);
+}
+
+void nb_push_key(uint32_t code, uint8_t mods)
+{
+	enqueue((queued_key){ .code = code, .mods = mods });
+}
+
+void nb_push_mouse(int x, int y, int button, uint8_t mods)
+{
+	assert(button >= 1 && button <= 15 && mods <= 0x0F);
+	if (x < 0 || y < 0 || x >= cfg.cols || y >= cfg.rows) return;
+	enqueue((queued_key){ .mouse = true, .code = (uint32_t)button, .mods = mods,
+		.x = (int16_t)x, .y = (int16_t)y });
 }
 
 void nb_request_save(void)

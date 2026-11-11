@@ -23,7 +23,10 @@ object Keys {
  * Single funnel for every input source (IME, hardware keyboard, key bar, back button),
  * so the sticky Ctrl latch applies uniformly.
  */
-class KeyRouter(private val sink: (code: Int, mods: Int) -> Unit = NarSilNative::nativePushKey) {
+class KeyRouter(
+    private val sink: (code: Int, mods: Int) -> Unit = NarSilNative::nativePushKey,
+    private val mouseSink: (x: Int, y: Int, button: Int, mods: Int) -> Unit = NarSilNative::nativePushMouse,
+) {
     var ctrlLatched by mutableStateOf(false)
 
     fun char(cp: Int) {
@@ -37,8 +40,26 @@ class KeyRouter(private val sink: (code: Int, mods: Int) -> Unit = NarSilNative:
         sink(Keys.ctrl(cp), 0)
     }
 
+    fun mouse(x: Int, y: Int, button: Int) {
+        ctrlLatched = false
+        mouseSink(x, y, button, 0)
+    }
+
+    /** octant: 0 = east, anticlockwise.  Cardinals as arrows (menus scroll); diagonals as keypad digits. */
+    fun direction(octant: Int) {
+        require(octant in 0..7)
+        special(DIRECTION_KEYS[octant])
+    }
+
     fun special(code: Int) {
         ctrlLatched = false
         sink(code, 0)
+    }
+
+    private companion object {
+        val DIRECTION_KEYS = intArrayOf(
+            Keys.ARROW_RIGHT, '9'.code, Keys.ARROW_UP, '7'.code,
+            Keys.ARROW_LEFT, '1'.code, Keys.ARROW_DOWN, '3'.code,
+        )
     }
 }

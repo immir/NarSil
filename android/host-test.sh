@@ -25,4 +25,8 @@ test -s "$work/data/save/Harness"
 echo "== reload the savefile"
 run @enter @expect=Harness @expect=50\' ^x @enter @esc | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
+echo "== touch: first tap highlights a menu item, second selects it"
+rm -rf "$work/data"
+run @enter @tap=4,12 @expect=Edain @tap=4,12 @expect='House affects' | tail -1 | grep -q 'state=1'
+
 echo "PASS ($san) work=$work"

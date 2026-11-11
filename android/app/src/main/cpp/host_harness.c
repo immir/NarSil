@@ -8,6 +8,9 @@
  * to block on input again:
  *   @esc @enter @tab @bs @up @down @left @right   special keys
  *   ^x                                            control-x
+ *   @tap=X,Y @hold=X,Y                            left / right mouse press on a cell
+ *   @tap@DX,DY                                    tap relative to the player's '@'
+ *   @where                                        print the player's screen position
  *   @dump                                         print the current frame
  *   @save                                         request a save and wait for it
  *   @save-async                                   request a save; it runs at the next safe point
@@ -74,6 +77,19 @@ static bool expect(const char *needle)
 	return strstr(text, needle) != NULL;
 }
 
+/* Screen position of the player glyph, searching below the message line. */
+static bool find_player(int *px, int *py)
+{
+	int cx, cy;
+	bool vis;
+	int32_t *const cells = frame_buf();
+	nb_snapshot(cells, 2u * (size_t)nb_cols() * (size_t)nb_rows(), &cx, &cy, &vis);
+	for (int y = 1; y < nb_rows() - 1; y++)
+		for (int x = 13; x < nb_cols(); x++)
+			if (cells[2 * (y * nb_cols() + x)] == '@') { *px = x; *py = y; return true; }
+	return false;
+}
+
 static const struct { const char *name; uint32_t code; } specials[] = {
 	{ "@esc", ESCAPE }, { "@enter", KC_ENTER }, { "@tab", KC_TAB },
 	{ "@bs", KC_BACKSPACE }, { "@up", ARROW_UP }, { "@down", ARROW_DOWN },
@@ -103,6 +119,28 @@ static int run_token(const char *tok)
 			return 1;
 		}
 		return 0;
+	}
+	int mx, my;
+	char tail;
+	if (sscanf(tok, "@tap=%d,%d%c", &mx, &my, &tail) == 2) {
+		nb_push_mouse(mx, my, 1, 0);
+		return settle() ? 0 : 1;
+	}
+	if (sscanf(tok, "@tap@%d,%d%c", &mx, &my, &tail) == 2) {
+		int px, py;
+		if (!find_player(&px, &py)) { fprintf(stderr, "no @ on screen\n"); return 1; }
+		printf("tap @(%d,%d)%+d%+d\n", px, py, mx, my);
+		nb_push_mouse(px + mx, py + my, 1, 0);
+		return settle() ? 0 : 1;
+	}
+	if (strncmp(tok, "@where", 6) == 0) {
+		int px, py;
+		if (find_player(&px, &py)) printf("player at %d,%d\n", px, py);
+		return 0;
+	}
+	if (sscanf(tok, "@hold=%d,%d%c", &mx, &my, &tail) == 2) {
+		nb_push_mouse(mx, my, 2, 0);
+		return settle() ? 0 : 1;
 	}
 	if (strcmp(tok, "@save-async") == 0) {
 		nb_request_save();

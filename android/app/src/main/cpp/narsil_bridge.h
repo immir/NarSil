@@ -37,6 +37,12 @@ bool nb_start(const nb_config *cfg);
 /* `code` is an Angband keycode (ui-event.h): Unicode, or ESCAPE/KC_ and ARROW_ codes. */
 void nb_push_key(uint32_t code, uint8_t mods);
 
+/*
+ * A mouse press on term cell (x, y): button 1 = left (tap), 2 = right (long
+ * press); mods are KC_MOD_* flags.  Out-of-range cells are dropped.
+ */
+void nb_push_mouse(int x, int y, int button, uint8_t mods);
+
 /* Asynchronous; completes at the next safe point.  See nb_save_count(). */
 void nb_request_save(void);
 uint64_t nb_save_count(void);

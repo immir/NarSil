@@ -40,6 +40,14 @@ JNIEXPORT void JNICALL JNI_FN(nativePushKey)(JNIEnv *env, jclass cls,
 	nb_push_key((uint32_t)code, (uint8_t)mods);
 }
 
+JNIEXPORT void JNICALL JNI_FN(nativePushMouse)(JNIEnv *env, jclass cls,
+		jint x, jint y, jint button, jint mods)
+{
+	(void)env; (void)cls;
+	if (button < 1 || button > 15 || mods < 0 || mods > 0x0F) return;
+	nb_push_mouse(x, y, button, (uint8_t)mods);
+}
+
 JNIEXPORT void JNICALL JNI_FN(nativeRequestSave)(JNIEnv *env, jclass cls)
 {
 	(void)env; (void)cls;
