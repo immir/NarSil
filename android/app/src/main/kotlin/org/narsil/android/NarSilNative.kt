@@ -54,6 +54,15 @@ object NarSilNative {
     /** (x, y) pairs, target first; returns the pair count (0 = no path). */
     @JvmStatic external fun nativePath(xy: IntArray): Int
 
+    const val PROMPT_NONE = 0
+    const val PROMPT_ITEM = 1
+
+    @JvmStatic external fun nativePromptGeneration(): Long
+    /** "<kind>\n<text>"; see nb_prompt() in narsil_bridge.h for the item format. */
+    @JvmStatic external fun nativePrompt(): String
+    /** Index of the chosen item line, or -1 to cancel. */
+    @JvmStatic external fun nativeAnswerItem(index: Int)
+
     @JvmStatic external fun nativeState(): Int
     @JvmStatic external fun nativeExitMessage(): String
 }

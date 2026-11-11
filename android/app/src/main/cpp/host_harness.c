@@ -11,6 +11,8 @@
  *   @tap=X,Y @hold=X,Y                            left / right mouse press on a cell
  *   @tap@DX,DY                                    tap relative to the player's '@'
  *   @where                                        print the player's screen position
+ *   @prompt                                       print the open native prompt
+ *   @pick=N                                       answer an item prompt (-1 cancels)
  *   @map                                          print the native map around the player
  *   @preview@DX,DY @travel@DX,DY                  native path preview / travel, relative to player grid
  *   @dump                                         print the current frame
@@ -150,6 +152,16 @@ static int run_token(const char *tok)
 		printf("%s -> (%d,%d): path=%zu player now (%d,%d)\n", travel ? "travel" : "preview",
 			gx, gy, n ? n - 1 : 0, meta[NB_META_PLAYER_X], meta[NB_META_PLAYER_Y]);
 		return 0;
+	}
+	if (strcmp(tok, "@prompt") == 0) {
+		static char text[32 * 1024];
+		const enum nb_prompt_kind kind = nb_prompt(text, sizeof(text));
+		printf("prompt kind=%d\n%s", (int)kind, text);
+		return 0;
+	}
+	if (sscanf(tok, "@pick=%d%c", &mx, &tail) == 1) {
+		nb_answer_item(mx);
+		return settle() ? 0 : 1;
 	}
 	if (strcmp(tok, "@map") == 0) {
 		int32_t meta[NB_META_COUNT];

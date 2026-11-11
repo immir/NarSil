@@ -180,3 +180,27 @@ JNIEXPORT jint JNICALL JNI_FN(nativePath)(JNIEnv *env, jclass cls, jintArray xy)
 	(*env)->ReleaseIntArrayElements(env, xy, buf, 0);
 	return (jint)n;
 }
+
+/* ---- Native prompts ---- */
+
+JNIEXPORT jlong JNICALL JNI_FN(nativePromptGeneration)(JNIEnv *env, jclass cls)
+{
+	(void)env; (void)cls;
+	return (jlong)nb_prompt_generation();
+}
+
+/* "<kind>\n<prompt text>"; kind 0 = none.  See nb_prompt(). */
+JNIEXPORT jstring JNICALL JNI_FN(nativePrompt)(JNIEnv *env, jclass cls)
+{
+	(void)cls;
+	static char text[32 * 1024];
+	text[0] = '0' + (char)nb_prompt(text + 2, sizeof(text) - 2);
+	text[1] = '\n';
+	return (*env)->NewStringUTF(env, text);
+}
+
+JNIEXPORT void JNICALL JNI_FN(nativeAnswerItem)(JNIEnv *env, jclass cls, jint index)
+{
+	(void)env; (void)cls;
+	nb_answer_item(index);
+}

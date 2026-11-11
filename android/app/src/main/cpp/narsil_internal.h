@@ -11,6 +11,15 @@
 /* Implemented by narsil_bridge.c: wake the game thread if it is waiting for input. */
 void bridge_wake_game(void);
 
+/*
+ * Implemented by narsil_bridge.c: report whether the game thread is blocked
+ * waiting for the UI outside the term (a native prompt), for nb_wait_for_input().
+ */
+void bridge_set_idle(bool idle);
+
+/* Implemented by narsil_prompt.c (game thread): install the native prompt hooks. */
+void native_prompt_init(void);
+
 /* Implemented by narsil_native.c; all game-thread only. */
 void native_init(void);
 

@@ -36,4 +36,11 @@ echo "$out" | grep -q 'mode=1 prompt=1'
 echo "$out" | grep -qE '^travel -> '
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
+echo "== native item prompt: browse + cancel, then eat via the prompt"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" i @prompt @pick=-1 E @prompt @pick=0 @expect='renewed energy' ^x @enter @esc)
+echo "$out" | grep -q 'Lembas'
+echo "$out" | grep -q 'Eat which food'
+echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
+
 echo "PASS ($san) work=$work"

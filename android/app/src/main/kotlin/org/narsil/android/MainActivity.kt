@@ -31,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -109,6 +110,26 @@ class MainActivity : ComponentActivity() {
      */
     @Composable
     private fun GameScreen(state: GameState) {
+        Box(Modifier.fillMaxSize()) {
+            GameLayers(state)
+            state.itemPrompt?.let { prompt ->
+                DisposableEffect(prompt) {
+                    router.intercept = { code -> answerByKey(prompt, code); true }
+                    onDispose { router.intercept = null }
+                }
+                ItemSheet(prompt, state::colour) { NarSilNative.nativeAnswerItem(it) }
+            }
+        }
+    }
+
+    /** Esc cancels; a letter picks the item with that label, as in the textui menu; anything else is swallowed. */
+    private fun answerByKey(prompt: GameState.ItemPrompt, code: Int) {
+        if (code == Keys.ESCAPE) { NarSilNative.nativeAnswerItem(-1); return }
+        prompt.items.firstOrNull { it.label != '-' && it.label.code == code }?.let { NarSilNative.nativeAnswerItem(it.index) }
+    }
+
+    @Composable
+    private fun GameLayers(state: GameState) {
         Column(Modifier.fillMaxSize()) {
             if (state.mapMode) MessageStrip(state.messageLine) { router.special(Keys.ENTER) }
             Box(Modifier.weight(1f).fillMaxWidth()) {

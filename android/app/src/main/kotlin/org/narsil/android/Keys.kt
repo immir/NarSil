@@ -35,10 +35,13 @@ class KeyRouter(
 ) {
     var ctrlLatched by mutableStateOf(false)
 
+    /** While a native prompt is open it gets first refusal on every key; true = consumed. */
+    var intercept: ((code: Int) -> Boolean)? = null
+
     fun char(cp: Int) {
         val code = if (ctrlLatched && cp in 0x40..0x7F) Keys.ctrl(cp) else cp
         ctrlLatched = false
-        sink(code, 0)
+        if (intercept?.invoke(code) != true) sink(code, 0)
     }
 
     fun control(cp: Int) {
@@ -59,7 +62,7 @@ class KeyRouter(
 
     fun special(code: Int) {
         ctrlLatched = false
-        sink(code, 0)
+        if (intercept?.invoke(code) != true) sink(code, 0)
     }
 
     private companion object {

@@ -269,6 +269,8 @@ static void init_main_term(void)
 
 static errr get_cmd(cmd_context ctx)
 {
+	/* textui_init() (also re-run after death, after reinit_hook) resets the prompt hooks. */
+	native_prompt_init();
 	game.at_command_prompt = ctx == CTX_GAME;
 	const errr r = textui_get_cmd(ctx);
 	game.at_command_prompt = false;
@@ -416,6 +418,14 @@ void nb_push_mouse(int x, int y, int button, uint8_t mods)
 	if (x < 0 || y < 0 || x >= cfg.cols || y >= cfg.rows) return;
 	enqueue((queued_key){ .mouse = true, .code = (uint32_t)button, .mods = mods,
 		.x = (int16_t)x, .y = (int16_t)y });
+}
+
+void bridge_set_idle(bool idle)
+{
+	pthread_mutex_lock(&shared.lock);
+	shared.waiting = idle;
+	if (idle) pthread_cond_broadcast(&shared.idle_cv);
+	pthread_mutex_unlock(&shared.lock);
 }
 
 void bridge_wake_game(void)

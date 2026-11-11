@@ -17,7 +17,7 @@ set_target_properties(narsil_core PROPERTIES C_STANDARD 99 POSITION_INDEPENDENT_
 target_compile_options(narsil_core PRIVATE -w)
 
 find_package(Threads REQUIRED)
-add_library(narsil_bridge STATIC narsil_bridge.c narsil_native.c)
+add_library(narsil_bridge STATIC narsil_bridge.c narsil_native.c narsil_prompt.c)
 set_target_properties(narsil_bridge PROPERTIES C_STANDARD 11 POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(narsil_bridge PRIVATE _POSIX_C_SOURCE=200809L)
 target_compile_options(narsil_bridge PRIVATE -Wall -Wextra)

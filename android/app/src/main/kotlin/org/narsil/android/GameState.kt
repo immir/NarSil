@@ -38,12 +38,20 @@ class GameState {
     var statusLine by mutableStateOf("")
         private set
 
+    var itemPrompt by mutableStateOf<ItemPrompt?>(null)
+        private set
+
+    data class Item(val index: Int, val section: Int, val label: Char, val glyph: Int, val attr: Int,
+                    val weightTenthsLb: Int, val name: String)
+    data class ItemPrompt(val title: String, val items: List<Item>)
+
     data class Status(val hp: Int = 0, val maxHp: Int = 0, val voice: Int = 0, val maxVoice: Int = 0,
                       val depth: Int = 0, val exp: Int = 0)
 
     private var termGen = 0L
     private var mapGen = 0L
     private var pathGen = 0L
+    private var promptGen = 0L
     private val termListeners = mutableListOf<() -> Unit>()
     private val mapListeners = mutableListOf<() -> Unit>()
 
@@ -73,6 +81,18 @@ class GameState {
             if (gen == pathGen) false else { pathGen = gen; pathPairs = N.nativePath(path); true }
         }
         if (mapChanged || pathChanged) mapListeners.forEach { it() }
+        N.nativePromptGeneration().let { gen -> if (gen != promptGen) { promptGen = gen; itemPrompt = parsePrompt(N.nativePrompt()) } }
+    }
+
+    /** See nb_prompt(): kind line, prompt line, then tab-separated item records. */
+    private fun parsePrompt(raw: String): ItemPrompt? {
+        val lines = raw.split('\n')
+        if (lines.firstOrNull()?.toIntOrNull() != N.PROMPT_ITEM) return null
+        val items = lines.drop(2).filter { it.isNotEmpty() }.mapIndexed { i, line ->
+            val f = line.split('\t', limit = 6)
+            Item(i, f[0].toInt(), f[1].first(), f[2].toInt(), f[3].toInt(), f[4].toInt(), f[5])
+        }
+        return ItemPrompt(lines.getOrElse(1) { "" }.trim(), items)
     }
 
     private fun pollMap(): Boolean {

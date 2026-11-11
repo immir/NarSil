@@ -113,6 +113,31 @@ void nb_request_travel(int x, int y);
 uint64_t nb_path_generation(void);
 size_t nb_path(int32_t *xy, size_t max_pairs);
 
+/* ------------------------------------------------------------------------
+ * Native prompts (narsil_prompt.c)
+ *
+ * When the game needs an answer it publishes a prompt and blocks until the UI
+ * answers; nb_prompt_generation() moves on both open and close.
+ * ------------------------------------------------------------------------ */
+
+enum nb_prompt_kind { NB_PROMPT_NONE = 0, NB_PROMPT_ITEM = 1 };
+
+enum nb_item_section {
+	NB_ITEM_INVENTORY = 0, NB_ITEM_EQUIPMENT = 1, NB_ITEM_FLOOR = 2, NB_ITEM_THROWING = 3,
+};
+
+uint64_t nb_prompt_generation(void);
+
+/*
+ * The open prompt, if any, serialised as UTF-8 lines with tab-separated
+ * fields.  NB_PROMPT_ITEM: line 0 is the prompt; each further line is
+ * section, label, glyph codepoint, attr, weight (1/10 lb), name.
+ */
+enum nb_prompt_kind nb_prompt(char *text, size_t cap);
+
+/* Answer an item prompt with the index of an item line (0-based), or -1 to cancel. */
+void nb_answer_item(int index);
+
 enum nb_state nb_state(void);
 const char *nb_exit_message(void); /* valid once state is NB_EXITED */
 
