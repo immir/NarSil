@@ -54,4 +54,4 @@ Gradle 8.4). Upgrade them all together.
 - Fixed 80x24 grid scaled to fit. It's small in portrait; landscape is fine.
 - Text only: no tiles, sound or subwindows.
 - Tapping the terminal toggles the soft keyboard; Back sends Escape.
-- Untested on a device: the Kotlin and NDK parts haven't been compiled yet.
+- Builds (debug and release, arm64-v8a and x86_64) but hasn't run on a device or emulator yet.
