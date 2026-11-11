@@ -80,6 +80,12 @@ object NarSilNative {
     /** Only honoured at the command prompt. */
     @JvmStatic external fun nativeRequestAction(action: Int)
 
+    /** Read-only descriptions; see nb_request_inspect() in narsil_bridge.h for the format. */
+    @JvmStatic external fun nativeRequestInspect(x: Int, y: Int)
+    @JvmStatic external fun nativeRequestLookList()
+    @JvmStatic external fun nativeInfoGeneration(): Long
+    @JvmStatic external fun nativeInfo(): String
+
     const val CELL_IN_VIEW = 1 shl 0
     const val CELL_PLAYER = 1 shl 1
     const val CELL_MONSTER = 1 shl 2

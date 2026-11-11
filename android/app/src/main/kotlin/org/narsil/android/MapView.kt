@@ -22,7 +22,7 @@ import org.narsil.android.NarSilNative as N
  *
  *  - tap an adjacent grid: step there
  *  - tap a distant grid: ghost path (from the game's pathfinder); tap it again to go
- *  - long press + drag: inspect / move the ghost path with the finger
+ *  - long press: describe the grid (monster recall, objects, terrain)
  *  - swipe: one step in that direction (also answers direction prompts)
  *  - pinch: zoom; two-finger drag: pan (the camera follows the player again once they move)
  */
@@ -41,7 +41,6 @@ class MapView(context: Context, private val state: GameState, private val router
     private var camAnimator: ValueAnimator? = null
 
     private var selected: Pair<Int, Int>? = null
-    private var inspecting = false
     private var multiTouch = false
 
     private val pathPaint = Paint().apply { color = Color.argb(90, 255, 200, 60) }
@@ -201,18 +200,18 @@ class MapView(context: Context, private val state: GameState, private val router
             return true
         }
 
+        /** Long press: describe what is there (monster recall, objects, terrain). */
         override fun onLongPress(e: MotionEvent) {
-            if (multiTouch || !state.atPrompt || aim != null || direction != null) return
-            gridAt(e.x, e.y)?.let {
+            if (multiTouch || aim != null || direction != null) return
+            gridAt(e.x, e.y)?.let { (x, y) ->
                 performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                inspecting = true
-                select(it)
+                N.nativeRequestInspect(x, y)
             }
         }
 
         override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
             val start = e1 ?: return false
-            if (multiTouch || inspecting) return false
+            if (multiTouch) return false
             val dx = e2.x - start.x
             val dy = e2.y - start.y
             if (hypot(dx, dy) < 2f * painter.cellW) return false
@@ -236,15 +235,12 @@ class MapView(context: Context, private val state: GameState, private val router
     override fun onTouchEvent(e: MotionEvent): Boolean {
         scaler.onTouchEvent(e)
         when (e.actionMasked) {
-            MotionEvent.ACTION_DOWN -> { multiTouch = false; inspecting = false }
+            MotionEvent.ACTION_DOWN -> multiTouch = false
             MotionEvent.ACTION_POINTER_DOWN -> { multiTouch = true; lastFocus = focus(e) }
             MotionEvent.ACTION_POINTER_UP -> lastFocus = focus(e, excluding = e.actionIndex)
-            MotionEvent.ACTION_MOVE -> when {
-                multiTouch && e.pointerCount >= 2 -> pan(e)
-                inspecting -> gridAt(e.x, e.y)?.takeIf { it != selected }?.let(::select)
-            }
+            MotionEvent.ACTION_MOVE -> if (multiTouch && e.pointerCount >= 2) pan(e)
         }
-        if (!inspecting || e.actionMasked != MotionEvent.ACTION_MOVE) gestures.onTouchEvent(e)
+        gestures.onTouchEvent(e)
         return true
     }
 

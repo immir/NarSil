@@ -233,3 +233,31 @@ JNIEXPORT void JNICALL JNI_FN(nativeRequestAction)(JNIEnv *env, jclass cls, jint
 	(void)env; (void)cls;
 	if (action >= 0 && action < NB_ACT_COUNT) nb_request_action((enum nb_action)action);
 }
+
+/* ---- Inspect / look list ---- */
+
+JNIEXPORT void JNICALL JNI_FN(nativeRequestInspect)(JNIEnv *env, jclass cls, jint x, jint y)
+{
+	(void)env; (void)cls;
+	nb_request_inspect(x, y);
+}
+
+JNIEXPORT void JNICALL JNI_FN(nativeRequestLookList)(JNIEnv *env, jclass cls)
+{
+	(void)env; (void)cls;
+	nb_request_look_list();
+}
+
+JNIEXPORT jlong JNICALL JNI_FN(nativeInfoGeneration)(JNIEnv *env, jclass cls)
+{
+	(void)env; (void)cls;
+	return (jlong)nb_info_generation();
+}
+
+JNIEXPORT jstring JNICALL JNI_FN(nativeInfo)(JNIEnv *env, jclass cls)
+{
+	(void)cls;
+	static char text[32 * 1024];
+	nb_info(text, sizeof(text));
+	return (*env)->NewStringUTF(env, text);
+}

@@ -19,6 +19,7 @@
 #include "game-world.h"
 #include "obj-gear.h"
 #include "player-attack.h"
+#include "player-calcs.h"
 #include "player-path.h"
 #include "player-util.h"
 #include "player-timed.h"
@@ -28,17 +29,27 @@
 #include "ui-map.h"
 #include "ui-player.h"
 #include "message.h"
+#include "mon-desc.h"
+#include "mon-lore.h"
+#include "mon-predicate.h"
+#include "monster.h"
+#include "obj-desc.h"
+#include "obj-ignore.h"
+#include "target.h"
+#include "ui-mon-lore.h"
+#include "z-textblock.h"
 #include "ui-output.h"
 
 #include <assert.h>
 #include <pthread.h>
+#include <stdarg.h>
 #include <string.h>
 
-enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 6, MESSAGES_CAP = 4096 };
+enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 6, MESSAGES_CAP = 4096, INFO_CAP = 32 * 1024, LOOK_MAX = 40 };
 
 typedef struct { int32_t cp, attr_flags; } map_cell;
 
-enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION };
+enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_INSPECT, REQ_LOOK_LIST };
 typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; } request;
 
 /* Game thread only. */
@@ -63,6 +74,8 @@ static struct {
 	request pending;
 	char messages[MESSAGES_CAP];
 	uint64_t messages_gen;
+	char info[INFO_CAP];
+	uint64_t info_gen;
 } shared = { .lock = PTHREAD_MUTEX_INITIALIZER };
 
 /* ------------------------------------------------------------------------
@@ -258,6 +271,151 @@ bool native_has_request(void)
 	return any;
 }
 
+/* ------------------------------------------------------------------------
+ * Inspect / look list (game thread; read-only, so answered wherever the map shows)
+ * ------------------------------------------------------------------------ */
+
+static size_t info_len;
+static char info_buf[INFO_CAP];
+
+static void info_add(const char *fmt, ...)
+{
+	if (info_len >= sizeof(info_buf) - 1) return;
+	va_list vp;
+	va_start(vp, fmt);
+	info_len += vstrnfmt(info_buf + info_len, sizeof(info_buf) - info_len, fmt, vp);
+	va_end(vp);
+}
+
+static void info_add_textblock(textblock *tb)
+{
+	for (const wchar_t *w = textblock_text(tb); w && *w; w++) {
+		char mb[8];
+		const int n = text_wctomb(mb, *w);
+		if (n > 0 && info_len + (size_t)n < sizeof(info_buf) - 1) {
+			memcpy(info_buf + info_len, mb, (size_t)n);
+			info_len += (size_t)n;
+			info_buf[info_len] = '\0';
+		}
+	}
+}
+
+static void flatten(char *s)
+{
+	for (; *s; s++) if (*s == '\t' || *s == '\n') *s = ' ';
+}
+
+static void publish_info(void)
+{
+	pthread_mutex_lock(&shared.lock);
+	memcpy(shared.info, info_buf, info_len + 1);
+	shared.info_gen++;
+	pthread_mutex_unlock(&shared.lock);
+}
+
+static struct monster *visible_monster(struct loc g)
+{
+	struct monster *const mon = square_monster(cave, g);
+	return mon && monster_is_visible(mon) ? mon : NULL;
+}
+
+/* One-line summary of the most interesting thing the player knows to be at g. */
+static void summarise(struct loc g, char *out, size_t cap)
+{
+	struct monster *const mon = visible_monster(g);
+	if (mon) {
+		char name[80], state[80] = "";
+		monster_desc(name, sizeof(name), mon, MDESC_IND_VIS | MDESC_CAPITAL);
+		look_mon_desc(state, sizeof(state), square(cave, g)->mon);
+		strnfmt(out, cap, state[0] ? "%s (%s)" : "%s", name, state);
+	} else if (square_object(player->cave, g)) {
+		const struct object *const known = square_object(player->cave, g);
+		object_desc(out, cap, cave->objects[known->oidx] ? cave->objects[known->oidx] : known,
+			ODESC_PREFIX | ODESC_FULL, player);
+	} else {
+		square_apparent_name(cave, g, out, cap);
+		my_strcap(out);
+	}
+	flatten(out);
+}
+
+/*
+ * Serialised: "Inspect" \t x \t y; then blocks, each a header line starting
+ * with '#' followed by free text lines:
+ *   #M \t name \t state   (monster recall follows)
+ *   #O \t name            (one per known object)
+ *   #F \t terrain
+ */
+static void inspect(struct loc g)
+{
+	info_len = 0;
+	info_buf[0] = '\0';
+	if (!square_in_bounds(cave, g)) return;
+	info_add("Inspect\t%d\t%d\n", g.x, g.y);
+
+	struct monster *const mon = visible_monster(g);
+	if (mon) {
+		char name[80], state[80] = "";
+		monster_desc(name, sizeof(name), mon, MDESC_IND_VIS | MDESC_CAPITAL);
+		look_mon_desc(state, sizeof(state), square(cave, g)->mon);
+		flatten(name);
+		flatten(state);
+		info_add("#M\t%s\t%s\n", name, state);
+		monster_race_track(player->upkeep, mon->race);
+		health_track(player->upkeep, mon);
+		textblock *const tb = textblock_new();
+		lore_description(tb, mon->race, get_lore(mon->race), false);
+		info_add_textblock(tb);
+		textblock_free(tb);
+		info_add("\n");
+	}
+	for (const struct object *known = square_object(player->cave, g); known; known = known->next) {
+		if (ignore_known_item_ok(player, (struct object *)known)) continue;
+		const struct object *const real = cave->objects[known->oidx] ? cave->objects[known->oidx] : known;
+		char name[160];
+		object_desc(name, sizeof(name), real, ODESC_PREFIX | ODESC_FULL, player);
+		flatten(name);
+		info_add("#O\t%s\n", name);
+	}
+	if (square_isknown(cave, g)) {
+		char terrain[80];
+		square_apparent_name(cave, g, terrain, sizeof(terrain));
+		my_strcap(terrain);
+		info_add("#F\t%s\n", terrain);
+	}
+}
+
+/* Monsters matter most in Sil, then objects, then features (doors, stairs...). */
+static int look_rank(struct loc g)
+{
+	if (visible_monster(g)) return 0;
+	if (square_object(player->cave, g)) return 1;
+	return 2;
+}
+
+/*
+ * Serialised: "Look"; then per interesting grid: x \t y \t summary; monsters
+ * first, then objects, then features, each nearest first.
+ */
+static void look_list(void)
+{
+	info_len = 0;
+	info_buf[0] = '\0';
+	info_add("Look\n");
+	struct point_set *const pts = target_get_monsters(TARGET_LOOK, NULL, false);
+	int listed = 0;
+	for (int rank = 0; rank <= 2; rank++)
+		for (int i = 0; i < point_set_size(pts) && listed < LOOK_MAX; i++) {
+			const struct loc g = pts->pts[i];
+			if (loc_eq(g, player->grid) || look_rank(g) != rank) continue;
+			char what[200];
+			summarise(g, what, sizeof(what));
+			info_add("%d\t%d\t%s\n", g.x, g.y, what);
+			listed++;
+		}
+	point_set_dispose(pts);
+}
+
 bool native_service(bool at_prompt)
 {
 	pthread_mutex_lock(&shared.lock);
@@ -265,12 +423,17 @@ bool native_service(bool at_prompt)
 	shared.pending.kind = REQ_NONE;
 	pthread_mutex_unlock(&shared.lock);
 
-	if (!at_prompt || !map_visible()) return false;
+	if (!map_visible()) return false;
+	if (r.kind == REQ_INSPECT) { inspect(r.grid); publish_info(); return false; }
+	if (r.kind == REQ_LOOK_LIST) { look_list(); publish_info(); return false; }
+	if (!at_prompt) return false;
 	switch (r.kind) {
 		case REQ_PREVIEW: preview_path(r.grid); return false;
 		case REQ_CLEAR_PREVIEW: publish_path(r.grid, NULL, 0); return false;
 		case REQ_TRAVEL:
 		case REQ_ACTION: game.stashed = r; return true;
+		case REQ_INSPECT:
+		case REQ_LOOK_LIST:
 		case REQ_NONE: return false;
 	}
 	return false;
@@ -377,6 +540,33 @@ void nb_request_action(enum nb_action a)
 {
 	if (a < 0 || a >= NB_ACT_COUNT) return;
 	post((request){ .kind = REQ_ACTION, .action = a });
+}
+
+void nb_request_inspect(int x, int y)
+{
+	post((request){ .kind = REQ_INSPECT, .grid = loc(x, y) });
+}
+
+void nb_request_look_list(void)
+{
+	post((request){ .kind = REQ_LOOK_LIST });
+}
+
+uint64_t nb_info_generation(void)
+{
+	pthread_mutex_lock(&shared.lock);
+	const uint64_t gen = shared.info_gen;
+	pthread_mutex_unlock(&shared.lock);
+	return gen;
+}
+
+size_t nb_info(char *text, size_t cap)
+{
+	assert(cap > 0);
+	pthread_mutex_lock(&shared.lock);
+	my_strcpy(text, shared.info, cap);
+	pthread_mutex_unlock(&shared.lock);
+	return strlen(text);
 }
 
 void nb_request_travel(int x, int y)

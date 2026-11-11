@@ -13,6 +13,7 @@
  *   @where                                        print the player's screen position
  *   @prompt                                       print the open native prompt
  *   @act=N                                        native action (enum nb_action)
+ *   @inspect@DX,DY @look                          native inspect (relative) / look list
  *   @ctx                                          print the context flags
  *   @answer=N                                     answer any native prompt (see nb_answer)
  *   @aim@DX,DY                                    answer an aim prompt with a grid relative to the player
@@ -175,6 +176,18 @@ static int run_token(const char *tok)
 	if (sscanf(tok, "@act=%d%c", &mx, &tail) == 1) {
 		nb_request_action((enum nb_action)mx);
 		return settle() ? 0 : 1;
+	}
+	if (sscanf(tok, "@inspect@%d,%d%c", &mx, &my, &tail) == 2 || strcmp(tok, "@look") == 0) {
+		int32_t meta[NB_META_COUNT];
+		nb_map_snapshot(meta, NULL, 0);
+		const uint64_t before = nb_info_generation();
+		if (tok[1] == 'l') nb_request_look_list();
+		else nb_request_inspect(meta[NB_META_PLAYER_X] + mx, meta[NB_META_PLAYER_Y] + my);
+		if (!settle()) return 1;
+		static char text[32 * 1024];
+		nb_info(text, sizeof(text));
+		printf("info (gen moved=%d):\n%s", nb_info_generation() != before, text);
+		return 0;
 	}
 	if (strcmp(tok, "@ctx") == 0) {
 		int32_t meta[NB_META_COUNT];

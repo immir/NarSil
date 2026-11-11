@@ -118,6 +118,19 @@ enum nb_action {
 /* Only at the command prompt, like travel. */
 void nb_request_action(enum nb_action a);
 
+/*
+ * Read-only descriptions, answered whenever the map is showing (even at
+ * -more-).  nb_info() returns the latest; its generation moves per answer.
+ *  inspect:   "Inspect" \t x \t y, then blocks headed "#M \t name \t state"
+ *             (monster recall text follows), "#O \t name", "#F \t terrain"
+ *  look list: "Look", then per interesting grid, nearest first: x \t y \t summary
+ * Only what the player knows is described.
+ */
+void nb_request_inspect(int x, int y);
+void nb_request_look_list(void);
+uint64_t nb_info_generation(void);
+size_t nb_info(char *text, size_t cap);
+
 enum nb_cell_flag {
 	NB_CELL_IN_VIEW = 1 << 0,
 	NB_CELL_PLAYER  = 1 << 1,

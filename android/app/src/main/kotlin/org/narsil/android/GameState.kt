@@ -61,6 +61,25 @@ class GameState {
 
     data class Neighbour(val dir: Int, val x: Int, val y: Int, val what: String)
 
+    /** Read-only descriptions the player asked for; dismissable, the game is not waiting on them. */
+    sealed interface Info {
+        data class Inspect(val x: Int, val y: Int, val monster: Monster?, val objects: List<String>, val terrain: String?) : Info
+        data class LookList(val entries: List<LookEntry>) : Info
+    }
+    data class Monster(val name: String, val state: String, val recall: String)
+    data class LookEntry(val x: Int, val y: Int, val summary: String)
+
+    var info by mutableStateOf<Info?>(null)
+
+    /** Glyph and attr the map shows at (x, y), or null off the map. */
+    fun mapCell(x: Int, y: Int): Pair<Int, Int>? {
+        val w = meta[N.META_WIDTH]
+        val h = meta[N.META_HEIGHT]
+        if (x !in 0 until w || y !in 0 until h) return null
+        val i = 2 * (y * w + x)
+        return map[i] to (map[i + 1] and 0xFFFF)
+    }
+
     data class Status(val hp: Int = 0, val maxHp: Int = 0, val voice: Int = 0, val maxVoice: Int = 0,
                       val depth: Int = 0, val exp: Int = 0, val context: Int = 0) {
         fun has(flag: Int) = context and flag != 0
@@ -71,6 +90,7 @@ class GameState {
     private var pathGen = 0L
     private var promptGen = 0L
     private var messagesGen = 0L
+    private var infoGen = -1L
     private val termListeners = mutableListOf<() -> Unit>()
     private val mapListeners = mutableListOf<() -> Unit>()
 
@@ -108,6 +128,10 @@ class GameState {
             }
         }
         N.nativeMessagesGeneration().let { gen -> if (gen != messagesGen) { messagesGen = gen; messages = parseMessages(N.nativeMessages()) } }
+        N.nativeInfoGeneration().let { gen ->
+            if (infoGen < 0) infoGen = gen  // ignore whatever was there before this UI existed
+            else if (gen != infoGen) { infoGen = gen; info = parseInfo(N.nativeInfo()) }
+        }
     }
 
     /** See nb_prompt() in narsil_bridge.h for each kind's layout. */
@@ -135,6 +159,38 @@ class GameState {
             }
             N.PROMPT_DIRECTION -> Prompt.Direction(lines.getOrNull(1)?.trim() == "1",
                 lines.drop(2).filter { it.isNotEmpty() }.map { fields(it, 4).let { f -> Neighbour(f[0].toInt(), f[1].toInt(), f[2].toInt(), f[3]) } })
+            else -> null
+        }
+    }
+
+    /** See nb_request_inspect() in narsil_bridge.h. */
+    private fun parseInfo(raw: String): Info? {
+        val lines = raw.split('\n')
+        val head = lines.firstOrNull()?.split('\t') ?: return null
+        return when (head[0]) {
+            "Look" -> Info.LookList(lines.drop(1).filter { it.isNotEmpty() }.map { l ->
+                l.split('\t', limit = 3).let { LookEntry(it[0].toInt(), it[1].toInt(), it[2]) }
+            })
+            "Inspect" -> {
+                var monster: Monster? = null
+                val objects = mutableListOf<String>()
+                var terrain: String? = null
+                var i = 1
+                while (i < lines.size) {
+                    val f = lines[i].split('\t')
+                    when (f[0]) {
+                        "#M" -> {
+                            val body = lines.drop(i + 1).takeWhile { !it.startsWith("#") }
+                            monster = Monster(f.getOrElse(1) { "" }, f.getOrElse(2) { "" }, body.joinToString("\n").trim())
+                            i += body.size
+                        }
+                        "#O" -> objects += f.getOrElse(1) { "" }
+                        "#F" -> terrain = f.getOrElse(1) { "" }
+                    }
+                    i++
+                }
+                Info.Inspect(head[1].toInt(), head[2].toInt(), monster, objects, terrain)
+            }
             else -> null
         }
     }

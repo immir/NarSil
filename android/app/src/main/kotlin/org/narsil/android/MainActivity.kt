@@ -126,6 +126,17 @@ class MainActivity : ComponentActivity() {
                     is GameState.Prompt.Aim, is GameState.Prompt.Direction -> Unit  // drawn by GameLayers over the map
                 }
             }
+            if (state.prompt == null) state.info?.let { info ->
+                DisposableEffect(info) {
+                    router.intercept = { code -> if (code == Keys.ESCAPE) state.info = null; code == Keys.ESCAPE }
+                    onDispose { router.intercept = null }
+                }
+            }
+            if (state.prompt == null) when (val info = state.info) {
+                is GameState.Info.Inspect -> InspectSheet(info, state) { state.info = null }
+                is GameState.Info.LookList -> LookSheet(info, state) { state.info = null }
+                null -> Unit
+            }
             if (showMore) MoreSheet(moreActions(router) { terminal?.toggleKeyboard() }) { showMore = false }
         }
     }

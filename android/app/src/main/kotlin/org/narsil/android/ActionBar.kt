@@ -51,14 +51,14 @@ fun contextActions(s: GameState.Status): List<BarAction> = buildList {
     if (s.has(N.CTX_ADJ_RUBBLE)) add(BarAction("Tunnel", emphasised = true, run = act(N.ACT_TUNNEL)))
 }
 
-/** Always present: the turn-by-turn Sil toolkit. */
+/** Always present: the turn-by-turn Sil toolkit.  Look is the native list of what is in view. */
 fun coreActions(s: GameState.Status): List<BarAction> = listOf(
     BarAction("Rest", run = act(N.ACT_REST)),
     BarAction("Wait", run = act(N.ACT_HOLD)),
     BarAction(if (s.has(N.CTX_STEALTH)) "Stealth ●" else "Stealth", active = s.has(N.CTX_STEALTH), run = act(N.ACT_STEALTH)),
     BarAction(if (s.has(N.CTX_SINGING)) "Song ♪" else "Song", active = s.has(N.CTX_SINGING), run = act(N.ACT_SONG)),
     BarAction("Pack", run = act(N.ACT_INVENTORY)),
-    BarAction("Look", run = act(N.ACT_LOOK)),
+    BarAction("Look", run = { N.nativeRequestLookList() }),
 )
 
 /** Less frequent but necessary: behind the ☰ button. */
