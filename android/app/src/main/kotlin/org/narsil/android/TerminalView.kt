@@ -54,6 +54,8 @@ class TerminalView(context: Context, private val state: GameState, private val r
     }
 
     override fun onDraw(canvas: Canvas) {
+        /* Compose's AndroidView does not clip children: drawColor() would paint the whole window. */
+        canvas.clipRect(0, 0, width, height)
         canvas.drawColor(Color.BLACK)
         if (state.palette.isEmpty()) return
         val cells = state.term

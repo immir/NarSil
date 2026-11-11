@@ -105,6 +105,8 @@ class MapView(context: Context, private val state: GameState, private val router
     }
 
     override fun onDraw(canvas: Canvas) {
+        /* Compose's AndroidView does not clip children: drawColor() would paint the whole window. */
+        canvas.clipRect(0, 0, width, height)
         canvas.drawColor(Color.BLACK)
         val w = mapW
         val h = mapH
