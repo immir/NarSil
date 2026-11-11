@@ -1,42 +1,57 @@
-# NarSil for Android: spike
+# NarSil for Android
 
-Status: spike (2026-11-11, Immir). Proves the build, data paths, threading and
-save model. The UI is a terminal fallback, not the mobile-first design yet.
+Status: playable, mobile-first, in progress (2026-11-11, Immir).
+
+The game's core runs unmodified on its own thread. Everything you play with
+day to day is native touch UI; any textui screen not yet replaced still works
+in a zoomable terminal view underneath.
+
+## What is native
+
+| Area | How |
+|---|---|
+| Map | Whole-level snapshot from `map_info()` (game's own glyphs/lighting); pinch zoom, two-finger pan, follow camera |
+| Moving | Tap adjacent = step/attack; tap far = ghost path (game's `find_path`), tap again = go; swipe = step |
+| Inspect | Long press: monster state + lore recall, objects, terrain; **Look** lists what is in view (monsters first) |
+| Prompts | Item selection, item actions (with description), yes/no, aiming (tap a monster/grid, swipe), adjacent direction, songs, skills |
+| Action bar | Context (Down/Up, Pick up, Fire, Throw, Open/Close, Disarm, Tunnel, Skills when experience waits) + Rest, Wait, Stealth, Song, Pack, Look; ☰ for the rest |
+| Status | HP/Voice bars, depth, status line, tracked foe (health, Sleeping/Unwary/...+morale), 3-line message history; tap or tap the map at -more- |
+| Saving | On leaving the app, plus autosave each new level and every 100 commands |
 
 ## Layout
 
 | Path | Role |
 |---|---|
-| `app/src/main/cpp/narsil_bridge.{h,c}` | Platform-neutral: game thread, z-term backend, key queue, double-buffered frames, safe-point saves |
-| `app/src/main/cpp/narsil_jni.c` | JNI glue for `org.narsil.android.NarSilNative` |
-| `app/src/main/cpp/host_harness.c` | Desktop driver: runs a key script against the bridge |
-| `app/src/main/cpp/CMakeLists.txt` | One build: NDK gives `libnarsil.so`; the host gives `narsil_host` |
-| `app/src/main/kotlin/...` | `TerminalView` (grid render + IME/hardware keys), key bar, asset install, lifecycle |
-
-The core is every `src/*.c` except `main*.c`/`snd-*.c`, so nothing upstream changes.
+| `app/src/main/cpp/narsil_bridge.{h,c}` | Public C API; game thread, z-term backend, key/mouse queue, double-buffered frames, safe-point saves, autosave |
+| `app/src/main/cpp/narsil_native.c` | Map/status/messages snapshots, path preview, travel, one-tap actions, inspect/look |
+| `app/src/main/cpp/narsil_prompt.c` | Native prompt hooks (item, actions, check, aim, direction, songs, skills) |
+| `app/src/main/cpp/narsil_jni.c` | JNI glue (strings decoded safely: no `NewStringUTF` on game text) |
+| `app/src/main/cpp/host_harness.c` | Desktop driver: scripted keys, taps, actions and prompt answers |
+| `app/src/main/kotlin/...` | `GameState` (per-vsync poller), `MapView`, `TerminalView`, sheets and bars |
 
 ## Design points
 
-- **Threads.** The game runs on its own 8 MB-stack thread and blocks in
-  `TERM_XTRA_EVENT` on a condvar. The UI thread never blocks. It pushes keys,
-  and on each vsync it copies a frame only if the frame generation has changed.
-- **Frames** are published at `TERM_XTRA_FRESH` from a private buffer, so the UI never sees a half-drawn screen.
-- **Saves** (`onStop`) are requests. The game thread does them only while it
-  is inside `cmd_get_hook(CTX_GAME)`, where no command is half-executed. A
-  request made anywhere else (birth, `-more-`, mid-turn) waits for the next
-  command prompt. The save skips `save_game()`'s message flush, which could
-  bring up a `-more-` prompt while the app is in the background.
-- **quit()** ends only the game thread, not the process. The UI then shows the
-  exit message and closes the process, since the core's globals can't be
-  initialised a second time.
+- **Threads.** The game blocks in `TERM_XTRA_EVENT` or in a native prompt;
+  the UI never blocks.  Lock order: bridge lock, then native lock.
+- **Typed commands, not keystrokes.** Taps and action-bar buttons become
+  requests handled at the top-level command prompt (wake with a null key,
+  then queue `CMD_*` or open the textui screen in place) -- independent of
+  keyset and keymaps.  Requests away from the prompt are dropped.
+- **Native prompts defer to the textui while a keymap expands**
+  (`inkey_next`), e.g. the original keyset maps `6` to walk + `6`.
+- **Saves** run only at a safe point (waiting for a top-level command).
+- **quit()** ends only the game thread; the UI then closes the process.
 
 ## Host tests (no Android SDK needed)
 
     ./host-test.sh          # ASan + UBSan
     TSAN=1 ./host-test.sh   # ThreadSanitizer
 
-These cover new game, a save deferred during birth, moving, an explicit save,
-quit, and reloading the savefile.
+    MSAN=1 ./host-test.sh   # MemorySanitizer (clang)
+
+Scenarios cover saving/reloading, touch, the native map, every native prompt,
+actions, inspect/look and skill spending.  `NARSIL_PLAYER=PLAYER` lets the
+harness load a savefile copied off a device.
 
 ## Android build
 
@@ -49,9 +64,7 @@ Needs SDK platform 34, build-tools, NDK 26.1.10909125 and CMake 3.22.1. Point
 Plugin versions match the NetHack mobile build (AGP 8.2.0, Kotlin 1.9.20,
 Gradle 8.4). Upgrade them all together.
 
-## Known spike limits
+## Not yet native
 
-- Fixed 80x24 grid scaled to fit. It's small in portrait; landscape is fine.
-- Text only: no tiles, sound or subwindows.
-- Tapping the terminal toggles the soft keyboard; Back sends Escape.
-- Builds (debug and release, arm64-v8a and x86_64) but hasn't run on a device or emulator yet.
+Birth, death screen, abilities (Tab), smithing, help and options use the
+zoomable terminal view (pinch to zoom, two-finger pan, tap = click).
