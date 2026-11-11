@@ -266,7 +266,7 @@ JNIEXPORT jlong JNICALL JNI_FN(nativeMessagesGeneration)(JNIEnv *env, jclass cls
 JNIEXPORT jstring JNICALL JNI_FN(nativeMessages)(JNIEnv *env, jclass cls)
 {
 	(void)cls;
-	static char text[8192];
+	static char text[NB_MESSAGES_CAP];
 	nb_messages(text, sizeof(text));
 	return new_string(env, text);
 }

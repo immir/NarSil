@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -34,7 +36,7 @@ import androidx.compose.ui.unit.sp
 import org.narsil.android.NarSilNative as N
 
 @Composable
-private fun BottomSheet(onDismiss: () -> Unit, content: @Composable () -> Unit) {
+private fun BottomSheet(onDismiss: () -> Unit, tall: Boolean = false, content: @Composable () -> Unit) {
     Box(
         Modifier.fillMaxSize().background(Color(0x99000000))
             .clickable(remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
@@ -43,7 +45,7 @@ private fun BottomSheet(onDismiss: () -> Unit, content: @Composable () -> Unit) 
         Surface(
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
             color = Color(0xFF1C1C1E),
-            modifier = Modifier.fillMaxWidth().heightIn(max = 600.dp)
+            modifier = Modifier.fillMaxWidth().let { if (tall) it.fillMaxHeight(0.85f) else it.heightIn(max = 600.dp) }
                 .clickable(remember { MutableInteractionSource() }, indication = null) {},
         ) { content() }
     }
@@ -106,6 +108,32 @@ fun LookSheet(info: GameState.Info.LookList, state: GameState, onDismiss: () -> 
                     }
                     Divider(color = Color(0xFF2C2C2E), modifier = Modifier.padding(start = 52.dp))
                 }
+            }
+        }
+    }
+}
+
+/**
+ * The message log, newest at the bottom and scrolled there; scroll up for history.
+ * Live: messages arriving while it is open are appended.
+ */
+@Composable
+fun MessagesSheet(state: GameState, onDismiss: () -> Unit) {
+    val messages = state.messages
+    val list = rememberLazyListState(initialFirstVisibleItemIndex = maxOf(messages.size - 1, 0))
+    BottomSheet(onDismiss, tall = true) {
+        Column(Modifier.padding(top = 12.dp)) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("Messages", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                TextButton(onClick = onDismiss) { Text("Close") }
+            }
+            if (messages.isEmpty()) Text("No messages yet.", color = Color(0xFF9A9AA0), modifier = Modifier.padding(16.dp))
+            LazyColumn(Modifier.fillMaxWidth(), state = list) {
+                items(messages) { m ->
+                    Text(if (m.count > 1) "${m.text} (x${m.count})" else m.text, color = Color(state.colour(m.attr)), fontSize = 15.sp,
+                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp))
+                }
+                item { Box(Modifier.padding(bottom = 12.dp)) }
             }
         }
     }

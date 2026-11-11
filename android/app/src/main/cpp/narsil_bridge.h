@@ -231,9 +231,11 @@ void nb_answer(int32_t value);
 void nb_answer_item(int index);
 
 /*
- * Recent messages, oldest first, one per line: attr \t repeat count \t text.
- * The generation moves whenever a message is added.
+ * The message log (the newest few hundred), oldest first, one per line:
+ * attr \t repeat count \t text.  The generation moves whenever a message is added.
+ * A buffer of NB_MESSAGES_CAP always holds the whole log.
  */
+enum { NB_MESSAGES_CAP = 160 * 1024 };
 uint64_t nb_messages_generation(void);
 size_t nb_messages(char *text, size_t cap);
 

@@ -59,6 +59,7 @@ class MainActivity : ComponentActivity() {
     private var terminal: TerminalView? = null
     private var game: GameState? = null
     private var showMore by mutableStateOf(false)
+    private var showMessages by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -140,7 +141,14 @@ class MainActivity : ComponentActivity() {
                 is GameState.Info.LookList -> LookSheet(info, state) { state.info = null }
                 null -> Unit
             }
-            if (showMore) MoreSheet(moreActions(router) { terminal?.toggleKeyboard() }) { showMore = false }
+            if (state.prompt == null && showMessages) {
+                DisposableEffect(Unit) {
+                    router.intercept = { code -> if (code == Keys.ESCAPE) showMessages = false; code == Keys.ESCAPE }
+                    onDispose { router.intercept = null }
+                }
+                MessagesSheet(state) { showMessages = false }
+            }
+            if (showMore) MoreSheet(moreActions(router, { showMessages = true }) { terminal?.toggleKeyboard() }) { showMore = false }
         }
     }
 
@@ -190,7 +198,10 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun GameLayers(state: GameState) {
         Column(Modifier.fillMaxSize()) {
-            if (state.mapMode) MessageStrip(state) { router.special(Keys.ENTER) }
+            /* At -more- a tap continues; otherwise it opens the scrollable history. */
+            if (state.mapMode) MessageStrip(state) {
+                if (state.messageLine.contains("-more-")) router.special(Keys.ENTER) else showMessages = true
+            }
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 AndroidView(
                     factory = { ctx -> TerminalView(ctx, state, router).also { terminal = it } },

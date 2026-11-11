@@ -46,7 +46,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 6, MESSAGES_CAP = 4096, INFO_CAP = 32 * 1024, LOOK_MAX = 40 };
+enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MAX = 40 };
 
 typedef struct { int32_t cp, attr_flags; } map_cell;
 
@@ -73,7 +73,7 @@ static struct {
 	size_t path_pairs;
 	uint64_t path_gen;
 	request pending;
-	char messages[MESSAGES_CAP];
+	char messages[NB_MESSAGES_CAP];
 	uint64_t messages_gen;
 	char info[INFO_CAP];
 	uint64_t info_gen;
@@ -96,19 +96,24 @@ static void mark_messages(game_event_type type, game_event_data *data, void *use
 	game.messages_dirty = true;
 }
 
-/* Oldest first; tabs/newlines in message text flattened so records stay one per line. */
+/*
+ * Oldest first; tabs/newlines in message text flattened so records stay one per line.
+ * As many of the newest messages as fit (a record is at most ~530 bytes).
+ */
 static void publish_messages(void)
 {
-	char buf[MESSAGES_CAP];
+	static char buf[NB_MESSAGES_CAP];
+	enum { RECORD_MAX = 512 + 24 };
 	size_t len = 0;
 	buf[0] = '\0';  /* the log is empty at startup, before a savefile loads */
-	const int n = MIN((int)messages_num(), MESSAGES_SHOWN);
+	const int n = MIN(MIN((int)messages_num(), MESSAGES_SHOWN), (int)(sizeof(buf) / RECORD_MAX));
 	for (int age = n - 1; age >= 0; age--) {
 		char text[512];
 		my_strcpy(text, message_str((uint16_t)age), sizeof(text));
 		for (char *p = text; *p; p++) if (*p == '\t' || *p == '\n') *p = ' ';
 		len += (size_t)strnfmt(buf + len, sizeof(buf) - len, "%d\t%d\t%s\n",
 			(int)message_color((uint16_t)age), (int)message_count((uint16_t)age), text);
+		assert(len < sizeof(buf));
 	}
 	pthread_mutex_lock(&shared.lock);
 	memcpy(shared.messages, buf, len + 1);

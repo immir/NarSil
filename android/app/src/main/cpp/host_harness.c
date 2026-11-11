@@ -201,7 +201,7 @@ static int run_token(const char *tok)
 		return settle() ? 0 : 1;
 	}
 	if (strcmp(tok, "@messages") == 0) {
-		static char text[8192];
+		static char text[NB_MESSAGES_CAP];
 		nb_messages(text, sizeof(text));
 		printf("messages:\n%s", text);
 		for (const unsigned char *p = (const unsigned char *)text; *p; p++)
