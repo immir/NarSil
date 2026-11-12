@@ -536,7 +536,7 @@ static void run_action(enum nb_action a)
 		case NB_ACT_LOOK: do_cmd_look(); break;
 		case NB_ACT_MESSAGES: do_cmd_messages(); break;
 		case NB_ACT_CHARACTER: do_cmd_change_name(); break;
-		case NB_ACT_ABILITIES: do_cmd_abilities(); break;
+		case NB_ACT_ABILITIES: native_abilities(); break;
 		case NB_ACT_HELP: do_cmd_help(); break;
 		case NB_ACT_SKILLS: native_gain_skills(); break;
 		case NB_ACT_COUNT: break;

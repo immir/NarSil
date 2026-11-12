@@ -65,7 +65,7 @@ echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 # player legitimately stops it), so only the flow is asserted here.
 echo "== aiming beyond range completes (aims that way rather than at the player)"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" t @pick=0 @aim@-9,0 @messages ^x @enter @esc)
+out=$(run "${birth[@]}" t @pick=0 @aim@-9,0 @messages @esc @esc ^x @enter @esc)
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
 echo "== autosave on first prompt; stealth action toggles; close opens the direction prompt"
@@ -87,6 +87,13 @@ rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=23 @answer=100 @answer=100 @answer=200 @answer=2 @act=23 @prompt @answer=-1 ^x @enter @esc)
 echo "$out" | grep -qP '^Skills\t4900$'
 echo "$out" | grep -qP '^Melee\t1\t'
+echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
+
+echo "== abilities: learn one (confirmed by the native check), then switch it off"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=23 @answer=101 @answer=2 @act=21 @answer=14 @answer=1 @prompt @answer=14 @prompt @answer=-1 ^x @enter @esc)
+echo "$out" | grep -qP '^1\t2\t1\t\d+\t\tCareful Shot\t'
+echo "$out" | grep -qP '^1\t3\t1\t\d+\t\tCareful Shot\t'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
 echo "== native walk and run: some direction is open; runs end at the prompt"

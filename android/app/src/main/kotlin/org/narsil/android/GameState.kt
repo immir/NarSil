@@ -64,10 +64,13 @@ class GameState {
         data class Direction(val allowHere: Boolean, val neighbours: List<Neighbour>) : Prompt
         data class Choice(val title: String, val options: List<Option>) : Prompt
         data class Skills(val expLeft: Int, val skills: List<Skill>) : Prompt
+        data class Abilities(val expLeft: Int, val skills: List<String>, val abilities: List<Ability>) : Prompt
     }
 
     data class Neighbour(val dir: Int, val x: Int, val y: Int, val what: String)
     data class Option(val index: Int, val label: String, val description: String)
+    data class Ability(val index: Int, val skill: Int, val state: Int, val points: Int, val cost: Int,
+                       val prereqs: String, val name: String, val description: String)
     data class Skill(val index: Int, val name: String, val base: Int, val total: Int, val spent: Int, val nextCost: Int)
 
     /** Read-only descriptions the player asked for; dismissable, the game is not waiting on them. */
@@ -185,6 +188,10 @@ class GameState {
             N.PROMPT_SKILLS -> Prompt.Skills(fields(lines[0], 2).getOrNull(1)?.toIntOrNull() ?: 0,
                 lines.drop(1).filter { it.isNotEmpty() }.mapIndexed { i, l ->
                     fields(l, 5).let { f -> Skill(i, f[0], f[1].toInt(), f[2].toInt(), f[3].toInt(), f[4].toInt()) }
+                })
+            N.PROMPT_ABILITIES -> Prompt.Abilities(fields(lines[0], 2).getOrNull(1)?.toIntOrNull() ?: 0, lines[1].split('\t'),
+                lines.drop(2).filter { it.isNotEmpty() }.mapIndexed { i, l ->
+                    fields(l, 7).let { f -> Ability(i, f[0].toInt(), f[1].toInt(), f[2].toInt(), f[3].toInt(), f[4], f[5], f.getOrElse(6) { "" }) }
                 })
             N.PROMPT_DIRECTION -> Prompt.Direction(lines.getOrNull(1)?.trim() == "1",
                 lines.drop(2).filter { it.isNotEmpty() }.map { fields(it, 4).let { f -> Neighbour(f[0].toInt(), f[1].toInt(), f[2].toInt(), f[3]) } })

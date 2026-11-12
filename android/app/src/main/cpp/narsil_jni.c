@@ -242,7 +242,7 @@ JNIEXPORT jlong JNICALL JNI_FN(nativePromptGeneration)(JNIEnv *env, jclass cls)
 JNIEXPORT jstring JNICALL JNI_FN(nativePrompt)(JNIEnv *env, jclass cls)
 {
 	(void)cls;
-	static char text[32 * 1024];
+	static char text[NB_PROMPT_CAP + 2];
 	text[0] = '0' + (char)nb_prompt(text + 2, sizeof(text) - 2);
 	text[1] = '\n';
 	return new_string(env, text);

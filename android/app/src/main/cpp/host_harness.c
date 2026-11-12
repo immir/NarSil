@@ -173,7 +173,7 @@ static int run_token(const char *tok)
 		return 0;
 	}
 	if (strcmp(tok, "@prompt") == 0) {
-		static char text[32 * 1024];
+		static char text[NB_PROMPT_CAP];
 		const enum nb_prompt_kind kind = nb_prompt(text, sizeof(text));
 		printf("prompt kind=%d\n%s", (int)kind, text);
 		return 0;

@@ -193,6 +193,18 @@ enum nb_prompt_kind {
 	NB_PROMPT_DIRECTION = 5, /* adjacent direction: answer 1-9 (5 only if allowed), -1 cancel */
 	NB_PROMPT_CHOICE = 6,  /* pick one option: answer its index, -1 cancel */
 	NB_PROMPT_SKILLS = 7,  /* spend experience: answer NB_SKILL_*, -1 cancel (undo) */
+	NB_PROMPT_ABILITIES = 8, /* answer: an ability line index (learn, or switch on/off), -1 close */
+};
+
+/* A buffer of NB_PROMPT_CAP always holds a whole prompt (plus its kind line). */
+enum { NB_PROMPT_CAP = 64 * 1024 };
+
+/* Ability line states (NB_PROMPT_ABILITIES). */
+enum nb_ability_state {
+	NB_ABILITY_LOCKED = 0,     /* missing skill points or a prerequisite */
+	NB_ABILITY_AVAILABLE = 1,  /* can be learnt (if the experience is there) */
+	NB_ABILITY_ON = 2, NB_ABILITY_OFF = 3,            /* learnt; switched on / off */
+	NB_ABILITY_ITEM_ON = 4, NB_ABILITY_ITEM_OFF = 5,  /* granted by equipment */
 };
 
 /* Skill answers: buy/sell a point in skill i, reset this session, or accept. */

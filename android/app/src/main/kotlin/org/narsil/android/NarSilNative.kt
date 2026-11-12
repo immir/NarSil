@@ -123,6 +123,13 @@ object NarSilNative {
     const val PROMPT_DIRECTION = 5
     const val PROMPT_CHOICE = 6
     const val PROMPT_SKILLS = 7
+    const val PROMPT_ABILITIES = 8
+    const val ABILITY_LOCKED = 0
+    const val ABILITY_AVAILABLE = 1
+    const val ABILITY_ON = 2
+    const val ABILITY_OFF = 3
+    const val ABILITY_ITEM_ON = 4
+    const val ABILITY_ITEM_OFF = 5
 
     const val SKILL_RESET = 1
     const val SKILL_ACCEPT = 2

@@ -36,6 +36,7 @@
 #include "player-skills.h"
 #include "songs.h"
 #include "player-path.h"
+#include "player-util.h"
 #include "target.h"
 #include "ui-game.h"
 #include "ui-input.h"
@@ -48,7 +49,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-enum { MAX_ITEMS = 96, MAX_ACTIONS = 16, MAX_TARGETS = 64, TEXT_CAP = 48 * 1024 };
+enum { MAX_ITEMS = 96, MAX_ACTIONS = 16, MAX_TARGETS = 64, TEXT_CAP = NB_PROMPT_CAP - 8 };
 #define ANSWER_PENDING INT32_MIN
 
 /* Shared; guarded by `lock`. */
@@ -624,6 +625,136 @@ void native_gain_skills(void)
 	event_remove_handler(EVENT_SKILLPOINTS, on_skill_points, NULL);
 	finalise_skills();
 	player->upkeep->redraw |= PR_EXP;
+}
+
+/* ------------------------------------------------------------------------
+ * Abilities: do_cmd_abilities() (ui-abilities.c) as one native screen.  Learning
+ * and switching use the same calls as the textui (player_gain_ability() asks
+ * its confirmation through the native check prompt).
+ * ------------------------------------------------------------------------ */
+
+static const char *bane_names[] = {
+	#define BANE(a, b) b,
+	#include "list-bane-types.h"
+	#undef BANE
+};
+
+static enum nb_ability_state ability_state(struct ability *a)
+{
+	const struct ability *innate = locate_ability(player->abilities, a);
+	const struct ability *item = locate_ability(player->item_abilities, a);
+	if (innate) return innate->active ? NB_ABILITY_ON : NB_ABILITY_OFF;
+	if (item) return item->active ? NB_ABILITY_ITEM_ON : NB_ABILITY_ITEM_OFF;
+	return player_has_prereq_abilities(player, a) && player->skill_base[a->skill] >= a->level
+		? NB_ABILITY_AVAILABLE : NB_ABILITY_LOCKED;
+}
+
+static bool is_bane(const struct ability *a)
+{
+	return a->skill == SKILL_PERCEPTION && streq(a->name, "Bane");
+}
+
+/* The global ability list in skill order (as the textui menus list them). */
+static int abilities_by_skill(struct ability **out, int max)
+{
+	int n = 0;
+	for (int s = 0; s < SKILL_MAX; s++)
+		for (struct ability *a = abilities; a && n < max; a = a->next)
+			if (a->skill == s) out[n++] = a;
+	return n;
+}
+
+/*
+ * Serialised: "Abilities" \t experience to spend; skill names \t-separated;
+ * then per ability: skill \t state \t skill points needed \t cost (-1 when
+ * prerequisites are missing) \t prerequisites (" or "-joined) \t name \t description.
+ */
+static void publish_abilities(struct ability **list, int n)
+{
+	pthread_mutex_lock(&shared.lock);
+	text_reset();
+	text_add("Abilities\t%d\n", player->new_exp);
+	for (int s = 0; s < SKILL_MAX; s++) text_add("%s%s", s ? "\t" : "", skill_names[s]);
+	text_add("\n");
+	for (int i = 0; i < n; i++) {
+		struct ability *a = list[i];
+		const enum nb_ability_state st = ability_state(a);
+		char prereqs[300] = "";
+		for (const struct ability *p = a->prerequisites; p; p = p->next)
+			my_strcat(prereqs, format("%s%s", prereqs[0] ? " or " : "", p->name), sizeof(prereqs));
+		char name[120], desc[2000];
+		my_strcpy(name, a->name, sizeof(name));
+		my_strcpy(desc, a->desc ? a->desc : "", sizeof(desc));
+		if (is_bane(a) && player->bane_type > 0 && (st == NB_ABILITY_ON || st == NB_ABILITY_OFF)) {
+			strnfmt(name, sizeof(name), "%s-Bane", bane_names[player->bane_type]);
+			my_strcat(desc, format("  %s slain: %d, giving a %+d bonus.", bane_names[player->bane_type],
+				player_bane_type_killed(player->bane_type), calc_bane_bonus(player)), sizeof(desc));
+		}
+		sanitise(prereqs); sanitise(name); sanitise(desc);
+		const int cost = player_has_prereq_abilities(player, a) ? player_ability_cost(player, a) : -1;
+		text_add("%d\t%d\t%d\t%d\t%s\t%s\t%s\n", a->skill, (int)st, a->level, cost, prereqs, name, desc);
+	}
+	pthread_mutex_unlock(&shared.lock);
+}
+
+/* bane_menu(): only enemy types with four kills can be chosen.  False if none was. */
+static bool choose_bane(void)
+{
+	int type[N_ELEMENTS(bane_names)], n = 0;
+	pthread_mutex_lock(&shared.lock);
+	text_reset();
+	text_add("Choose the enemy for your Bane\n");
+	for (int t = 1; t < (int)N_ELEMENTS(bane_names); t++) {
+		const int kills = player_bane_type_killed(t);
+		if (kills < 4) continue;
+		type[n++] = t;
+		text_add("%s\tYou have slain %d of these foes.\n", bane_names[t], kills);
+	}
+	pthread_mutex_unlock(&shared.lock);
+	if (n == 0) {
+		msg("You must slay at least four of a kind of foe before you can choose it as your Bane.");
+		return false;
+	}
+	const int32_t pick = ask(NB_PROMPT_CHOICE);
+	if (pick < 0 || pick >= n) return false;
+	player->bane_type = type[pick];
+	return true;
+}
+
+/* ability_action(): switch a held ability, or learn an available one. */
+static void use_ability(struct ability *a)
+{
+	struct ability *held = locate_ability(player->abilities, a);
+	if (!held) held = locate_ability(player->item_abilities, a);
+	if (held) {
+		held->active = !held->active;
+		player->upkeep->update |= PU_BONUS;
+		return;
+	}
+	if (ability_state(a) != NB_ABILITY_AVAILABLE) {
+		msg("Insufficient prerequisites for ability!");
+		return;
+	}
+	if (!player_can_gain_ability(player, a)) {
+		msg("You do not have enough experience to acquire this ability.");
+		return;
+	}
+	if (is_bane(a) && !choose_bane()) return;
+	if (!player_gain_ability(player, a) && is_bane(a)) player->bane_type = 0;
+}
+
+void native_abilities(void)
+{
+	struct ability *list[400];
+	const int n = abilities_by_skill(list, (int)N_ELEMENTS(list));
+	for (;;) {
+		handle_stuff(player);
+		publish_abilities(list, n);
+		const int32_t pick = ask(NB_PROMPT_ABILITIES);
+		if (pick < 0 || pick >= n) break;
+		use_ability(list[pick]);
+	}
+	handle_stuff(player);
 }
 
 /* ------------------------------------------------------------------------
