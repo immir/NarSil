@@ -53,7 +53,7 @@ enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MA
 
 typedef struct { int32_t cp, attr_flags; } map_cell;
 
-enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_LOOK_LIST };
+enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_LOOK_LIST, REQ_TEST_DIE };
 typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; int dir; bool run; } request;
 
 /* Game thread only. */
@@ -565,7 +565,8 @@ bool native_service(bool at_prompt)
 		case REQ_CLEAR_PREVIEW: publish_path(r.grid, NULL, 0); return false;
 		case REQ_TRAVEL:
 		case REQ_ACTION:
-		case REQ_MOVE: game.stashed = r; return true;
+		case REQ_MOVE:
+		case REQ_TEST_DIE: game.stashed = r; return true;
 		case REQ_INSPECT:
 		case REQ_LOOK_LIST:
 		case REQ_NONE: return false;
@@ -648,6 +649,8 @@ void native_run_stashed(void)
 	} else if (r.kind == REQ_ACTION) {
 		publish_path(r.grid, NULL, 0);
 		run_action(r.action);
+	} else if (r.kind == REQ_TEST_DIE) {
+		take_hit(player, player->chp + 100, "the test harness");
 	} else if (r.kind == REQ_MOVE) {
 		publish_path(r.grid, NULL, 0);
 		/* Running confused would be refused; the game makes walking stagger instead. */
@@ -689,6 +692,13 @@ void nb_request_move(int dir, bool run)
 	if (dir < 1 || dir > 9 || dir == 5) return;
 	post((request){ .kind = REQ_MOVE, .dir = dir, .run = run });
 }
+
+#ifndef __ANDROID__
+void nb_test_die(void)
+{
+	post((request){ .kind = REQ_TEST_DIE });
+}
+#endif
 
 void nb_request_inspect(int x, int y)
 {

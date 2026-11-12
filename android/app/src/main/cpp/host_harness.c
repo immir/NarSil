@@ -196,6 +196,10 @@ static int run_token(const char *tok)
 		nb_answer_text(tok + 6);
 		return settle() ? 0 : 1;
 	}
+	if (strcmp(tok, "@die") == 0) {
+		nb_test_die();
+		return settle() ? 0 : 1;
+	}
 	if (strcmp(tok, "@info") == 0) {
 		static char text[32 * 1024];
 		nb_info(text, sizeof(text));

@@ -138,6 +138,12 @@ out=$(run "${birth[@]}" Q @answer=1 @ @enter @prompt @answer=0 @answer=-1 @answe
 echo "$out" | grep -qP '^Screen\tdeath\tYou have retired$'
 echo "$out" | grep -qP '^Screen\trace\tRace$'
 
+echo "== death screen (slain): -more-, then the death screen, then a new character"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @die @enter @prompt @answer=5 @answer=1 @prompt)
+echo "$out" | grep -qP '^Screen\tdeath\tYou have been slain$'
+echo "$out" | grep -qP '^Screen\trace\tRace$'
+
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @walk=1 @walk=2 @walk=3 @walk=4 @walk=6 @walk=7 @walk=8 @walk=9 @run=2 @run=4 @run=6 @run=8 @walk=5 "${quit[@]}")
