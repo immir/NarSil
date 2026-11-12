@@ -163,11 +163,20 @@ private fun NumbersRow(pair: List<GameState.SmithOption>, onAnswer: (Int) -> Uni
 @Composable
 fun TextPrompt(p: GameState.Prompt.Text, onCancel: () -> Unit) {
     var text by remember(p) { mutableStateOf(p.initial) }
+    val long = p.maxBytes > 40
     AlertDialog(
         onDismissRequest = onCancel,
         title = { Text(p.title) },
-        text = { OutlinedTextField(text, { text = it.take(19) }, singleLine = true) },
+        text = {
+            OutlinedTextField(text, { t -> if (t.toByteArray().size <= p.maxBytes) text = t.replace('\n', ' ') },
+                              singleLine = !long, minLines = if (long) 4 else 1)
+        },
         confirmButton = { TextButton(onClick = { N.nativeAnswerText(text.trim()) }) { Text("OK") } },
-        dismissButton = { TextButton(onClick = onCancel) { Text("Cancel") } },
+        dismissButton = {
+            Row {
+                if (p.random) TextButton(onClick = { N.nativeAnswer(N.TEXT_RANDOM) }) { Text("Random") }
+                TextButton(onClick = onCancel) { Text("Cancel") }
+            }
+        },
     )
 }

@@ -59,6 +59,11 @@ extern bool arg_wizard;
 extern char savefile[1024];
 extern char panicfile[1024];
 extern void (*reinit_hook)(void);
+/* Front ends may replace the textui's birth and death screens (NULL: use them). */
+extern void (*birth_hook)(void);
+extern void (*death_hook)(void);
+/* After a finished game, how to start the next (NULL: let the player select). */
+extern enum game_mode_type (*play_again_hook)(void);
 
 void cmd_init(void);
 unsigned char cmd_lookup_key(cmd_code lookup_cmd, int mode);

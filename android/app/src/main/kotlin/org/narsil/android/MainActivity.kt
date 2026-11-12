@@ -148,6 +148,7 @@ class MainActivity : ComponentActivity() {
                     is GameState.Prompt.Abilities -> AbilitiesSheet(prompt, answer)
                     is GameState.Prompt.Smith -> SmithSheet(prompt, answer)
                     is GameState.Prompt.Text -> TextPrompt(prompt) { answer(-1) }
+                    is GameState.Prompt.Screen -> ScreenSheet(prompt, answer)
                     is GameState.Prompt.Aim, is GameState.Prompt.Direction -> Unit  // drawn by GameLayers over the map
                 }
             }
@@ -198,6 +199,7 @@ class MainActivity : ComponentActivity() {
         }
         is GameState.Prompt.Abilities, is GameState.Prompt.Smith -> if (code == Keys.ESCAPE) -1 else null
         is GameState.Prompt.Text -> if (code == Keys.ESCAPE) -1 else null
+        is GameState.Prompt.Screen -> if (code == Keys.ESCAPE && prompt.stage != "death") -1 else null
         is GameState.Prompt.Skills -> when (code) {
             Keys.ESCAPE -> -1
             Keys.ENTER -> NarSilNative.SKILL_ACCEPT
@@ -396,6 +398,7 @@ class MainActivity : ComponentActivity() {
         val keys: List<Pair<String, () -> Unit>> = when (waiting) {
             GameState.Waiting.YES_NO -> listOf("Yes" to { router.char('y'.code) }, "No" to { router.char('n'.code) })
             GameState.Waiting.MORE, GameState.Waiting.ANY_KEY -> listOf("Continue" to { router.special(Keys.ENTER) })
+            GameState.Waiting.AT_SIGN -> listOf("Confirm (@)" to { router.char('@'.code) }, "Cancel" to { router.special(Keys.ESCAPE) })
             GameState.Waiting.MENU -> listOf("Back" to { router.special(Keys.ESCAPE) }, "OK" to { router.special(Keys.ENTER) })
         }
         Row(

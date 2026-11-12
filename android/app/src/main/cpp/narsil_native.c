@@ -126,6 +126,7 @@ static void publish_messages(void)
 
 void native_init(void)
 {
+	native_birth_init();
 	event_add_handler(EVENT_MESSAGE, mark_messages, NULL);
 	game.messages_dirty = true;
 	static game_event_type dirtying[] = {

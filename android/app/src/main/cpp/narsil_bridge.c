@@ -73,6 +73,7 @@ static struct {
 	bool save_requested;
 	uint64_t saves_done;
 	bool waiting;
+	bool in_prompt;  /* blocked in a native prompt: only an answer wakes it */
 	cell *front;
 	int cur_x, cur_y;
 	bool cur_visible;
@@ -331,6 +332,12 @@ static void reinit(void)
 	native_init();
 }
 
+/* The native death screen has already asked; a new character replaces the dead one. */
+static enum game_mode_type play_again_new(void)
+{
+	return GAME_NEW;
+}
+
 /*
  * config.h hardwires PRIVATE_USER_PATH ("~/.angband") on UNIX, which on Android
  * is unwritable and on a desktop is the player's real profile.  Keep the user
@@ -368,6 +375,7 @@ static void *game_main(void *unused)
 	init_main_term();
 	cmd_get_hook = get_cmd;
 	reinit_hook = reinit;
+	play_again_hook = play_again_new;
 
 	init_display();
 	init_angband();
@@ -449,6 +457,7 @@ void bridge_set_idle(bool idle)
 {
 	pthread_mutex_lock(&shared.lock);
 	shared.waiting = idle;
+	shared.in_prompt = idle;
 	if (idle) pthread_cond_broadcast(&shared.idle_cv);
 	pthread_mutex_unlock(&shared.lock);
 }
@@ -456,8 +465,8 @@ void bridge_set_idle(bool idle)
 void bridge_wake_game(void)
 {
 	pthread_mutex_lock(&shared.lock);
-	/* Not idle until the game thread has seen whatever woke it. */
-	shared.waiting = false;
+	/* Not idle until the game thread has seen whatever woke it (a prompt waits on, still idle). */
+	if (!shared.in_prompt) shared.waiting = false;
 	pthread_cond_signal(&shared.input_cv);
 	pthread_mutex_unlock(&shared.lock);
 }
@@ -466,8 +475,8 @@ void nb_request_save(void)
 {
 	pthread_mutex_lock(&shared.lock);
 	shared.save_requested = true;
-	/* Not idle until the game thread has seen the request (saved or deferred). */
-	shared.waiting = false;
+	/* Not idle until the game thread has seen the request (saved or deferred); a prompt defers it. */
+	if (!shared.in_prompt) shared.waiting = false;
 	pthread_cond_signal(&shared.input_cv);
 	pthread_mutex_unlock(&shared.lock);
 }

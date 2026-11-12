@@ -599,11 +599,13 @@ static void publish_skills(void)
 	pthread_mutex_unlock(&shared.lock);
 }
 
-void native_gain_skills(void)
+/* gain_skills(): 1 accepted, -1 cancelled (this session's changes undone). */
+int native_skill_points(int context, bool reset)
 {
 	event_add_handler(EVENT_SKILLPOINTS, on_skill_points, NULL);
-	init_skills(false, true);
-	for (int next = 0; !next;) {
+	init_skills(false, reset);
+	int next = 0;
+	while (!next) {
 		publish_skills();
 		const int32_t a = ask(NB_PROMPT_SKILLS);
 		if (a >= NB_SKILL_BUY && a < NB_SKILL_BUY + SKILL_MAX) {
@@ -621,11 +623,19 @@ void native_gain_skills(void)
 			if (a != NB_SKILL_RESET) next = -1;
 		}
 		cmdq_push(CMD_REFRESH_SKILLS);
-		cmdq_execute(CTX_GAME);
+		cmdq_execute(context);
 	}
 	event_remove_handler(EVENT_SKILLPOINTS, on_skill_points, NULL);
-	finalise_skills();
-	player->upkeep->redraw |= PR_EXP;
+	if (context == CTX_GAME) {
+		finalise_skills();
+		player->upkeep->redraw |= PR_EXP;
+	}
+	return next;
+}
+
+void native_gain_skills(void)
+{
+	(void)native_skill_points(CTX_GAME, true);
 }
 
 /* ------------------------------------------------------------------------

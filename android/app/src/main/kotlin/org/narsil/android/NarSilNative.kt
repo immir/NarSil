@@ -129,6 +129,10 @@ object NarSilNative {
     const val PROMPT_ABILITIES = 8
     const val PROMPT_SMITH = 9
     const val PROMPT_TEXT = 10
+    const val PROMPT_SCREEN = 11
+    const val TEXT_RANDOM = 2
+    const val SCREEN_RANDOM = 1000
+    const val SCREEN_OPTIONS = 1001
     const val OPT_OFF = 0
     const val OPT_ON = 1
     const val OPT_MAYBE = 2

@@ -40,7 +40,7 @@
 #include <string.h>
 #include <wchar.h>
 
-enum { WAIT_MS = 10000 };
+enum { WAIT_MS = 30000 };
 
 static void log_stderr(const char *msg)
 {

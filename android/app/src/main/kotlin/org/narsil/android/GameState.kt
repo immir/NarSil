@@ -39,7 +39,7 @@ class GameState {
         private set
 
     /** What a textui screen is waiting for, judged from its text; picks the key bar's buttons. */
-    enum class Waiting { MENU, YES_NO, MORE, ANY_KEY }
+    enum class Waiting { MENU, YES_NO, MORE, ANY_KEY, AT_SIGN }
     var waiting by mutableStateOf(Waiting.MENU)
         private set
 
@@ -66,12 +66,17 @@ class GameState {
         data class Skills(val expLeft: Int, val skills: List<Skill>) : Prompt
         data class Smith(val view: String, val title: String, val notes: List<String>, val item: SmithItem?,
                          val costs: List<SmithCost>, val description: List<String>, val options: List<SmithOption>) : Prompt
-        data class Text(val title: String, val initial: String) : Prompt
+        data class Text(val title: String, val initial: String, val maxBytes: Int, val random: Boolean) : Prompt
+        data class Screen(val stage: String, val title: String, val paragraphs: List<String>, val options: List<ScreenOption>,
+                          val stats: List<BirthStat>, val pointsLeft: Int, val pointsTotal: Int) : Prompt
         data class Abilities(val expLeft: Int, val skills: List<String>, val abilities: List<Ability>) : Prompt
     }
 
     data class Neighbour(val dir: Int, val x: Int, val y: Int, val what: String)
     data class Option(val index: Int, val label: String, val description: String)
+    data class ScreenOption(val index: Int, val state: Int, val label: String, val summary: String, val description: String)
+    data class BirthStat(val index: Int, val name: String, val value: Int, val spent: Int, val nextCost: Int,
+                         val canSell: Boolean, val canBuy: Boolean)
     data class SmithItem(val name: String, val difficulty: Int, val max: Int, val drains: Boolean, val turns: Int, val turnsLeft: Int)
     data class SmithCost(val label: String, val state: Int)
     data class SmithOption(val index: Int, val state: Int, val label: String, val detail: String)
@@ -141,6 +146,7 @@ class GameState {
             waiting = (0 until rows).map(::rowText).let { text ->
                 fun any(re: Regex) = text.any { re.containsMatchIn(it) }
                 when {
+                    any(AT_SIGN) -> Waiting.AT_SIGN
                     any(YES_NO) -> Waiting.YES_NO
                     any(MORE) -> Waiting.MORE
                     any(ANY_KEY) -> Waiting.ANY_KEY
@@ -209,7 +215,19 @@ class GameState {
                     of("#D").map { it.getOrElse(1) { "" } },
                     of("#O").mapIndexed { i, f -> SmithOption(i, f[1].toInt(), f[2], f.getOrElse(3) { "" }) })
             }
-            N.PROMPT_TEXT -> Prompt.Text(lines[0], lines.getOrElse(1) { "" })
+            N.PROMPT_TEXT -> Prompt.Text(lines[0], lines.getOrElse(1) { "" }, lines.getOrNull(2)?.toIntOrNull() ?: 19,
+                                         lines.getOrNull(3) == "1")
+            N.PROMPT_SCREEN -> {
+                val head = lines[0].split('\t')
+                val recs = lines.drop(1).filter { it.isNotEmpty() }.map { it.split('\t') }
+                fun of(tag: String) = recs.filter { it[0] == tag }
+                val points = of("#P").firstOrNull()
+                Prompt.Screen(head.getOrElse(1) { "" }, head.getOrElse(2) { "" },
+                    of("#H").map { it.getOrElse(1) { "" } },
+                    of("#O").mapIndexed { i, f -> ScreenOption(i, f[1].toInt(), f[2], f.getOrElse(3) { "" }, f.getOrElse(4) { "" }) },
+                    of("#S").mapIndexed { i, f -> BirthStat(i, f[1], f[2].toInt(), f[3].toInt(), f[4].toInt(), f[5] == "1", f[6] == "1") },
+                    points?.get(1)?.toInt() ?: 0, points?.get(2)?.toInt() ?: 0)
+            }
             N.PROMPT_ABILITIES -> Prompt.Abilities(fields(lines[0], 2).getOrNull(1)?.toIntOrNull() ?: 0, lines[1].split('\t'),
                 lines.drop(2).filter { it.isNotEmpty() }.mapIndexed { i, l ->
                     fields(l, 7).let { f -> Ability(i, f[0].toInt(), f[1].toInt(), f[2].toInt(), f[3].toInt(), f[4], f[5], f.getOrElse(6) { "" }) }
@@ -295,6 +313,7 @@ class GameState {
     private companion object {
         val YES_NO = Regex("""\[y/n\]""", RegexOption.IGNORE_CASE)
         val MORE = Regex("-more-")
+        val AT_SIGN = Regex("by typing the '@'")
         val ANY_KEY = Regex("any key", RegexOption.IGNORE_CASE)
     }
 

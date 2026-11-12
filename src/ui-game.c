@@ -98,6 +98,9 @@ char panicfile[1024];
  * without exiting.  May be NULL.
  */
 void (*reinit_hook)(void) = NULL;
+void (*birth_hook)(void) = NULL;
+void (*death_hook)(void) = NULL;
+enum game_mode_type (*play_again_hook)(void) = NULL;
 
 
 /**
@@ -715,7 +718,7 @@ static bool start_game(bool new_game)
 	/* No living character loaded */
 	if (player->is_dead || new_game) {
 		character_generated = false;
-		textui_do_birth();
+		if (birth_hook) birth_hook(); else textui_do_birth();
 	}
 
 	/* Tell the UI we've started. */
@@ -964,7 +967,7 @@ void play_game(enum game_mode_type mode)
 			(*reinit_hook)();
 		}
 		textui_init();
-		mode = GAME_SELECT;
+		mode = play_again_hook ? play_again_hook() : GAME_SELECT;
 	}
 }
 
@@ -1137,7 +1140,7 @@ void close_game(bool prompt_failed_save)
 	if (!in_tutorial()) {
 		if (player->is_dead) {
 			death_knowledge(player);
-			death_screen();
+			if (death_hook) death_hook(); else death_screen();
 
 			/* Save dead player */
 			while (prompting && !savefile_save(savefile)) {

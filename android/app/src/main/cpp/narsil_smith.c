@@ -450,7 +450,7 @@ static void rename_view(void)
 	char base[60];
 	object_desc(base, sizeof(base), smith_obj, ODESC_BASE, player);
 	native_prompt_begin();
-	native_prompt_add("Name your %s\n%s\n", base, smith_art->name ? smith_art->name : "");
+	native_prompt_add("Name your %s\n%s\n19\n0\n", base, smith_art->name ? smith_art->name : "");
 	native_prompt_end();
 	char name[20] = "";
 	if (native_ask(NB_PROMPT_TEXT) == 1) native_answer_text(name, sizeof(name));

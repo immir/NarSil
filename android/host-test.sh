@@ -17,7 +17,9 @@ cmake -S "$here/app/src/main/cpp" -B "$build" -DCMAKE_BUILD_TYPE=Debug ${cc:+-DC
 cmake --build "$build" -j"$(nproc)" >/dev/null
 
 run() { timeout 120 "$build/narsil_host" "$root/lib" "$work/data" "$@"; }
-birth=(@enter @enter @enter @enter @enter @enter @enter y y @esc)
+# The native birth screens: race, house, sex (first of each), accept stats and
+# skills, keep the name, accept history, begin; dismiss the opening text.
+birth=(@enter @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc)
 # Quit from the command prompt; the Escs first dismiss any -more- left on screen.
 quit=(@esc @esc ^x @enter @esc)
 
@@ -34,9 +36,9 @@ test -s "$work/data/save/Harness"
 echo "== reload the savefile"
 run @enter @expect=Harness @expect=50\' ^x @enter @esc | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
-echo "== touch: first tap highlights a menu item, second selects it"
+echo "== touch: tapping a line of a text menu (the command menu) selects it"
 rm -rf "$work/data"
-run @enter @tap=4,12 @expect=Edain @tap=4,12 @expect='House affects' | tail -1 | grep -q 'state=1'
+run "${birth[@]}" @enter @tap=22,8 @expect='Full dungeon map' | tail -1 | grep -q 'state=1'
 
 echo "== native map, path preview and travel"
 rm -rf "$work/data"
@@ -120,6 +122,21 @@ echo "$out" | grep -qP '^#I\t24 Arrows'
 echo "$out" | grep -qx 'prompt kind=10'
 echo "$out" | grep -qP '^#O\t1\tName artefact\tBrightfletch$'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
+
+echo "== native birth: random house, buy a stat, back from skills to stats, then on"
+rm -rf "$work/data"
+out=$(run @enter @answer=0 @answer=1000 @prompt @answer=0 @answer=100 @prompt @answer=2 @answer=-1 @prompt \
+      @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc "${quit[@]}")
+echo "$out" | grep -qP '^Screen\tsex\tSex$'
+echo "$out" | grep -qP '^#S\tStrength\t1\t1\t'
+echo "$out" | grep -qP '^#P\t12\t13$'
+echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
+
+echo "== death screen (by retiring): character, then a new character goes straight to birth"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" Q @answer=1 @ @enter @prompt @answer=0 @answer=-1 @answer=5 @answer=1 @prompt)
+echo "$out" | grep -qP '^Screen\tdeath\tYou have retired$'
+echo "$out" | grep -qP '^Screen\trace\tRace$'
 
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"

@@ -200,7 +200,8 @@ enum nb_prompt_kind {
 	NB_PROMPT_SKILLS = 7,  /* spend experience: answer NB_SKILL_*, -1 cancel (undo) */
 	NB_PROMPT_ABILITIES = 8, /* answer: an ability line index (learn, or switch on/off), -1 close */
 	NB_PROMPT_SMITH = 9,   /* smithing: answer an option index, -1 back (see narsil_smith.c) */
-	NB_PROMPT_TEXT = 10,   /* text entry: nb_answer_text(), or nb_answer(-1) to cancel */
+	NB_PROMPT_TEXT = 10,   /* text entry: nb_answer_text(), NB_TEXT_RANDOM, or nb_answer(-1) to cancel */
+	NB_PROMPT_SCREEN = 11, /* birth and death screens: answer an option index, NB_SCREEN_*, -1 back */
 };
 
 /* A buffer of NB_PROMPT_CAP always holds a whole prompt (plus its kind line). */
@@ -213,6 +214,11 @@ enum nb_ability_state {
 	NB_ABILITY_ON = 2, NB_ABILITY_OFF = 3,            /* learnt; switched on / off */
 	NB_ABILITY_ITEM_ON = 4, NB_ABILITY_ITEM_OFF = 5,  /* granted by equipment */
 };
+
+/* Text prompt: title; default text; maximum length in bytes; 1 if NB_TEXT_RANDOM is offered. */
+enum { NB_TEXT_RANDOM = 2 };
+/* Screen answers besides an option index.  The birth stats screen answers like skills (NB_SKILL_*). */
+enum { NB_SCREEN_RANDOM = 1000, NB_SCREEN_OPTIONS = 1001 };
 
 /* Skill answers: buy/sell a point in skill i, reset this session, or accept. */
 enum { NB_SKILL_RESET = 1, NB_SKILL_ACCEPT = 2, NB_SKILL_BUY = 100, NB_SKILL_SELL = 200 };
