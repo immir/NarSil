@@ -113,6 +113,7 @@ enum nb_context {
 	NB_CTX_ADJ_OPEN_DOOR   = 1 << 8,
 	NB_CTX_ADJ_RUBBLE      = 1 << 9,
 	NB_CTX_ADJ_TRAP        = 1 << 10, /* known, disarmable */
+	NB_CTX_FORGE           = 1 << 11, /* standing on a forge */
 };
 
 /* One-tap actions; each does what its key would at the command prompt. */
@@ -128,6 +129,7 @@ enum nb_action {
 	NB_ACT_CHARACTER, NB_ACT_ABILITIES, NB_ACT_HELP,
 	NB_ACT_SKILLS,        /* spend experience on skills */
 	NB_ACT_CHARACTER_SCREEN, /* the textui character screen (rename, equipment flags, dump) */
+	NB_ACT_SMITH,         /* smithing (at a forge to make things; elsewhere to browse) */
 	NB_ACT_COUNT
 };
 

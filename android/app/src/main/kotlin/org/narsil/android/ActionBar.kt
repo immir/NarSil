@@ -43,6 +43,7 @@ fun contextActions(s: GameState.Status): List<BarAction> = buildList {
     if (s.has(N.CTX_DOWN_STAIRS)) add(BarAction("Down ▼", emphasised = true, run = act(N.ACT_GO_DOWN)))
     if (s.has(N.CTX_UP_STAIRS)) add(BarAction("Up ▲", emphasised = true, run = act(N.ACT_GO_UP)))
     if (s.has(N.CTX_FLOOR_ITEMS)) add(BarAction("Pick up", emphasised = true, run = act(N.ACT_PICKUP)))
+    if (s.has(N.CTX_FORGE)) add(BarAction("Forge", emphasised = true, run = act(N.ACT_SMITH)))
     if (s.has(N.CTX_CAN_FIRE)) add(BarAction("Fire", emphasised = true, run = act(N.ACT_FIRE_NEAREST)))
     if (s.has(N.CTX_CAN_THROW)) add(BarAction("Throw", emphasised = true, run = act(N.ACT_THROW_NEAREST)))
     if (s.has(N.CTX_ADJ_CLOSED_DOOR)) add(BarAction("Open", emphasised = true, run = act(N.ACT_OPEN)))
@@ -78,6 +79,7 @@ fun moreActions(router: KeyRouter, showMessages: () -> Unit, showOptions: () -> 
     BarAction("Tunnel", run = act(N.ACT_TUNNEL)),
     BarAction("Disarm", run = act(N.ACT_DISARM)),
     BarAction("Exchange", run = act(N.ACT_EXCHANGE)),
+    BarAction("Smithing", run = act(N.ACT_SMITH)),
     BarAction("All commands", run = { router.special(Keys.ENTER) }),
     BarAction("Help", run = act(N.ACT_HELP)),
     BarAction("Options", run = showOptions),

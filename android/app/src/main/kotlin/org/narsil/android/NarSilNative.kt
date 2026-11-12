@@ -62,6 +62,7 @@ object NarSilNative {
     const val CTX_ADJ_OPEN_DOOR = 1 shl 8
     const val CTX_ADJ_RUBBLE = 1 shl 9
     const val CTX_ADJ_TRAP = 1 shl 10
+    const val CTX_FORGE = 1 shl 11
 
     // enum nb_action (order matters)
     const val ACT_REST = 0
@@ -89,6 +90,7 @@ object NarSilNative {
     const val ACT_HELP = 22
     const val ACT_SKILLS = 23
     const val ACT_CHARACTER_SCREEN = 24
+    const val ACT_SMITH = 25
 
     /** Only honoured at the command prompt. */
     @JvmStatic external fun nativeRequestAction(action: Int)

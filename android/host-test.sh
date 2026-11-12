@@ -104,6 +104,11 @@ echo "$out" | grep -qP '^#S\tSkills$'
 echo "$out" | grep -qP '^Strength\t-?\d+\t\d+\t'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
+echo "== smithing action opens the smithing screen (exploration mode away from a forge)"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=25 @expect=Smithing @esc @esc @esc ^x @enter @esc)
+echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
+
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @walk=1 @walk=2 @walk=3 @walk=4 @walk=6 @walk=7 @walk=8 @walk=9 @run=2 @run=4 @run=6 @run=8 @walk=5 ^x @enter @esc)

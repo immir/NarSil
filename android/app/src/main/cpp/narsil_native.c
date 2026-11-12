@@ -181,6 +181,7 @@ static int32_t context_flags(void)
 	if (square_isupstairs(cave, g)) f |= NB_CTX_UP_STAIRS;
 	if (square_isdownstairs(cave, g)) f |= NB_CTX_DOWN_STAIRS;
 	if (square_object(cave, g)) f |= NB_CTX_FLOOR_ITEMS;
+	if (square_isforge(cave, g)) f |= NB_CTX_FORGE;
 	if (player_can_fire_quiver1(player, false)) f |= NB_CTX_CAN_FIRE;
 	if (player_has_throwable(player, false)) f |= NB_CTX_CAN_THROW;
 	if (player->stealth_mode) f |= NB_CTX_STEALTH;
@@ -576,7 +577,7 @@ static void push_travel(struct loc target)
 {
 	if (!square_in_bounds_fully(cave, target)) return;
 	if (loc_eq(target, player->grid)) {
-		cmdq_push(square_object(cave, target) ? CMD_PICKUP : CMD_HOLD);
+		cmdq_push(square_object(cave, target) ? CMD_PICKUP : square_isforge(cave, target) ? CMD_SMITH : CMD_HOLD);
 		return;
 	}
 	const bool adjacent = ABS(target.x - player->grid.x) <= 1
@@ -626,6 +627,7 @@ static void run_action(enum nb_action a)
 		case NB_ACT_MESSAGES: do_cmd_messages(); break;
 		case NB_ACT_CHARACTER: handle_stuff(player); character_sheet(); publish_info(); break;
 		case NB_ACT_CHARACTER_SCREEN: do_cmd_change_name(); break;
+		case NB_ACT_SMITH: cmdq_push(CMD_SMITH); break;
 		case NB_ACT_ABILITIES: native_abilities(); break;
 		case NB_ACT_HELP: do_cmd_help(); break;
 		case NB_ACT_SKILLS: native_gain_skills(); break;
