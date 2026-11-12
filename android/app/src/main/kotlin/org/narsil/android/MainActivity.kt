@@ -139,8 +139,8 @@ class MainActivity : ComponentActivity() {
                     onDispose { router.intercept = null }
                 }
                 when (prompt) {
-                    is GameState.Prompt.Items -> ItemSheet(prompt, state::colour, answer)
-                    is GameState.Prompt.Actions -> ActionSheet(prompt, state::colour, answer)
+                    is GameState.Prompt.Items -> TextScale(settings.itemScale / settings.buttonScale) { ItemSheet(prompt, state::colour, answer) }
+                    is GameState.Prompt.Actions -> TextScale(settings.itemScale / settings.buttonScale) { ActionSheet(prompt, state::colour, answer) }
                     is GameState.Prompt.Check -> CheckDialog(prompt, answer)
                     is GameState.Prompt.Choice -> ChoiceSheet(prompt, answer)
                     is GameState.Prompt.Skills -> SkillsSheet(prompt, answer)
@@ -247,7 +247,7 @@ class MainActivity : ComponentActivity() {
             if (state.mapMode) TextScale(settings.statusScale) {
                 if (dpadMode() == Settings.DPAD_DOCKED) Row(Modifier.background(Color(0xFF141414)), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.weight(1f)) { StatusStrip(state.status, state.statusLine, stacked = true) }
-                    Box(Modifier.padding(4.dp)) { Dpad(settings.dpadSizeDp, { dir, held -> dpad(state, dir, held) }) }
+                    Box(Modifier.padding(4.dp)) { Dpad(settings.dpadSizeDp, { dpad(state, it) }) }
                 } else StatusStrip(state.status, state.statusLine, stacked = false)
             }
             if (state.mapMode) TextScale(settings.buttonScale) {
@@ -273,10 +273,10 @@ class MainActivity : ComponentActivity() {
             recent.forEachIndexed { i, m ->
                 val alpha = 0.45f + 0.55f * (i + 1) / recent.size
                 Text(if (m.count > 1) "${m.text} (x${m.count})" else m.text,
-                     color = Color(state.colour(m.attr)).copy(alpha = alpha), fontSize = 14.sp, maxLines = 2)
+                     color = Color(state.colour(m.attr)).copy(alpha = alpha), fontSize = 14.sp, lineHeight = 16.sp, maxLines = 2)
             }
-            if (banner != null) Text(banner, color = Color(0xFFFFD54F), fontSize = 14.sp, maxLines = 2)
-            if (more) Text("▸ tap to continue", color = Color(0xFFFFD54F), fontSize = 13.sp)
+            if (banner != null) Text(banner, color = Color(0xFFFFD54F), fontSize = 14.sp, lineHeight = 16.sp, maxLines = 2)
+            if (more) Text("▸ tap to continue", color = Color(0xFFFFD54F), fontSize = 13.sp, lineHeight = 15.sp)
             if (recent.isEmpty() && banner == null && !more) Text(" ", fontSize = 14.sp)
         }
     }
@@ -289,18 +289,19 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * A d-pad press means what a keypad digit would here: answer an open aim or
-     * direction prompt; at the map prompt step (held: run; centre: wait, held: rest);
-     * elsewhere (a textui screen, -more-) send the key itself.
+     * A d-pad gesture: answers an open aim or direction prompt; at the map prompt
+     * steps, runs, waits or rests; elsewhere (-more-) it sends the keypad digit.
      */
-    private fun dpad(state: GameState, dir: Int, held: Boolean) {
+    private fun dpad(state: GameState, a: PadAction) {
+        val dir = when (a) { is PadAction.Step -> a.dir; is PadAction.Run -> a.dir; else -> 5 }
         when (val p = state.prompt) {
             is GameState.Prompt.Aim -> NarSilNative.nativeAnswer(if (dir == 5) NarSilNative.AIM_CURRENT else dir)
             is GameState.Prompt.Direction -> if (dir != 5 || p.allowHere) NarSilNative.nativeAnswer(dir)
             null -> when {
                 !state.atPrompt -> router.char('0'.code + dir)
-                dir == 5 -> NarSilNative.nativeRequestAction(if (held) NarSilNative.ACT_REST else NarSilNative.ACT_HOLD)
-                else -> NarSilNative.nativeRequestMove(dir, held)
+                a == PadAction.Wait -> NarSilNative.nativeRequestAction(NarSilNative.ACT_HOLD)
+                a == PadAction.Rest -> NarSilNative.nativeRequestAction(NarSilNative.ACT_REST)
+                else -> NarSilNative.nativeRequestMove(dir, a is PadAction.Run)
             }
             else -> Unit
         }
@@ -315,7 +316,7 @@ class MainActivity : ComponentActivity() {
             val freeW = (constraints.maxWidth - pad).coerceAtLeast(1f)
             val freeH = (constraints.maxHeight - pad).coerceAtLeast(1f)
             Box(Modifier.offset { IntOffset((settings.dpadX * freeW).roundToInt(), (settings.dpadY * freeH).roundToInt()) }) {
-                Dpad(settings.dpadSizeDp, { dir, held -> dpad(state, dir, held) }) { delta ->
+                Dpad(settings.dpadSizeDp, { dpad(state, it) }) { delta ->
                     settings.dpadX = (settings.dpadX + delta.x / freeW).coerceIn(0f, 1f)
                     settings.dpadY = (settings.dpadY + delta.y / freeH).coerceIn(0f, 1f)
                 }

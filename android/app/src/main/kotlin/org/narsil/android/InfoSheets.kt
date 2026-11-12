@@ -131,7 +131,7 @@ fun MessagesSheet(state: GameState, onDismiss: () -> Unit) {
             LazyColumn(Modifier.fillMaxWidth(), state = list) {
                 items(messages) { m ->
                     Text(if (m.count > 1) "${m.text} (x${m.count})" else m.text, color = Color(state.colour(m.attr)), fontSize = 15.sp,
-                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp))
+                         lineHeight = 18.sp, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp))
                 }
                 item { Box(Modifier.padding(bottom = 12.dp)) }
             }

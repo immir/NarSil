@@ -49,6 +49,7 @@ class Settings(context: Context) {
 
     private val buttons = float("buttonScale", 1f)
     private val messageText = float("messageScale", 1f)
+    private val itemText = float("itemScale", 1f)
     private val statusText = float("statusScale", 1f)
     private val padSize = float("dpadSize", 144f)
     private val padX = float("dpadX", 1f)
@@ -58,6 +59,7 @@ class Settings(context: Context) {
 
     var buttonScale: Float get() = buttons.floatValue; set(v) { buttons.floatValue = v; save("buttonScale", v) }
     var messageScale: Float get() = messageText.floatValue; set(v) { messageText.floatValue = v; save("messageScale", v) }
+    var itemScale: Float get() = itemText.floatValue; set(v) { itemText.floatValue = v; save("itemScale", v) }
     var statusScale: Float get() = statusText.floatValue; set(v) { statusText.floatValue = v; save("statusScale", v) }
     var dpadSizeDp: Float get() = padSize.floatValue; set(v) { padSize.floatValue = v; save("dpadSize", v) }
     /** Floating d-pad position as fractions (0..1) of the free space in the map area. */
@@ -102,6 +104,7 @@ fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onDismiss: () ->
                 }
                 Scale("Buttons and menus", settings.buttonScale) { settings.buttonScale = it }
                 Scale("Messages", settings.messageScale) { settings.messageScale = it }
+                Scale("Inventory and items", settings.itemScale) { settings.itemScale = it }
                 Scale("Status", settings.statusScale) { settings.statusScale = it }
 
                 Label("D-pad")
@@ -111,8 +114,9 @@ fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onDismiss: () ->
                             FilterChip(selected = settings.dpad == mode, onClick = { settings.dpad = mode }, label = { Text(label) })
                         }
                 }
-                Hint("Tap a direction to step, hold it to run.  Centre: tap to wait, hold to rest; " +
-                     "drag the centre to move a floating pad.  Beside status is portrait only (it floats in landscape).")
+                Hint("Tap a direction to step; hold it, or drag from the centre towards it, to run.  " +
+                     "Centre: tap to wait, hold to rest; on a floating pad hold the centre then drag to move it.  " +
+                     "Beside status is portrait only (it floats in landscape).")
                 if (settings.dpad != Settings.DPAD_OFF) {
                     Label("D-pad size  ${settings.dpadSizeDp.roundToInt()} dp")
                     Slider(settings.dpadSizeDp, { settings.dpadSizeDp = it }, valueRange = 100f..220f)

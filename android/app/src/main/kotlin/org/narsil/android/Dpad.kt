@@ -1,103 +1,133 @@
 package org.narsil.android
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
+import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 
-/** Keypad layout, top row first: 7 8 9 / 4 5 6 / 1 2 3. */
-private val PAD = listOf(listOf(7, 8, 9), listOf(4, 5, 6), listOf(1, 2, 3))
-private val ARROWS = mapOf(7 to "↖", 8 to "↑", 9 to "↗", 4 to "←", 5 to "•", 6 to "→", 1 to "↙", 2 to "↓", 3 to "↘")
+/** What a d-pad gesture asks for; dir is a keypad direction, 5 = centre. */
+sealed interface PadAction {
+    data class Step(val dir: Int) : PadAction
+    data class Run(val dir: Int) : PadAction
+    data object Wait : PadAction
+    data object Rest : PadAction
+}
 
-private sealed interface Press { data object Tap : Press; data object Hold : Press; data object Drag : Press }
+private const val CENTRE = 0.32f       // centre button radius, as a fraction of the pad radius
+private const val SWIPE_OUT = 0.42f    // drag this far from the centre (fraction of radius) to run
 
 /**
- * Nine-way pad.  [onPress] receives a keypad direction (5 = centre) and whether it
- * was held (long press).  With [onDrag], dragging from the centre moves the pad.
+ * Round eight-way pad.
+ *  - tap a direction: step; hold it: run
+ *  - centre: tap waits; drag out towards a direction runs that way; hold rests
+ *  - with [onMove]: hold the centre, then drag, to move the pad
  */
 @Composable
-fun Dpad(sizeDp: Float, onPress: (dir: Int, held: Boolean) -> Unit, onDrag: ((Offset) -> Unit)? = null) {
-    var pressed by remember { mutableIntStateOf(0) }
+fun Dpad(sizeDp: Float, onAction: (PadAction) -> Unit, onMove: ((Offset) -> Unit)? = null) {
+    var lit by remember { mutableIntStateOf(0) }
     val haptics = LocalHapticFeedback.current
-    val press by rememberUpdatedState(onPress)
-    val drag by rememberUpdatedState(onDrag)
-    Column(
-        Modifier.size(sizeDp.dp).background(Color(0x66202024), RoundedCornerShape(18.dp))
-            .border(1.dp, Color(0x55FFFFFF), RoundedCornerShape(18.dp))
-            .pointerInput(onDrag != null) {
-                gestures({ pressed = it }, onPress = { dir, held ->
-                    if (held) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    press(dir, held)
-                }, if (onDrag == null) null else { d -> drag?.invoke(d) })
-            },
-    ) {
-        PAD.forEach { row ->
-            Row(Modifier.weight(1f)) {
-                row.forEach { dir ->
-                    Box(Modifier.weight(1f).fillMaxSize(), contentAlignment = Alignment.Center) {
-                        val lit = pressed == dir
-                        Box(Modifier.size((sizeDp / 4.2f).dp)
-                                .background(if (lit) Color(0xCC3A5F8A) else Color(0x33FFFFFF), CircleShape),
-                            contentAlignment = Alignment.Center) {
-                            Text(ARROWS.getValue(dir), color = Color.White, fontSize = (sizeDp / 7.5f).sp)
+    val action by rememberUpdatedState(onAction)
+    val move by rememberUpdatedState(onMove)
+    val movable = onMove != null
+    Canvas(
+        Modifier.size(sizeDp.dp).pointerInput(movable) {
+            awaitEachGesture {
+                val down = awaitFirstDown()
+                val r = size.width / 2f
+                val centre = Offset(r, size.height / 2f)
+                fun dirAt(p: Offset) = (p - centre).let { if (it.getDistance() < CENTRE * r) 5 else OCTANT_TO_DIR[octant(it.x, it.y)] }
+                fun fire(a: PadAction) {
+                    if (a is PadAction.Run || a == PadAction.Rest) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    action(a)
+                }
+                val start = dirAt(down.position)
+                lit = start
+                val timeout = viewConfiguration.longPressTimeoutMillis
+                if (start != 5) {
+                    val released = withTimeoutOrNull(timeout) { awaitRelease() } != null
+                    fire(if (released) PadAction.Step(start) else PadAction.Run(start))
+                    if (!released) awaitRelease()
+                } else {
+                    /* Centre: released → wait; dragged out → run; held still → rest, or move the pad. */
+                    val outcome = withTimeoutOrNull(timeout) {
+                        while (true) {
+                            val c = awaitPointerEvent().changes.first()
+                            if (!c.pressed) return@withTimeoutOrNull PadAction.Wait
+                            val d = c.position - centre
+                            if (d.getDistance() > SWIPE_OUT * r) return@withTimeoutOrNull PadAction.Run(OCTANT_TO_DIR[octant(d.x, d.y)])
+                        }
+                        @Suppress("UNREACHABLE_CODE") PadAction.Wait
+                    }
+                    when (outcome) {
+                        PadAction.Wait -> fire(PadAction.Wait)
+                        is PadAction.Run -> { lit = outcome.dir; fire(outcome); awaitRelease() }
+                        else -> {  // held
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            var moved = false
+                            while (true) {
+                                val c = awaitPointerEvent().changes.first()
+                                if (!c.pressed) break
+                                if (movable && c.positionChange() != Offset.Zero) { moved = true; move?.invoke(c.positionChange()); c.consume() }
+                            }
+                            if (!moved) action(PadAction.Rest)
                         }
                     }
                 }
+                lit = 0
             }
-        }
+        },
+    ) { drawPad(lit) }
+}
+
+/** Suspends until the pointer that went down is lifted; returns that change. */
+private suspend fun AwaitPointerEventScope.awaitRelease(): PointerInputChange {
+    while (true) {
+        val c = awaitPointerEvent().changes.first()
+        if (!c.pressed) return c
     }
 }
 
-private suspend fun PointerInputScope.gestures(
-    highlight: (Int) -> Unit, onPress: (Int, Boolean) -> Unit, onDrag: ((Offset) -> Unit)?,
-) = awaitEachGesture {
-    val down = awaitFirstDown()
-    val cell = { p: Offset -> PAD[(3 * p.y / size.height).toInt().coerceIn(0, 2)][(3 * p.x / size.width).toInt().coerceIn(0, 2)] }
-    val dir = cell(down.position)
-    highlight(dir)
-    val draggable = onDrag != null && dir == 5
-    val press = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
-        while (true) {
-            val c = awaitPointerEvent().changes.first()
-            if (!c.pressed) return@withTimeoutOrNull Press.Tap
-            if (draggable && (c.position - down.position).getDistance() > viewConfiguration.touchSlop) return@withTimeoutOrNull Press.Drag
-        }
-        @Suppress("UNREACHABLE_CODE") Press.Tap
-    } ?: Press.Hold
-    when (press) {
-        Press.Tap -> onPress(dir, false)
-        Press.Hold -> onPress(dir, true)
-        Press.Drag -> Unit
+/** Keypad direction -> screen angle in degrees (0 = east, clockwise as drawn, y down). */
+private val DIR_ANGLE = mapOf(6 to 0f, 3 to 45f, 2 to 90f, 1 to 135f, 4 to 180f, 7 to 225f, 8 to 270f, 9 to 315f)
+
+private fun DrawScope.drawPad(lit: Int) {
+    val r = size.minDimension / 2f
+    val c = center
+    drawCircle(Color(0x99141418), r, c)
+    drawCircle(Color(0x40FFFFFF), r - 1.dp.toPx(), c, style = Stroke(1.dp.toPx()))
+    DIR_ANGLE[lit]?.let { a ->
+        drawArc(Color(0x803A5F8A), a - 22.5f, 45f, useCenter = true, topLeft = c - Offset(r, r), size = Size(2 * r, 2 * r))
     }
-    while (true) {
-        val c = awaitPointerEvent().changes.first()
-        if (!c.pressed) break
-        if (press == Press.Drag) { onDrag?.invoke(c.positionChange()); c.consume() }
+    val arrow = Path().apply {
+        val s = r * 0.11f
+        moveTo(r * 0.78f + s, 0f); lineTo(r * 0.78f - s * 0.6f, -s); lineTo(r * 0.78f - s * 0.6f, s); close()
+        translate(c)
     }
-    highlight(0)
+    DIR_ANGLE.forEach { (dir, a) ->
+        val cardinal = dir % 2 == 0
+        rotate(a, c) { drawPath(arrow, if (dir == lit) Color.White else Color(if (cardinal) 0xC0FFFFFF else 0x80FFFFFF)) }
+    }
+    drawCircle(if (lit == 5) Color(0xA03A5F8A) else Color(0x40FFFFFF), r * CENTRE, c)
+    drawCircle(Color(0x30FFFFFF), r * CENTRE, c, style = Stroke(1.dp.toPx()))
 }
