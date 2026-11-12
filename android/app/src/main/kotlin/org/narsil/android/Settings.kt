@@ -114,7 +114,7 @@ fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onDismiss: () ->
                             FilterChip(selected = settings.dpad == mode, onClick = { settings.dpad = mode }, label = { Text(label) })
                         }
                 }
-                Hint("Tap a direction to step; hold it, or drag from the centre towards it, to run.  " +
+                Hint("Tap a key to step; hold it, or drag from the centre key towards it, to run.  " +
                      "Centre: tap to wait, hold to rest; on a floating pad hold the centre then drag to move it.  " +
                      "Beside status is portrait only (it floats in landscape).")
                 if (settings.dpad != Settings.DPAD_OFF) {

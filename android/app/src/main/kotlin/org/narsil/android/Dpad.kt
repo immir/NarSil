@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerInputChange
@@ -34,11 +36,12 @@ sealed interface PadAction {
     data object Rest : PadAction
 }
 
-private const val CENTRE = 0.32f       // centre button radius, as a fraction of the pad radius
-private const val SWIPE_OUT = 0.42f    // drag this far from the centre (fraction of radius) to run
+/** Keypad layout, top row first. */
+private val PAD = listOf(listOf(7, 8, 9), listOf(4, 5, 6), listOf(1, 2, 3))
+private const val SWIPE_OUT = 0.6f     // drag this far from the centre, in key widths, to run
 
 /**
- * Round eight-way pad.
+ * Flat 3x3 keypad.
  *  - tap a direction: step; hold it: run
  *  - centre: tap waits; drag out towards a direction runs that way; hold rests
  *  - with [onMove]: hold the centre, then drag, to move the pad
@@ -54,9 +57,9 @@ fun Dpad(sizeDp: Float, onAction: (PadAction) -> Unit, onMove: ((Offset) -> Unit
         Modifier.size(sizeDp.dp).pointerInput(movable) {
             awaitEachGesture {
                 val down = awaitFirstDown()
-                val r = size.width / 2f
-                val centre = Offset(r, size.height / 2f)
-                fun dirAt(p: Offset) = (p - centre).let { if (it.getDistance() < CENTRE * r) 5 else OCTANT_TO_DIR[octant(it.x, it.y)] }
+                val key = size.width / 3f
+                val centre = Offset(size.width / 2f, size.height / 2f)
+                fun dirAt(p: Offset) = PAD[(p.y / key).toInt().coerceIn(0, 2)][(p.x / key).toInt().coerceIn(0, 2)]
                 fun fire(a: PadAction) {
                     if (a is PadAction.Run || a == PadAction.Rest) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     action(a)
@@ -75,7 +78,7 @@ fun Dpad(sizeDp: Float, onAction: (PadAction) -> Unit, onMove: ((Offset) -> Unit
                             val c = awaitPointerEvent().changes.first()
                             if (!c.pressed) return@withTimeoutOrNull PadAction.Wait
                             val d = c.position - centre
-                            if (d.getDistance() > SWIPE_OUT * r) return@withTimeoutOrNull PadAction.Run(OCTANT_TO_DIR[octant(d.x, d.y)])
+                            if (d.getDistance() > SWIPE_OUT * key) return@withTimeoutOrNull PadAction.Run(OCTANT_TO_DIR[octant(d.x, d.y)])
                         }
                         @Suppress("UNREACHABLE_CODE") PadAction.Wait
                     }
@@ -108,26 +111,26 @@ private suspend fun AwaitPointerEventScope.awaitRelease(): PointerInputChange {
     }
 }
 
-/** Keypad direction -> screen angle in degrees (0 = east, clockwise as drawn, y down). */
-private val DIR_ANGLE = mapOf(6 to 0f, 3 to 45f, 2 to 90f, 1 to 135f, 4 to 180f, 7 to 225f, 8 to 270f, 9 to 315f)
+private val ARROW_ANGLE = mapOf(6 to 0f, 3 to 45f, 2 to 90f, 1 to 135f, 4 to 180f, 7 to 225f, 8 to 270f, 9 to 315f)
 
 private fun DrawScope.drawPad(lit: Int) {
-    val r = size.minDimension / 2f
-    val c = center
-    drawCircle(Color(0x99141418), r, c)
-    drawCircle(Color(0x40FFFFFF), r - 1.dp.toPx(), c, style = Stroke(1.dp.toPx()))
-    DIR_ANGLE[lit]?.let { a ->
-        drawArc(Color(0x803A5F8A), a - 22.5f, 45f, useCenter = true, topLeft = c - Offset(r, r), size = Size(2 * r, 2 * r))
-    }
+    val key = size.minDimension / 3f
+    val gap = 3.dp.toPx()
+    val corner = CornerRadius(6.dp.toPx())
     val arrow = Path().apply {
-        val s = r * 0.11f
-        moveTo(r * 0.78f + s, 0f); lineTo(r * 0.78f - s * 0.6f, -s); lineTo(r * 0.78f - s * 0.6f, s); close()
-        translate(c)
+        val a = key * 0.16f
+        moveTo(a, 0f); lineTo(-a * 0.7f, -a * 0.85f); lineTo(-a * 0.7f, a * 0.85f); close()
     }
-    DIR_ANGLE.forEach { (dir, a) ->
-        val cardinal = dir % 2 == 0
-        rotate(a, c) { drawPath(arrow, if (dir == lit) Color.White else Color(if (cardinal) 0xC0FFFFFF else 0x80FFFFFF)) }
+    PAD.forEachIndexed { row, dirs ->
+        dirs.forEachIndexed { col, dir ->
+            val topLeft = Offset(col * key + gap / 2, row * key + gap / 2)
+            val k = Size(key - gap, key - gap)
+            drawRoundRect(if (dir == lit) Color(0xD03A5F8A) else Color(0x8C26262B), topLeft, k, corner)
+            drawRoundRect(Color(0x30FFFFFF), topLeft, k, corner, style = Stroke(1.dp.toPx()))
+            val mid = topLeft + Offset(k.width / 2, k.height / 2)
+            val ink = if (dir == lit) Color.White else Color(0xCCFFFFFF)
+            ARROW_ANGLE[dir]?.let { a -> translate(mid.x, mid.y) { rotate(a, Offset.Zero) { drawPath(arrow, ink) } } }
+                ?: drawCircle(ink, key * 0.07f, mid)
+        }
     }
-    drawCircle(if (lit == 5) Color(0xA03A5F8A) else Color(0x40FFFFFF), r * CENTRE, c)
-    drawCircle(Color(0x30FFFFFF), r * CENTRE, c, style = Stroke(1.dp.toPx()))
 }
