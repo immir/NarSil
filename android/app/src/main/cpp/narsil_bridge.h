@@ -170,6 +170,9 @@ void nb_clear_preview(void);
 /* Walk to an adjacent grid, pathfind to a far one, or pick up / hold on the player. */
 void nb_request_travel(int x, int y);
 
+/* Walk one step, or run, in keypad direction dir (1-9, not 5).  Only at the map prompt. */
+void nb_request_move(int dir, bool run);
+
 /* Path as (x, y) pairs: the target first, then each step; 0 = no path. */
 uint64_t nb_path_generation(void);
 size_t nb_path(int32_t *xy, size_t max_pairs);

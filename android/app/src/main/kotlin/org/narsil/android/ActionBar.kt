@@ -67,7 +67,7 @@ fun coreActions(s: GameState.Status): List<BarAction> = listOfNotNull(
 )
 
 /** Less frequent but necessary: behind the ☰ button. */
-fun moreActions(router: KeyRouter, showMessages: () -> Unit, toggleKeyboard: () -> Unit): List<BarAction> = listOf(
+fun moreActions(router: KeyRouter, showMessages: () -> Unit, showOptions: () -> Unit, toggleKeyboard: () -> Unit): List<BarAction> = listOf(
     BarAction("Gear", run = act(N.ACT_EQUIPMENT)),
     BarAction("Map", run = act(N.ACT_MAP)),
     BarAction("Messages", run = showMessages),
@@ -80,6 +80,7 @@ fun moreActions(router: KeyRouter, showMessages: () -> Unit, toggleKeyboard: () 
     BarAction("Exchange", run = act(N.ACT_EXCHANGE)),
     BarAction("All commands", run = { router.special(Keys.ENTER) }),
     BarAction("Help", run = act(N.ACT_HELP)),
+    BarAction("Options", run = showOptions),
     BarAction("Keyboard", run = toggleKeyboard),
     BarAction("Esc", run = { router.special(Keys.ESCAPE) }),
 )

@@ -201,6 +201,12 @@ JNIEXPORT void JNICALL JNI_FN(nativeClearPreview)(JNIEnv *env, jclass cls)
 	nb_clear_preview();
 }
 
+JNIEXPORT void JNICALL JNI_FN(nativeRequestMove)(JNIEnv *env, jclass cls, jint dir, jboolean run)
+{
+	(void)env; (void)cls;
+	nb_request_move(dir, run);
+}
+
 JNIEXPORT void JNICALL JNI_FN(nativeRequestTravel)(JNIEnv *env, jclass cls, jint x, jint y)
 {
 	(void)env; (void)cls;

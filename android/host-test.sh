@@ -89,4 +89,11 @@ echo "$out" | grep -qP '^Skills\t4900$'
 echo "$out" | grep -qP '^Melee\t1\t'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
+echo "== native walk and run: some direction is open; runs end at the prompt"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @walk=1 @walk=2 @walk=3 @walk=4 @walk=6 @walk=7 @walk=8 @walk=9 @run=2 @run=4 @run=6 @run=8 @walk=5 ^x @enter @esc)
+echo "$out" | grep -q '^walk [0-9]: moved 1$'
+[ "$(echo "$out" | grep -c '^run [0-9]: moved')" = 4 ]
+echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
+
 echo "PASS ($san) work=$work"

@@ -50,8 +50,8 @@ enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MA
 
 typedef struct { int32_t cp, attr_flags; } map_cell;
 
-enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_INSPECT, REQ_LOOK_LIST };
-typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; } request;
+enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_LOOK_LIST };
+typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; int dir; bool run; } request;
 
 /* Game thread only. */
 static struct {
@@ -473,7 +473,8 @@ bool native_service(bool at_prompt)
 		case REQ_PREVIEW: preview_path(r.grid); return false;
 		case REQ_CLEAR_PREVIEW: publish_path(r.grid, NULL, 0); return false;
 		case REQ_TRAVEL:
-		case REQ_ACTION: game.stashed = r; return true;
+		case REQ_ACTION:
+		case REQ_MOVE: game.stashed = r; return true;
 		case REQ_INSPECT:
 		case REQ_LOOK_LIST:
 		case REQ_NONE: return false;
@@ -554,6 +555,11 @@ void native_run_stashed(void)
 	} else if (r.kind == REQ_ACTION) {
 		publish_path(r.grid, NULL, 0);
 		run_action(r.action);
+	} else if (r.kind == REQ_MOVE) {
+		publish_path(r.grid, NULL, 0);
+		/* Running confused would be refused; the game makes walking stagger instead. */
+		cmdq_push(r.run && !player->timed[TMD_CONFUSED] ? CMD_RUN : CMD_WALK);
+		cmd_set_arg_direction(cmdq_peek(), "direction", r.dir);
 	}
 }
 
@@ -583,6 +589,12 @@ void nb_request_action(enum nb_action a)
 {
 	if (a < 0 || a >= NB_ACT_COUNT) return;
 	post((request){ .kind = REQ_ACTION, .action = a });
+}
+
+void nb_request_move(int dir, bool run)
+{
+	if (dir < 1 || dir > 9 || dir == 5) return;
+	post((request){ .kind = REQ_MOVE, .dir = dir, .run = run });
 }
 
 void nb_request_inspect(int x, int y)

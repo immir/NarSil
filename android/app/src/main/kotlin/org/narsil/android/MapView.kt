@@ -23,11 +23,12 @@ import org.narsil.android.NarSilNative as N
  *  - tap an adjacent grid: step there
  *  - tap a distant grid: ghost path (from the game's pathfinder); tap it again to go
  *  - long press: describe the grid (monster recall, objects, terrain)
- *  - swipe: one step in that direction (also answers direction prompts)
+ *  - swipe: one step (or a run, by option) in that direction; also answers direction prompts
  *  - pinch: zoom; two-finger drag: pan (the camera follows the player again once they move)
  */
 @SuppressLint("ViewConstructor")
-class MapView(context: Context, private val state: GameState, private val router: KeyRouter) : View(context) {
+class MapView(context: Context, private val state: GameState, private val router: KeyRouter,
+              private val swipeRuns: () -> Boolean) : View(context) {
     private val painter = GlyphPainter(context, state::colour)
     private val density = resources.displayMetrics.density
     private var cellHeightPx = DEFAULT_CELL_DP * density
@@ -218,7 +219,11 @@ class MapView(context: Context, private val state: GameState, private val router
             val dy = e2.y - start.y
             if (hypot(dx, dy) < 2f * painter.cellW) return false
             val o = octant(dx, dy)
-            if (aim != null || direction != null) N.nativeAnswer(OCTANT_TO_DIR[o]) else router.direction(o)
+            when {
+                aim != null || direction != null -> N.nativeAnswer(OCTANT_TO_DIR[o])
+                state.atPrompt && state.prompt == null -> N.nativeRequestMove(OCTANT_TO_DIR[o], swipeRuns())
+                else -> router.direction(o)
+            }
             return true
         }
     })

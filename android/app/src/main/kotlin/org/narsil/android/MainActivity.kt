@@ -13,6 +13,13 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.sp
 import android.view.View
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -60,9 +67,12 @@ class MainActivity : ComponentActivity() {
     private var game: GameState? = null
     private var showMore by mutableStateOf(false)
     private var showMessages by mutableStateOf(false)
+    private var showOptions by mutableStateOf(false)
+    private lateinit var settings: Settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        settings = Settings(applicationContext)
         onBackPressedDispatcher.addCallback(this) { router.special(Keys.ESCAPE) }
         setContent {
             MaterialTheme(colorScheme = darkColorScheme()) { App() }
@@ -115,6 +125,13 @@ class MainActivity : ComponentActivity() {
     private fun GameScreen(state: GameState) {
         Box(Modifier.fillMaxSize()) {
             GameLayers(state)
+            TextScale(settings.buttonScale) { Overlays(state) }
+        }
+    }
+
+    @Composable
+    private fun Overlays(state: GameState) {
+        Box(Modifier.fillMaxSize()) {
             val answer: (Int) -> Unit = NarSilNative::nativeAnswer
             state.prompt?.let { prompt ->
                 DisposableEffect(prompt) {
@@ -146,9 +163,16 @@ class MainActivity : ComponentActivity() {
                     router.intercept = { code -> if (code == Keys.ESCAPE) showMessages = false; code == Keys.ESCAPE }
                     onDispose { router.intercept = null }
                 }
-                MessagesSheet(state) { showMessages = false }
+                TextScale(settings.messageScale / settings.buttonScale) { MessagesSheet(state) { showMessages = false } }
             }
-            if (showMore) MoreSheet(moreActions(router, { showMessages = true }) { terminal?.toggleKeyboard() }) { showMore = false }
+            if (showMore) MoreSheet(moreActions(router, { showMessages = true }, { showOptions = true }) { terminal?.toggleKeyboard() }) { showMore = false }
+            if (showOptions) {
+                DisposableEffect(Unit) {
+                    router.intercept = { code -> if (code == Keys.ESCAPE) showOptions = false; code == Keys.ESCAPE }
+                    onDispose { router.intercept = null }
+                }
+                OptionsSheet(settings, onGameOptions = { router.char('='.code) }) { showOptions = false }
+            }
         }
     }
 
@@ -199,8 +223,8 @@ class MainActivity : ComponentActivity() {
     private fun GameLayers(state: GameState) {
         Column(Modifier.fillMaxSize()) {
             /* At -more- a tap continues; otherwise it opens the scrollable history. */
-            if (state.mapMode) MessageStrip(state) {
-                if (state.messageLine.contains("-more-")) router.special(Keys.ENTER) else showMessages = true
+            if (state.mapMode) TextScale(settings.messageScale) {
+                MessageStrip(state) { if (state.messageLine.contains("-more-")) router.special(Keys.ENTER) else showMessages = true }
             }
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 AndroidView(
@@ -208,7 +232,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                 )
                 AndroidView(
-                    factory = { ctx -> MapView(ctx, state, router) },
+                    factory = { ctx -> MapView(ctx, state, router) { settings.swipeRuns } },
                     update = { it.visibility = if (state.mapMode) View.VISIBLE else View.GONE },
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -218,9 +242,17 @@ class MainActivity : ComponentActivity() {
                 (state.prompt as? GameState.Prompt.Direction)?.let { d ->
                     Box(Modifier.align(Alignment.BottomCenter)) { DirectionBar(d, NarSilNative::nativeAnswer) }
                 }
+                if (state.mapMode && dpadMode() == Settings.DPAD_FLOATING) FloatingDpad(state)
             }
-            if (state.mapMode) StatusStrip(state.status, state.statusLine)
-            if (state.mapMode) ActionBar(contextActions(state.status) + coreActions(state.status)) { showMore = true }
+            if (state.mapMode) TextScale(settings.statusScale) {
+                if (dpadMode() == Settings.DPAD_DOCKED) Row(Modifier.background(Color(0xFF141414)), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.weight(1f)) { StatusStrip(state.status, state.statusLine, stacked = true) }
+                    Box(Modifier.padding(4.dp)) { Dpad(settings.dpadSizeDp, { dir, held -> dpad(state, dir, held) }) }
+                } else StatusStrip(state.status, state.statusLine, stacked = false)
+            }
+            if (state.mapMode) TextScale(settings.buttonScale) {
+                ActionBar(contextActions(state.status) + coreActions(state.status)) { showMore = true }
+            }
             else KeyBar()
         }
     }
@@ -249,16 +281,62 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** Docked in portrait (beside the status, which then stacks), otherwise floating; or off. */
     @Composable
-    private fun StatusStrip(s: GameState.Status, line: String) {
+    private fun dpadMode(): Int {
+        val portrait = LocalConfiguration.current.orientation != Configuration.ORIENTATION_LANDSCAPE
+        return if (settings.dpad == Settings.DPAD_DOCKED && !portrait) Settings.DPAD_FLOATING else settings.dpad
+    }
+
+    /**
+     * A d-pad press means what a keypad digit would here: answer an open aim or
+     * direction prompt; at the map prompt step (held: run; centre: wait, held: rest);
+     * elsewhere (a textui screen, -more-) send the key itself.
+     */
+    private fun dpad(state: GameState, dir: Int, held: Boolean) {
+        when (val p = state.prompt) {
+            is GameState.Prompt.Aim -> NarSilNative.nativeAnswer(if (dir == 5) NarSilNative.AIM_CURRENT else dir)
+            is GameState.Prompt.Direction -> if (dir != 5 || p.allowHere) NarSilNative.nativeAnswer(dir)
+            null -> when {
+                !state.atPrompt -> router.char('0'.code + dir)
+                dir == 5 -> NarSilNative.nativeRequestAction(if (held) NarSilNative.ACT_REST else NarSilNative.ACT_HOLD)
+                else -> NarSilNative.nativeRequestMove(dir, held)
+            }
+            else -> Unit
+        }
+    }
+
+    /** Draggable by its centre; the position is kept as a fraction of the free space. */
+    @Composable
+    private fun FloatingDpad(state: GameState) {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val density = LocalDensity.current
+            val pad = with(density) { settings.dpadSizeDp.dp.toPx() }
+            val freeW = (constraints.maxWidth - pad).coerceAtLeast(1f)
+            val freeH = (constraints.maxHeight - pad).coerceAtLeast(1f)
+            Box(Modifier.offset { IntOffset((settings.dpadX * freeW).roundToInt(), (settings.dpadY * freeH).roundToInt()) }) {
+                Dpad(settings.dpadSizeDp, { dir, held -> dpad(state, dir, held) }) { delta ->
+                    settings.dpadX = (settings.dpadX + delta.x / freeW).coerceIn(0f, 1f)
+                    settings.dpadY = (settings.dpadY + delta.y / freeH).coerceIn(0f, 1f)
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun StatusStrip(s: GameState.Status, line: String, stacked: Boolean) {
         Column(Modifier.fillMaxWidth().background(Color(0xFF141414)).padding(horizontal = 8.dp, vertical = 4.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (stacked) {
+                Meter("HP", s.hp, s.maxHp, Color(0xFFD04040), Modifier.fillMaxWidth())
+                Meter("Voice", s.voice, s.maxVoice, Color(0xFF4080E0), Modifier.fillMaxWidth().padding(top = 4.dp))
+                Text("${s.depth * 50} ft", color = Color.White, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+            } else Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Meter("HP", s.hp, s.maxHp, Color(0xFFD04040), Modifier.weight(1f))
                 Meter("Voice", s.voice, s.maxVoice, Color(0xFF4080E0), Modifier.weight(1f))
                 Text("${s.depth * 50} ft", color = Color.White, fontSize = 13.sp)
             }
             if (line.isNotEmpty())
-                Text(line.replace(Regex("\\s{2,}"), "  ·  "), color = Color(0xFFB0B0B0), fontSize = 12.sp, maxLines = 1)
+                Text(line.replace(Regex("\\s{2,}"), "  ·  "), color = Color(0xFFB0B0B0), fontSize = 12.sp, maxLines = if (stacked) 3 else 1)
             s.foe?.let { FoeLine(it) }
         }
     }

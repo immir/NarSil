@@ -21,6 +21,7 @@
  *   @messages                                     print the recent message log
  *   @pick=N                                       answer an item prompt (-1 cancels)
  *   @map                                          print the native map around the player
+ *   @walk=D @run=D                                native step / run in keypad direction D
  *   @preview@DX,DY @travel@DX,DY                  native path preview / travel, relative to player grid
  *   @dump                                         print the current frame
  *   @save                                         request a save and wait for it
@@ -158,6 +159,17 @@ static int run_token(const char *tok)
 		nb_map_snapshot(meta, NULL, 0);
 		printf("%s -> (%d,%d): path=%zu player now (%d,%d)\n", travel ? "travel" : "preview",
 			gx, gy, n ? n - 1 : 0, meta[NB_META_PLAYER_X], meta[NB_META_PLAYER_Y]);
+		return 0;
+	}
+	if (sscanf(tok, "@walk=%d%c", &mx, &tail) == 1 || sscanf(tok, "@run=%d%c", &mx, &tail) == 1) {
+		int32_t meta[NB_META_COUNT];
+		nb_map_snapshot(meta, NULL, 0);
+		const int x0 = meta[NB_META_PLAYER_X], y0 = meta[NB_META_PLAYER_Y];
+		nb_request_move(mx, tok[1] == 'r');
+		if (!settle()) return 1;
+		nb_map_snapshot(meta, NULL, 0);
+		printf("%s %d: moved %d\n", tok[1] == 'r' ? "run" : "walk", mx,
+			abs(meta[NB_META_PLAYER_X] - x0) > abs(meta[NB_META_PLAYER_Y] - y0) ? abs(meta[NB_META_PLAYER_X] - x0) : abs(meta[NB_META_PLAYER_Y] - y0));
 		return 0;
 	}
 	if (strcmp(tok, "@prompt") == 0) {

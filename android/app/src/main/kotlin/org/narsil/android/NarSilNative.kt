@@ -110,6 +110,7 @@ object NarSilNative {
     @JvmStatic external fun nativeRequestPreview(x: Int, y: Int)
     @JvmStatic external fun nativeClearPreview()
     @JvmStatic external fun nativeRequestTravel(x: Int, y: Int)
+    @JvmStatic external fun nativeRequestMove(dir: Int, run: Boolean)
     @JvmStatic external fun nativePathGeneration(): Long
     /** (x, y) pairs, target first; returns the pair count (0 = no path). */
     @JvmStatic external fun nativePath(xy: IntArray): Int
