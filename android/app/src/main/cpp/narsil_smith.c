@@ -644,7 +644,11 @@ static void main_view_options(enum opt_state st[6])
 
 struct object *native_smith_object(struct smithing_cost *cost)
 {
-	/* Resume interrupted work. */
+	/* Resume interrupted work.  The design is not saved, so after a restart there is nothing to resume. */
+	if (player->smithing_leftover > 0 && !smith_obj->kind) {
+		msg("Your unfinished work did not survive your absence.");
+		player->smithing_leftover = 0;
+	}
 	if (player->smithing_leftover > 0) {
 		if (square_isforge(cave, player->grid)) {
 			*cost = current_cost;
