@@ -15,6 +15,7 @@
  *   @prompt                                       print the open native prompt
  *   @act=N                                        native action (enum nb_action)
  *   @inspect@DX,DY @look                          native inspect (relative) / look list
+ *   @info                                         print the latest info (e.g. after @act=20, the character)
  *   @ctx                                          print the context flags
  *   @answer=N                                     answer any native prompt (see nb_answer)
  *   @aim@DX,DY                                    answer an aim prompt with a grid relative to the player
@@ -189,6 +190,12 @@ static int run_token(const char *tok)
 	if (sscanf(tok, "@act=%d%c", &mx, &tail) == 1) {
 		nb_request_action((enum nb_action)mx);
 		return settle() ? 0 : 1;
+	}
+	if (strcmp(tok, "@info") == 0) {
+		static char text[32 * 1024];
+		nb_info(text, sizeof(text));
+		printf("%s", text);
+		return 0;
 	}
 	if (sscanf(tok, "@inspect@%d,%d%c", &mx, &my, &tail) == 2 || strcmp(tok, "@look") == 0) {
 		int32_t meta[NB_META_COUNT];

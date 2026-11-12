@@ -96,6 +96,14 @@ echo "$out" | grep -qP '^1\t2\t1\t\d+\t\tCareful Shot\t'
 echo "$out" | grep -qP '^1\t3\t1\t\d+\t\tCareful Shot\t'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
+echo "== character sheet is published as sections"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=20 @info ^x @enter @esc)
+echo "$out" | grep -qx 'Character'
+echo "$out" | grep -qP '^#S\tSkills$'
+echo "$out" | grep -qP '^Strength\t-?\d+\t\d+\t'
+echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
+
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @walk=1 @walk=2 @walk=3 @walk=4 @walk=6 @walk=7 @walk=8 @walk=9 @run=2 @run=4 @run=6 @run=8 @walk=5 ^x @enter @esc)

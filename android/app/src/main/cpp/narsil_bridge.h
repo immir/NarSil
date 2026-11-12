@@ -127,6 +127,7 @@ enum nb_action {
 	NB_ACT_INVENTORY, NB_ACT_EQUIPMENT, NB_ACT_MAP, NB_ACT_LOOK, NB_ACT_MESSAGES,
 	NB_ACT_CHARACTER, NB_ACT_ABILITIES, NB_ACT_HELP,
 	NB_ACT_SKILLS,        /* spend experience on skills */
+	NB_ACT_CHARACTER_SCREEN, /* the textui character screen (rename, equipment flags, dump) */
 	NB_ACT_COUNT
 };
 
@@ -139,6 +140,8 @@ void nb_request_action(enum nb_action a);
  *  inspect:   "Inspect" \t x \t y, then blocks headed "#M \t name \t state"
  *             (monster recall text follows), "#O \t name", "#F \t terrain"
  *  look list: "Look", then per interesting grid, nearest first: x \t y \t summary
+ *  character: "Character"; "#S \t title" heads a section of rows label \t value \t attr \t detail;
+ *             "#T \t text" is a paragraph.  Published by NB_ACT_CHARACTER.
  * Only what the player knows is described.
  */
 void nb_request_inspect(int x, int y);

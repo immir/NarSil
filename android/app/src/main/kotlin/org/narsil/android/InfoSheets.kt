@@ -138,3 +138,38 @@ fun MessagesSheet(state: GameState, onDismiss: () -> Unit) {
         }
     }
 }
+
+/** The character sheet: identity, stats, skills, combat, progress, history. */
+@Composable
+fun CharacterSheet(info: GameState.Info.Character, state: GameState, onDismiss: () -> Unit) {
+    BottomSheet(onDismiss, tall = true) {
+        Column(Modifier.padding(top = 12.dp)) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(info.sections.firstOrNull()?.title ?: "Character", color = Color.White, fontSize = 18.sp,
+                     fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                TextButton(onClick = onDismiss) { Text("Close") }
+            }
+            LazyColumn(Modifier.weight(1f, fill = false)) {
+                info.sections.forEachIndexed { i, sec ->
+                    if (i > 0) item { Text(sec.title, color = Color(0xFF9A9AA0), fontSize = 13.sp,
+                                           modifier = Modifier.padding(start = 16.dp, top = 14.dp, bottom = 2.dp)) }
+                    items(sec.rows) { r ->
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(r.label, color = Color.White, fontSize = 15.sp)
+                                if (r.detail.isNotEmpty()) Text(r.detail, color = Color(0xFF8A8A90), fontSize = 12.sp)
+                            }
+                            Text(r.value, color = Color(state.colour(r.attr)), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                    sec.text?.let { t -> item { Text(t, color = Color(0xFFC8C8CC), fontSize = 14.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) } }
+                }
+            }
+            Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilledTonalButton(onClick = { onDismiss(); N.nativeRequestAction(N.ACT_SKILLS) }, modifier = Modifier.weight(1f)) { Text("Skills") }
+                FilledTonalButton(onClick = { onDismiss(); N.nativeRequestAction(N.ACT_ABILITIES) }, modifier = Modifier.weight(1f)) { Text("Abilities") }
+                FilledTonalButton(onClick = { onDismiss(); N.nativeRequestAction(N.ACT_CHARACTER_SCREEN) }, modifier = Modifier.weight(1f)) { Text("More…") }
+            }
+        }
+    }
+}

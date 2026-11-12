@@ -77,8 +77,11 @@ class GameState {
     sealed interface Info {
         data class Inspect(val x: Int, val y: Int, val monster: Monster?, val objects: List<String>, val terrain: String?) : Info
         data class LookList(val entries: List<LookEntry>) : Info
+        data class Character(val sections: List<Section>) : Info
     }
     data class Monster(val name: String, val state: String, val recall: String)
+    data class Section(val title: String, val rows: List<SheetRow>, val text: String?)
+    data class SheetRow(val label: String, val value: String, val attr: Int, val detail: String)
     data class LookEntry(val x: Int, val y: Int, val summary: String)
 
     var info by mutableStateOf<Info?>(null)
@@ -206,6 +209,17 @@ class GameState {
         return when (head[0]) {
             "Look" -> Info.LookList(lines.drop(1).filter { it.isNotEmpty() }.map { l ->
                 l.split('\t', limit = 3).let { LookEntry(it[0].toInt(), it[1].toInt(), it[2]) }
+            })
+            "Character" -> Info.Character(buildList {
+                lines.drop(1).filter { it.isNotEmpty() }.forEach { l ->
+                    val f = l.split('\t')
+                    when (f[0]) {
+                        "#S" -> add(Section(f.getOrElse(1) { "" }, emptyList(), null))
+                        "#T" -> if (isNotEmpty()) set(lastIndex, last().copy(text = f.getOrElse(1) { "" }))
+                        else -> if (isNotEmpty() && f.size >= 3) set(lastIndex, last().copy(rows = last().rows +
+                            SheetRow(f[0], f[1], f[2].toIntOrNull() ?: 1, f.getOrElse(3) { "" })))
+                    }
+                }
             })
             "Inspect" -> {
                 var monster: Monster? = null

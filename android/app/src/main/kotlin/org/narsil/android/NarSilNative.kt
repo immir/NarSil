@@ -88,6 +88,7 @@ object NarSilNative {
     const val ACT_ABILITIES = 21
     const val ACT_HELP = 22
     const val ACT_SKILLS = 23
+    const val ACT_CHARACTER_SCREEN = 24
 
     /** Only honoured at the command prompt. */
     @JvmStatic external fun nativeRequestAction(action: Int)

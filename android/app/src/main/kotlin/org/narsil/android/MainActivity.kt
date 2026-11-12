@@ -158,6 +158,7 @@ class MainActivity : ComponentActivity() {
             if (state.prompt == null) when (val info = state.info) {
                 is GameState.Info.Inspect -> InspectSheet(info, state) { state.info = null }
                 is GameState.Info.LookList -> LookSheet(info, state) { state.info = null }
+                is GameState.Info.Character -> CharacterSheet(info, state) { state.info = null }
                 null -> Unit
             }
             if (state.prompt == null && showMessages) {

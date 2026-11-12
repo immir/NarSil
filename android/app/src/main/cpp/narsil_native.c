@@ -15,6 +15,9 @@
 #include "angband.h"
 #include "cave.h"
 #include "cmd-core.h"
+#include "combat.h"
+#include "player-abilities.h"
+#include "project.h"
 #include "game-event.h"
 #include "game-world.h"
 #include "obj-gear.h"
@@ -458,6 +461,92 @@ static void look_list(void)
 	point_set_dispose(pts);
 }
 
+/*
+ * The character sheet: display_player(0) (ui-player.c) as sections of
+ * label/value rows.  Serialised: "Character"; then "#S" \t section title;
+ * rows: label \t value \t attr \t detail; "#T" \t a paragraph.
+ */
+static void character_sheet(void)
+{
+	static const char *skills[] = {
+		#define SKILL(a, b) b,
+		#include "list-skills.h"
+		#undef SKILL
+	};
+	const struct player_state *st = &player->state;
+	info_len = 0;
+	info_buf[0] = '\0';
+	info_add("Character\n");
+
+	info_add("#S\t%s\n", player->full_name);
+	info_add("Race\t%s\t%d\t\n", player->race->name, COLOUR_L_BLUE);
+	info_add("House\t%s\t%d\t\n", player->house->short_name, COLOUR_L_BLUE);
+	info_add("Sex\t%s\t%d\t\n", player->sex->name, COLOUR_L_BLUE);
+	info_add("Age · height · weight\t%d · %d'%d\" · %d lb\t%d\t\n", player->age, player->ht / 12, player->ht % 12,
+		player->wt, COLOUR_L_BLUE);
+
+	info_add("#S\tStats\n");
+	for (int i = 0; i < STAT_MAX; i++) {
+		char detail[80] = "";
+		const bool drained = player->stat_drain[i] < 0;
+		if (st->stat_equip_mod[i] || player->stat_drain[i] || st->stat_misc_mod[i]) {
+			my_strcat(detail, format("base %d", player->stat_base[i]), sizeof(detail));
+			if (st->stat_equip_mod[i]) my_strcat(detail, format(" · equipment %+d", st->stat_equip_mod[i]), sizeof(detail));
+			if (player->stat_drain[i]) my_strcat(detail, format(" · drained %+d", player->stat_drain[i]), sizeof(detail));
+			if (st->stat_misc_mod[i]) my_strcat(detail, format(" · other %+d", st->stat_misc_mod[i]), sizeof(detail));
+		}
+		static const char *const full[STAT_MAX] = { "Strength", "Dexterity", "Constitution", "Grace" };
+		if (drained) my_strcat(detail, " (drained)", sizeof(detail));
+		info_add("%s\t%d\t%d\t%s\n", full[i], st->stat_use[i],
+			drained ? COLOUR_YELLOW : COLOUR_L_GREEN, detail);
+	}
+
+	info_add("#S\tSkills\n");
+	for (int s = 0; s < SKILL_MAX; s++) {
+		char detail[80];
+		strnfmt(detail, sizeof(detail), "base %d", player->skill_base[s]);
+		if (st->skill_stat_mod[s]) my_strcat(detail, format(" · stats %+d", st->skill_stat_mod[s]), sizeof(detail));
+		if (st->skill_equip_mod[s]) my_strcat(detail, format(" · equipment %+d", st->skill_equip_mod[s]), sizeof(detail));
+		if (st->skill_misc_mod[s]) my_strcat(detail, format(" · other %+d", st->skill_misc_mod[s]), sizeof(detail));
+		info_add("%s\t%d\t%d\t%s\n", skills[s], st->skill_use[s], COLOUR_L_GREEN, detail);
+	}
+
+	info_add("#S\tCombat\n");
+	const int mel = st->skill_use[SKILL_MELEE], arc = st->skill_use[SKILL_ARCHERY];
+	const int blows = player_active_ability(player, "Rapid Attack") ? 2 : 1;
+	info_add("Melee\t(%+d, %dd%d)%s\t%d\t\n", mel, st->mdd, st->mds, blows > 1 ? " ×2" : "", COLOUR_L_BLUE);
+	if (st->mds2 > 0)
+		info_add("Off-hand\t(%+d, %dd%d)\t%d\t\n", mel + st->offhand_mel_mod, st->mdd2, st->mds2, COLOUR_L_BLUE);
+	if (st->ads > 0)
+		info_add("Bows\t(%+d, %dd%d)%s\t%d\t\n", arc, st->add, st->ads,
+			player_active_ability(player, "Rapid Fire") ? " ×2" : "", COLOUR_L_BLUE);
+	info_add("Armour\t[%+d, %d-%d]\t%d\tevasion, protection\n", st->skill_use[SKILL_EVASION],
+		protection_roll(player, PROJ_HURT, true, MINIMISE), protection_roll(player, PROJ_HURT, true, MAXIMISE), COLOUR_L_BLUE);
+	info_add("Health\t%d / %d\t%d\t\n", player->chp, player->mhp, player->chp < player->mhp ? COLOUR_YELLOW : COLOUR_L_GREEN);
+	info_add("Voice\t%d / %d\t%d\t\n", player->csp, player->msp, player->csp < player->msp ? COLOUR_YELLOW : COLOUR_L_GREEN);
+	if (player->song[SONG_MAIN])
+		info_add("Song\t%s%s%s\t%d\t\n", player->song[SONG_MAIN]->name, player->song[SONG_MINOR] ? ", " : "",
+			player->song[SONG_MINOR] ? player->song[SONG_MINOR]->name : "", COLOUR_L_BLUE);
+
+	info_add("#S\tProgress\n");
+	info_add("Experience to spend\t%d\t%d\t\n", player->new_exp, COLOUR_L_GREEN);
+	info_add("Total experience\t%d\t%d\t\n", player->exp, COLOUR_L_GREEN);
+	const int limit = weight_limit(player->state);
+	info_add("Burden\t%.1f / %.1f lb\t%d\t\n", player->upkeep->total_weight / 10.0, limit / 10.0,
+		player->upkeep->total_weight > limit ? COLOUR_YELLOW : COLOUR_L_GREEN);
+	info_add("Depth\t%d ft (min %d ft)\t%d\t\n", player->depth * 50, player_min_depth(player) * 50,
+		player->depth < player_min_depth(player) ? COLOUR_YELLOW : COLOUR_L_GREEN);
+	info_add("Light radius\t%d\t%d\t\n", player->upkeep->cur_light, COLOUR_L_GREEN);
+	info_add("Game turn\t%d\t%d\t\n", player->turn, COLOUR_L_GREEN);
+
+	if (player->history && player->history[0]) {
+		char history[1024];
+		my_strcpy(history, player->history, sizeof(history));
+		for (char *p = history; *p; p++) if (*p == '\t' || *p == '\n') *p = ' ';
+		info_add("#S\tHistory\n#T\t%s\n", history);
+	}
+}
+
 bool native_service(bool at_prompt)
 {
 	pthread_mutex_lock(&shared.lock);
@@ -535,7 +624,8 @@ static void run_action(enum nb_action a)
 		case NB_ACT_MAP: do_cmd_view_map(); break;
 		case NB_ACT_LOOK: do_cmd_look(); break;
 		case NB_ACT_MESSAGES: do_cmd_messages(); break;
-		case NB_ACT_CHARACTER: do_cmd_change_name(); break;
+		case NB_ACT_CHARACTER: handle_stuff(player); character_sheet(); publish_info(); break;
+		case NB_ACT_CHARACTER_SCREEN: do_cmd_change_name(); break;
 		case NB_ACT_ABILITIES: native_abilities(); break;
 		case NB_ACT_HELP: do_cmd_help(); break;
 		case NB_ACT_SKILLS: native_gain_skills(); break;
