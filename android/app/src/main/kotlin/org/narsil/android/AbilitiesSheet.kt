@@ -53,14 +53,14 @@ private fun colour(a: GameState.Ability) = when (a.state) {
     else -> Color(0xFF77777D)
 }
 
-private fun summary(a: GameState.Ability, skill: String, expLeft: Int) = when (a.state) {
+private fun summary(a: GameState.Ability, skill: GameState.AbilitySkill, expLeft: Int) = when (a.state) {
     N.ABILITY_ON -> "Learnt"
     N.ABILITY_OFF -> "Learnt · switched off"
     N.ABILITY_ITEM_ON -> "From equipment"
     N.ABILITY_ITEM_OFF -> "From equipment · switched off"
     N.ABILITY_AVAILABLE -> if (a.cost <= expLeft) "Learn for ${a.cost} exp" else "${a.cost} exp (you have $expLeft)"
     else -> listOfNotNull(
-        "needs ${a.points} $skill".takeIf { a.cost >= 0 || a.prereqs.isEmpty() },
+        "needs ${a.points} ${skill.name} points, you have ${skill.base}".takeIf { skill.base < a.points },
         "needs ${a.prereqs}".takeIf { a.cost < 0 && a.prereqs.isNotEmpty() },
     ).joinToString(" · ").replaceFirstChar { it.uppercase() }
 }
@@ -82,15 +82,21 @@ fun AbilitiesSheet(prompt: GameState.Prompt.Abilities, onAnswer: (Int) -> Unit) 
                     TextButton(onClick = { onAnswer(-1) }) { Text("Close") }
                 }
                 ScrollableTabRow(selectedTabIndex = tab, containerColor = Color(0xFF1C1C1E), edgePadding = 8.dp) {
-                    prompt.skills.forEachIndexed { i, name ->
+                    prompt.skills.forEachIndexed { i, sk ->
+                        val name = sk.name
                         val learnt = prompt.abilities.count { it.skill == i && it.state == N.ABILITY_ON || it.skill == i && it.state == N.ABILITY_OFF }
                         Tab(selected = i == tab, onClick = { AbilitiesView.tab = i; AbilitiesView.open = null },
                             text = { Text(if (learnt > 0) "$name $learnt" else name) })
                     }
                 }
+                prompt.skills.getOrNull(tab)?.let { sk ->
+                    Text("${sk.name}: ${sk.base} points bought" + (if (sk.total != sk.base) " (${sk.total} with bonuses)" else "") +
+                             ". Abilities need bought points.",
+                         color = Color(0xFF9A9AA0), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+                }
                 LazyColumn(Modifier.fillMaxWidth()) {
                     items(shown, key = { it.index }) { a ->
-                        AbilityRow(a, prompt.skills.getOrElse(a.skill) { "" }, prompt.expLeft, AbilitiesView.open == a.name, onAnswer)
+                        AbilityRow(a, prompt.skills.getOrElse(a.skill) { GameState.AbilitySkill("", 0, 0) }, prompt.expLeft, AbilitiesView.open == a.name, onAnswer)
                     }
                 }
             }
@@ -99,7 +105,7 @@ fun AbilitiesSheet(prompt: GameState.Prompt.Abilities, onAnswer: (Int) -> Unit) 
 }
 
 @Composable
-private fun AbilityRow(a: GameState.Ability, skill: String, expLeft: Int, open: Boolean, onAnswer: (Int) -> Unit) {
+private fun AbilityRow(a: GameState.Ability, skill: GameState.AbilitySkill, expLeft: Int, open: Boolean, onAnswer: (Int) -> Unit) {
     Column(Modifier.fillMaxWidth().clickable { AbilitiesView.open = if (open) null else a.name }
         .padding(horizontal = 16.dp, vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {

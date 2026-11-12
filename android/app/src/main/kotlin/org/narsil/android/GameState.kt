@@ -69,7 +69,7 @@ class GameState {
         data class Text(val title: String, val initial: String, val maxBytes: Int, val random: Boolean) : Prompt
         data class Screen(val stage: String, val title: String, val paragraphs: List<String>, val options: List<ScreenOption>,
                           val stats: List<BirthStat>, val pointsLeft: Int, val pointsTotal: Int) : Prompt
-        data class Abilities(val expLeft: Int, val skills: List<String>, val abilities: List<Ability>) : Prompt
+        data class Abilities(val expLeft: Int, val skills: List<AbilitySkill>, val abilities: List<Ability>) : Prompt
     }
 
     data class Neighbour(val dir: Int, val x: Int, val y: Int, val what: String)
@@ -82,6 +82,8 @@ class GameState {
     data class SmithOption(val index: Int, val state: Int, val label: String, val detail: String)
     data class Ability(val index: Int, val skill: Int, val state: Int, val points: Int, val cost: Int,
                        val prereqs: String, val name: String, val description: String)
+    /** A skill tab: abilities need [base] points (bought, without stat or equipment modifiers). */
+    data class AbilitySkill(val name: String, val base: Int, val total: Int)
     data class Skill(val index: Int, val name: String, val base: Int, val total: Int, val spent: Int, val nextCost: Int)
 
     /** Read-only descriptions the player asked for; dismissable, the game is not waiting on them. */
@@ -228,7 +230,8 @@ class GameState {
                     of("#S").mapIndexed { i, f -> BirthStat(i, f[1], f[2].toInt(), f[3].toInt(), f[4].toInt(), f[5] == "1", f[6] == "1") },
                     points?.get(1)?.toInt() ?: 0, points?.get(2)?.toInt() ?: 0)
             }
-            N.PROMPT_ABILITIES -> Prompt.Abilities(fields(lines[0], 2).getOrNull(1)?.toIntOrNull() ?: 0, lines[1].split('\t'),
+            N.PROMPT_ABILITIES -> Prompt.Abilities(fields(lines[0], 2).getOrNull(1)?.toIntOrNull() ?: 0,
+                lines[1].split('\t').map { it.split('/') }.map { f -> AbilitySkill(f[0], f.getOrNull(1)?.toIntOrNull() ?: 0, f.getOrNull(2)?.toIntOrNull() ?: 0) },
                 lines.drop(2).filter { it.isNotEmpty() }.mapIndexed { i, l ->
                     fields(l, 7).let { f -> Ability(i, f[0].toInt(), f[1].toInt(), f[2].toInt(), f[3].toInt(), f[4], f[5], f.getOrElse(6) { "" }) }
                 })

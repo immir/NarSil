@@ -676,7 +676,8 @@ static int abilities_by_skill(struct ability **out, int max)
 }
 
 /*
- * Serialised: "Abilities" \t experience to spend; skill names \t-separated;
+ * Serialised: "Abilities" \t experience to spend; per skill, \t-separated,
+ * name/base points/total with modifiers (abilities need base points);
  * then per ability: skill \t state \t skill points needed \t cost (-1 when
  * prerequisites are missing) \t prerequisites (" or "-joined) \t name \t description.
  */
@@ -685,7 +686,8 @@ static void publish_abilities(struct ability **list, int n)
 	pthread_mutex_lock(&shared.lock);
 	text_reset();
 	text_add("Abilities\t%d\n", player->new_exp);
-	for (int s = 0; s < SKILL_MAX; s++) text_add("%s%s", s ? "\t" : "", skill_names[s]);
+	for (int s = 0; s < SKILL_MAX; s++)
+		text_add("%s%s/%d/%d", s ? "\t" : "", skill_names[s], player->skill_base[s], player->state.skill_use[s]);
 	text_add("\n");
 	for (int i = 0; i < n; i++) {
 		struct ability *a = list[i];
