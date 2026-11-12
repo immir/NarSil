@@ -254,6 +254,15 @@ JNIEXPORT void JNICALL JNI_FN(nativeAnswerItem)(JNIEnv *env, jclass cls, jint in
 	nb_answer_item(index);
 }
 
+JNIEXPORT void JNICALL JNI_FN(nativeAnswerText)(JNIEnv *env, jclass cls, jstring text)
+{
+	(void)cls;
+	const char *const s = (*env)->GetStringUTFChars(env, text, NULL);
+	if (!s) return;
+	nb_answer_text(s);
+	(*env)->ReleaseStringUTFChars(env, text, s);
+}
+
 JNIEXPORT void JNICALL JNI_FN(nativeAnswer)(JNIEnv *env, jclass cls, jint value)
 {
 	(void)env; (void)cls;

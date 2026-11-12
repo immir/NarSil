@@ -199,6 +199,8 @@ enum nb_prompt_kind {
 	NB_PROMPT_CHOICE = 6,  /* pick one option: answer its index, -1 cancel */
 	NB_PROMPT_SKILLS = 7,  /* spend experience: answer NB_SKILL_*, -1 cancel (undo) */
 	NB_PROMPT_ABILITIES = 8, /* answer: an ability line index (learn, or switch on/off), -1 close */
+	NB_PROMPT_SMITH = 9,   /* smithing: answer an option index, -1 back (see narsil_smith.c) */
+	NB_PROMPT_TEXT = 10,   /* text entry: nb_answer_text(), or nb_answer(-1) to cancel */
 };
 
 /* A buffer of NB_PROMPT_CAP always holds a whole prompt (plus its kind line). */
@@ -246,6 +248,9 @@ enum nb_prompt_kind nb_prompt(char *text, size_t cap);
 
 /* Answer the open prompt; see enum nb_prompt_kind for each kind's values. */
 void nb_answer(int32_t value);
+
+/* Answer a text prompt (NB_PROMPT_TEXT: title line, then the default text). */
+void nb_answer_text(const char *text);
 
 /* Answer an item prompt with the index of an item line (0-based), or -1 to cancel. */
 void nb_answer_item(int index);

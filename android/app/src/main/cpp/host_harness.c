@@ -15,6 +15,7 @@
  *   @prompt                                       print the open native prompt
  *   @act=N                                        native action (enum nb_action)
  *   @inspect@DX,DY @look                          native inspect (relative) / look list
+ *   @text=TEXT                                    answer a text prompt
  *   @info                                         print the latest info (e.g. after @act=20, the character)
  *   @ctx                                          print the context flags
  *   @answer=N                                     answer any native prompt (see nb_answer)
@@ -189,6 +190,10 @@ static int run_token(const char *tok)
 	}
 	if (sscanf(tok, "@act=%d%c", &mx, &tail) == 1) {
 		nb_request_action((enum nb_action)mx);
+		return settle() ? 0 : 1;
+	}
+	if (strncmp(tok, "@text=", 6) == 0) {
+		nb_answer_text(tok + 6);
 		return settle() ? 0 : 1;
 	}
 	if (strcmp(tok, "@info") == 0) {

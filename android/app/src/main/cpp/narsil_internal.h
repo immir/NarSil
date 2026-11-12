@@ -6,7 +6,14 @@
 #ifndef NARSIL_INTERNAL_H
 #define NARSIL_INTERNAL_H
 
+#include "narsil_bridge.h"
+
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+struct object;
+struct smithing_cost;
 
 /* Implemented by narsil_bridge.c: wake the game thread if it is waiting for input. */
 void bridge_wake_game(void);
@@ -30,6 +37,23 @@ void native_prompt_set_intent(int nb_action);
 /* Implemented by narsil_prompt.c (game thread, command prompt): spend experience on skills. */
 void native_gain_skills(void);
 void native_abilities(void);
+
+/*
+ * Implemented by narsil_prompt.c (game thread): build a prompt's text between
+ * begin (takes the prompt lock, clears the text) and end, then ask (blocks for
+ * the answer).  Text is truncated rather than overflowing.
+ */
+void native_prompt_begin(void);
+void native_prompt_add(const char *fmt, ...);
+void native_prompt_end(void);
+int32_t native_ask(enum nb_prompt_kind kind);
+/* Tabs and newlines to spaces, so a field stays one field. */
+void native_sanitise(char *s);
+/* The text of the last NB_PROMPT_TEXT answered with 1. */
+void native_answer_text(char *buf, size_t cap);
+
+/* Implemented by narsil_smith.c: smith_object_hook. */
+struct object *native_smith_object(struct smithing_cost *cost);
 
 /* Implemented by narsil_native.c; all game-thread only. */
 void native_init(void);

@@ -64,11 +64,17 @@ class GameState {
         data class Direction(val allowHere: Boolean, val neighbours: List<Neighbour>) : Prompt
         data class Choice(val title: String, val options: List<Option>) : Prompt
         data class Skills(val expLeft: Int, val skills: List<Skill>) : Prompt
+        data class Smith(val view: String, val title: String, val notes: List<String>, val item: SmithItem?,
+                         val costs: List<SmithCost>, val description: List<String>, val options: List<SmithOption>) : Prompt
+        data class Text(val title: String, val initial: String) : Prompt
         data class Abilities(val expLeft: Int, val skills: List<String>, val abilities: List<Ability>) : Prompt
     }
 
     data class Neighbour(val dir: Int, val x: Int, val y: Int, val what: String)
     data class Option(val index: Int, val label: String, val description: String)
+    data class SmithItem(val name: String, val difficulty: Int, val max: Int, val drains: Boolean, val turns: Int, val turnsLeft: Int)
+    data class SmithCost(val label: String, val state: Int)
+    data class SmithOption(val index: Int, val state: Int, val label: String, val detail: String)
     data class Ability(val index: Int, val skill: Int, val state: Int, val points: Int, val cost: Int,
                        val prereqs: String, val name: String, val description: String)
     data class Skill(val index: Int, val name: String, val base: Int, val total: Int, val spent: Int, val nextCost: Int)
@@ -192,6 +198,18 @@ class GameState {
                 lines.drop(1).filter { it.isNotEmpty() }.mapIndexed { i, l ->
                     fields(l, 5).let { f -> Skill(i, f[0], f[1].toInt(), f[2].toInt(), f[3].toInt(), f[4].toInt()) }
                 })
+            N.PROMPT_SMITH -> {
+                val head = lines[0].split('\t')
+                val recs = lines.drop(1).filter { it.isNotEmpty() }.map { it.split('\t') }
+                fun of(tag: String) = recs.filter { it[0] == tag }
+                Prompt.Smith(head.getOrElse(1) { "" }, head.getOrElse(2) { "" },
+                    of("#N").map { it.getOrElse(1) { "" } },
+                    of("#I").firstOrNull()?.let { f -> SmithItem(f[1], f[2].toInt(), f[3].toInt(), f[4] == "1", f[5].toInt(), f[6].toInt()) },
+                    of("#C").map { SmithCost(it[1], it[2].toInt()) },
+                    of("#D").map { it.getOrElse(1) { "" } },
+                    of("#O").mapIndexed { i, f -> SmithOption(i, f[1].toInt(), f[2], f.getOrElse(3) { "" }) })
+            }
+            N.PROMPT_TEXT -> Prompt.Text(lines[0], lines.getOrElse(1) { "" })
             N.PROMPT_ABILITIES -> Prompt.Abilities(fields(lines[0], 2).getOrNull(1)?.toIntOrNull() ?: 0, lines[1].split('\t'),
                 lines.drop(2).filter { it.isNotEmpty() }.mapIndexed { i, l ->
                     fields(l, 7).let { f -> Ability(i, f[0].toInt(), f[1].toInt(), f[2].toInt(), f[3].toInt(), f[4], f[5], f.getOrElse(6) { "" }) }

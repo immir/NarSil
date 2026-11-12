@@ -60,6 +60,7 @@ static struct {
 	uint64_t gen;
 	char text[TEXT_CAP];
 	int32_t answer;
+	char answer_text[256];
 } shared = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
 	.answered_cv = PTHREAD_COND_INITIALIZER,
@@ -769,6 +770,7 @@ void native_prompt_init(void)
 	if (get_aim_dir_hook != native_get_aim_dir) textui.get_aim_dir = get_aim_dir_hook;
 	if (get_rep_dir_hook != native_get_rep_dir) textui.get_rep_dir = get_rep_dir_hook;
 	change_song_hook = native_change_song;
+	smith_object_hook = native_smith_object;
 	assert(textui.get_item && textui.get_check && textui.get_aim_dir && textui.get_rep_dir);
 	get_item_hook = native_get_item;
 	get_check_hook = native_get_check;
@@ -814,6 +816,40 @@ void nb_answer(int32_t value)
 		pthread_cond_signal(&shared.answered_cv);
 	}
 	pthread_mutex_unlock(&shared.lock);
+}
+
+void nb_answer_text(const char *text)
+{
+	if (!prompt_open()) return;
+	bridge_set_idle(false);
+	pthread_mutex_lock(&shared.lock);
+	if (shared.kind == NB_PROMPT_TEXT && shared.answer == ANSWER_PENDING) {
+		my_strcpy(shared.answer_text, text, sizeof(shared.answer_text));
+		shared.answer = 1;
+		pthread_cond_signal(&shared.answered_cv);
+	}
+	pthread_mutex_unlock(&shared.lock);
+}
+
+void native_answer_text(char *buf, size_t cap)
+{
+	pthread_mutex_lock(&shared.lock);
+	my_strcpy(buf, shared.answer_text, cap);
+	pthread_mutex_unlock(&shared.lock);
+}
+
+void native_prompt_begin(void) { pthread_mutex_lock(&shared.lock); text_reset(); }
+void native_prompt_end(void) { pthread_mutex_unlock(&shared.lock); }
+int32_t native_ask(enum nb_prompt_kind kind) { return ask(kind); }
+void native_sanitise(char *s) { sanitise(s); }
+
+void native_prompt_add(const char *fmt, ...)
+{
+	if (text_len >= sizeof(shared.text) - 1) return;
+	va_list vp;
+	va_start(vp, fmt);
+	text_len += vstrnfmt(shared.text + text_len, sizeof(shared.text) - text_len, fmt, vp);
+	va_end(vp);
 }
 
 void nb_answer_item(int index)

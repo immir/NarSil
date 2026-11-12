@@ -127,6 +127,14 @@ object NarSilNative {
     const val PROMPT_CHOICE = 6
     const val PROMPT_SKILLS = 7
     const val PROMPT_ABILITIES = 8
+    const val PROMPT_SMITH = 9
+    const val PROMPT_TEXT = 10
+    const val OPT_OFF = 0
+    const val OPT_ON = 1
+    const val OPT_MAYBE = 2
+    const val OPT_CHOSEN = 3
+    const val OPT_DEAR = 4
+    const val OPT_ARTISTRY = 5
     const val ABILITY_LOCKED = 0
     const val ABILITY_AVAILABLE = 1
     const val ABILITY_ON = 2
@@ -151,6 +159,7 @@ object NarSilNative {
     @JvmStatic external fun nativeAnswerItem(index: Int)
     /** Answer the open prompt; values per kind as in enum nb_prompt_kind. */
     @JvmStatic external fun nativeAnswer(value: Int)
+    @JvmStatic external fun nativeAnswerText(text: String)
     @JvmStatic external fun nativeMessagesGeneration(): Long
     /** attr \t count \t text per line, oldest first. */
     @JvmStatic external fun nativeMessages(): String

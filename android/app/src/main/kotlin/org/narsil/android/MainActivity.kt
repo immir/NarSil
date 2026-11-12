@@ -146,6 +146,8 @@ class MainActivity : ComponentActivity() {
                     is GameState.Prompt.Choice -> ChoiceSheet(prompt, answer)
                     is GameState.Prompt.Skills -> SkillsSheet(prompt, answer)
                     is GameState.Prompt.Abilities -> AbilitiesSheet(prompt, answer)
+                    is GameState.Prompt.Smith -> SmithSheet(prompt, answer)
+                    is GameState.Prompt.Text -> TextPrompt(prompt) { answer(-1) }
                     is GameState.Prompt.Aim, is GameState.Prompt.Direction -> Unit  // drawn by GameLayers over the map
                 }
             }
@@ -194,7 +196,8 @@ class MainActivity : ComponentActivity() {
             'n'.code, 'N'.code, Keys.ESCAPE -> 0
             else -> null
         }
-        is GameState.Prompt.Abilities -> if (code == Keys.ESCAPE) -1 else null
+        is GameState.Prompt.Abilities, is GameState.Prompt.Smith -> if (code == Keys.ESCAPE) -1 else null
+        is GameState.Prompt.Text -> if (code == Keys.ESCAPE) -1 else null
         is GameState.Prompt.Skills -> when (code) {
             Keys.ESCAPE -> -1
             Keys.ENTER -> NarSilNative.SKILL_ACCEPT
