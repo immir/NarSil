@@ -19,6 +19,8 @@ object Keys {
     const val ENTER = 0x9C
     const val TAB = 0x9D
     const val BACKSPACE = 0x9F
+    const val PAGE_UP = 0x95
+    const val PAGE_DOWN = 0x97
     const val ESCAPE = 0xE000
 
     /** KTRL(): control characters are delivered as raw ASCII with no modifier, as main-gcu does. */

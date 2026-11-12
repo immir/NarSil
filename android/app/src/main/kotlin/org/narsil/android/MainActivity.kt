@@ -68,6 +68,7 @@ class MainActivity : ComponentActivity() {
     private var showMore by mutableStateOf(false)
     private var showMessages by mutableStateOf(false)
     private var showOptions by mutableStateOf(false)
+    private var showKeys by mutableStateOf(false)
     private lateinit var settings: Settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -166,6 +167,7 @@ class MainActivity : ComponentActivity() {
                 TextScale(settings.messageScale / settings.buttonScale) { MessagesSheet(state) { showMessages = false } }
             }
             if (showMore) MoreSheet(moreActions(router, { showMessages = true }, { showOptions = true }) { terminal?.toggleKeyboard() }) { showMore = false }
+            if (showKeys) MoreSheet(extraKeys()) { showKeys = false }
             if (showOptions) {
                 DisposableEffect(Unit) {
                     router.intercept = { code -> if (code == Keys.ESCAPE) showOptions = false; code == Keys.ESCAPE }
@@ -253,7 +255,7 @@ class MainActivity : ComponentActivity() {
             if (state.mapMode) TextScale(settings.buttonScale) {
                 ActionBar(contextActions(state.status) + coreActions(state.status)) { showMore = true }
             }
-            else KeyBar()
+            else TextScale(settings.buttonScale) { KeyBar(state.waiting) }
         }
     }
 
@@ -378,32 +380,44 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Bottom bar for the remaining textui screens.  Taps on the screen pick menu lines
+     * and swipes move, so the bar only offers what the screen is waiting for; the
+     * rarer keys are behind ⋯.
+     */
     @Composable
-    private fun KeyBar() {
-        val keys: List<Pair<String, () -> Unit>> = listOf(
-            "Esc" to { router.special(Keys.ESCAPE) },
-            "⏎" to { router.special(Keys.ENTER) },
-            "⌨" to { terminal?.toggleKeyboard() },
-            "7" to { router.char('7'.code) }, "8" to { router.char('8'.code) }, "9" to { router.char('9'.code) },
-            "4" to { router.char('4'.code) }, "5" to { router.char('5'.code) }, "6" to { router.char('6'.code) },
-            "1" to { router.char('1'.code) }, "2" to { router.char('2'.code) }, "3" to { router.char('3'.code) },
-            "Tab" to { router.special(Keys.TAB) },
-            "⌫" to { router.special(Keys.BACKSPACE) },
-        )
+    private fun KeyBar(waiting: GameState.Waiting) {
+        val keys: List<Pair<String, () -> Unit>> = when (waiting) {
+            GameState.Waiting.YES_NO -> listOf("Yes" to { router.char('y'.code) }, "No" to { router.char('n'.code) })
+            GameState.Waiting.MORE, GameState.Waiting.ANY_KEY -> listOf("Continue" to { router.special(Keys.ENTER) })
+            GameState.Waiting.MENU -> listOf("Back" to { router.special(Keys.ESCAPE) }, "OK" to { router.special(Keys.ENTER) })
+        }
         Row(
-            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            Modifier.fillMaxWidth().background(Color(0xFF101012)).padding(horizontal = 6.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            FilledTonalButton(
-                onClick = { router.ctrlLatched = !router.ctrlLatched },
-                colors = if (router.ctrlLatched) ButtonDefaults.buttonColors() else ButtonDefaults.filledTonalButtonColors(),
-                contentPadding = PaddingValues(horizontal = 10.dp),
-            ) { Text("Ctrl") }
-            keys.forEach { (label, action) ->
-                FilledTonalButton(onClick = action, contentPadding = PaddingValues(horizontal = 10.dp)) { Text(label) }
+            keys.forEachIndexed { i, (label, action) ->
+                val padding = PaddingValues(horizontal = 14.dp)
+                if (i == 0 && waiting != GameState.Waiting.MENU || label == "OK")
+                    Button(onClick = action, contentPadding = padding, modifier = Modifier.weight(1f)) { Text(label) }
+                else FilledTonalButton(onClick = action, contentPadding = padding, modifier = Modifier.weight(1f)) { Text(label) }
             }
+            FilledTonalButton(onClick = { terminal?.toggleKeyboard() }, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("⌨") }
+            FilledTonalButton(onClick = { showKeys = true }, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("⋯") }
         }
     }
+
+    /** The rarely needed keys; Ctrl latches for the next key. */
+    private fun extraKeys(): List<BarAction> = listOf(
+        BarAction("Esc", run = { router.special(Keys.ESCAPE) }),
+        BarAction("Enter", run = { router.special(Keys.ENTER) }),
+        BarAction(if (router.ctrlLatched) "Ctrl ●" else "Ctrl", run = { router.ctrlLatched = !router.ctrlLatched }),
+        BarAction("Tab", run = { router.special(Keys.TAB) }),
+        BarAction("⌫", run = { router.special(Keys.BACKSPACE) }),
+        BarAction("Space", run = { router.char(' '.code) }),
+        BarAction("Page up", run = { router.special(Keys.PAGE_UP) }),
+        BarAction("Page down", run = { router.special(Keys.PAGE_DOWN) }),
+    ) + (1..9).map { d -> BarAction("$d", run = { router.char('0'.code + d) }) }
 
     @Composable
     private fun Centered(text: String, action: String? = null, onAction: () -> Unit = {}) {

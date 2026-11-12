@@ -38,6 +38,11 @@ class GameState {
     var statusLine by mutableStateOf("")
         private set
 
+    /** What a textui screen is waiting for, judged from its text; picks the key bar's buttons. */
+    enum class Waiting { MENU, YES_NO, MORE, ANY_KEY }
+    var waiting by mutableStateOf(Waiting.MENU)
+        private set
+
     var prompt by mutableStateOf<Prompt?>(null)
         private set
     var messages by mutableStateOf<List<Message>>(emptyList())
@@ -121,6 +126,15 @@ class GameState {
             palette = N.nativePalette()
             messageLine = rowText(0)
             statusLine = rowText(rows - 1)
+            waiting = (0 until rows).map(::rowText).let { text ->
+                fun any(re: Regex) = text.any { re.containsMatchIn(it) }
+                when {
+                    any(YES_NO) -> Waiting.YES_NO
+                    any(MORE) -> Waiting.MORE
+                    any(ANY_KEY) -> Waiting.ANY_KEY
+                    else -> Waiting.MENU
+                }
+            }
             termListeners.forEach { it() }
         }
         val mapChanged = pollMap()
@@ -238,6 +252,12 @@ class GameState {
     private fun rowText(y: Int): String = buildString(cols) {
         for (x in 0 until cols) appendCodePoint(term[2 * (y * cols + x)])
     }.trim()
+
+    private companion object {
+        val YES_NO = Regex("""\[y/n\]""", RegexOption.IGNORE_CASE)
+        val MORE = Regex("-more-")
+        val ANY_KEY = Regex("any key", RegexOption.IGNORE_CASE)
+    }
 
     fun colour(index: Int): Int = palette.getOrElse(index) { android.graphics.Color.WHITE }
 }
