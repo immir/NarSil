@@ -137,9 +137,14 @@ class MainActivity : ComponentActivity() {
      */
     @Composable
     private fun GameScreen(state: GameState) {
+        /* The textui draws its own splash while loading; show nothing until the game's first native screen or map. */
+        var started by remember { mutableStateOf(GameLauncher.started) }
+        if (!started && (state.prompt != null || state.mapMode)) started = true.also { GameLauncher.started = true }
+        LaunchedEffect(Unit) { delay(5000); started = true }
         Box(Modifier.fillMaxSize()) {
             GameLayers(state)
             TextScale(settings.buttonScale) { Overlays(state) }
+            if (!started) Box(Modifier.fillMaxSize().background(Color.Black))
         }
     }
 

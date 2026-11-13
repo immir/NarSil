@@ -14,6 +14,9 @@ object GameLauncher {
     const val ROWS = 24
     const val PLAYER = "PLAYER"
 
+    /** Set once the game has shown a native screen or the map; until then its textui start-up is hidden. */
+    @Volatile var started = false
+
     @Synchronized
     fun ensureStarted(context: Context) {
         if (NarSilNative.nativeState() != NarSilNative.STATE_IDLE) return
