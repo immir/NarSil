@@ -12,7 +12,7 @@ import java.io.File
 object GameLauncher {
     const val COLS = 80
     const val ROWS = 24
-    private const val PLAYER = "PLAYER"
+    const val PLAYER = "PLAYER"
 
     @Synchronized
     fun ensureStarted(context: Context) {
@@ -20,6 +20,7 @@ object GameLauncher {
         val libDir = File(context.filesDir, "lib")
         val dataDir = File(context.filesDir, "data").apply { mkdirs() }
         installIfStale(context, libDir)
+        Scum.applyPendingRestore(context)
         check(NarSilNative.nativeStart(libDir.path, dataDir.path, PLAYER, COLS, ROWS)) { "nativeStart failed" }
     }
 

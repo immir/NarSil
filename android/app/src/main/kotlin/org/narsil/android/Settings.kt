@@ -56,6 +56,7 @@ class Settings(context: Context) {
     private val padY = float("dpadY", 1f)
     private val pad = mutableIntStateOf(prefs.getInt("dpad", DPAD_DOCKED))
     private val swipe = mutableStateOf(prefs.getBoolean("swipeRuns", false))
+    private val scum = mutableStateOf(prefs.getBoolean("scumming", false))
 
     var buttonScale: Float get() = buttons.floatValue; set(v) { buttons.floatValue = v; save("buttonScale", v) }
     var messageScale: Float get() = messageText.floatValue; set(v) { messageText.floatValue = v; save("messageScale", v) }
@@ -67,6 +68,7 @@ class Settings(context: Context) {
     var dpadY: Float get() = padY.floatValue; set(v) { padY.floatValue = v; save("dpadY", v) }
     var dpad: Int get() = pad.intValue; set(v) { pad.intValue = v; prefs.edit().putInt("dpad", v).apply() }
     var swipeRuns: Boolean get() = swipe.value; set(v) { swipe.value = v; prefs.edit().putBoolean("swipeRuns", v).apply() }
+    var scumming: Boolean get() = scum.value; set(v) { scum.value = v; prefs.edit().putBoolean("scumming", v).apply() }
 
     companion object {
         const val DPAD_OFF = 0
@@ -127,6 +129,13 @@ fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onDismiss: () ->
                         Hint("Otherwise a swipe takes one step.")
                     }
                     Switch(settings.swipeRuns, { settings.swipeRuns = it })
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Label("Save scumming (for testing)")
+                        Hint("Adds a Scum button that keeps a copy of your save, and Restore scum save in ☰ and on the death screen.")
+                    }
+                    Switch(settings.scumming, { settings.scumming = it })
                 }
                 TextButton(onClick = { onDismiss(); onGameOptions() }) { Text("Game options…") }
             }

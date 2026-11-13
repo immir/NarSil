@@ -50,7 +50,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
@@ -69,6 +73,8 @@ class MainActivity : ComponentActivity() {
     private var showMessages by mutableStateOf(false)
     private var showOptions by mutableStateOf(false)
     private var showKeys by mutableStateOf(false)
+    private var showScum by mutableStateOf(false)
+    private val scope = MainScope()
     private lateinit var settings: Settings
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,6 +88,7 @@ class MainActivity : ComponentActivity() {
 
     /** Runs at the game's next safe point (top-level command prompt). */
     override fun onDestroy() {
+        scope.cancel()
         game?.stop()
         super.onDestroy()
     }
@@ -148,7 +155,7 @@ class MainActivity : ComponentActivity() {
                     is GameState.Prompt.Abilities -> AbilitiesSheet(prompt, answer)
                     is GameState.Prompt.Smith -> SmithSheet(prompt, answer)
                     is GameState.Prompt.Text -> TextPrompt(prompt) { answer(-1) }
-                    is GameState.Prompt.Screen -> ScreenSheet(prompt, answer)
+                    is GameState.Prompt.Screen -> ScreenSheet(prompt, answer, onScum = { showScum = true }.takeIf { settings.scumming })
                     is GameState.Prompt.Aim, is GameState.Prompt.Direction -> Unit  // drawn by GameLayers over the map
                 }
             }
@@ -171,7 +178,8 @@ class MainActivity : ComponentActivity() {
                 }
                 TextScale(settings.messageScale / settings.buttonScale) { MessagesSheet(state) { showMessages = false } }
             }
-            if (showMore) MoreSheet(moreActions(router, { showMessages = true }, { showOptions = true }) { terminal?.toggleKeyboard() }) { showMore = false }
+            if (showMore) MoreSheet(moreActions(router, { showMessages = true }, { showOptions = true }) { terminal?.toggleKeyboard() } +
+                                    listOfNotNull(BarAction("Restore scum save", run = { showScum = true }).takeIf { settings.scumming })) { showMore = false }
             if (showKeys) MoreSheet(extraKeys()) { showKeys = false }
             if (showOptions) {
                 DisposableEffect(Unit) {
@@ -180,6 +188,7 @@ class MainActivity : ComponentActivity() {
                 }
                 OptionsSheet(settings, onGameOptions = { router.char('='.code) }) { showOptions = false }
             }
+            if (showScum) ScumSheet(this@MainActivity) { showScum = false }
         }
     }
 
@@ -261,7 +270,7 @@ class MainActivity : ComponentActivity() {
                 } else StatusStrip(state.status, state.statusLine, stacked = false)
             }
             if (state.mapMode) TextScale(settings.buttonScale) {
-                ActionBar(contextActions(state.status) + coreActions(state.status)) { showMore = true }
+                ActionBar(contextActions(state.status) + coreActions(state.status) + listOfNotNull(scumAction())) { showMore = true }
             }
             else TextScale(settings.buttonScale) { KeyBar(state.waiting) }
         }
@@ -437,6 +446,11 @@ class MainActivity : ComponentActivity() {
     }
 
     /** Native game state is process-global and cannot be re-initialised; end the process. */
+    /** Save scumming's quick copy (Options → Save scumming). */
+    private fun scumAction(): BarAction? = BarAction("Scum") {
+        scope.launch { Toast.makeText(this@MainActivity, Scum.take(applicationContext), Toast.LENGTH_SHORT).show() }
+    }.takeIf { settings.scumming }
+
     private fun exitApp() {
         finishAndRemoveTask()
         Process.killProcess(Process.myPid())

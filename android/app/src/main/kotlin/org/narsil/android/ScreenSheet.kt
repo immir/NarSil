@@ -43,7 +43,7 @@ private val CHOICE_STAGES = setOf("race", "house", "sex")
  * then the options as cards, or the stat point buy.
  */
 @Composable
-fun ScreenSheet(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
+fun ScreenSheet(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit, onScum: (() -> Unit)? = null) {
     val canGoBack = p.stage != "death" && p.stage != "race" && p.stage != "quickstart"
     Surface(color = Color(0xFF121214), modifier = Modifier.fillMaxSize()) {
         Column {
@@ -74,6 +74,7 @@ fun ScreenSheet(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
                     TextButton(onClick = { onAnswer(N.SKILL_RESET) }) { Text("Reset") }
                     Button(onClick = { onAnswer(N.SKILL_ACCEPT) }) { Text("Accept") }
                 }
+                if (p.stage == "death" && onScum != null) Button(onClick = onScum) { Text("Restore scum save") }
                 if (p.stage == "text") Button(onClick = { onAnswer(-1) }) { Text("Done") }
             }
         }
