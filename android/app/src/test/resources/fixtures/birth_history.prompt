@@ -1,0 +1,9 @@
+11
+Screen	confirm	Ready?
+#H	Harness, Noldor of the house of Feanor (Male)
+#H	Strength 0 · Dexterity 2 · Constitution 2 · Grace 2
+#H	Melee 2 · Archery 3 · Evasion 2 · Stealth 2 · Perception 2 · Will 2 · Smithing 3 · Song 2
+#H	Health 28 · Voice 28 · Age 1079 · 6'4" · 161 lb
+#H	You are one of two children of a bard from the house of Feanor. You have light blue eyes, straight golden hair, and a fair complexion.
+#O	1	Begin the adventure		
+#O	1	Start over		

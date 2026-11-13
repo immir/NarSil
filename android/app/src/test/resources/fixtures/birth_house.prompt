@@ -1,0 +1,6 @@
+11
+Screen	house	House
+#H	House affects stats, skills, and other character traits.
+#O	1	House of Feanor	Strength +0 · Dexterity +2 · Constitution +2 · Grace +2 · Archery affinity · Smithing affinity · Blade proficiency	Feanor was the greatest of the Noldor, though proud and unyielding. He created the Silmarils which Morgoth later stole, and he led his house across the sea to Beleriand in pursuit. Those of Feanor's house are fiery in temper, but capable of great works of beauty.
+#O	1	House of Fingolfin	Strength +0 · Dexterity +1 · Constitution +3 · Grace +2 · Archery affinity · Will affinity · Blade proficiency	Fingolfin led his house into Beleriand to protect its peoples from the shadow of Morgoth. Betrayed by the Feanorians, they had to come through the icy wastes of the north. Their people are the most hardy and valiant, most feared by the orcs and hated by Morgoth.
+#O	1	House of Finarfin	Strength +0 · Dexterity +1 · Constitution +2 · Grace +3 · Archery affinity · Perception affinity · Blade proficiency	Finarfin himself did not come to Beleriand, but many of his house made the journey under Fingolfin's banner. They are the fairest and wisest of the Noldor. All have golden hair as a mark of their Vanyarin ancestry.

@@ -1,0 +1,81 @@
+14
+Knowledge	objects	Objects	-1
+#G	amulet
+#E	34	22	Sea Shell amulet	unknown
+#E	34	3	Coral amulet	unknown
+#E	34	11	Golden amulet	unknown
+#E	34	11	Amber amulet	unknown
+#E	34	8	Obsidian amulet	unknown
+#E	34	4	Ruby amulet	unknown
+#E	34	9	Dragon Tooth amulet	unknown
+#G	food
+#E	44	11	Fragment of Lembas	
+#G	herb
+#E	44	9	Grey herb	unknown
+#E	44	11	Yellow herb	unknown
+#E	44	1	Pale herb	unknown
+#E	44	13	Pale Green herb	unknown
+#E	44	7	Wrinkled herb	unknown
+#E	44	4	Russet herb	unknown
+#E	44	5	Dark Green herb	unknown
+#E	44	8	Black herb	unknown
+#E	44	2	Thorny herb	unknown
+#E	44	15	Mottled herb	unknown
+#G	horn
+#E	63	9	Silver horn	unknown
+#E	63	19	Tapered horn	unknown
+#E	63	25	Engraved horn	unknown
+#E	63	15	Brazen horn	unknown
+#E	63	1	Ivory horn	unknown
+#G	light
+#E	126	7	Wooden Torch	
+#G	potion
+#E	33	1	Clear potion	unknown
+#E	33	7	Murky Brown potion	unknown
+#E	33	6	Sparkling Blue potion	unknown
+#E	33	11	Yellow potion	unknown
+#E	33	4	Vermilion potion	unknown
+#E	33	6	Dark Blue potion	unknown
+#E	33	7	Brown potion	unknown
+#E	33	5	Green potion	unknown
+#E	33	2	Smoky potion	unknown
+#E	33	5	Dark Green potion	unknown
+#E	33	13	Pale Green potion	unknown
+#E	33	14	Sky Blue potion	unknown
+#E	33	2	Grey potion	unknown
+#E	33	17	Violet potion	unknown
+#E	33	1	Milky White potion	unknown
+#E	33	1	Cloudy potion	unknown
+#E	33	3	Bright Orange potion	unknown
+#E	33	11	Golden potion	unknown
+#E	33	15	Copper Speckled potion	unknown
+#G	ring
+#E	61	5	Emerald ring	unknown
+#E	61	8	Jet ring	unknown
+#E	61	13	Beryl ring	unknown
+#E	61	1	Pearl ring	unknown
+#E	61	12	Bloodstone ring	unknown
+#E	61	6	Sapphire ring	unknown
+#E	61	12	Ruby ring	unknown
+#E	61	1	Marble ring	unknown
+#E	61	9	Chalcedony ring	unknown
+#E	61	27	Turquoise ring	unknown
+#E	61	9	Silver ring	unknown
+#E	61	8	Onyx ring	unknown
+#E	61	17	Amethyst ring	unknown
+#G	staff
+#E	95	25	Walnut staff	unknown
+#E	95	1	Birch staff	unknown
+#E	95	9	Silver staff	unknown
+#E	95	7	Runed staff	unknown
+#E	95	2	Ashen staff	unknown
+#E	95	11	Golden staff	unknown
+#E	95	7	Mahogany staff	unknown
+#E	95	1	Ivory staff	unknown
+#E	95	4	Rosewood staff	unknown
+#E	95	25	Gnarled staff	unknown
+#E	95	19	Twisted staff	unknown
+#E	95	15	Willow staff	unknown
+#E	95	8	Ebony staff	unknown
+#E	95	25	Elm staff	unknown
+#E	95	19	Oak staff	unknown

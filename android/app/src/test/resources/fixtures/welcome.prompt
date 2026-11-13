@@ -1,0 +1,8 @@
+11
+Screen	welcome	NarSil
+#V	The world was young, the mountains green,
+#V	No stain yet on the moon was seen...
+#H	Welcome to Sil, a game of adventure set in the First Age of Middle-earth, when the world still rang with elven song and gleamed with dwarven mail. Walk the dark halls of Angband. Slay creatures black and fell. Wrest a shining Silmaril from Morgoth's iron crown.
+#H	Version 1.4.0
+#O	1	Begin		
+#O	1	Tutorial	A short guided dungeon; your own character is untouched.	

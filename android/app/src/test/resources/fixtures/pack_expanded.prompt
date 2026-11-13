@@ -1,0 +1,15 @@
+13
+Pack	0	0	63	1000	0
+#I	0	a	44	11	3	3 Fragments of Lembas
+#I	0	b	126	7	40	2 Wooden Torches (2000 turns)
+#I	1	f	126	7	20	a Wooden Torch (2000 turns)
+#A	1	Eat
+#A	1	Drop
+#A	1	Throw
+#A	1	Inscribe
+#A	1	Ignore
+#D	An inheritance from your family
+#D	
+#D	It restores a point of grace if it has been drained.  It provides nourishment for about 3,000 turns under normal conditions. 
+#D	
+#D	

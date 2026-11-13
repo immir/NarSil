@@ -1,0 +1,9 @@
+9
+Smith	main	Smithing
+#N	Exploration mode: smithing requires a forge.
+#O	2	Base item	Start with a new base item.
+#O	0	Enchant	Add a special enchantment to the base item (not with Artifice).
+#O	0	Artifice	Design your own artefact (not with Enchant).
+#O	0	Numbers	Change the item's key numbers.
+#O	0	Melt	Melt down a mithril item.
+#O	0	Make it	You are not at a forge, so you cannot create items.

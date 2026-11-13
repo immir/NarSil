@@ -28,6 +28,9 @@ echo "== empty message log at startup is published cleanly (MSan catches the old
 rm -rf "$work/data"
 run @messages | grep -q '^messages:'
 
+echo "== bridge constants: narsil_bridge.h and NarSilNative.kt agree"
+python3 "$here/check-bridge-constants.py"
+
 echo "== new game; save requested during birth is deferred to first command prompt"
 run @answer=0 @save-async "${birth[@]:1}" @expect=Harness 6 4 @save ^x @enter @esc | tail -1 \
     | grep -qx 'state=2 exit="" saves=2'

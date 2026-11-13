@@ -1,0 +1,11 @@
+14
+Knowledge	main	Knowledge	-1
+#E	67	13	Creatures	everything you have seen, with what you have learnt
+#E	33	14	Objects	kinds of item, and which flavours you know
+#E	124	11	Artefacts	the ones you have found
+#E	93	15	Special items	the kinds of special item you have seen
+#E	42	14	Runes	the properties you can recognise
+#E	35	2	Terrain	what the dungeon is made of
+#E	94	4	Traps and locks	and glyphs
+#E	64	1	Character history	the story so far
+#E	48	11	Hall of fame	past characters

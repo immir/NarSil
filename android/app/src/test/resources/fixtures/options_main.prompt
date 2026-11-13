@@ -1,0 +1,34 @@
+12
+Options	main	Game options
+#H	Interface
+#O	1001	0	0	Move with hjkl etc. (^ for underlying keys)	hjkl_movement
+#O	1002	0	0	Use sound	use_sound
+#O	1003	1	0	Dismiss '-more-', 'y/n' prompts with any key	quick_messages
+#O	1004	0	0	Use a keyset more closely based on Angband	angband_keyset
+#O	1005	1	0	Stop singing when you use the rest command	stop_singing_on_rest
+#O	1006	1	0	Forgo bonus attacks on non-alert enemies	forgo_attacking_unwary
+#O	1007	0	0	Audible beep (on errors/warnings)	beep
+#O	1008	0	0	Highlight the player with the cursor	highlight_player
+#O	1009	1	0	Highlight the target with the cursor	highlight_target
+#O	1010	1	0	Highlight sleeping and unwary creatures	highlight_unwary
+#O	1011	1	0	Show walls as solid blocks	solid_walls
+#O	1012	0	0	Show walls with shaded background	hybrid_walls
+#O	1013	0	0	Color: Shimmer multi-colored things	animate_flicker
+#O	1014	0	0	Center map continuously	center_player
+#O	1015	0	0	Avoid centering while running	run_avoid_center
+#O	1016	0	0	Automatically clear '-more-' prompts	auto_more
+#O	1017	1	0	Allow mouse clicks to move the player	mouse_movement
+#O	1018	1	0	Display a mark when something gets hit	display_hits
+#O	1019	0	0	Always pickup items	pickup_always
+#O	1020	0	0	Always pickup items matching inventory	pickup_inven
+#O	1021	0	0	Show flavors in object descriptions	show_flavors
+#H	Settings
+#N	10000	Hitpoint warning	3	0	9	Warn when health falls below this many tenths (0 = off).
+#N	11000	Base delay	40	0	255	Milliseconds per step of missile and spell animations.
+#N	12000	Movement delay	0	0	255	Centiseconds to wait for a second key for diagonal moves.
+#H	More
+#L	100	Birth options	Set when the character was created; shown for reference.
+#L	101	Cheat options	Debugging aids; using one marks the character as a cheater.
+#L	102	Item ignoring	The text menu.
+#L	103	Auto-inscriptions	The text menu.
+#L	104	Advanced	The full text options menu: keymaps, colours, pref files.

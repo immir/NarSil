@@ -67,10 +67,17 @@ android {
     }
 }
 
-tasks.named("preBuild") { dependsOn(syncGameData) }
+// Drift guard: narsil_bridge.h and NarSilNative.kt carry the same constants, written by hand.
+val checkBridgeConstants by tasks.registering(Exec::class) {
+    commandLine("python3", rootProject.file("check-bridge-constants.py").path)
+    inputs.files(file("src/main/cpp/narsil_bridge.h"), file("src/main/kotlin/org/narsil/android/NarSilNative.kt"))
+    outputs.upToDateWhen { false }
+}
+tasks.named("preBuild") { dependsOn(syncGameData, checkBridgeConstants) }
 
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2023.10.01")
+    testImplementation("junit:junit:4.13.2")
     implementation(composeBom)
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.foundation:foundation")

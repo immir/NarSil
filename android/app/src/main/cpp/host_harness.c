@@ -28,6 +28,8 @@
  *   @dump                                         print the current frame
  *   @save                                         request a save and wait for it
  *   @save-async                                   request a save; it runs at the next safe point
+ *   @promptfile=PATH @infofile=PATH               write the open prompt / info exactly as the app receives it
+ *                                                 ("<kind>\n<text>" / the info text), for the app's JVM tests
  *   @expect=TEXT                                  fail unless TEXT is on screen
  *   anything else                                 typed literally
  */
@@ -203,6 +205,21 @@ static int run_token(const char *tok)
 	if (strcmp(tok, "@die") == 0) {
 		nb_test_die();
 		return settle() ? 0 : 1;
+	}
+	if (strncmp(tok, "@promptfile=", 12) == 0 || strncmp(tok, "@infofile=", 10) == 0) {
+		static char text[NB_PROMPT_CAP];
+		const bool is_prompt = tok[1] == 'p';
+		FILE *const f = fopen(strchr(tok, '=') + 1, "w");
+		if (!f) { fprintf(stderr, "cannot write %s\n", tok); return 1; }
+		if (is_prompt) {
+			const enum nb_prompt_kind kind = nb_prompt(text, sizeof(text));
+			fprintf(f, "%d\n%s", (int)kind, text);
+		} else {
+			nb_info(text, sizeof(text));
+			fputs(text, f);
+		}
+		fclose(f);
+		return 0;
 	}
 	if (strcmp(tok, "@info") == 0) {
 		static char text[32 * 1024];

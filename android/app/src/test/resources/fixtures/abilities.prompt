@@ -1,0 +1,85 @@
+8
+Abilities	5000
+Melee/0/2	Archery/0/3	Evasion/0/2	Stealth/0/2	Perception/0/2	Will/0/2	Smithing/0/3	Song/0/2
+0	0	1	500		Power	Gives a bonus of +1 damage sides to your melee attacks, but makes it harder to score critical hits (increasing the base required by 1).
+0	0	2	500		Finesse	Lowers the base number needed to get critical hits with melee from 7 to 6.
+0	0	3	500		Throwing Mastery	Gives a +5 bonus to throwing attacks and prevents thrown items breaking.
+0	0	4	500		Polearm Mastery	Gives you +1 to attack with polearms (spears & glaives) and lets you set them to receive free attacks on advancing enemies when you wait (z or 5).
+0	0	5	500		Charge	When you attack an opponent immediately after moving towards it, your attack is calculated as if you you had 3 points more strength and dexterity.
+0	0	6	-1	Finesse or Power	Follow-Through	Allows you to continue your attack if you kill an opponent, moving onto the next adjacent enemy.
+0	0	7	-1	Polearm Mastery or Finesse	Zone of Control	You get a free attack whenever an opponent moves between two squares which are adjacent to you.
+0	0	8	-1	Finesse	Subtlety	Lowers the base number needed to get critical hits with melee by 2 points, when you are using a one handed weapon with the other hand free.
+0	0	9	-1	Follow-Through or Charge	Momentum	Doubles the upper limit on the amount of strength bonus you can get with a weapon of a given weight. It becomes 1 point per 0.5 lbs.
+0	0	10	-1	Opportunist or Subtlety	Rapid Attack	Grants you an extra melee attack, but your attacks are calculated as if you had 3 points less strength and dexterity.
+0	0	11	-1	Parry or Finesse	Two Weapon Fighting	Allows you to wield a one-handed weapon in your off-hand for an extra attack (calculated as if you had 3 points less strength and dexterity).
+0	0	12	-1	Charge or Power	Knock Back	You have a chance to knock enemies back a square in melee depending upon your effective strength and your opponent's constitution.
+0	0	13	-1	Follow-Through	Whirlwind Attack	Allows you to attack all adjacent enemies if there are no adjacent walls or rubble.
+0	0	20	-1	Knock Back or Momentum	Strength	You gain a point of strength.
+1	0	1	0		Careful Shot	Halves the chance of breaking arrows.
+1	0	3	0		Precision	Lowers the base number needed to get critical hits with archery from 7 to 6.
+1	0	4	-1	Careful Shot	Point Blank Archery	The monster you are firing at cannot get an attack of opportunity.
+1	0	5	0		Versatility	If you have more skill points in archery than in melee, you gain a bonus to melee of half the difference between them.
+1	0	6	-1	Precision	Crippling Shot	Your critical hits sometimes temporarily slow monsters (depending on the level of critical and the monster's Will).
+1	0	7	0		Flaming Arrows	Your arrows do an extra die of damage against most targets, but they always break.
+1	0	8	-1	Precision	Rapid Fire	Lets you fire two arrows per round, but they are calculated as if you had 3 points less strength and dexterity.
+1	0	10	-1	Flaming Arrows or Versatility	Dexterity	You gain a point of dexterity.
+2	0	2	500		Dodging	Gives you a +3 bonus to evasion if you moved on your last turn.
+2	0	3	500		Blocking	Doubles the protection roll for your shield against all ranged attacks, and against melee as well if you waited last turn (z or 5).
+2	0	4	500		Parry	Doubles the evasion bonus granted by your primary melee weapon.
+2	0	5	500		Crowd Fighting	Halves the bonus opponents get for surrounding you.
+2	0	6	500		Leaping	You can leap over a chasm, pit, or false floor if you moved towards it the previous turn.
+2	0	7	-1	Leaping or Dodging	Sprinting	You start moving more quickly if you run four or more squares in roughly the same direction.
+2	0	8	500		Flanking	Gives you a free attack on an opponent if you step from a square which is adjacent to it, to another square which is adjacent to it.
+2	0	9	-1	Crowd Fighting or Blocking	Heavy Armour	Gives you [1dX] protection, where X is your total armour weight divided by 15 lbs.
+2	0	10	-1	Parry	Riposte	It gives you a free attack on an opponent who misses you by at least 10 + the weight of your weapon (only once per round).
+2	0	11	-1	Flanking or Blocking	Controlled Retreat	Gives you a free attack on an opponent when you step away from it, but only if you did not move the previous round.
+2	0	20	500		Dexterity	You gain a point of dexterity.
+3	0	3	500		Disguise	Halves any bonuses that awake but unwary enemies have to notice you due to you being in their line of sight.
+3	0	4	500		Assassination	Gives you a melee bonus against non-alert creatures equal to your stealth score.
+3	0	5	-1	Assassination	Cruel Blow	Your critical hits sometimes confuse monsters with the pain (depending on the level of critical and the monster's Will).
+3	0	6	-1	Follow-Through or Assassination	Opportunist	You get a free attack whenever an adjacent opponent moves away from you.
+3	0	7	-1	Crowd Fighting or Disguise	Exchange Places	Allows you to use the 'X' command to exchange places with an adjacent enemy (who gets a free attack on you as you pass).
+3	0	8	-1	Disguise	Vanish	Gives a +10 stealth bonus towards making enemies become unwary when you are out of their line of sight.
+3	0	11	500		Dexterity	You gain a point of dexterity.
+4	0	1	500		Eye for Detail	Gives you a bonus of +5 for finding traps and secret doors.
+4	0	2	500		Focused Attack	Gives you a bonus of half your Perception score to your attacks if you passed the previous turn.
+4	0	3	500		Keen Senses	Allows you to see enemies who are just beyond the edge of a pool of light, and gives a +5 bonus to spot 'invisible' creatures.
+4	0	4	500		Item Lore	Lets you recognise non-worn items immediately.
+4	0	5	-1	Focused Attack	Concentration	Gives you a +1 bonus to attack for every consecutive round spent attacking the same enemy (to a maximum of Perception/2).
+4	0	6	500		Bane	You receive a bonus to all skill rolls against a selected category of enemy. The bonus increases as you kill more.
+4	0	7	-1	Item Lore	Lore-Master	You can immediately identify every item and have full knowledge of all your opponents.
+4	0	8	-1	Keen Senses	Listen	Gives you a chance each turn to detect enemies that you cannot see (including around corners and through doors).
+4	0	9	-1	Bane or Concentration	Master Hunter	Gives you an attack bonus of +1 for each time you have killed an opponent of the same type (up to a maximum of Perception/4).
+4	0	10	500		Grace	You gain a point of grace.
+5	0	2	500		Channeling	Gives you bonuses to using staves and horns (+5 to skill checks, always know charges, half voice cost).
+5	0	3	500		Mind Over Body	Makes you grow hungry at just one third the normal rate.
+5	0	4	500		Curse Breaking	Allows you to break the curses on items when you attempt to take them off.
+5	0	5	500		Inner Light	Increases the intensity of light within your light radius by 1 point (without increasing the radius).
+5	0	5	500		Clarity	Gives you resistance to confusion, stunning, and hallucination.
+5	0	6	500		Hardiness	Gives you [1dX] additional protection, where X = Will/6.
+5	0	7	-1	Hardiness or Mind Over Body	Poison Resistance	Gives you resistance to poison.
+5	0	8	-1	Inner Light or Mind Over Body	Strength in Adversity	Gives you bonuses to Strength and Grace when seriously injured: +1 when less than or equal to 50% health, +2 when 25%.
+5	0	9	-1	Hardiness or Curse Breaking	Critical Resistance	Raises the base number enemies need to get critical hits against you by 1 per 5 points of Will.
+5	0	9	-1	Inner Light or Channeling	Majesty	Lowers monster morale by half the difference between your Will and theirs.
+5	0	12	-1	Critical Resistance or Poison Resistance	Constitution	You gain a point of constitution.
+6	0	2	0		Weaponsmith	Allows you to create weapons.
+6	0	3	0		Armoursmith	Allows you to create armour.
+6	0	4	0		Jeweller	Allows you to create rings, amulets, and light sources.
+6	0	5	0		Enchantment	Allows you to create {special} items.
+6	0	6	-1	Armoursmith or Weaponsmith	Artistry	Allows you to create items with bonuses to attack, evasion, damage, or protection.
+6	0	8	-1	Enchantment or Jeweller	Artifice	Allows you to create highly customised artifacts.
+6	0	9	-1	Enchantment	Masterpiece	Allows you to create items that are more difficult than usual. Doing so drains your smithing skill for each excess point.
+6	0	10	-1	Artifice	Grace	You gain a point of grace.
+7	0	1	500		Song of Elbereth	Causes fear in nearby servants of Morgoth.
+7	0	2	500		Song of Slaying	Gives you a bonus to attack that increases for each kill, and then fades away over time.
+7	0	3	500		Song of Silence	Dampens all nearby sounds, making it harder for opponents to hear you and each other.
+7	0	4	-1	Song of Elbereth	Song of Freedom	Discovers and overcomes nearby doors, traps, and rubble.
+7	0	5	500		Song of the Trees	Increases your light level by 1 point per 5 points of Song.
+7	0	6	500		Song of Aule	Gives you a bonus of +1 to Smithing per 4 points of Song.
+7	0	7	-1	Song of the Trees or Song of Slaying	Song of Staying	Gives you a bonus of +X to Will and [1dX] protection, where X = Song/3.
+7	0	8	-1	Song of Silence	Song of Lorien	Gradually puts nearby opponents to sleep.
+7	0	9	-1	Song of the Trees	Song of Este	Provides a bonus to your regeneration and your recovery from all negative timed effects (such as confusion or poison) with every 4 points of Song.
+7	0	10	-1	Song of Aule or Song of Slaying	Song of Sharpness	Your attacks ignore 2 percent of your opponent's armour per point of Song. Works for edged weapons, axes, polearms, and arrows.
+7	0	11	-1	Song of Lorien or Song of Elbereth	Song of Mastery	Occasionally prevents nearby opponents from moving or acting.
+7	0	12	500		Woven Themes	Allows you to add a 'minor theme' to your song. This means you can have the effect of a second song, but at half your normal Song score.
+7	0	15	500		Grace	You gain a point of grace.

@@ -1,0 +1,20 @@
+11
+Screen	stats	Stats
+#H	Spend points on your stats; the rest of your experience goes on skills next.
+#S	Strength	0	0	1	0	1
+#S	Dexterity	2	0	1	0	1
+#S	Constitution	2	0	1	0	1
+#S	Grace	2	0	1	0	1
+#P	13	13
+#K	Melee	2
+#K	Archery	3
+#K	Evasion	2
+#K	Stealth	2
+#K	Perception	2
+#K	Will	2
+#K	Smithing	3
+#K	Song	2
+#C	Attack	+2
+#C	Defence	+2
+#C	Health	28
+#C	Voice	28
