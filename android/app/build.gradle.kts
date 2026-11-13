@@ -8,7 +8,7 @@ val narsilLib = rootProject.file("../lib")
 val generatedAssets = layout.buildDirectory.dir("generated/narsilAssets")
 val syncGameData by tasks.registering(Sync::class) {
     from(narsilLib) {
-        include("gamedata/**", "customize/**", "help/**", "screens/**")
+        include("gamedata/**", "customize/**", "help/**", "screens/**", "tiles/list.txt", "tiles/microchasm/**")
         exclude("**/Makefile")
     }
     into(generatedAssets.map { it.dir("lib") })

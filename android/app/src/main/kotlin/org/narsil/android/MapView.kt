@@ -4,6 +4,10 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.RectF
+import android.graphics.Rect
+import android.graphics.BitmapFactory
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Paint
 import android.view.GestureDetector
@@ -28,8 +32,19 @@ import org.narsil.android.NarSilNative as N
  */
 @SuppressLint("ViewConstructor")
 class MapView(context: Context, private val state: GameState, private val router: KeyRouter,
-              private val swipeRuns: () -> Boolean) : View(context) {
+              private val swipeRuns: () -> Boolean, private val tiles: () -> Boolean) : View(context) {
     private val painter = GlyphPainter(context, state::colour)
+    /** MicroChasm's 16x16 tile sheet (lib/tiles/microchasm), drawn unsmoothed. */
+    private val tileSheet: Bitmap? = runCatching {
+        context.assets.open("lib/tiles/microchasm/16x16.png").use { BitmapFactory.decodeStream(it) }
+    }.getOrNull()
+    private val tilePaint = Paint().apply { isFilterBitmap = false }
+    private val tileSrc = Rect()
+    private val tileDst = RectF()
+    private val tilesOn get() = tiles() && tileSheet != null
+    /* Tiles are square; glyph cells are as wide as the widest glyph. */
+    private val cellW get() = if (tilesOn) painter.cellH else painter.cellW
+    private val cellH get() = painter.cellH
     private val density = resources.displayMetrics.density
     private var cellHeightPx = DEFAULT_CELL_DP * density
         set(v) { field = v.coerceIn(minCellPx, MAX_CELL_DP * density); painter.setCellHeight(field) }
@@ -68,9 +83,9 @@ class MapView(context: Context, private val state: GameState, private val router
     fun toggleOverview() {
         val from = overviewFrom
         if (from != null) { endOverview(from); return }
-        if (mapW <= 0 || mapH <= 0 || width == 0 || painter.cellH <= 0f) return
+        if (mapW <= 0 || mapH <= 0 || width == 0 || cellH <= 0f) return
         overviewFrom = cellHeightPx
-        val aspect = painter.cellW / painter.cellH
+        val aspect = cellW / cellH
         val fit = minOf(height.toFloat() / mapH, width.toFloat() / (mapW * aspect))
         minCellPx = minOf(MIN_CELL_DP * density, fit)
         cellHeightPx = fit
@@ -104,10 +119,10 @@ class MapView(context: Context, private val state: GameState, private val router
 
     /** Recentre when the player leaves the middle half of the view. */
     private fun keepPlayerInView(animate: Boolean) {
-        if (!followPlayer || painter.cellW <= 0f || width == 0) return
+        if (!followPlayer || cellW <= 0f || width == 0) return
         val (px, py) = player
-        val halfW = width / painter.cellW / 2f
-        val halfH = height / painter.cellH / 2f
+        val halfW = width / cellW / 2f
+        val halfH = height / cellH / 2f
         val outside = abs(px + 0.5f - camX) > halfW * 0.5f || abs(py + 0.5f - camY) > halfH * 0.5f
         if (!outside && animate) return
         val (tx, ty) = px + 0.5f to py + 0.5f
@@ -129,12 +144,12 @@ class MapView(context: Context, private val state: GameState, private val router
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) = keepPlayerInView(animate = false)
 
-    private fun originX() = width / 2f - camX * painter.cellW
-    private fun originY() = height / 2f - camY * painter.cellH
+    private fun originX() = width / 2f - camX * cellW
+    private fun originY() = height / 2f - camY * cellH
 
     private fun gridAt(px: Float, py: Float): Pair<Int, Int>? {
-        val x = floor((px - originX()) / painter.cellW).toInt()
-        val y = floor((py - originY()) / painter.cellH).toInt()
+        val x = floor((px - originX()) / cellW).toInt()
+        val y = floor((py - originY()) / cellH).toInt()
         return if (x in 0 until mapW && y in 0 until mapH) x to y else null
     }
 
@@ -145,8 +160,8 @@ class MapView(context: Context, private val state: GameState, private val router
         val w = mapW
         val h = mapH
         if (w == 0 || state.palette.isEmpty()) return
-        val cw = painter.cellW
-        val ch = painter.cellH
+        val cw = cellW
+        val ch = cellH
         val ox = originX()
         val oy = originY()
         val x0 = maxOf(0, floor(-ox / cw).toInt())
@@ -154,9 +169,17 @@ class MapView(context: Context, private val state: GameState, private val router
         val x1 = minOf(w - 1, floor((width - ox) / cw).toInt())
         val y1 = minOf(h - 1, floor((height - oy) / ch).toInt())
         val map = state.map
+        val sheet = tileSheet.takeIf { tilesOn }
         for (y in y0..y1) for (x in x0..x1) {
-            val i = 2 * (y * w + x)
-            painter.drawCell(canvas, ox + x * cw, oy + y * ch, map[i], map[i + 1] and 0xFFFF)
+            val i = N.MAP_CELL_INTS * (y * w + x)
+            val tile = map[i + 2]
+            if (sheet != null && tile >= 0) {
+                val col = tile and 0xFF
+                val row = tile shr 8
+                tileSrc.set(col * TILE_PX, row * TILE_PX, (col + 1) * TILE_PX, (row + 1) * TILE_PX)
+                tileDst.set(ox + x * cw, oy + y * ch, ox + (x + 1) * cw, oy + (y + 1) * ch)
+                canvas.drawBitmap(sheet, tileSrc, tileDst, tilePaint)
+            } else painter.drawCell(canvas, ox + x * cw, oy + y * ch, map[i], map[i + 1] and 0xFFFF)
         }
         drawPath(canvas, ox, oy, cw, ch)
         val (px, py) = player
@@ -250,7 +273,7 @@ class MapView(context: Context, private val state: GameState, private val router
             if (multiTouch) return false
             val dx = e2.x - start.x
             val dy = e2.y - start.y
-            if (hypot(dx, dy) < 2f * painter.cellW) return false
+            if (hypot(dx, dy) < 2f * cellW) return false
             val o = octant(dx, dy)
             when {
                 aim != null || direction != null -> N.nativeAnswer(OCTANT_TO_DIR[o])
@@ -294,14 +317,15 @@ class MapView(context: Context, private val state: GameState, private val router
         val f = focus(e)
         camAnimator?.cancel()
         followPlayer = false
-        camX -= (f.first - lastFocus.first) / painter.cellW
-        camY -= (f.second - lastFocus.second) / painter.cellH
+        camX -= (f.first - lastFocus.first) / cellW
+        camY -= (f.second - lastFocus.second) / cellH
         lastFocus = f
         invalidate()
     }
 
     private companion object {
         const val DEFAULT_CELL_DP = 22f
+        const val TILE_PX = 16
         const val MIN_CELL_DP = 8f
         const val MAX_CELL_DP = 64f
     }

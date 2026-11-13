@@ -246,8 +246,8 @@ static int run_token(const char *tok)
 		int32_t meta[NB_META_COUNT];
 		nb_map_snapshot(meta, NULL, 0);
 		const size_t w = (size_t)meta[NB_META_WIDTH], h = (size_t)meta[NB_META_HEIGHT];
-		int32_t *const cells = malloc(sizeof(int32_t) * 2 * w * h);
-		nb_map_snapshot(meta, cells, 2 * w * h);
+		int32_t *const cells = malloc(sizeof(int32_t) * NB_MAP_CELL_INTS * w * h);
+		nb_map_snapshot(meta, cells, NB_MAP_CELL_INTS * w * h);
 		printf("map %zux%zu player (%d,%d) hp %d/%d voice %d/%d depth %d mode=%d prompt=%d\n",
 			w, h, meta[NB_META_PLAYER_X], meta[NB_META_PLAYER_Y], meta[NB_META_HP],
 			meta[NB_META_MAX_HP], meta[NB_META_VOICE], meta[NB_META_MAX_VOICE],
@@ -256,13 +256,19 @@ static int run_token(const char *tok)
 		for (int y = py - 6; y <= py + 6; y++) {
 			for (int x = px - 20; x <= px + 20; x++) {
 				const bool in = x >= 0 && y >= 0 && (size_t)x < w && (size_t)y < h;
-				const int32_t cp = in ? cells[2 * ((size_t)y * w + (size_t)x)] : ' ';
+				const int32_t cp = in ? cells[NB_MAP_CELL_INTS * ((size_t)y * w + (size_t)x)] : ' ';
 				putchar(cp >= 32 && cp < 127 ? (int)cp : '?');
 			}
 			putchar('\n');
 		}
+		const int32_t tile = cells[NB_MAP_CELL_INTS * ((size_t)py * w + (size_t)px) + 2];
+		printf("player tile %d,%d\n", tile < 0 ? -1 : tile >> 8, tile < 0 ? -1 : tile & 0xFF);
 		free(cells);
 		return 0;
+	}
+	if (strcmp(tok, "@tiles") == 0) {
+		nb_set_tiles(true);
+		return settle() ? 0 : 1;
 	}
 	if (strncmp(tok, "@where", 6) == 0) {
 		int px, py;

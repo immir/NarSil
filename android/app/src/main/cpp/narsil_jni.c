@@ -177,6 +177,12 @@ JNIEXPORT jlong JNICALL JNI_FN(nativeMapGeneration)(JNIEnv *env, jclass cls)
 }
 
 /* meta: NB_META_COUNT ints; cells: 2 * width * height ints, or null for meta only. */
+JNIEXPORT void JNICALL JNI_FN(nativeSetTiles)(JNIEnv *env, jclass cls, jboolean on)
+{
+	(void)env; (void)cls;
+	nb_set_tiles(on);
+}
+
 JNIEXPORT jlong JNICALL JNI_FN(nativeMapSnapshot)(JNIEnv *env, jclass cls,
 		jintArray meta, jintArray cells)
 {

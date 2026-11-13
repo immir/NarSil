@@ -101,6 +101,9 @@ object NarSilNative {
     /** Read-only descriptions; see nb_request_inspect() in narsil_bridge.h for the format. */
     @JvmStatic external fun nativeRequestInspect(x: Int, y: Int)
     @JvmStatic external fun nativeRequestTarget(x: Int, y: Int)
+    /** Map cells carry a MicroChasm tile as well (MAP_CELL_INTS per cell either way). */
+    @JvmStatic external fun nativeSetTiles(on: Boolean)
+    const val MAP_CELL_INTS = 3
     /** Rest: a number of turns, or REST_*. */
     @JvmStatic external fun nativeRequestRest(turnsOrMode: Int)
     const val REST_HP_AND_VOICE = -1

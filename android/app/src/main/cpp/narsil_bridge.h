@@ -170,7 +170,16 @@ enum nb_cell_flag {
 uint64_t nb_map_generation(void);
 
 /*
- * Fills meta[NB_META_COUNT] and, if `cells` holds 2 * width * height ints,
+ * Map cells, NB_MAP_CELL_INTS ints each: glyph (Unicode), attr | NB_CELL_* << 16,
+ * and the MicroChasm tile ((row << 8) | column, 16x16 pixels in
+ * lib/tiles/microchasm/16x16.png) or -1 when tiles are off (nb_set_tiles).
+ */
+enum { NB_MAP_CELL_INTS = 3 };
+/* Draw the map with tiles as well (any thread); the next map snapshot has them. */
+void nb_set_tiles(bool on);
+
+/*
+ * Fills meta[NB_META_COUNT] and, if `cells` holds NB_MAP_CELL_INTS * width * height ints,
  * the map.  Returns the generation, or 0 if cells was too small (call again
  * with a buffer sized from meta).
  */

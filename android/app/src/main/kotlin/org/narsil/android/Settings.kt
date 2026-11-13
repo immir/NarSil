@@ -59,6 +59,7 @@ class Settings(context: Context) {
     private val swipe = mutableStateOf(prefs.getBoolean("swipeRuns", false))
     private val scum = mutableStateOf(prefs.getBoolean("scumming", false))
     private val edge = mutableStateOf(prefs.getBoolean("edgeSwipePanel", false))
+    private val tile = mutableStateOf(prefs.getBoolean("tiles", false))
 
     var buttonScale: Float get() = buttons.floatValue; set(v) { buttons.floatValue = v; save("buttonScale", v) }
     var messageScale: Float get() = messageText.floatValue; set(v) { messageText.floatValue = v; save("messageScale", v) }
@@ -72,6 +73,8 @@ class Settings(context: Context) {
     var swipeRuns: Boolean get() = swipe.value; set(v) { swipe.value = v; prefs.edit().putBoolean("swipeRuns", v).apply() }
     var scumming: Boolean get() = scum.value; set(v) { scum.value = v; prefs.edit().putBoolean("scumming", v).apply() }
     var edgeSwipePanel: Boolean get() = edge.value; set(v) { edge.value = v; prefs.edit().putBoolean("edgeSwipePanel", v).apply() }
+    /** MicroChasm tiles on the map (the game is told by NarSilNative.nativeSetTiles). */
+    var tiles: Boolean get() = tile.value; set(v) { tile.value = v; prefs.edit().putBoolean("tiles", v).apply(); NarSilNative.nativeSetTiles(v) }
 
     companion object {
         const val DPAD_OFF = 0
@@ -125,6 +128,13 @@ fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onExportSave: ()
                 if (settings.dpad != Settings.DPAD_OFF) {
                     Label("D-pad size  ${settings.dpadSizeDp.roundToInt()} dp")
                     Slider(settings.dpadSizeDp, { settings.dpadSizeDp = it }, valueRange = 100f..220f)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Label("Tiles on the map")
+                        Hint("MicroChasm's pictures instead of letters. Lists and menus keep the letters.")
+                    }
+                    Switch(settings.tiles, { settings.tiles = it })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {

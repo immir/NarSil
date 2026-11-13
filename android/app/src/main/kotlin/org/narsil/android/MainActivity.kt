@@ -132,7 +132,7 @@ class MainActivity : ComponentActivity() {
 
         LaunchedEffect(Unit) {
             phase = runCatching { withContext(Dispatchers.IO) { GameLauncher.ensureStarted(applicationContext) } }
-                .fold({ game = GameState().also { it.start() }; Phase.Running }, { Phase.Failed(it.message ?: it.toString()) })
+                .fold({ game = GameState().also { it.start() }; NarSilNative.nativeSetTiles(settings.tiles); Phase.Running }, { Phase.Failed(it.message ?: it.toString()) })
         }
         LaunchedEffect(phase) {
             while (phase == Phase.Running) {
@@ -358,7 +358,7 @@ when (prompt) {
                     modifier = Modifier.fillMaxSize(),
                 )
                 AndroidView(
-                    factory = { ctx -> MapView(ctx, state, router) { settings.swipeRuns }.also { mapView = it } },
+                    factory = { ctx -> MapView(ctx, state, router, { settings.swipeRuns }, { settings.tiles }).also { mapView = it } },
                     update = { it.visibility = if (state.mapMode) View.VISIBLE else View.GONE },
                     modifier = Modifier.fillMaxSize(),
                 )

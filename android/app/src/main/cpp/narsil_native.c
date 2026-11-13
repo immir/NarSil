@@ -51,7 +51,8 @@
 
 enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MAX = 40 };
 
-typedef struct { int32_t cp, attr_flags; } map_cell;
+/* NB_MAP_CELL_INTS per grid: glyph, attr | flags << 16, tile (or -1). */
+typedef struct { int32_t cp, attr_flags, tile; } map_cell;
 
 enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_REST };
 typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; int dir; bool run; } request;
@@ -62,6 +63,7 @@ static struct {
 	size_t work_cap;
 	bool dirty;
 	bool messages_dirty;
+	bool built_tiles;       /* whether the map was last built with tiles */
 	request stashed;
 } game;
 
@@ -81,6 +83,7 @@ static struct {
 	char info[INFO_CAP];
 	uint64_t info_gen;
 	char foe_name[80];
+	bool tiles;             /* nb_set_tiles() */
 } shared = { .lock = PTHREAD_MUTEX_INITIALIZER };
 
 /* ------------------------------------------------------------------------
@@ -153,6 +156,10 @@ static int32_t cell_flags(const struct grid_data *g, struct loc grid)
 
 static void build_map(void)
 {
+	pthread_mutex_lock(&shared.lock);
+	const bool tiles = shared.tiles;
+	pthread_mutex_unlock(&shared.lock);
+	game.built_tiles = tiles;
 	const size_t n = (size_t)cave->width * (size_t)cave->height;
 	if (n > game.work_cap) {
 		game.work = mem_realloc(game.work, n * sizeof(map_cell));
@@ -165,10 +172,11 @@ static void build_map(void)
 			int a, ta;
 			wchar_t c, tc;
 			map_info(grid, &g);
+			const int32_t tile = tiles ? native_tile(&g) : -1;
 			grid_data_as_text(&g, &a, &c, &ta, &tc);
 			assert(a >= 0 && a < 0x10000);
 			game.work[(size_t)y * (size_t)cave->width + (size_t)x] = (map_cell){
-				.cp = (int32_t)c, .attr_flags = a | (cell_flags(&g, grid) << 16),
+				.cp = (int32_t)c, .attr_flags = a | (cell_flags(&g, grid) << 16), .tile = tile,
 			};
 		}
 	}
@@ -227,6 +235,10 @@ void native_publish(bool at_prompt)
 	}
 
 	const bool visible = map_visible();
+	pthread_mutex_lock(&shared.lock);
+	const bool tiles = shared.tiles;
+	pthread_mutex_unlock(&shared.lock);
+	if (tiles != game.built_tiles) game.dirty = true;
 	const bool rebuild = visible && game.dirty;
 	if (rebuild) build_map();
 
@@ -754,6 +766,14 @@ void nb_request_rest(int turns_or_mode)
 	post((request){ .kind = REQ_REST, .dir = turns_or_mode });
 }
 
+void nb_set_tiles(bool on)
+{
+	pthread_mutex_lock(&shared.lock);
+	shared.tiles = on;
+	pthread_mutex_unlock(&shared.lock);
+	bridge_wake_game();
+}
+
 void nb_request_target(int x, int y)
 {
 	post((request){ .kind = REQ_TARGET, .grid = loc(x, y) });
@@ -808,7 +828,7 @@ uint64_t nb_map_snapshot(int32_t *meta, int32_t *cells, size_t n_ints)
 	pthread_mutex_lock(&shared.lock);
 	memcpy(meta, shared.meta, sizeof(shared.meta));
 	const size_t n = (size_t)shared.meta[NB_META_WIDTH] * (size_t)shared.meta[NB_META_HEIGHT];
-	const bool fits = cells && n_ints >= 2 * n;
+	const bool fits = cells && n_ints >= NB_MAP_CELL_INTS * n;
 	if (fits) memcpy(cells, shared.front, n * sizeof(map_cell));
 	const uint64_t gen = shared.map_gen;
 	pthread_mutex_unlock(&shared.lock);

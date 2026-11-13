@@ -61,6 +61,13 @@ const char *native_character_text(void);
 /* Implemented by narsil_smith.c: the panel's smithing tab; true if CMD_SMITH was queued to make the design. */
 bool native_smith_tab(void);
 
+/*
+ * Implemented by narsil_tiles.c (game thread): the MicroChasm tile for a map
+ * grid, (row << 8) | column in 16x16.png, or -1 (no tiles installed).
+ */
+struct grid_data;
+int32_t native_tile(const struct grid_data *g);
+
 /* Implemented by narsil_knowledge.c (game thread): the knowledge browser. */
 void native_knowledge(void);
 /* Just the history or the hall of fame (the death screen). */

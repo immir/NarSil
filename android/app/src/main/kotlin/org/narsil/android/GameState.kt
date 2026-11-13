@@ -132,7 +132,7 @@ class GameState {
         val w = meta[N.META_WIDTH]
         val h = meta[N.META_HEIGHT]
         if (x !in 0 until w || y !in 0 until h) return null
-        val i = 2 * (y * w + x)
+        val i = N.MAP_CELL_INTS * (y * w + x)
         return map[i] to (map[i + 1] and 0xFFFF)
     }
 
@@ -366,7 +366,7 @@ class GameState {
         if (N.nativeMapGeneration() == mapGen) return false
         var gen = N.nativeMapSnapshot(meta, map)
         if (gen == 0L) {
-            map = IntArray(2 * meta[N.META_WIDTH] * meta[N.META_HEIGHT])
+            map = IntArray(N.MAP_CELL_INTS * meta[N.META_WIDTH] * meta[N.META_HEIGHT])
             gen = N.nativeMapSnapshot(meta, map)
         }
         mapGen = gen
