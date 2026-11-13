@@ -164,7 +164,8 @@ class GameState {
         }
     }
 
-    fun start() = Choreographer.getInstance().postFrameCallback(frame)
+    /** Polls once per display frame while started; idempotent. */
+    fun start() = Choreographer.getInstance().run { removeFrameCallback(frame); postFrameCallback(frame) }
     fun stop() = Choreographer.getInstance().removeFrameCallback(frame)
 
     private fun poll() {

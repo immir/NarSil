@@ -105,8 +105,15 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
+    override fun onStart() {
+        super.onStart()
+        game?.start()
+    }
+
+    /** Saves, and stops polling the game while nothing is on screen. */
     override fun onStop() {
         super.onStop()
+        game?.stop()
         if (NarSilNative.nativeState() == NarSilNative.STATE_RUNNING) NarSilNative.nativeRequestSave()
     }
 
