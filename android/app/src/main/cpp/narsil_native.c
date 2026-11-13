@@ -469,6 +469,16 @@ static void look_list(void)
  * label/value rows.  Serialised: "Character"; then "#S" \t section title;
  * rows: label \t value \t attr \t detail; "#T" \t a paragraph.
  */
+static void character_sheet(void);
+
+/* The character sheet in the info format (see narsil_bridge.h), for the panel's Character tab. */
+const char *native_character_text(void)
+{
+	handle_stuff(player);
+	character_sheet();
+	return info_buf;
+}
+
 static void character_sheet(void)
 {
 	static const char *skills[] = {
@@ -603,7 +613,9 @@ static void push_travel(struct loc target)
 {
 	if (!square_in_bounds_fully(cave, target)) return;
 	if (loc_eq(target, player->grid)) {
-		cmdq_push(square_object(cave, target) ? CMD_PICKUP : square_isforge(cave, target) ? CMD_SMITH : CMD_HOLD);
+		if (square_object(cave, target)) cmdq_push(CMD_PICKUP);
+		else if (square_isforge(cave, target)) (void)native_panel(NB_TAB_SMITH, 0);
+		else cmdq_push(CMD_HOLD);
 		return;
 	}
 	const bool adjacent = ABS(target.x - player->grid.x) <= 1
@@ -646,19 +658,20 @@ static void run_action(enum nb_action a)
 		case NB_ACT_TUNNEL: cmdq_push(CMD_TUNNEL); break;
 		case NB_ACT_BASH: cmdq_push(CMD_BASH); break;
 		case NB_ACT_EXCHANGE: cmdq_push(CMD_EXCHANGE); break;
-		case NB_ACT_INVENTORY: (void)native_pack(NB_ITEM_INVENTORY); break;
-		case NB_ACT_EQUIPMENT: (void)native_pack(NB_ITEM_EQUIPMENT); break;
+		case NB_ACT_INVENTORY: (void)native_panel(NB_TAB_PACK, NB_ITEM_INVENTORY); break;
+		case NB_ACT_EQUIPMENT: (void)native_panel(NB_TAB_PACK, NB_ITEM_EQUIPMENT); break;
+		case NB_ACT_PANEL: (void)native_panel(-1, NB_ITEM_INVENTORY); break;
 		case NB_ACT_MAP: do_cmd_view_map(); break;
 		case NB_ACT_LOOK: do_cmd_look(); break;
 		case NB_ACT_MESSAGES: do_cmd_messages(); break;
-		case NB_ACT_CHARACTER: handle_stuff(player); character_sheet(); publish_info(); break;
+		case NB_ACT_CHARACTER: (void)native_panel(NB_TAB_CHARACTER, 0); break;
 		case NB_ACT_CHARACTER_SCREEN: do_cmd_change_name(); break;
-		case NB_ACT_SMITH: cmdq_push(CMD_SMITH); break;
-		case NB_ACT_ABILITIES: native_abilities(); break;
+		case NB_ACT_SMITH: (void)native_panel(NB_TAB_SMITH, 0); break;
+		case NB_ACT_ABILITIES: (void)native_panel(NB_TAB_ABILITIES, 0); break;
 		case NB_ACT_HELP: do_cmd_help(); break;
-		case NB_ACT_OPTIONS: native_options(); break;
-		case NB_ACT_KNOWLEDGE: native_knowledge(); break;
-		case NB_ACT_SKILLS: native_gain_skills(); break;
+		case NB_ACT_OPTIONS: (void)native_panel(NB_TAB_OPTIONS, 0); break;
+		case NB_ACT_KNOWLEDGE: (void)native_panel(NB_TAB_KNOWLEDGE, 0); break;
+		case NB_ACT_SKILLS: (void)native_panel(NB_TAB_SKILLS, 0); break;
 		case NB_ACT_COUNT: break;
 	}
 }

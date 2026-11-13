@@ -7,6 +7,10 @@ import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.LinearProgressIndicator
@@ -157,21 +161,7 @@ class MainActivity : ComponentActivity() {
                     router.intercept = { code -> answerByKey(prompt, code)?.let(answer); true }
                     onDispose { router.intercept = null }
                 }
-                when (prompt) {
-                    is GameState.Prompt.Items -> TextScale(settings.itemScale / settings.buttonScale) { ItemSheet(prompt, state::colour, answer) }
-                    is GameState.Prompt.Actions -> TextScale(settings.itemScale / settings.buttonScale) { ActionSheet(prompt, state::colour, answer) }
-                    is GameState.Prompt.Check -> CheckDialog(prompt, answer)
-                    is GameState.Prompt.Choice -> ChoiceSheet(prompt, answer)
-                    is GameState.Prompt.Skills -> SkillsSheet(prompt, answer)
-                    is GameState.Prompt.Abilities -> AbilitiesSheet(prompt, answer)
-                    is GameState.Prompt.Smith -> SmithSheet(prompt, answer)
-                    is GameState.Prompt.Text -> TextPrompt(prompt) { answer(-1) }
-                    is GameState.Prompt.Options -> OptionsScreen(prompt, answer)
-                    is GameState.Prompt.Knowledge -> KnowledgeScreen(prompt, state::colour, answer)
-                    is GameState.Prompt.Pack -> TextScale(settings.itemScale / settings.buttonScale) { PackSheet(prompt, state::colour, answer) }
-                    is GameState.Prompt.Screen -> ScreenSheet(prompt, answer, onScum = { showScum = true }.takeIf { settings.scumming })
-                    is GameState.Prompt.Aim, is GameState.Prompt.Direction -> Unit  // drawn by GameLayers over the map
-                }
+                if (state.panelTab >= 0) PanelOverlay(state, prompt, answer) else PromptUi(state, prompt, answer)
             }
             if (state.prompt == null) state.info?.let { info ->
                 DisposableEffect(info) {
@@ -182,7 +172,7 @@ class MainActivity : ComponentActivity() {
             if (state.prompt == null) when (val info = state.info) {
                 is GameState.Info.Inspect -> InspectSheet(info, state) { state.info = null }
                 is GameState.Info.LookList -> LookSheet(info, state) { state.info = null }
-                is GameState.Info.Character -> CharacterSheet(info, state) { state.info = null }
+                is GameState.Info.Character -> CharacterSheet(info, state, onDismiss = { state.info = null })
                 null -> Unit
             }
             if (state.prompt == null && showMessages) {
@@ -213,6 +203,47 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** One prompt's native screen. */
+    @Composable
+    private fun PromptUi(state: GameState, prompt: GameState.Prompt, answer: (Int) -> Unit) {
+when (prompt) {
+            is GameState.Prompt.Items -> TextScale(settings.itemScale / settings.buttonScale) { ItemSheet(prompt, state::colour, answer) }
+            is GameState.Prompt.Actions -> TextScale(settings.itemScale / settings.buttonScale) { ActionSheet(prompt, state::colour, answer) }
+            is GameState.Prompt.Check -> CheckDialog(prompt, answer)
+            is GameState.Prompt.Choice -> ChoiceSheet(prompt, answer)
+            is GameState.Prompt.Skills -> SkillsSheet(prompt, answer)
+            is GameState.Prompt.Abilities -> AbilitiesSheet(prompt, answer)
+            is GameState.Prompt.Smith -> SmithSheet(prompt, answer)
+            is GameState.Prompt.Text -> TextPrompt(prompt) { answer(-1) }
+            is GameState.Prompt.Options -> OptionsScreen(prompt, answer, onAppSettings = { showOptions = true }.takeIf { LocalInPanel.current })
+        is GameState.Prompt.Character -> CharacterSheet(prompt.info, state, onDismiss = { answer(-1) }, onMore = { answer(NarSilNative.CHARACTER_SCREEN) })
+            is GameState.Prompt.Knowledge -> KnowledgeScreen(prompt, state::colour, answer)
+            is GameState.Prompt.Pack -> TextScale(settings.itemScale / settings.buttonScale) { PackSheet(prompt, state::colour, answer) }
+            is GameState.Prompt.Screen -> ScreenSheet(prompt, answer, onScum = { showScum = true }.takeIf { settings.scumming })
+            is GameState.Prompt.Aim, is GameState.Prompt.Direction -> Unit  // drawn by GameLayers over the map
+        }
+    }
+
+    /**
+     * The character panel: the open tab's screen inside the panel; any other
+     * prompt (a yes/no, a text entry, a choice) is asked over the last tab screen.
+     */
+    @Composable
+    private fun PanelOverlay(state: GameState, prompt: GameState.Prompt, answer: (Int) -> Unit) {
+        var shown by remember { mutableStateOf<GameState.Prompt?>(null) }
+        if (prompt.isPanelContent()) shown = prompt
+        PanelHost(state.panelTab, answer) {
+            shown?.let { c ->
+                Box(Modifier.fillMaxSize()) {
+                    PromptUi(state, c, if (c === prompt) answer else { _ -> })
+                    if (c !== prompt) Box(Modifier.fillMaxSize().background(Color(0x55000000))
+                                              .clickable(remember { MutableInteractionSource() }, indication = null) {})
+                }
+            }
+        }
+        if (!prompt.isPanelContent()) PromptUi(state, prompt, answer)
+    }
+
     /**
      * Keyboard answers while a native prompt is open (all other keys are swallowed):
      * Esc cancels; item letters pick by label; y/n answer checks; keypad digits,
@@ -233,6 +264,7 @@ class MainActivity : ComponentActivity() {
         is GameState.Prompt.Options -> if (code == Keys.ESCAPE) -1 else null
         is GameState.Prompt.Pack -> if (code == Keys.ESCAPE) -1 else null
         is GameState.Prompt.Knowledge -> if (code == Keys.ESCAPE) -1 else null
+        is GameState.Prompt.Character -> if (code == Keys.ESCAPE) -1 else null
         is GameState.Prompt.Skills -> when (code) {
             Keys.ESCAPE -> -1
             Keys.ENTER -> NarSilNative.SKILL_ACCEPT
@@ -286,6 +318,7 @@ class MainActivity : ComponentActivity() {
                     Box(Modifier.align(Alignment.BottomCenter)) { DirectionBar(d, NarSilNative::nativeAnswer) }
                 }
                 if (state.mapMode && dpadMode() == Settings.DPAD_FLOATING) FloatingDpad(state)
+                if (state.mapMode && settings.edgeSwipePanel) EdgeSwipeHandle(Modifier.align(Alignment.CenterEnd))
             }
             if (state.mapMode) TextScale(settings.statusScale) {
                 if (dpadMode() == Settings.DPAD_DOCKED) Row(Modifier.background(Color(0xFF141414)), verticalAlignment = Alignment.CenterVertically) {
@@ -311,8 +344,8 @@ class MainActivity : ComponentActivity() {
         val more = line0.contains("-more-")
         /* The textui joins several messages on its top line; only show it when it is something else (a prompt). */
         val banner = line0.takeIf { it.isNotEmpty() && !more && state.messages.none { m -> line0.contains(m.text) } }
-        Column(Modifier.fillMaxWidth().background(Color(0xFF141414)).clickable(onClick = onTap)
-            .padding(horizontal = 10.dp, vertical = 4.dp)) {
+        Row(Modifier.fillMaxWidth().background(Color(0xFF141414)), verticalAlignment = Alignment.Top) {
+        Column(Modifier.weight(1f).clickable(onClick = onTap).padding(horizontal = 10.dp, vertical = 4.dp)) {
             recent.forEachIndexed { i, m ->
                 val alpha = 0.45f + 0.55f * (i + 1) / recent.size
                 Text(if (m.count > 1) "${m.text} (x${m.count})" else m.text,
@@ -321,6 +354,18 @@ class MainActivity : ComponentActivity() {
             if (banner != null) Text(banner, color = Color(0xFFFFD54F), fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)
             if (more) Text("▸ tap to continue", color = Color(0xFFFFD54F), fontSize = 13.sp, lineHeight = 16.sp)
             if (recent.isEmpty() && banner == null && !more) Text(" ", fontSize = 14.sp)
+        }
+            PanelButton()
+        }
+    }
+
+    /** Opens the character panel (pack, character, skills, …) at its last tab. */
+    @Composable
+    private fun PanelButton() {
+        Box(Modifier.padding(4.dp).size(40.dp).background(Color(0xFF26262B), RoundedCornerShape(10.dp))
+                .clickable { NarSilNative.nativeRequestAction(NarSilNative.ACT_PANEL) },
+            contentAlignment = Alignment.Center) {
+            Text("@", color = Color(0xFFF3D27A), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace)
         }
     }
 

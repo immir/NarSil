@@ -45,6 +45,9 @@ class GameState {
 
     var prompt by mutableStateOf<Prompt?>(null)
         private set
+    /** The character panel tab the prompt belongs to, or -1. */
+    var panelTab by mutableStateOf(-1)
+        private set
     var messages by mutableStateOf<List<Message>>(emptyList())
         private set
 
@@ -72,6 +75,8 @@ class GameState {
         /** The knowledge browser: [rows] in order; [expanded] (an entry index or -1) has [text]. */
         data class Knowledge(val view: String, val title: String, val expanded: Int, val rows: List<KnowRow>, val text: String,
                              val actions: List<Pair<Int, String>> = emptyList()) : Prompt
+        /** The panel's Character tab. */
+        data class Character(val info: Info.Character) : Prompt
         data class Options(val page: String, val title: String, val rows: List<OptionRow>) : Prompt
         data class Text(val title: String, val initial: String, val maxBytes: Int, val random: Boolean) : Prompt
         data class Screen(val stage: String, val title: String, val paragraphs: List<String>, val options: List<ScreenOption>,
@@ -187,6 +192,7 @@ class GameState {
             if (gen != promptGen) {
                 promptGen = gen
                 prompt = parsePrompt(N.nativePrompt())
+                panelTab = N.nativePanelTab()
                 mapListeners.forEach { it() }  // the map draws aim targets
             }
         }
@@ -264,6 +270,7 @@ class GameState {
                     lines.filter { it.startsWith("#D\t") }.joinToString("\n") { it.removePrefix("#D\t") }.trim(),
                     head.getOrNull(5) == "1")
             }
+            N.PROMPT_CHARACTER -> (parseInfo(raw.substringAfter('\n')) as? Info.Character)?.let { Prompt.Character(it) }
             N.PROMPT_OPTIONS -> {
                 val head = lines[0].split('\t')
                 Prompt.Options(head.getOrElse(1) { "" }, head.getOrElse(2) { "" },

@@ -44,12 +44,12 @@ private val WARN = Color(0xFFFFB74D)
 
 /** The game's own options (narsil_options.c), full screen; changes apply at once. */
 @Composable
-fun OptionsScreen(p: GameState.Prompt.Options, onAnswer: (Int) -> Unit) {
+fun OptionsScreen(p: GameState.Prompt.Options, onAnswer: (Int) -> Unit, onAppSettings: (() -> Unit)? = null) {
     val main = p.page == "main"
     Surface(color = BG, modifier = Modifier.fillMaxSize()) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { onAnswer(-1) }) { Text(if (main) "Close" else "‹ Back") }
+                if (!(main && LocalInPanel.current)) TextButton(onClick = { onAnswer(-1) }) { Text(if (main) "Close" else "‹ Back") }
                 Text(p.title, color = GOLD, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
             }
             when (p.page) {
@@ -57,6 +57,9 @@ fun OptionsScreen(p: GameState.Prompt.Options, onAnswer: (Int) -> Unit) {
                 "cheat" -> Note("Switching one on marks this character as a cheater for good, even if you switch it off again.")
             }
             LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(bottom = 16.dp)) {
+                if (main && onAppSettings != null) item {
+                    LinkRow(OptionRow.Link(0, "Display and controls", "Text sizes, d-pad, swipes, save scumming"), { onAppSettings() })
+                }
                 items(p.rows) { row ->
                     when (row) {
                         is OptionRow.Heading -> Text(row.text, color = GOLD, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,

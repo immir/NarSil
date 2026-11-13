@@ -182,9 +182,7 @@ fun ChoiceSheet(prompt: GameState.Prompt.Choice, onAnswer: (Int) -> Unit) {
  */
 @Composable
 fun SkillsSheet(prompt: GameState.Prompt.Skills, onAnswer: (Int) -> Unit) {
-    Box(Modifier.fillMaxSize().background(Color(0x99000000)), contentAlignment = Alignment.BottomCenter) {
-        Surface(shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp), color = Color(0xFF1C1C1E),
-                modifier = Modifier.fillMaxWidth()) {
+    PanelAwareSheet(null) {
             Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Skills", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                 Text("Experience to spend: ${prompt.expLeft}", color = Color(0xFFFFD54F), fontSize = 14.sp)
@@ -209,5 +207,4 @@ fun SkillsSheet(prompt: GameState.Prompt.Skills, onAnswer: (Int) -> Unit) {
                 }
             }
         }
-    }
 }

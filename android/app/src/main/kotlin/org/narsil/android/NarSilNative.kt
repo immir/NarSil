@@ -93,6 +93,7 @@ object NarSilNative {
     const val ACT_SMITH = 25
     const val ACT_OPTIONS = 26
     const val ACT_KNOWLEDGE = 27
+    const val ACT_PANEL = 28
 
     /** Only honoured at the command prompt. */
     @JvmStatic external fun nativeRequestAction(action: Int)
@@ -136,6 +137,21 @@ object NarSilNative {
     const val PROMPT_OPTIONS = 12
     const val PROMPT_PACK = 13
     const val PROMPT_KNOWLEDGE = 14
+    const val PROMPT_CHARACTER = 15
+    /** The character panel (enum nb_panel_tab); while open, prompts also take PANEL_TAB + tab or PANEL_CLOSE. */
+    const val TAB_PACK = 0
+    const val TAB_CHARACTER = 1
+    const val TAB_SKILLS = 2
+    const val TAB_ABILITIES = 3
+    const val TAB_KNOWLEDGE = 4
+    const val TAB_SMITH = 5
+    const val TAB_OPTIONS = 6
+    const val TAB_COUNT = 7
+    const val PANEL_TAB = 1 shl 24
+    const val PANEL_CLOSE = PANEL_TAB + TAB_COUNT
+    const val CHARACTER_SCREEN = 1
+    /** The open panel tab, or -1. */
+    @JvmStatic external fun nativePanelTab(): Int
     const val KNOW_COLLAPSE = 99999
     const val PACK_COLLAPSE = 999
     const val PACK_EXPAND = 1000

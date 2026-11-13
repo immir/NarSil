@@ -37,18 +37,7 @@ import org.narsil.android.NarSilNative as N
 
 @Composable
 private fun BottomSheet(onDismiss: () -> Unit, tall: Boolean = false, content: @Composable () -> Unit) {
-    Box(
-        Modifier.fillMaxSize().background(Color(0x99000000))
-            .clickable(remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
-        contentAlignment = Alignment.BottomCenter,
-    ) {
-        Surface(
-            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            color = Color(0xFF1C1C1E),
-            modifier = Modifier.fillMaxWidth().let { if (tall) it.fillMaxHeight(0.85f) else it.heightIn(max = 600.dp) }
-                .clickable(remember { MutableInteractionSource() }, indication = null) {},
-        ) { content() }
-    }
+    PanelAwareSheet(onDismiss, heightFraction = if (tall) 0.85f else null, maxHeight = if (tall) null else 600.dp) { content() }
 }
 
 @Composable
@@ -143,13 +132,14 @@ fun MessagesSheet(state: GameState, onDismiss: () -> Unit) {
 
 /** The character sheet: identity, stats, skills, combat, progress, history. */
 @Composable
-fun CharacterSheet(info: GameState.Info.Character, state: GameState, onDismiss: () -> Unit) {
+fun CharacterSheet(info: GameState.Info.Character, state: GameState, onDismiss: () -> Unit, onMore: (() -> Unit)? = null) {
+    val inPanel = LocalInPanel.current
     BottomSheet(onDismiss, tall = true) {
         Column(Modifier.padding(top = 12.dp)) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(info.sections.firstOrNull()?.title ?: "Character", color = Color.White, fontSize = 18.sp,
                      fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                TextButton(onClick = onDismiss) { Text("Close") }
+                if (!inPanel) TextButton(onClick = onDismiss) { Text("Close") }
             }
             LazyColumn(Modifier.weight(1f, fill = false)) {
                 info.sections.forEachIndexed { i, sec ->
@@ -168,9 +158,12 @@ fun CharacterSheet(info: GameState.Info.Character, state: GameState, onDismiss: 
                 }
             }
             Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilledTonalButton(onClick = { onDismiss(); N.nativeRequestAction(N.ACT_SKILLS) }, modifier = Modifier.weight(1f)) { Text("Skills") }
-                FilledTonalButton(onClick = { onDismiss(); N.nativeRequestAction(N.ACT_ABILITIES) }, modifier = Modifier.weight(1f)) { Text("Abilities") }
-                FilledTonalButton(onClick = { onDismiss(); N.nativeRequestAction(N.ACT_CHARACTER_SCREEN) }, modifier = Modifier.weight(1f)) { Text("More…") }
+                if (!inPanel) {
+                    FilledTonalButton(onClick = { onDismiss(); N.nativeRequestAction(N.ACT_SKILLS) }, modifier = Modifier.weight(1f)) { Text("Skills") }
+                    FilledTonalButton(onClick = { onDismiss(); N.nativeRequestAction(N.ACT_ABILITIES) }, modifier = Modifier.weight(1f)) { Text("Abilities") }
+                }
+                FilledTonalButton(onClick = { onMore?.invoke() ?: run { onDismiss(); N.nativeRequestAction(N.ACT_CHARACTER_SCREEN) } },
+                                  modifier = Modifier.weight(1f)) { Text("Rename, flags, dump…") }
             }
         }
     }

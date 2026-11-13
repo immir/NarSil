@@ -75,7 +75,7 @@ fun SmithSheet(p: GameState.Prompt.Smith, onAnswer: (Int) -> Unit) {
     Surface(color = BG, modifier = Modifier.fillMaxSize()) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { onAnswer(-1) }) { Text(if (main) "Close" else "‹ Back") }
+                if (!(main && LocalInPanel.current)) TextButton(onClick = { onAnswer(-1) }) { Text(if (main) "Close" else "‹ Back") }
                 Column(Modifier.weight(1f)) {
                     if (!main) VIEW_NAMES[p.view]?.let { Text("Smithing · $it", color = SUB, fontSize = 12.sp) }
                     Text(p.title, color = GOLD, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)

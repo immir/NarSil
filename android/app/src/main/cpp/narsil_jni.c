@@ -234,6 +234,12 @@ JNIEXPORT jint JNICALL JNI_FN(nativePath)(JNIEnv *env, jclass cls, jintArray xy)
 
 /* ---- Native prompts ---- */
 
+JNIEXPORT jint JNICALL JNI_FN(nativePanelTab)(JNIEnv *env, jclass cls)
+{
+	(void)env; (void)cls;
+	return nb_panel_tab();
+}
+
 JNIEXPORT jlong JNICALL JNI_FN(nativePromptGeneration)(JNIEnv *env, jclass cls)
 {
 	(void)env; (void)cls;

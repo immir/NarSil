@@ -642,32 +642,27 @@ static void main_view_options(enum opt_state st[6])
 			: "Create the item you have designed.");
 }
 
-struct object *native_smith_object(struct smithing_cost *cost)
+/*
+ * A design left by switching panel tabs is picked up again; one finished in
+ * the panel ("Make it") waits for the CMD_SMITH it queued.
+ */
+static bool design_live, ready_to_make;
+
+static void start_design(void)
 {
-	/* Resume interrupted work.  The design is not saved, so after a restart there is nothing to resume. */
-	if (player->smithing_leftover > 0 && !smith_obj->kind) {
-		msg("Your unfinished work did not survive your absence.");
-		player->smithing_leftover = 0;
-	}
-	if (player->smithing_leftover > 0) {
-		if (square_isforge(cave, player->grid)) {
-			*cost = current_cost;
-			return smith_obj;
-		}
-		if (!get_check(format("A forge has an unfinished %s.  Abandon it to see smithing options? ",
-				smith_obj->artifact ? "artifact" : "item")))
-			return NULL;
-		player->smithing_leftover = 0;
-	}
+	if (design_live) { design_live = false; return; }
 	wipe_smithing_objects();
 	pval = 0;
 	pval_included = false;
 	numbers_changed = false;
 	no_forge = !square_isforge(cave, player->grid);
 	exhausted = !no_forge && !square_forge_uses(cave, player->grid);
+}
 
-	bool create = false;
-	while (!create) {
+/* The menus; true once "Make it" is chosen.  Leaving the panel keeps the design. */
+static bool design(void)
+{
+	for (;;) {
 		begin_view("main", "Smithing");
 		enum opt_state st[6];
 		main_view_options(st);
@@ -679,11 +674,62 @@ struct object *native_smith_object(struct smithing_cost *cost)
 			case 2: artefact_view(); break;
 			case 3: numbers_view(); break;
 			case 4: melt_view(); break;
-			case 5: create = accept_item(); break;
-			default: wipe_smithing_objects(); return NULL;
+			case 5: if (accept_item()) return true; break;
+			default:
+				if (native_panel_leaving() && smith_obj->kind) design_live = true;
+				else wipe_smithing_objects();
+				return false;
 		}
 	}
+}
+
+/* Unfinished work: false if the player would rather abandon it and browse. */
+static bool resume_unfinished(void)
+{
+	/* The design is not saved, so after a restart there is nothing to resume. */
+	if (player->smithing_leftover > 0 && !smith_obj->kind) {
+		msg("Your unfinished work did not survive your absence.");
+		player->smithing_leftover = 0;
+	}
+	if (player->smithing_leftover <= 0) return false;
+	if (square_isforge(cave, player->grid)) return true;
+	if (!get_check(format("A forge has an unfinished %s.  Abandon it to see smithing options? ",
+			smith_obj->artifact ? "artifact" : "item")))
+		return true;
+	player->smithing_leftover = 0;
+	return false;
+}
+
+struct object *native_smith_object(struct smithing_cost *cost)
+{
+	if (ready_to_make) {
+		ready_to_make = false;
+		*cost = current_cost;
+		return smith_obj;
+	}
+	if (resume_unfinished()) {
+		if (!square_isforge(cave, player->grid)) return NULL;
+		*cost = current_cost;
+		return smith_obj;
+	}
+	start_design();
+	if (!design()) return NULL;
 	include_pval(smith_obj);
 	*cost = current_cost;
 	return smith_obj;
+}
+
+bool native_smith_tab(void)
+{
+	if (resume_unfinished()) {
+		if (!square_isforge(cave, player->grid)) return false;
+		cmdq_push(CMD_SMITH);
+		return true;
+	}
+	start_design();
+	if (!design()) return false;
+	include_pval(smith_obj);
+	ready_to_make = true;
+	cmdq_push(CMD_SMITH);
+	return true;
 }

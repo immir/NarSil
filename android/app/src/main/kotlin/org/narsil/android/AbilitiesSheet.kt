@@ -70,16 +70,14 @@ private fun summary(a: GameState.Ability, skill: GameState.AbilitySkill, expLeft
 fun AbilitiesSheet(prompt: GameState.Prompt.Abilities, onAnswer: (Int) -> Unit) {
     val tab = AbilitiesView.tab.coerceIn(0, maxOf(prompt.skills.size - 1, 0))
     val shown = prompt.abilities.filter { it.skill == tab }
-    Box(Modifier.fillMaxSize().background(Color(0x99000000)), contentAlignment = Alignment.BottomCenter) {
-        Surface(shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp), color = Color(0xFF1C1C1E),
-                modifier = Modifier.fillMaxWidth().fillMaxHeight(0.9f)) {
+    PanelAwareSheet(null, heightFraction = 0.9f) {
             Column {
                 Row(Modifier.padding(start = 16.dp, top = 12.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text("Abilities", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                         Text("Experience to spend: ${prompt.expLeft}", color = Color(0xFFFFD54F), fontSize = 13.sp)
                     }
-                    TextButton(onClick = { onAnswer(-1) }) { Text("Close") }
+                    if (!LocalInPanel.current) TextButton(onClick = { onAnswer(-1) }) { Text("Close") }
                 }
                 ScrollableTabRow(selectedTabIndex = tab, containerColor = Color(0xFF1C1C1E), edgePadding = 8.dp) {
                     prompt.skills.forEachIndexed { i, sk ->
@@ -101,7 +99,6 @@ fun AbilitiesSheet(prompt: GameState.Prompt.Abilities, onAnswer: (Int) -> Unit) 
                 }
             }
         }
-    }
 }
 
 @Composable

@@ -34,6 +34,7 @@
 #include "player-abilities.h"
 #include "player-calcs.h"
 #include "ui-output.h"
+#include "ui-player.h"
 #include "player-skills.h"
 #include "songs.h"
 #include "player-path.h"
@@ -58,6 +59,7 @@ static struct {
 	pthread_mutex_t lock;
 	pthread_cond_t answered_cv;
 	enum nb_prompt_kind kind;
+	int32_t panel_tab;      /* the character panel's open tab (enum nb_panel_tab), or -1 */
 	uint64_t gen;
 	char text[TEXT_CAP];
 	int32_t answer;
@@ -65,7 +67,21 @@ static struct {
 } shared = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
 	.answered_cv = PTHREAD_COND_INITIALIZER,
+	.panel_tab = -1,
 };
+
+/*
+ * The character panel: a tab switch or close answered to any prompt inside it.
+ * Until the panel loop takes it, every ask() returns -1 at once, so whatever
+ * screens are open unwind back to the panel loop (game thread only).
+ */
+enum { PANEL_STAY = -1 };
+static int panel_next = PANEL_STAY;
+
+bool native_panel_leaving(void)
+{
+	return panel_next != PANEL_STAY;
+}
 
 /*
  * The textui's own hooks, captured when ours are installed.  While a keymap is
@@ -92,6 +108,7 @@ static bool keymap_pending(void)
 static int32_t ask(enum nb_prompt_kind kind)
 {
 	assert(kind != NB_PROMPT_NONE);
+	if (native_panel_leaving()) return -1;
 	/* The UI decides what to draw under the prompt from fresh map/meta. */
 	native_publish(false);
 
@@ -108,7 +125,12 @@ static int32_t ask(enum nb_prompt_kind kind)
 	const int32_t answer = shared.answer;
 	shared.kind = NB_PROMPT_NONE;
 	shared.gen++;
+	const bool in_panel = shared.panel_tab >= 0;
 	pthread_mutex_unlock(&shared.lock);
+	if (in_panel && answer >= NB_PANEL_TAB && answer <= NB_PANEL_CLOSE) {
+		panel_next = answer - NB_PANEL_TAB;
+		return -1;
+	}
 	return answer;
 }
 
@@ -411,7 +433,7 @@ bool native_pack_resume(void)
 	pack_after.reopen = false;
 	if (player->is_dead || !player->upkeep->playing || player->upkeep->generate_level || screen_save_depth > 0) return false;
 	pack_resumed = true;
-	const bool queued = native_pack(pack_after.focus);
+	const bool queued = native_panel(NB_TAB_PACK, pack_after.focus);
 	pack_resumed = false;
 	return queued;
 }
@@ -717,6 +739,9 @@ int native_skill_points(int context, bool reset)
 			cmd_set_arg_choice(cmdq_peek(), "choice", a - NB_SKILL_SELL);
 		} else if (a == NB_SKILL_ACCEPT) {
 			next = 1;
+		} else if (native_panel_leaving()) {
+			/* Switching panel tabs keeps what was bought. */
+			next = 1;
 		} else {
 			/* Reset, or cancel (which undoes this session's changes). */
 			cmdq_push(CMD_RESET_SKILLS);
@@ -869,6 +894,77 @@ void native_abilities(void)
 		use_ability(list[pick]);
 	}
 	handle_stuff(player);
+}
+
+/* ------------------------------------------------------------------------
+ * The character panel: tabs over the pack, character, skills, abilities,
+ * knowledge, smithing and options.  Each tab is its screen's own loop; a tab
+ * answer unwinds it (see ask()) and the loop here opens the next.
+ * ------------------------------------------------------------------------ */
+
+static int last_tab = NB_TAB_PACK;
+
+static void set_panel_tab(int tab)
+{
+	pthread_mutex_lock(&shared.lock);
+	shared.panel_tab = tab;
+	pthread_mutex_unlock(&shared.lock);
+}
+
+static void character_tab(void)
+{
+	for (;;) {
+		native_prompt_begin();
+		native_prompt_add("%s", native_character_text());
+		native_prompt_end();
+		const int32_t a = ask(NB_PROMPT_CHARACTER);
+		if (a != NB_CHARACTER_SCREEN) return;
+		do_cmd_change_name();
+	}
+}
+
+/* Accepting keeps the tab open with a fresh session; Cancel (undo) closes the panel. */
+static void skills_tab(void)
+{
+	while (native_skill_points(CTX_GAME, true) == 1 && !native_panel_leaving()) {}
+}
+
+/* Runs tabs until one closes the panel; true if a command was queued (e.g. a pack action). */
+bool native_panel(int tab, int focus)
+{
+	assert(tab >= -1 && tab < NB_TAB_COUNT);
+	if (tab < 0) tab = last_tab;
+	bool queued = false;
+	for (;;) {
+		last_tab = tab;
+		panel_next = PANEL_STAY;
+		set_panel_tab(tab);
+		switch ((enum nb_panel_tab)tab) {
+			case NB_TAB_PACK: queued = native_pack(focus); break;
+			case NB_TAB_CHARACTER: character_tab(); break;
+			case NB_TAB_SKILLS: skills_tab(); break;
+			case NB_TAB_ABILITIES: native_abilities(); break;
+			case NB_TAB_KNOWLEDGE: native_knowledge(); break;
+			case NB_TAB_SMITH: queued = native_smith_tab(); break;
+			case NB_TAB_OPTIONS: native_options(); break;
+			case NB_TAB_COUNT: break;
+		}
+		if (queued || panel_next == PANEL_STAY || panel_next >= NB_TAB_COUNT) break;
+		tab = panel_next;
+		focus = NB_ITEM_INVENTORY;
+	}
+	panel_next = PANEL_STAY;
+	set_panel_tab(-1);
+	handle_stuff(player);
+	return queued;
+}
+
+int nb_panel_tab(void)
+{
+	pthread_mutex_lock(&shared.lock);
+	const int tab = shared.panel_tab;
+	pthread_mutex_unlock(&shared.lock);
+	return tab;
 }
 
 /* ------------------------------------------------------------------------

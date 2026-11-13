@@ -177,7 +177,9 @@ static int run_token(const char *tok)
 	if (strcmp(tok, "@prompt") == 0) {
 		static char text[NB_PROMPT_CAP];
 		const enum nb_prompt_kind kind = nb_prompt(text, sizeof(text));
-		printf("prompt kind=%d\n%s", (int)kind, text);
+		printf("prompt kind=%d\n", (int)kind);
+		if (nb_panel_tab() >= 0) printf("panel tab=%d\n", nb_panel_tab());
+		printf("%s", text);
 		return 0;
 	}
 	if (sscanf(tok, "@aim@%d,%d%c", &mx, &my, &tail) == 2) {

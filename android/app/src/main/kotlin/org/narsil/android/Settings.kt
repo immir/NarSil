@@ -57,6 +57,7 @@ class Settings(context: Context) {
     private val pad = mutableIntStateOf(prefs.getInt("dpad", DPAD_DOCKED))
     private val swipe = mutableStateOf(prefs.getBoolean("swipeRuns", false))
     private val scum = mutableStateOf(prefs.getBoolean("scumming", false))
+    private val edge = mutableStateOf(prefs.getBoolean("edgeSwipePanel", false))
 
     var buttonScale: Float get() = buttons.floatValue; set(v) { buttons.floatValue = v; save("buttonScale", v) }
     var messageScale: Float get() = messageText.floatValue; set(v) { messageText.floatValue = v; save("messageScale", v) }
@@ -69,6 +70,7 @@ class Settings(context: Context) {
     var dpad: Int get() = pad.intValue; set(v) { pad.intValue = v; prefs.edit().putInt("dpad", v).apply() }
     var swipeRuns: Boolean get() = swipe.value; set(v) { swipe.value = v; prefs.edit().putBoolean("swipeRuns", v).apply() }
     var scumming: Boolean get() = scum.value; set(v) { scum.value = v; prefs.edit().putBoolean("scumming", v).apply() }
+    var edgeSwipePanel: Boolean get() = edge.value; set(v) { edge.value = v; prefs.edit().putBoolean("edgeSwipePanel", v).apply() }
 
     companion object {
         const val DPAD_OFF = 0
@@ -129,6 +131,14 @@ fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onDismiss: () ->
                         Hint("Otherwise a swipe takes one step.")
                     }
                     Switch(settings.swipeRuns, { settings.swipeRuns = it })
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Label("Swipe from the right edge opens the panel")
+                        Hint("A short stretch in the middle of the right edge, marked by a faint handle, opens the character panel. " +
+                             "That stretch no longer works as the system Back gesture.")
+                    }
+                    Switch(settings.edgeSwipePanel, { settings.edgeSwipePanel = it })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {

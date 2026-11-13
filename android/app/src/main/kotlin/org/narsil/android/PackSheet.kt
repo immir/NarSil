@@ -69,16 +69,7 @@ fun PackSheet(p: GameState.Prompt.Pack, colour: (Int) -> Int, onAnswer: (Int) ->
                                .takeIf { sections.any { it.first == p.focus } } ?: 0)
     }
     DisposableEffect(Unit) { onDispose { PackView.first = list.firstVisibleItemIndex; PackView.offset = list.firstVisibleItemScrollOffset } }
-    Box(
-        Modifier.fillMaxSize().background(Color(0x99000000))
-            .clickable(remember { MutableInteractionSource() }, indication = null) { onAnswer(-1) },
-        contentAlignment = Alignment.BottomCenter,
-    ) {
-        Surface(
-            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp), color = Color(0xFF1C1C1E),
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.88f)
-                .clickable(remember { MutableInteractionSource() }, indication = null) {},
-        ) {
+    PanelAwareSheet({ onAnswer(-1) }, heightFraction = 0.88f) {
             Column(Modifier.padding(top = 10.dp)) {
                 Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
@@ -86,7 +77,7 @@ fun PackSheet(p: GameState.Prompt.Pack, colour: (Int) -> Int, onAnswer: (Int) ->
                         Text("Carrying ${lb(p.weight)} of ${lb(p.limit)}", fontSize = 12.sp,
                              color = if (p.weight > p.limit) Color(0xFFFFB74D) else SUB)
                     }
-                    TextButton(onClick = { onAnswer(-1) }) { Text("Close") }
+                    if (!LocalInPanel.current) TextButton(onClick = { onAnswer(-1) }) { Text("Close") }
                 }
                 LazyColumn(Modifier.fillMaxWidth(), state = list) {
                     sections.forEach { (section, items) ->
@@ -102,7 +93,6 @@ fun PackSheet(p: GameState.Prompt.Pack, colour: (Int) -> Int, onAnswer: (Int) ->
                 }
             }
         }
-    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)

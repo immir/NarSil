@@ -132,6 +132,7 @@ enum nb_action {
 	NB_ACT_SMITH,         /* smithing (at a forge to make things; elsewhere to browse) */
 	NB_ACT_OPTIONS,       /* game options (NB_PROMPT_OPTIONS) */
 	NB_ACT_KNOWLEDGE,     /* knowledge browser (NB_PROMPT_KNOWLEDGE) */
+	NB_ACT_PANEL,         /* the character panel at its last tab */
 	NB_ACT_COUNT
 };
 
@@ -212,6 +213,7 @@ enum nb_prompt_kind {
 	NB_PROMPT_TEXT = 10,   /* text entry: nb_answer_text(), NB_TEXT_RANDOM, or nb_answer(-1) to cancel */
 	NB_PROMPT_SCREEN = 11, /* birth and death screens: answer an option index, NB_SCREEN_*, -1 back */
 	NB_PROMPT_OPTIONS = 12, /* game options: answer a record's answer (see narsil_options.c), -1 back */
+	NB_PROMPT_CHARACTER = 15, /* the panel's character tab (info format, see nb_info()): -1 close, NB_CHARACTER_SCREEN */
 	NB_PROMPT_KNOWLEDGE = 14, /* knowledge browser (see narsil_knowledge.c): an entry index, NB_KNOW_COLLAPSE, -1 back */
 	NB_PROMPT_PACK = 13,   /* every item, one expanded (see publish_pack()): NB_PACK_* answers, -1 close */
 };
@@ -233,6 +235,18 @@ enum { NB_TEXT_RANDOM = 2 };
 enum { NB_SCREEN_RANDOM = 1000, NB_SCREEN_OPTIONS = 1001 };
 
 enum { NB_KNOW_COLLAPSE = 99999, NB_KNOW_ACTION = 100000 };
+
+/*
+ * The character panel: while it is open (nb_panel_tab() >= 0), any prompt also
+ * accepts NB_PANEL_TAB + tab to switch tabs, or NB_PANEL_CLOSE.
+ */
+enum nb_panel_tab {
+	NB_TAB_PACK, NB_TAB_CHARACTER, NB_TAB_SKILLS, NB_TAB_ABILITIES, NB_TAB_KNOWLEDGE, NB_TAB_SMITH, NB_TAB_OPTIONS,
+	NB_TAB_COUNT
+};
+enum { NB_PANEL_TAB = 1 << 24, NB_PANEL_CLOSE = NB_PANEL_TAB + NB_TAB_COUNT, NB_CHARACTER_SCREEN = 1 };
+/* The open panel tab, or -1 (any thread). */
+int nb_panel_tab(void);
 
 /* Pack answers: collapse; expand item i; action k of item i. */
 enum { NB_PACK_COLLAPSE = 999, NB_PACK_EXPAND = 1000, NB_PACK_ACT = 100000, NB_PACK_ACT_STRIDE = 100 };

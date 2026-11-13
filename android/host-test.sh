@@ -88,21 +88,21 @@ echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
 echo "== spend experience: buy, buy, sell, accept persists; cancel undoes"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" @act=23 @answer=100 @answer=100 @answer=200 @answer=2 @act=23 @prompt @answer=-1 "${quit[@]}")
+out=$(run "${birth[@]}" @act=23 @answer=100 @answer=100 @answer=200 @answer=2 @answer=-1 @act=23 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qP '^Skills\t4900$'
 echo "$out" | grep -qP '^Melee\t1\t'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
 echo "== abilities: learn one (confirmed by the native check), then switch it off"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" @act=23 @answer=101 @answer=2 @act=21 @answer=14 @answer=1 @prompt @answer=14 @prompt @answer=-1 "${quit[@]}")
+out=$(run "${birth[@]}" @act=23 @answer=101 @answer=2 @answer=-1 @act=21 @answer=14 @answer=1 @prompt @answer=14 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qP '^1\t2\t1\t\d+\t\tCareful Shot\t'
 echo "$out" | grep -qP '^1\t3\t1\t\d+\t\tCareful Shot\t'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
-echo "== character sheet is published as sections"
+echo "== character sheet: the panel's Character tab, as sections"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" @act=20 @info "${quit[@]}")
+out=$(run "${birth[@]}" @act=20 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qx 'Character'
 echo "$out" | grep -qP '^#S\tSkills$'
 echo "$out" | grep -qP '^Strength\t-?\d+\t\d+\t'
@@ -186,6 +186,16 @@ rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=27 @prompt @answer=4 @prompt @answer=0 @prompt @answer=100000 @prompt @text=dig @prompt @answer=-1 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qP '^#E\t[0-9]+\t[0-9]+\tTunneling\t\{dig\}$'
 echo "$out" | grep -qP '^#A\t100001\tRemove inscription$'
+
+echo "== panel: pack, character, skills (bought points kept across tabs), abilities; smithing design kept across tabs"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=15 @prompt @answer=16777217 @prompt @answer=16777218 @prompt @answer=100 @prompt @answer=16777219 @prompt @answer=16777218 @prompt @answer=16777223 "${quit[@]}")
+echo "$out" | grep -qx 'panel tab=1'
+echo "$out" | grep -qP '^Skills\t4900$'
+[ "$(echo "$out" | grep -cP '^Melee\t1\t3\t')" -ge 2 ]
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=25 @prompt @answer=0 @prompt @answer=0 @prompt @answer=0 @prompt @answer=16777216 @prompt @answer=16777221 @prompt @answer=16777223 "${quit[@]}")
+[ "$(echo "$out" | grep -cP '^#I\t24 Arrows')" -ge 2 ]
 
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"
