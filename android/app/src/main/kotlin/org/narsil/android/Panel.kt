@@ -1,6 +1,15 @@
 package org.narsil.android
 
+import androidx.compose.foundation.ScrollState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -37,6 +46,31 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.narsil.android.NarSilNative as N
+
+/**
+ * Where each list was scrolled, by screen ("knowledge/creatures", "options/main", …),
+ * so a tab or view comes back where it was left (UI thread only).
+ */
+private object ScrollMemory {
+    val lists = HashMap<String, Pair<Int, Int>>()
+    val scrolls = HashMap<String, Int>()
+}
+
+/** A LazyListState that starts where the list called [key] was left. */
+@Composable
+fun rememberListPlace(key: String): LazyListState {
+    val st = remember(key) { ScrollMemory.lists[key]?.let { (i, o) -> LazyListState(i, o) } ?: LazyListState() }
+    DisposableEffect(key) { onDispose { ScrollMemory.lists[key] = st.firstVisibleItemIndex to st.firstVisibleItemScrollOffset } }
+    return st
+}
+
+/** A ScrollState that starts where the column called [key] was left. */
+@Composable
+fun rememberScrollPlace(key: String): ScrollState {
+    val st = remember(key) { ScrollState(ScrollMemory.scrolls[key] ?: 0) }
+    DisposableEffect(key) { onDispose { ScrollMemory.scrolls[key] = st.value } }
+    return st
+}
 
 /** True inside the character panel: sheets drop their own frame (scrim, rounded sheet, Close). */
 val LocalInPanel = staticCompositionLocalOf { false }
@@ -77,29 +111,34 @@ fun PanelAwareSheet(onDismiss: (() -> Unit)?, heightFraction: Float? = null, max
  * The character panel: tabs over the pack, character, skills, abilities,
  * knowledge, smithing and options, sliding in from the right.  The game owns
  * the tabs (native_panel()); a tab tap answers PANEL_TAB + tab.  [content]
- * draws the open tab's screen; [above] is any other prompt asked meanwhile.
+ * draws the open tab's screen; [visible] slides the panel in and out.
  */
 @Composable
-fun PanelHost(tab: Int, onAnswer: (Int) -> Unit, content: @Composable () -> Unit) {
+fun PanelHost(visible: Boolean, tab: Int, onAnswer: (Int) -> Unit, content: @Composable () -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val width = if (maxWidth > maxHeight) maxWidth * 0.58f else maxWidth * 0.94f
-        Box(Modifier.fillMaxSize().background(Color(0x77000000))
-                .clickable(remember { MutableInteractionSource() }, indication = null) { onAnswer(N.PANEL_CLOSE) })
-        Surface(color = PANEL_BG, shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp),
-                modifier = Modifier.align(Alignment.CenterEnd).width(width).fillMaxHeight()
-                    .clickable(remember { MutableInteractionSource() }, indication = null) {}) {
-            Column {
-                Row(Modifier.fillMaxWidth().swipeRightToClose { onAnswer(N.PANEL_CLOSE) }, verticalAlignment = Alignment.CenterVertically) {
-                    ScrollableTabRow(selectedTabIndex = tab.coerceIn(0, TAB_TITLES.lastIndex), containerColor = PANEL_BG,
-                                     edgePadding = 4.dp, modifier = Modifier.weight(1f)) {
-                        TAB_TITLES.forEachIndexed { i, t ->
-                            Tab(selected = i == tab, onClick = { if (i != tab) onAnswer(N.PANEL_TAB + i) }, text = { Text(t, fontSize = 14.sp) })
+        AnimatedVisibility(visible, enter = fadeIn(tween(200)), exit = fadeOut(tween(200))) {
+            Box(Modifier.fillMaxSize().background(Color(0x77000000))
+                    .clickable(remember { MutableInteractionSource() }, indication = null) { onAnswer(N.PANEL_CLOSE) })
+        }
+        AnimatedVisibility(visible, modifier = Modifier.align(Alignment.CenterEnd),
+                           enter = slideInHorizontally(tween(220)) { it }, exit = slideOutHorizontally(tween(200)) { it }) {
+            Surface(color = PANEL_BG, shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp),
+                    modifier = Modifier.width(width).fillMaxHeight()
+                        .clickable(remember { MutableInteractionSource() }, indication = null) {}) {
+                Column {
+                    Row(Modifier.fillMaxWidth().swipeRightToClose { onAnswer(N.PANEL_CLOSE) }, verticalAlignment = Alignment.CenterVertically) {
+                        ScrollableTabRow(selectedTabIndex = tab.coerceIn(0, TAB_TITLES.lastIndex), containerColor = PANEL_BG,
+                                         edgePadding = 4.dp, modifier = Modifier.weight(1f)) {
+                            TAB_TITLES.forEachIndexed { i, t ->
+                                Tab(selected = i == tab, onClick = { if (i != tab) onAnswer(N.PANEL_TAB + i) }, text = { Text(t, fontSize = 14.sp) })
+                            }
                         }
+                        TextButton(onClick = { onAnswer(N.PANEL_CLOSE) }) { Text("✕", fontSize = 18.sp) }
                     }
-                    TextButton(onClick = { onAnswer(N.PANEL_CLOSE) }) { Text("✕", fontSize = 18.sp) }
-                }
-                Box(Modifier.weight(1f).fillMaxWidth()) {
-                    CompositionLocalProvider(LocalInPanel provides true) { content() }
+                    Box(Modifier.weight(1f).fillMaxWidth()) {
+                        CompositionLocalProvider(LocalInPanel provides true) { content() }
+                    }
                 }
             }
         }

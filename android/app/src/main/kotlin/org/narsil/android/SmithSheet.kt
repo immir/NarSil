@@ -84,7 +84,7 @@ fun SmithSheet(p: GameState.Prompt.Smith, onAnswer: (Int) -> Unit) {
             p.notes.forEach { Banner(it) }
             DesignCard(p.item, p.costs, p.description)
             val make = if (main) p.options.firstOrNull { it.label == "Make it" } else null
-            LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(bottom = 12.dp)) {
+            LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = rememberListPlace("smith/${p.view}/${p.title}"), contentPadding = PaddingValues(bottom = 12.dp)) {
                 when {
                     main -> items(p.options.filter { it !== make }.chunked(2)) { row -> TileRow(row, onAnswer) }
                     p.view == "numbers" -> items(p.options.chunked(2)) { pair -> NumbersRow(pair, onAnswer) }

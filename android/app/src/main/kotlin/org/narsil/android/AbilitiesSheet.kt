@@ -92,7 +92,7 @@ fun AbilitiesSheet(prompt: GameState.Prompt.Abilities, onAnswer: (Int) -> Unit) 
                              ". Abilities depend on base points.",
                          color = Color(0xFF9A9AA0), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
                 }
-                LazyColumn(Modifier.fillMaxWidth()) {
+                LazyColumn(Modifier.fillMaxWidth(), state = rememberListPlace("abilities/$tab")) {
                     items(shown, key = { it.index }) { a ->
                         AbilityRow(a, prompt.skills.getOrElse(a.skill) { GameState.AbilitySkill("", 0, 0) }, prompt.expLeft, AbilitiesView.open == a.name, onAnswer)
                     }

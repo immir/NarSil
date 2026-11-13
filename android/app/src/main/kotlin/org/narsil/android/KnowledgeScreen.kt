@@ -51,7 +51,7 @@ private val GOLD = Color(0xFFF3D27A)
 @Composable
 fun KnowledgeScreen(p: GameState.Prompt.Knowledge, colour: (Int) -> Int, onAnswer: (Int) -> Unit) {
     val main = p.view == "main"
-    key(p.view) { Page(p, main, rememberLazyListState(), colour, onAnswer) }
+    key(p.view) { Page(p, main, rememberListPlace("knowledge/${p.view}"), colour, onAnswer) }
 }
 
 /** One view; [list] is its own, so each view starts at the top. */

@@ -56,7 +56,7 @@ fun OptionsScreen(p: GameState.Prompt.Options, onAnswer: (Int) -> Unit, onAppSet
                 "birth" -> if (p.rows.any { it is OptionRow.Toggle && it.locked }) Note("Fixed once the character exists.")
                 "cheat" -> Note("Switching one on marks this character as a cheater for good, even if you switch it off again.")
             }
-            LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(bottom = 16.dp)) {
+            LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = rememberListPlace("options/${p.page}"), contentPadding = PaddingValues(bottom = 16.dp)) {
                 if (main && onAppSettings != null) item {
                     LinkRow(OptionRow.Link(0, "Display and controls", "Text sizes, d-pad, swipes, save scumming"), { onAppSettings() })
                 }

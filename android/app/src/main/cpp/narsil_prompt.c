@@ -347,11 +347,11 @@ static bool run_action(struct object *obj)
 enum { PACK_COLLAPSE = NB_PACK_COLLAPSE, PACK_EXPAND = NB_PACK_EXPAND, PACK_ACT = NB_PACK_ACT, PACK_ACT_STRIDE = NB_PACK_ACT_STRIDE };
 
 static struct { bool reopen; int focus; } pack_after;
-static bool pack_resumed;  /* this showing reopens the pack after an action */
+static bool pack_keep_place;  /* reopened after an action, or reached by a tab switch: the UI keeps its scroll */
 
 /*
  * Serialised: "Pack" \t expanded item (-1 none) \t section to show first \t
- * weight carried \t limit (tenths of lb) \t 1 if reopened after an action; per item "#I \t section \t label \t
+ * weight carried \t limit (tenths of lb) \t 1 to keep the list's place (see pack_keep_place); per item "#I \t section \t label \t
  * glyph \t attr \t weight \t name"; then for the expanded item "#A \t valid
  * \t label" per action and "#D \t line" per description line.
  */
@@ -363,7 +363,7 @@ static void publish_pack(const candidate *c, int n, int expanded, int focus)
 
 	pthread_mutex_lock(&shared.lock);
 	text_reset();
-	text_add("Pack\t%d\t%d\t%d\t%d\t%d\n", expanded, focus, player->upkeep->total_weight, weight_limit(player->state), pack_resumed);
+	text_add("Pack\t%d\t%d\t%d\t%d\t%d\n", expanded, focus, player->upkeep->total_weight, weight_limit(player->state), pack_keep_place);
 	for (int i = 0; i < n; i++) {
 		const struct object *const obj = c[i].obj;
 		char name[160];
@@ -432,9 +432,9 @@ bool native_pack_resume(void)
 	if (!pack_after.reopen) return false;
 	pack_after.reopen = false;
 	if (player->is_dead || !player->upkeep->playing || player->upkeep->generate_level || screen_save_depth > 0) return false;
-	pack_resumed = true;
+	pack_keep_place = true;
 	const bool queued = native_panel(NB_TAB_PACK, pack_after.focus);
-	pack_resumed = false;
+	pack_keep_place = false;
 	return queued;
 }
 
@@ -952,7 +952,9 @@ bool native_panel(int tab, int focus)
 		if (queued || panel_next == PANEL_STAY || panel_next >= NB_TAB_COUNT) break;
 		tab = panel_next;
 		focus = NB_ITEM_INVENTORY;
+		pack_keep_place = true;
 	}
+	pack_keep_place = false;
 	panel_next = PANEL_STAY;
 	set_panel_tab(-1);
 	handle_stuff(player);

@@ -46,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -156,12 +157,14 @@ class MainActivity : ComponentActivity() {
     private fun Overlays(state: GameState) {
         Box(Modifier.fillMaxSize()) {
             val answer: (Int) -> Unit = NarSilNative::nativeAnswer
+            PanelLayer(state, answer)
             state.prompt?.let { prompt ->
                 DisposableEffect(prompt) {
                     router.intercept = { code -> answerByKey(prompt, code)?.let(answer); true }
                     onDispose { router.intercept = null }
                 }
-                if (state.panelTab >= 0) PanelOverlay(state, prompt, answer) else PromptUi(state, prompt, answer)
+                /* In the panel, its tab screens are drawn by PanelLayer; anything else is asked over it. */
+                if (state.panelTab < 0 || !prompt.isPanelContent()) PromptUi(state, prompt, answer)
             }
             if (state.prompt == null) state.info?.let { info ->
                 DisposableEffect(info) {
@@ -225,23 +228,34 @@ when (prompt) {
     }
 
     /**
-     * The character panel: the open tab's screen inside the panel; any other
-     * prompt (a yes/no, a text entry, a choice) is asked over the last tab screen.
+     * The character panel, sliding in and out: the open tab's screen; while some
+     * other prompt (a yes/no, a text entry) is asked over it, the last tab screen, dimmed.
      */
     @Composable
-    private fun PanelOverlay(state: GameState, prompt: GameState.Prompt, answer: (Int) -> Unit) {
+    private fun PanelLayer(state: GameState, answer: (Int) -> Unit) {
+        val prompt = state.prompt
+        val live = state.panelTab >= 0
+        var tab by remember { mutableIntStateOf(0) }
         var shown by remember { mutableStateOf<GameState.Prompt?>(null) }
-        if (prompt.isPanelContent()) shown = prompt
-        PanelHost(state.panelTab, answer) {
+        var visible by remember { mutableStateOf(false) }
+        if (live) {
+            tab = state.panelTab
+            if (prompt?.isPanelContent() == true) shown = prompt
+        }
+        /* Linger briefly on close: a pack action closes the panel and reopens it once the command has run. */
+        LaunchedEffect(live) { if (live) visible = true else { delay(180); visible = false } }
+        val interactive = live && prompt != null && prompt === shown
+        /* Dimmed under a question asked over it; not in the moment between two tabs (no prompt yet). */
+        val dimmed = live && prompt != null && prompt !== shown
+        PanelHost(visible, tab, if (live) answer else { _ -> }) {
             shown?.let { c ->
                 Box(Modifier.fillMaxSize()) {
-                    PromptUi(state, c, if (c === prompt) answer else { _ -> })
-                    if (c !== prompt) Box(Modifier.fillMaxSize().background(Color(0x55000000))
+                    PromptUi(state, c, if (interactive) answer else { _ -> })
+                    if (dimmed) Box(Modifier.fillMaxSize().background(Color(0x55000000))
                                               .clickable(remember { MutableInteractionSource() }, indication = null) {})
                 }
             }
         }
-        if (!prompt.isPanelContent()) PromptUi(state, prompt, answer)
     }
 
     /**

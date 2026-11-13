@@ -141,7 +141,7 @@ fun CharacterSheet(info: GameState.Info.Character, state: GameState, onDismiss: 
                      fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                 if (!inPanel) TextButton(onClick = onDismiss) { Text("Close") }
             }
-            LazyColumn(Modifier.weight(1f, fill = false)) {
+            LazyColumn(Modifier.weight(1f, fill = false), state = rememberListPlace("character")) {
                 info.sections.forEachIndexed { i, sec ->
                     if (i > 0) item { Text(sec.title, color = Color(0xFF9A9AA0), fontSize = 13.sp,
                                            modifier = Modifier.padding(start = 16.dp, top = 14.dp, bottom = 2.dp)) }
