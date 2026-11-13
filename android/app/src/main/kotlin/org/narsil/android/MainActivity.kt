@@ -78,6 +78,7 @@ private sealed interface Phase {
 class MainActivity : ComponentActivity() {
     private val router = KeyRouter()
     private var terminal: TerminalView? = null
+    private var mapView: MapView? = null
     private var game: GameState? = null
     private var showMore by mutableStateOf(false)
     private var showMessages by mutableStateOf(false)
@@ -185,7 +186,7 @@ class MainActivity : ComponentActivity() {
                 }
                 TextScale(settings.messageScale / settings.buttonScale) { MessagesSheet(state) { showMessages = false } }
             }
-            if (showMore) MoreSheet(moreActions(router, { showMessages = true }, { showOptions = true }, { showHelp = true }) { terminal?.toggleKeyboard() } +
+            if (showMore) MoreSheet(moreActions(router, { showMessages = true }, { showOptions = true }, { showHelp = true }, { mapView?.toggleOverview() }) { terminal?.toggleKeyboard() } +
                                     listOfNotNull(scumAction(), BarAction("Restore scum save", run = { showScum = true }).takeIf { settings.scumming })) { showMore = false }
             if (showKeys) MoreSheet(extraKeys()) { showKeys = false }
             if (showOptions) {
@@ -218,6 +219,7 @@ when (prompt) {
             is GameState.Prompt.Abilities -> AbilitiesSheet(prompt, answer)
             is GameState.Prompt.Smith -> SmithSheet(prompt, answer)
             is GameState.Prompt.Text -> TextPrompt(prompt) { answer(-1) }
+        is GameState.Prompt.Quantity -> QuantityDialog(prompt, answer)
             is GameState.Prompt.Options -> OptionsScreen(prompt, answer, onAppSettings = { showOptions = true }.takeIf { LocalInPanel.current })
         is GameState.Prompt.Character -> CharacterSheet(prompt.info, state, onDismiss = { answer(-1) }, onMore = { answer(NarSilNative.CHARACTER_SCREEN) })
             is GameState.Prompt.Knowledge -> KnowledgeScreen(prompt, state::colour, answer)
@@ -276,6 +278,7 @@ when (prompt) {
         is GameState.Prompt.Pack -> if (code == Keys.ESCAPE) -1 else null
         is GameState.Prompt.Knowledge -> if (code == Keys.ESCAPE) -1 else null
         is GameState.Prompt.Character -> if (code == Keys.ESCAPE) -1 else null
+        is GameState.Prompt.Quantity -> if (code == Keys.ESCAPE) -1 else null
         is GameState.Prompt.Skills -> when (code) {
             Keys.ESCAPE -> -1
             Keys.ENTER -> NarSilNative.SKILL_ACCEPT
@@ -318,7 +321,7 @@ when (prompt) {
                     modifier = Modifier.fillMaxSize(),
                 )
                 AndroidView(
-                    factory = { ctx -> MapView(ctx, state, router) { settings.swipeRuns } },
+                    factory = { ctx -> MapView(ctx, state, router) { settings.swipeRuns }.also { mapView = it } },
                     update = { it.visibility = if (state.mapMode) View.VISIBLE else View.GONE },
                     modifier = Modifier.fillMaxSize(),
                 )

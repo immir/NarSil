@@ -63,6 +63,9 @@ bool native_smith_tab(void);
 
 /* Implemented by narsil_knowledge.c (game thread): the knowledge browser. */
 void native_knowledge(void);
+/* Just the history or the hall of fame (the death screen). */
+void native_knowledge_history(void);
+void native_knowledge_scores(void);
 
 /* Implemented by narsil_options.c (game thread): the options screens. */
 void native_options(void);

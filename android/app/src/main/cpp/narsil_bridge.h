@@ -213,6 +213,7 @@ enum nb_prompt_kind {
 	NB_PROMPT_TEXT = 10,   /* text entry: nb_answer_text(), NB_TEXT_RANDOM, or nb_answer(-1) to cancel */
 	NB_PROMPT_SCREEN = 11, /* birth and death screens: answer an option index, NB_SCREEN_*, -1 back */
 	NB_PROMPT_OPTIONS = 12, /* game options: answer a record's answer (see narsil_options.c), -1 back */
+	NB_PROMPT_QUANTITY = 16, /* how many: title; maximum; default.  Answer 0..maximum, -1 cancel */
 	NB_PROMPT_CHARACTER = 15, /* the panel's character tab (info format, see nb_info()): -1 close, NB_CHARACTER_SCREEN */
 	NB_PROMPT_KNOWLEDGE = 14, /* knowledge browser (see narsil_knowledge.c): an entry index, NB_KNOW_COLLAPSE, -1 back */
 	NB_PROMPT_PACK = 13,   /* every item, one expanded (see publish_pack()): NB_PACK_* answers, -1 close */

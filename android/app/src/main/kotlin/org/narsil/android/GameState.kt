@@ -75,6 +75,8 @@ class GameState {
         /** The knowledge browser: [rows] in order; [expanded] (an entry index or -1) has [text]. */
         data class Knowledge(val view: String, val title: String, val expanded: Int, val rows: List<KnowRow>, val text: String,
                              val actions: List<Pair<Int, String>> = emptyList()) : Prompt
+        /** How many (e.g. of a stack to drop): 0..[max], starting at [initial]. */
+        data class Quantity(val title: String, val max: Int, val initial: Int) : Prompt
         /** The panel's Character tab. */
         data class Character(val info: Info.Character) : Prompt
         data class Options(val page: String, val title: String, val rows: List<OptionRow>) : Prompt
@@ -270,6 +272,7 @@ class GameState {
                     lines.filter { it.startsWith("#D\t") }.joinToString("\n") { it.removePrefix("#D\t") }.trim(),
                     head.getOrNull(5) == "1")
             }
+            N.PROMPT_QUANTITY -> Prompt.Quantity(lines[0], lines.getOrNull(1)?.toIntOrNull() ?: 1, lines.getOrNull(2)?.toIntOrNull() ?: 1)
             N.PROMPT_CHARACTER -> (parseInfo(raw.substringAfter('\n')) as? Info.Character)?.let { Prompt.Character(it) }
             N.PROMPT_OPTIONS -> {
                 val head = lines[0].split('\t')

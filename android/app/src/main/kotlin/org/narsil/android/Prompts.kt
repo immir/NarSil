@@ -27,6 +27,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import kotlin.math.roundToInt
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material3.Slider
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -207,4 +213,32 @@ fun SkillsSheet(prompt: GameState.Prompt.Skills, onAnswer: (Int) -> Unit) {
                 }
             }
         }
+}
+
+/** get_quantity: −/+ (a slider for larger stacks), All, OK; dismissing cancels. */
+@Composable
+fun QuantityDialog(p: GameState.Prompt.Quantity, onAnswer: (Int) -> Unit) {
+    var n by remember(p) { mutableIntStateOf(p.initial.coerceIn(0, p.max)) }
+    AlertDialog(
+        onDismissRequest = { onAnswer(-1) },
+        title = { Text(p.title) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedButton(onClick = { n = (n - 1).coerceAtLeast(1) }, enabled = n > 1) { Text("−", fontSize = 18.sp) }
+                    Text("$n", fontSize = 24.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                    OutlinedButton(onClick = { n = (n + 1).coerceAtMost(p.max) }, enabled = n < p.max) { Text("+", fontSize = 18.sp) }
+                }
+                if (p.max > 5) Slider(n.toFloat(), { n = it.roundToInt().coerceIn(1, p.max) }, valueRange = 1f..p.max.toFloat())
+                Text("of ${p.max}", color = Color(0xFF9A9AA0), fontSize = 13.sp)
+            }
+        },
+        confirmButton = { Button(onClick = { onAnswer(n) }) { Text("OK") } },
+        dismissButton = {
+            Row {
+                TextButton(onClick = { onAnswer(p.max) }) { Text("All ${p.max}") }
+                TextButton(onClick = { onAnswer(-1) }) { Text("Cancel") }
+            }
+        },
+    )
 }

@@ -27,12 +27,14 @@
 #include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
+#include "obj-knowledge.h"
 #include "obj-info.h"
 #include "obj-pile.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-abilities.h"
 #include "player-calcs.h"
+#include "ui-options.h"
 #include "ui-output.h"
 #include "ui-player.h"
 #include "player-skills.h"
@@ -93,6 +95,8 @@ static struct {
 	bool (*get_check)(const char *);
 	bool (*get_aim_dir)(int *, int);
 	bool (*get_rep_dir)(int *, bool);
+	bool (*get_string)(const char *, char *, size_t);
+	int (*get_quantity)(const char *, int);
 } textui;
 
 static bool keymap_pending(void)
@@ -265,6 +269,63 @@ static void publish_items(const char *pmt, const candidate *c, int n)
 }
 
 /* ------------------------------------------------------------------------
+ * Ignoring: textui_cmd_ignore_menu() (ui-object.c) as a native choice
+ * ------------------------------------------------------------------------ */
+
+enum ignore_choice { IGN_ITEM, UNIGN_ITEM, IGN_FLAVOR, UNIGN_FLAVOR, IGN_EGO, UNIGN_EGO, IGN_QUALITY };
+
+static void native_ignore_menu(struct object *obj)
+{
+	if (!obj) return;
+	enum ignore_choice code[8];
+	int n = 0;
+	pthread_mutex_lock(&shared.lock);
+	text_reset();
+	text_add("Ignore\n");
+	const bool item_ignored = (obj->known->notice & OBJ_NOTICE_IGNORE) != 0;
+	text_add("%s\t\n", item_ignored ? "Unignore this item" : "This item only");
+	code[n++] = item_ignored ? UNIGN_ITEM : IGN_ITEM;
+	if (ignore_tval(obj->tval) && (!obj->artifact || !object_flavor_is_aware(obj))) {
+		const bool ignored = kind_is_ignored_aware(obj->kind) || kind_is_ignored_unaware(obj->kind);
+		char kinds[70];
+		object_desc(kinds, sizeof(kinds), obj, ODESC_NOEGO | ODESC_BASE | ODESC_PLURAL, player);
+		sanitise(kinds);
+		text_add("%s %s\t\n", ignored ? "Unignore all" : "All", kinds);
+		code[n++] = ignored ? UNIGN_FLAVOR : IGN_FLAVOR;
+	}
+	const int type = ignore_type_of(obj);
+	if (obj->known->ego && type != ITYPE_MAX) {
+		struct ego_desc choice = { .e_idx = obj->ego->eidx, .itype = type, .short_name = "" };
+		char name[80] = "";
+		(void)ego_item_name(name, sizeof(name), &choice);
+		sanitise(name);
+		const bool ignored = ego_is_ignored(choice.e_idx, choice.itype);
+		text_add("%s %s\t\n", ignored ? "Unignore all" : "All", strlen(name) > 4 ? name + 4 : name);
+		code[n++] = ignored ? UNIGN_EGO : IGN_EGO;
+	}
+	uint8_t value = ignore_level_of(obj);
+	if (tval_is_jewelry(obj) && value != IGNORE_BAD) value = IGNORE_MAX;
+	if (value != IGNORE_MAX && type != ITYPE_MAX) {
+		text_add("All %s %s\tThe quality and worse, for this kind of item.\n", quality_values[value].name, ignore_name_for_type(type));
+		code[n++] = IGN_QUALITY;
+	}
+	pthread_mutex_unlock(&shared.lock);
+
+	const int32_t pick = ask(NB_PROMPT_CHOICE);
+	if (pick < 0 || pick >= n) return;
+	switch (code[pick]) {
+		case IGN_ITEM: obj->known->notice |= OBJ_NOTICE_IGNORE; break;
+		case UNIGN_ITEM: obj->known->notice &= ~OBJ_NOTICE_IGNORE; break;
+		case IGN_FLAVOR: object_ignore_flavor_of(obj); break;
+		case UNIGN_FLAVOR: kind_ignore_clear(obj->kind); break;
+		case IGN_EGO: ego_ignore(obj); break;
+		case UNIGN_EGO: ego_ignore_clear(obj); break;
+		case IGN_QUALITY: ignore_level[ignore_type_of(obj)] = ignore_level_of(obj); break;
+	}
+	player->upkeep->notice |= PN_IGNORE;
+}
+
+/* ------------------------------------------------------------------------
  * Item actions (browse mode)
  * ------------------------------------------------------------------------ */
 
@@ -330,7 +391,7 @@ static bool run_action(struct object *obj)
 	const unsigned char key = cmd_lookup_key(cmd, keymode());
 	if (!key_confirm_command(key) || !get_item_allow(obj, key, cmd, false)) return true;
 	if (cmd == CMD_IGNORE) {
-		textui_cmd_ignore_menu(obj);
+		native_ignore_menu(obj);
 	} else {
 		cmdq_push(cmd);
 		cmd_set_arg_item(cmdq_peek(), "item", obj);
@@ -394,7 +455,7 @@ static bool pack_action(struct object *obj, int k, int focus)
 	const cmd_code cmd = a[k].cmd;
 	const unsigned char key = cmd_lookup_key(cmd, keymode());
 	if (!key_confirm_command(key) || !get_item_allow(obj, key, cmd, false)) return false;
-	if (cmd == CMD_IGNORE) { textui_cmd_ignore_menu(obj); return false; }
+	if (cmd == CMD_IGNORE) { native_ignore_menu(obj); return false; }
 	cmdq_push(cmd);
 	cmd_set_arg_item(cmdq_peek(), "item", obj);
 	pack_after.reopen = cmd != CMD_FIRE && cmd != CMD_THROW;
@@ -934,6 +995,8 @@ bool native_panel(int tab, int focus)
 {
 	assert(tab >= -1 && tab < NB_TAB_COUNT);
 	if (tab < 0) tab = last_tab;
+	/* Any -more- first, while the message strip is still in view. */
+	event_signal(EVENT_MESSAGE_FLUSH);
 	bool queued = false;
 	for (;;) {
 		last_tab = tab;
@@ -970,6 +1033,54 @@ int nb_panel_tab(void)
 }
 
 /* ------------------------------------------------------------------------
+ * Text and quantities: get_string() and get_quantity()
+ * ------------------------------------------------------------------------ */
+
+/* Prompts read "Inscription: "; the native title drops the trailing colon. */
+static void prompt_title(char *dst, size_t cap, const char *prompt, const char *fallback)
+{
+	my_strcpy(dst, prompt && prompt[0] ? prompt : fallback, cap);
+	size_t n = strlen(dst);
+	while (n > 0 && (dst[n - 1] == ' ' || dst[n - 1] == ':' || dst[n - 1] == '?')) dst[--n] = '\0';
+	sanitise(dst);
+}
+
+/* NB_PROMPT_TEXT: title; default text; maximum length in bytes; no random. */
+static bool native_get_string(const char *prompt, char *buf, size_t len)
+{
+	if (keymap_pending()) return textui.get_string(prompt, buf, len);
+	assert(len > 0);
+	event_signal(EVENT_MESSAGE_FLUSH);
+	char title[160], initial[256];
+	prompt_title(title, sizeof(title), prompt, "Enter text");
+	my_strcpy(initial, buf, sizeof(initial));
+	sanitise(initial);
+	pthread_mutex_lock(&shared.lock);
+	text_reset();
+	text_add("%s\n%s\n%d\n0\n", title, initial, (int)MIN(len - 1, sizeof(shared.answer_text) - 1));
+	pthread_mutex_unlock(&shared.lock);
+	if (ask(NB_PROMPT_TEXT) != 1) return false;
+	native_answer_text(buf, len);
+	return true;
+}
+
+/* NB_PROMPT_QUANTITY: "how many?" with a default of 1, as textui_get_quantity(). */
+static int native_get_quantity(const char *prompt, int max)
+{
+	if (keymap_pending()) return textui.get_quantity(prompt, max);
+	if (max <= 1) return MAX(max, 0);
+	event_signal(EVENT_MESSAGE_FLUSH);
+	char title[160];
+	prompt_title(title, sizeof(title), prompt, "How many");
+	pthread_mutex_lock(&shared.lock);
+	text_reset();
+	text_add("%s\n%d\n%d\n", title, max, 1);
+	pthread_mutex_unlock(&shared.lock);
+	const int32_t a = ask(NB_PROMPT_QUANTITY);
+	return a < 0 ? 0 : MIN(a, max);
+}
+
+/* ------------------------------------------------------------------------
  * Install / public API
  * ------------------------------------------------------------------------ */
 
@@ -980,13 +1091,18 @@ void native_prompt_init(void)
 	if (get_check_hook != native_get_check) textui.get_check = get_check_hook;
 	if (get_aim_dir_hook != native_get_aim_dir) textui.get_aim_dir = get_aim_dir_hook;
 	if (get_rep_dir_hook != native_get_rep_dir) textui.get_rep_dir = get_rep_dir_hook;
+	if (get_string_hook != native_get_string) textui.get_string = get_string_hook;
+	if (get_quantity_hook != native_get_quantity) textui.get_quantity = get_quantity_hook;
 	change_song_hook = native_change_song;
 	smith_object_hook = native_smith_object;
-	assert(textui.get_item && textui.get_check && textui.get_aim_dir && textui.get_rep_dir);
+	assert(textui.get_item && textui.get_check && textui.get_aim_dir && textui.get_rep_dir && textui.get_string
+		&& textui.get_quantity);
 	get_item_hook = native_get_item;
 	get_check_hook = native_get_check;
 	get_aim_dir_hook = native_get_aim_dir;
 	get_rep_dir_hook = native_get_rep_dir;
+	get_string_hook = native_get_string;
+	get_quantity_hook = native_get_quantity;
 }
 
 uint64_t nb_prompt_generation(void)

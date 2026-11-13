@@ -535,8 +535,8 @@ void native_death_screen(void)
 			case DEATH_SHEET: death_sheet_screen(); break;
 			case DEATH_GEAR: death_gear_screen(); break;
 			case DEATH_MESSAGES: death_messages_screen(); break;
-			case DEATH_HISTORY: history_display(); break;
-			case DEATH_SCORES: screen_save(); show_scores(); screen_load(); break;
+			case DEATH_HISTORY: native_knowledge_history(); break;
+			case DEATH_SCORES: native_knowledge_scores(); break;
 			case DEATH_NEW_GAME: play_again = get_check("Start a new character? "); break;
 			case DEATH_QUIT: return;
 			default: break;

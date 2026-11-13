@@ -458,6 +458,9 @@ static void browse(enum view v)
 	}
 }
 
+void native_knowledge_history(void) { browse(VIEW_HISTORY); }
+void native_knowledge_scores(void) { browse(VIEW_SCORES); }
+
 void native_knowledge(void)
 {
 	for (;;) {

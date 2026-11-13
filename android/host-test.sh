@@ -197,6 +197,20 @@ rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=25 @prompt @answer=0 @prompt @answer=0 @prompt @answer=0 @prompt @answer=16777216 @prompt @answer=16777221 @prompt @answer=16777223 "${quit[@]}")
 [ "$(echo "$out" | grep -cP '^#I\t24 Arrows')" -ge 2 ]
 
+echo "== native quantity (drop part of a stack), text (inscribe), ignore choice; death history and scores"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=15 @prompt @answer=1001 @prompt @answer=100103 @prompt @answer=1 @enter @enter @prompt @answer=1000 @prompt @answer=100003 @enter @prompt @text=lunch @prompt @answer=1000 @prompt @answer=100005 @prompt @answer=1 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qx 'prompt kind=16'
+echo "$out" | grep -qP '^#I\t0\tb\t[0-9]+\t[0-9]+\t(20|40)\t(a|2) Wooden Torch'
+echo "$out" | grep -qx 'Inscribe with what'
+echo "$out" | grep -qP 'Fragments of Lembas \{lunch\}$'
+echo "$out" | grep -qP '^All Fragments of Lembas\t'
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @die @enter @prompt @answer=3 @prompt @answer=-1 @prompt @answer=4 @prompt @answer=-1 @prompt @answer=6)
+echo "$out" | grep -qP '^Knowledge\thistory\t'
+echo "$out" | grep -qP '^Knowledge\tscores\t'
+echo "$out" | grep -qP 'killed by the test harness at 50 ft\t'
+
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @walk=1 @walk=2 @walk=3 @walk=4 @walk=6 @walk=7 @walk=8 @walk=9 @run=2 @run=4 @run=6 @run=8 @walk=5 "${quit[@]}")

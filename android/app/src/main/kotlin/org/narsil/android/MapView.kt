@@ -32,7 +32,10 @@ class MapView(context: Context, private val state: GameState, private val router
     private val painter = GlyphPainter(context, state::colour)
     private val density = resources.displayMetrics.density
     private var cellHeightPx = DEFAULT_CELL_DP * density
-        set(v) { field = v.coerceIn(MIN_CELL_DP * density, MAX_CELL_DP * density); painter.setCellHeight(field) }
+        set(v) { field = v.coerceIn(minCellPx, MAX_CELL_DP * density); painter.setCellHeight(field) }
+    /* Lowered while the whole level is shown (see toggleOverview). */
+    private var minCellPx = MIN_CELL_DP * density
+    private var overviewFrom: Float? = null
 
     /** Grid coordinate shown at the view centre. */
     private var camX = 0f
@@ -58,7 +61,37 @@ class MapView(context: Context, private val state: GameState, private val router
     private val mapH get() = state.meta[N.META_HEIGHT]
     private val player get() = state.meta[N.META_PLAYER_X] to state.meta[N.META_PLAYER_Y]
 
+    /**
+     * The whole level at once (☰ → Map), or back to the zoom it came from.  Moving
+     * also ends it.
+     */
+    fun toggleOverview() {
+        val from = overviewFrom
+        if (from != null) { endOverview(from); return }
+        if (mapW <= 0 || mapH <= 0 || width == 0 || painter.cellH <= 0f) return
+        overviewFrom = cellHeightPx
+        val aspect = painter.cellW / painter.cellH
+        val fit = minOf(height.toFloat() / mapH, width.toFloat() / (mapW * aspect))
+        minCellPx = minOf(MIN_CELL_DP * density, fit)
+        cellHeightPx = fit
+        camAnimator?.cancel()
+        followPlayer = false
+        camX = mapW / 2f
+        camY = mapH / 2f
+        invalidate()
+    }
+
+    private fun endOverview(from: Float) {
+        overviewFrom = null
+        minCellPx = MIN_CELL_DP * density
+        cellHeightPx = from
+        followPlayer = true
+        keepPlayerInView(animate = false)
+        invalidate()
+    }
+
     private fun onMapChanged() {
+        overviewFrom?.let { from -> if (player != lastPlayer && lastPlayer.first >= 0) endOverview(from) }
         if (player != lastPlayer) {
             val first = lastPlayer.first < 0
             lastPlayer = player

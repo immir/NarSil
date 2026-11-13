@@ -138,6 +138,7 @@ object NarSilNative {
     const val PROMPT_PACK = 13
     const val PROMPT_KNOWLEDGE = 14
     const val PROMPT_CHARACTER = 15
+    const val PROMPT_QUANTITY = 16
     /** The character panel (enum nb_panel_tab); while open, prompts also take PANEL_TAB + tab or PANEL_CLOSE. */
     const val TAB_PACK = 0
     const val TAB_CHARACTER = 1
