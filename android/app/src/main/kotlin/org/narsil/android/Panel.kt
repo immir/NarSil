@@ -27,11 +27,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -108,25 +111,35 @@ fun PanelAwareSheet(onDismiss: (() -> Unit)?, heightFraction: Float? = null, max
  * draws the open tab's screen.
  */
 @Composable
-fun PanelHost(tab: Int, onAnswer: (Int) -> Unit, content: @Composable () -> Unit) {
+fun PanelHost(gameTab: Int, onAnswer: (Int) -> Unit, content: @Composable () -> Unit) {
+    /* The tab asked for shows at once; the game's answer (its new screen) follows. */
+    var asked by remember { mutableStateOf(-1) }
+    LaunchedEffect(gameTab) { asked = -1 }
+    /* An answer sent in the instant between two screens is dropped: fall back to the game's tab. */
+    LaunchedEffect(asked) { if (asked >= 0) { delay(600); asked = -1 } }
+    val tab = if (asked >= 0) asked else gameTab
+    val answer: (Int) -> Unit = { a ->
+        if (a >= N.PANEL_TAB && a < N.PANEL_CLOSE) asked = a - N.PANEL_TAB
+        onAnswer(a)
+    }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val width = if (maxWidth > maxHeight) maxWidth * 0.58f else maxWidth * 0.94f
         Box(Modifier.fillMaxSize().background(Color(0x77000000))
-                .clickable(remember { MutableInteractionSource() }, indication = null) { onAnswer(N.PANEL_CLOSE) })
+                .clickable(remember { MutableInteractionSource() }, indication = null) { answer(N.PANEL_CLOSE) })
             Surface(color = PANEL_BG, shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp),
                     modifier = Modifier.align(Alignment.CenterEnd).width(width).fillMaxHeight()
                         .clickable(remember { MutableInteractionSource() }, indication = null) {}) {
                 Column {
-                    Row(Modifier.fillMaxWidth().swipeRightToClose { onAnswer(N.PANEL_CLOSE) }, verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth().swipeRightToClose { answer(N.PANEL_CLOSE) }, verticalAlignment = Alignment.CenterVertically) {
                         ScrollableTabRow(selectedTabIndex = tab.coerceIn(0, TAB_TITLES.lastIndex), containerColor = PANEL_BG,
                                          edgePadding = 4.dp, modifier = Modifier.weight(1f)) {
                             TAB_TITLES.forEachIndexed { i, t ->
-                                Tab(selected = i == tab, onClick = { if (i != tab) onAnswer(N.PANEL_TAB + i) }, text = { Text(t, fontSize = 14.sp) })
+                                Tab(selected = i == tab, onClick = { if (i != tab) answer(N.PANEL_TAB + i) }, text = { Text(t, fontSize = 14.sp) })
                             }
                         }
-                        TextButton(onClick = { onAnswer(N.PANEL_CLOSE) }) { Text("✕", fontSize = 18.sp) }
+                        TextButton(onClick = { answer(N.PANEL_CLOSE) }) { Text("✕", fontSize = 18.sp) }
                     }
-                    Box(Modifier.weight(1f).fillMaxWidth().swipeBetweenTabs(tab, onAnswer)) {
+                    Box(Modifier.weight(1f).fillMaxWidth().swipeBetweenTabs(tab, answer)) {
                         CompositionLocalProvider(LocalInPanel provides true) { content() }
                     }
                 }
@@ -141,12 +154,17 @@ fun PanelHost(tab: Int, onAnswer: (Int) -> Unit, content: @Composable () -> Unit
  */
 private fun Modifier.swipeBetweenTabs(tab: Int, onAnswer: (Int) -> Unit) = pointerInput(tab) {
     var dx = 0f
-    detectHorizontalDragGestures(onDragStart = { dx = 0f }, onDragEnd = {
+    var done = false
+    val far = 56.dp.toPx()
+    /* Acts as soon as the swipe is far enough, not when the finger lifts. */
+    detectHorizontalDragGestures(onDragStart = { dx = 0f; done = false }) { _, d ->
+        dx += d
+        if (done) return@detectHorizontalDragGestures
         when {
-            dx < -72.dp.toPx() && tab + 1 < N.TAB_COUNT -> onAnswer(N.PANEL_TAB + tab + 1)
-            dx > 72.dp.toPx() -> onAnswer(if (tab > 0) N.PANEL_TAB + tab - 1 else N.PANEL_CLOSE)
+            dx < -far && tab + 1 < N.TAB_COUNT -> { done = true; onAnswer(N.PANEL_TAB + tab + 1) }
+            dx > far -> { done = true; onAnswer(if (tab > 0) N.PANEL_TAB + tab - 1 else N.PANEL_CLOSE) }
         }
-    }) { _, d -> dx += d }
+    }
 }
 
 /** A swipe to the right over this element calls [onClose] (the tab strip: lists below scroll vertically). */
