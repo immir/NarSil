@@ -2,6 +2,8 @@ package org.narsil.android
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -77,6 +79,7 @@ val LocalInPanel = staticCompositionLocalOf { false }
 
 private val TAB_TITLES = listOf("Pack", "Character", "Skills", "Abilities", "Knowledge", "Smithing", "Options")
 private val PANEL_BG = Color(0xFF1C1C1E)
+private const val PANEL_MS = 120
 
 /** The prompts that are a tab's own screen (anything else, e.g. a yes/no, is asked over it). */
 fun GameState.Prompt.isPanelContent() = when (this) {
@@ -117,12 +120,13 @@ fun PanelAwareSheet(onDismiss: (() -> Unit)?, heightFraction: Float? = null, max
 fun PanelHost(visible: Boolean, tab: Int, onAnswer: (Int) -> Unit, content: @Composable () -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val width = if (maxWidth > maxHeight) maxWidth * 0.58f else maxWidth * 0.94f
-        AnimatedVisibility(visible, enter = fadeIn(tween(200)), exit = fadeOut(tween(200))) {
+        AnimatedVisibility(visible, enter = fadeIn(tween(PANEL_MS)), exit = fadeOut(tween(PANEL_MS))) {
             Box(Modifier.fillMaxSize().background(Color(0x77000000))
                     .clickable(remember { MutableInteractionSource() }, indication = null) { onAnswer(N.PANEL_CLOSE) })
         }
         AnimatedVisibility(visible, modifier = Modifier.align(Alignment.CenterEnd),
-                           enter = slideInHorizontally(tween(220)) { it }, exit = slideOutHorizontally(tween(200)) { it }) {
+                           enter = slideInHorizontally(tween(PANEL_MS, easing = LinearOutSlowInEasing)) { it },
+                           exit = slideOutHorizontally(tween(PANEL_MS, easing = FastOutLinearInEasing)) { it }) {
             Surface(color = PANEL_BG, shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp),
                     modifier = Modifier.width(width).fillMaxHeight()
                         .clickable(remember { MutableInteractionSource() }, indication = null) {}) {

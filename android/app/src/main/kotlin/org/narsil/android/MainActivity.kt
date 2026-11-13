@@ -237,13 +237,14 @@ when (prompt) {
         val live = state.panelTab >= 0
         var tab by remember { mutableIntStateOf(0) }
         var shown by remember { mutableStateOf<GameState.Prompt?>(null) }
-        var visible by remember { mutableStateOf(false) }
+        var lingering by remember { mutableStateOf(false) }
         if (live) {
             tab = state.panelTab
             if (prompt?.isPanelContent() == true) shown = prompt
         }
-        /* Linger briefly on close: a pack action closes the panel and reopens it once the command has run. */
-        LaunchedEffect(live) { if (live) visible = true else { delay(180); visible = false } }
+        /* Opens at once; lingers briefly on close, as a pack action closes the panel and reopens it once the command has run. */
+        LaunchedEffect(live) { lingering = !live; if (!live) { delay(150); lingering = false } }
+        val visible = live || lingering
         val interactive = live && prompt != null && prompt === shown
         /* Dimmed under a question asked over it; not in the moment between two tabs (no prompt yet). */
         val dimmed = live && prompt != null && prompt !== shown
