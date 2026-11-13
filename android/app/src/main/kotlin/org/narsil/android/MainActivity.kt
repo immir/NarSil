@@ -157,7 +157,12 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun Overlays(state: GameState) {
         Box(Modifier.fillMaxSize()) {
-            val answer: (Int) -> Unit = NarSilNative::nativeAnswer
+            val answer: (Int) -> Unit = { value ->
+                if (!state.holding) {  // while the held pack waits to reopen there is nothing to answer
+                    state.answered(value)
+                    NarSilNative.nativeAnswer(value)
+                }
+            }
             PanelLayer(state, answer)
             state.prompt?.let { prompt ->
                 DisposableEffect(prompt) {

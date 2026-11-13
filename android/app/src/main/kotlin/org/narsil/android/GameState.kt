@@ -194,16 +194,34 @@ class GameState {
         N.nativePromptGeneration().let { gen ->
             if (gen != promptGen) {
                 promptGen = gen
-                prompt = Parse.prompt(N.nativePrompt())
-                panelTab = N.nativePanelTab()
+                val next = Parse.prompt(N.nativePrompt())
+                if (next != null || !holding) {
+                    prompt = next
+                    panelTab = N.nativePanelTab()
+                    holdUntilNanos = 0
+                }  // else: the pack is about to reopen; keep showing it rather than flash the map
                 mapListeners.forEach { it() }  // the map draws aim targets
             }
+        }
+        if (holding && System.nanoTime() > holdUntilNanos) {
+            holdUntilNanos = 0
+            prompt = null
+            panelTab = N.nativePanelTab()
         }
         N.nativeMessagesGeneration().let { gen -> if (gen != messagesGen) { messagesGen = gen; messages = Parse.messages(N.nativeMessages()) } }
         N.nativeInfoGeneration().let { gen ->
             if (infoGen < 0) infoGen = gen  // ignore whatever was there before this UI existed
             else if (gen != infoGen) { infoGen = gen; info = Parse.info(N.nativeInfo()) }
         }
+    }
+
+    private var holdUntilNanos = 0L
+    /** The pack answered with an action is still shown while its command runs; it reopens within moments. */
+    val holding get() = holdUntilNanos != 0L
+
+    /** Called with every answer the UI sends: an action from the pack keeps the pack on screen until it reopens. */
+    fun answered(value: Int) {
+        if (prompt is Prompt.Pack && value >= N.PACK_ACT && value < N.PANEL_TAB) holdUntilNanos = System.nanoTime() + HOLD_NANOS
     }
 
     private fun pollMap(): Boolean {
@@ -229,6 +247,7 @@ class GameState {
     }.trim()
 
     private companion object {
+        const val HOLD_NANOS = 800_000_000L
         val YES_NO = Regex("""\[y/n\]""", RegexOption.IGNORE_CASE)
         val MORE = Regex("-more-")
         val AT_SIGN = Regex("by typing the '@'")
