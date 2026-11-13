@@ -68,3 +68,8 @@ src/config
 src/stats/db.dep
 src/tests/ran-already
 src/version.h
+
+# iOS side-load reference and builds (not part of the port)
+/NarSil-continuous-ios/
+*.ipa
+/ios/build/
