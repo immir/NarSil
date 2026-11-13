@@ -60,7 +60,7 @@ private fun summary(a: GameState.Ability, skill: GameState.AbilitySkill, expLeft
     N.ABILITY_ITEM_OFF -> "From equipment · switched off"
     N.ABILITY_AVAILABLE -> if (a.cost <= expLeft) "Learn for ${a.cost} exp" else "${a.cost} exp (you have $expLeft)"
     else -> listOfNotNull(
-        "needs ${a.points} ${skill.name} points, you have ${skill.base}".takeIf { skill.base < a.points },
+        "needs ${a.points} base ${skill.name}, you have ${skill.base}".takeIf { skill.base < a.points },
         "needs ${a.prereqs}".takeIf { a.cost < 0 && a.prereqs.isNotEmpty() },
     ).joinToString(" · ").replaceFirstChar { it.uppercase() }
 }
@@ -90,8 +90,8 @@ fun AbilitiesSheet(prompt: GameState.Prompt.Abilities, onAnswer: (Int) -> Unit) 
                     }
                 }
                 prompt.skills.getOrNull(tab)?.let { sk ->
-                    Text("${sk.name}: ${sk.base} points bought" + (if (sk.total != sk.base) " (${sk.total} with bonuses)" else "") +
-                             ". Abilities need bought points.",
+                    Text("${sk.name}: base ${sk.base}" + (if (sk.total != sk.base) " (${sk.total} with bonuses)" else "") +
+                             ". Abilities depend on base points.",
                          color = Color(0xFF9A9AA0), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
                 }
                 LazyColumn(Modifier.fillMaxWidth()) {

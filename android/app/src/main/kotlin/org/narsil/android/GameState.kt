@@ -94,7 +94,7 @@ class GameState {
     data class SmithOption(val index: Int, val state: Int, val label: String, val detail: String)
     data class Ability(val index: Int, val skill: Int, val state: Int, val points: Int, val cost: Int,
                        val prereqs: String, val name: String, val description: String)
-    /** A skill tab: abilities need [base] points (bought, without stat or equipment modifiers). */
+    /** A skill tab: abilities need [base] points (without stat or equipment modifiers). */
     data class AbilitySkill(val name: String, val base: Int, val total: Int)
     data class Skill(val index: Int, val name: String, val base: Int, val total: Int, val spent: Int, val nextCost: Int)
 
