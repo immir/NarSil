@@ -1,14 +1,6 @@
 package org.narsil.android
 
 import androidx.compose.foundation.ScrollState
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.DisposableEffect
@@ -79,7 +71,6 @@ val LocalInPanel = staticCompositionLocalOf { false }
 
 private val TAB_TITLES = listOf("Pack", "Character", "Skills", "Abilities", "Knowledge", "Smithing", "Options")
 private val PANEL_BG = Color(0xFF1C1C1E)
-private const val PANEL_MS = 120
 
 /** The prompts that are a tab's own screen (anything else, e.g. a yes/no, is asked over it). */
 fun GameState.Prompt.isPanelContent() = when (this) {
@@ -114,21 +105,16 @@ fun PanelAwareSheet(onDismiss: (() -> Unit)?, heightFraction: Float? = null, max
  * The character panel: tabs over the pack, character, skills, abilities,
  * knowledge, smithing and options, sliding in from the right.  The game owns
  * the tabs (native_panel()); a tab tap answers PANEL_TAB + tab.  [content]
- * draws the open tab's screen; [visible] slides the panel in and out.
+ * draws the open tab's screen.
  */
 @Composable
-fun PanelHost(visible: Boolean, tab: Int, onAnswer: (Int) -> Unit, content: @Composable () -> Unit) {
+fun PanelHost(tab: Int, onAnswer: (Int) -> Unit, content: @Composable () -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val width = if (maxWidth > maxHeight) maxWidth * 0.58f else maxWidth * 0.94f
-        AnimatedVisibility(visible, enter = fadeIn(tween(PANEL_MS)), exit = fadeOut(tween(PANEL_MS))) {
-            Box(Modifier.fillMaxSize().background(Color(0x77000000))
-                    .clickable(remember { MutableInteractionSource() }, indication = null) { onAnswer(N.PANEL_CLOSE) })
-        }
-        AnimatedVisibility(visible, modifier = Modifier.align(Alignment.CenterEnd),
-                           enter = slideInHorizontally(tween(PANEL_MS, easing = LinearOutSlowInEasing)) { it },
-                           exit = slideOutHorizontally(tween(PANEL_MS, easing = FastOutLinearInEasing)) { it }) {
+        Box(Modifier.fillMaxSize().background(Color(0x77000000))
+                .clickable(remember { MutableInteractionSource() }, indication = null) { onAnswer(N.PANEL_CLOSE) })
             Surface(color = PANEL_BG, shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp),
-                    modifier = Modifier.width(width).fillMaxHeight()
+                    modifier = Modifier.align(Alignment.CenterEnd).width(width).fillMaxHeight()
                         .clickable(remember { MutableInteractionSource() }, indication = null) {}) {
                 Column {
                     Row(Modifier.fillMaxWidth().swipeRightToClose { onAnswer(N.PANEL_CLOSE) }, verticalAlignment = Alignment.CenterVertically) {
@@ -145,7 +131,6 @@ fun PanelHost(visible: Boolean, tab: Int, onAnswer: (Int) -> Unit, content: @Com
                     }
                 }
             }
-        }
     }
 }
 

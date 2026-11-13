@@ -228,8 +228,8 @@ when (prompt) {
     }
 
     /**
-     * The character panel, sliding in and out: the open tab's screen; while some
-     * other prompt (a yes/no, a text entry) is asked over it, the last tab screen, dimmed.
+     * The character panel: the open tab's screen; while some other prompt (a
+     * yes/no, a text entry) is asked over it, the last tab screen, dimmed.
      */
     @Composable
     private fun PanelLayer(state: GameState, answer: (Int) -> Unit) {
@@ -237,18 +237,14 @@ when (prompt) {
         val live = state.panelTab >= 0
         var tab by remember { mutableIntStateOf(0) }
         var shown by remember { mutableStateOf<GameState.Prompt?>(null) }
-        var lingering by remember { mutableStateOf(false) }
         if (live) {
             tab = state.panelTab
             if (prompt?.isPanelContent() == true) shown = prompt
         }
-        /* Opens at once; lingers briefly on close, as a pack action closes the panel and reopens it once the command has run. */
-        LaunchedEffect(live) { lingering = !live; if (!live) { delay(150); lingering = false } }
-        val visible = live || lingering
-        val interactive = live && prompt != null && prompt === shown
+        val interactive = prompt != null && prompt === shown
         /* Dimmed under a question asked over it; not in the moment between two tabs (no prompt yet). */
-        val dimmed = live && prompt != null && prompt !== shown
-        PanelHost(visible, tab, if (live) answer else { _ -> }) {
+        val dimmed = prompt != null && prompt !== shown
+        if (live) PanelHost(tab, answer) {
             shown?.let { c ->
                 Box(Modifier.fillMaxSize()) {
                     PromptUi(state, c, if (interactive) answer else { _ -> })
