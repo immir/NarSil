@@ -21,6 +21,9 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.AlertDialog
 import androidx.compose.foundation.layout.heightIn
@@ -100,6 +103,20 @@ fun ActionBar(actions: List<BarAction>, onMore: () -> Unit) {
             .padding(horizontal = 6.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
+    ) {
+        actions.forEach { BarButton(it) }
+        FilledTonalButton(onClick = onMore, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("☰", fontSize = 18.sp) }
+    }
+}
+
+/** The landscape rail's actions: the same buttons, wrapped into rows, scrolling if need be. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun ActionRail(actions: List<BarAction>, modifier: Modifier = Modifier, onMore: () -> Unit) {
+    FlowRow(
+        modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         actions.forEach { BarButton(it) }
         FilledTonalButton(onClick = onMore, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("☰", fontSize = 18.sp) }

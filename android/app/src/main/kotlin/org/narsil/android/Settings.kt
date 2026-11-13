@@ -93,7 +93,8 @@ fun TextScale(scale: Float, content: @Composable () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onExportSave: () -> Unit, onImportSave: () -> Unit, onDismiss: () -> Unit) {
+fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onExportSave: () -> Unit, onImportSave: () -> Unit,
+                 onSendLogs: () -> Unit, onDismiss: () -> Unit) {
     Box(
         Modifier.fillMaxSize().background(Color(0x99000000))
             .clickable(remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
@@ -164,6 +165,9 @@ fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onExportSave: ()
                     FilledTonalButton(onClick = { onDismiss(); onExportSave() }) { Text("Export save") }
                     FilledTonalButton(onClick = { onDismiss(); onImportSave() }) { Text("Import save…") }
                 }
+                Label("Problems")
+                Hint("Send logs shares a zip of the app's log, your save and character dump, for a bug report.")
+                FilledTonalButton(onClick = { onDismiss(); onSendLogs() }) { Text("Send logs") }
                 TextButton(onClick = { onDismiss(); onGameOptions() }) { Text("Game options…") }
             }
         }

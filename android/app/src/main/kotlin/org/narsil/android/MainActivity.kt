@@ -7,6 +7,7 @@ import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.size
@@ -215,7 +216,10 @@ class MainActivity : ComponentActivity() {
                     onDispose { router.intercept = null }
                 }
                 OptionsSheet(settings, onGameOptions = { NarSilNative.nativeRequestAction(NarSilNative.ACT_OPTIONS) },
-                             onExportSave = ::exportSave, onImportSave = { importSave.launch(arrayOf("*/*")) }) { showOptions = false }
+                             onExportSave = ::exportSave, onImportSave = { importSave.launch(arrayOf("*/*")) },
+                             onSendLogs = { scope.launch { Share.file(this@MainActivity, Share.bugReport(applicationContext), "application/zip", "Send logs") } }) {
+                    showOptions = false
+                }
             }
             if (showScum) ScumSheet(this@MainActivity) { showScum = false }
             pendingImport?.let { copy ->
@@ -351,42 +355,50 @@ when (prompt) {
 
     @Composable
     private fun GameLayers(state: GameState) {
-        Column(Modifier.fillMaxSize()) {
-            /* At -more- a tap continues; otherwise it opens the scrollable history. */
-            if (state.mapMode) TextScale(settings.messageScale) {
-                MessageStrip(state) { if (state.messageLine.contains("-more-")) router.special(Keys.ENTER) else showMessages = true }
-            }
-            Box(Modifier.weight(1f).fillMaxWidth()) {
-                AndroidView(
-                    factory = { ctx -> TerminalView(ctx, state, router).also { terminal = it } },
-                    modifier = Modifier.fillMaxSize(),
-                )
-                AndroidView(
-                    factory = { ctx -> MapView(ctx, state, router, { settings.swipeRuns }, { settings.tiles }).also { mapView = it } },
-                    update = { it.visibility = if (state.mapMode) View.VISIBLE else View.GONE },
-                    modifier = Modifier.fillMaxSize(),
-                )
-                (state.prompt as? GameState.Prompt.Aim)?.let { aim ->
-                    Box(Modifier.align(Alignment.BottomCenter)) { AimBar(aim, NarSilNative::nativeAnswer) }
+        /* Landscape: status and actions move to a rail on the right, so the map gets the full height. */
+        val rail = state.mapMode && LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+        Row(Modifier.fillMaxSize()) {
+            Column(Modifier.weight(1f).fillMaxHeight()) {
+                /* At -more- a tap continues; otherwise it opens the scrollable history. */
+                if (state.mapMode) TextScale(settings.messageScale) {
+                    MessageStrip(state) { if (state.messageLine.contains("-more-")) router.special(Keys.ENTER) else showMessages = true }
                 }
-                (state.prompt as? GameState.Prompt.Direction)?.let { d ->
-                    Box(Modifier.align(Alignment.BottomCenter)) { DirectionBar(d, NarSilNative::nativeAnswer) }
+                Box(Modifier.weight(1f).fillMaxWidth()) {
+                    AndroidView(
+                        factory = { ctx -> TerminalView(ctx, state, router).also { terminal = it } },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    AndroidView(
+                        factory = { ctx -> MapView(ctx, state, router, { settings.swipeRuns }, { settings.tiles }).also { mapView = it } },
+                        update = { it.visibility = if (state.mapMode) View.VISIBLE else View.GONE },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    (state.prompt as? GameState.Prompt.Aim)?.let { aim ->
+                        Box(Modifier.align(Alignment.BottomCenter)) { AimBar(aim, NarSilNative::nativeAnswer) }
+                    }
+                    (state.prompt as? GameState.Prompt.Direction)?.let { d ->
+                        Box(Modifier.align(Alignment.BottomCenter)) { DirectionBar(d, NarSilNative::nativeAnswer) }
+                    }
+                    if (state.mapMode && dpadMode() == Settings.DPAD_FLOATING) FloatingDpad(state)
+                    if (state.mapMode && settings.edgeSwipePanel) EdgeSwipeHandle(Modifier.align(Alignment.CenterEnd))
                 }
-                if (state.mapMode && dpadMode() == Settings.DPAD_FLOATING) FloatingDpad(state)
-                if (state.mapMode && settings.edgeSwipePanel) EdgeSwipeHandle(Modifier.align(Alignment.CenterEnd))
+                if (state.mapMode && !rail) TextScale(settings.statusScale) {
+                    if (dpadMode() == Settings.DPAD_DOCKED) Row(Modifier.background(Color(0xFF141414)), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.weight(1f)) { StatusStrip(state.status, state.statusLine, stacked = true) }
+                        Box(Modifier.padding(4.dp)) { Dpad(settings.dpadSizeDp, { dpad(state, it) }) }
+                    } else StatusStrip(state.status, state.statusLine, stacked = false)
+                }
+                if (state.mapMode && !rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { showMore = true } }
+                if (!state.mapMode) TextScale(settings.buttonScale) { KeyBar(state.waiting) }
             }
-            if (state.mapMode) TextScale(settings.statusScale) {
-                if (dpadMode() == Settings.DPAD_DOCKED) Row(Modifier.background(Color(0xFF141414)), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.weight(1f)) { StatusStrip(state.status, state.statusLine, stacked = true) }
-                    Box(Modifier.padding(4.dp)) { Dpad(settings.dpadSizeDp, { dpad(state, it) }) }
-                } else StatusStrip(state.status, state.statusLine, stacked = false)
+            if (rail) Column(Modifier.width(260.dp).fillMaxHeight().background(Color(0xFF141414))) {
+                TextScale(settings.statusScale) { StatusStrip(state.status, state.statusLine, stacked = true) }
+                TextScale(settings.buttonScale) { ActionRail(barActions(state), Modifier.weight(1f)) { showMore = true } }
             }
-            if (state.mapMode) TextScale(settings.buttonScale) {
-                ActionBar(contextActions(state.status) + coreActions(state.status) { showRest = true }) { showMore = true }
-            }
-            else TextScale(settings.buttonScale) { KeyBar(state.waiting) }
         }
     }
+
+    private fun barActions(state: GameState) = contextActions(state.status) + coreActions(state.status) { showRest = true }
 
     /**
      * The last few messages (older ones dimmer, in their game colours), plus the
