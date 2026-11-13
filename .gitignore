@@ -73,3 +73,6 @@ src/version.h
 /NarSil-continuous-ios/
 *.ipa
 /ios/build/
+/fonts.dir
+/lib/save/
+/lib/scores/
