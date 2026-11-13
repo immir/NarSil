@@ -90,7 +90,7 @@ final class GameState: ObservableObject {
                                                     morale: m(NB.META_FOE_MORALE))
         status = Status(hp: m(NB.META_HP), maxHp: m(NB.META_MAX_HP), voice: m(NB.META_VOICE), maxVoice: m(NB.META_MAX_VOICE),
                         depth: m(NB.META_DEPTH), exp: m(NB.META_EXP), context: m(NB.META_CONTEXT), foe: foe,
-                        newExp: m(NB.META_NEW_EXP), hpWarn: m(NB.META_HP_WARN))
+                        newExp: m(NB.META_NEW_EXP), hpWarn: m(NB.META_HP_WARN), autoMore: m(NB.META_AUTO_MORE) != 0)
         return true
     }
 

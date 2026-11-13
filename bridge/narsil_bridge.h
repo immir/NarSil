@@ -91,6 +91,7 @@ enum nb_meta {
 	NB_META_TARGET_X, NB_META_TARGET_Y, /* the current target's grid, or -1 */
 	NB_META_HP_WARN,    /* the hitpoint warning, in tenths of maximum health (0 = off) */
 	NB_META_TILE_ALERT, NB_META_TILE_GLOW, /* the overlay tiles (row << 8 | column) for alert monsters / glowing objects, or -1 */
+	NB_META_AUTO_MORE,  /* the game's "Automatically clear -more- prompts" option (see nb_set_auto_more()) */
 	NB_META_COUNT
 };
 
@@ -164,6 +165,9 @@ void nb_request_rest(int turns_or_mode);
  * (-1, -1) clears the target. */
 void nb_request_target(int x, int y);
 void nb_request_look_list(void);
+
+/* Sets the game's "Automatically clear -more- prompts" option (saved with the character); shown in NB_META_AUTO_MORE. */
+void nb_set_auto_more(bool on);
 uint64_t nb_info_generation(void);
 size_t nb_info(char *text, size_t cap);
 

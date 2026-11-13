@@ -724,6 +724,7 @@ bool native_smith_tab(void)
 	if (resume_unfinished()) {
 		if (!square_isforge(cave, player->grid)) return false;
 		cmdq_push(CMD_SMITH);
+		native_panel_reopen(NB_TAB_SMITH, 0);
 		return true;
 	}
 	start_design();
@@ -731,5 +732,6 @@ bool native_smith_tab(void)
 	include_pval(smith_obj);
 	ready_to_make = true;
 	cmdq_push(CMD_SMITH);
+	native_panel_reopen(NB_TAB_SMITH, 0);
 	return true;
 }

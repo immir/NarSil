@@ -133,6 +133,7 @@ struct Status: Equatable {
     var hp = 0, maxHp = 0, voice = 0, maxVoice = 0, depth = 0, exp = 0, context = 0
     var foe: Foe?
     var newExp = 0, hpWarn = 0
+    var autoMore = false
 
     func has(_ flag: Int) -> Bool { context & flag != 0 }
     /// Below the game's hitpoint warning (tenths of maximum health).

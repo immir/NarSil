@@ -139,7 +139,7 @@ class GameState {
 
     data class Status(val hp: Int = 0, val maxHp: Int = 0, val voice: Int = 0, val maxVoice: Int = 0,
                       val depth: Int = 0, val exp: Int = 0, val context: Int = 0, val foe: Foe? = null,
-                      val newExp: Int = 0, val hpWarn: Int = 0) {
+                      val newExp: Int = 0, val hpWarn: Int = 0, val autoMore: Boolean = false) {
         fun has(flag: Int) = context and flag != 0
         /** Below the game's hitpoint warning (tenths of maximum health). */
         val lowHp get() = maxHp > 0 && hpWarn > 0 && hp * 10 < maxHp * hpWarn
@@ -216,12 +216,17 @@ class GameState {
     }
 
     private var holdUntilNanos = 0L
-    /** The pack answered with an action is still shown while its command runs; it reopens within moments. */
+    /** A pack action or Make it: that screen stays shown while the command runs; it reopens within moments. */
     val holding get() = holdUntilNanos != 0L
 
     /** Called with every answer the UI sends: an action from the pack keeps the pack on screen until it reopens. */
     fun answered(value: Int) {
-        if (prompt is Prompt.Pack && value >= N.PACK_ACT && value < N.PANEL_TAB) holdUntilNanos = System.nanoTime() + HOLD_NANOS
+        val runsCommand = when (val p = prompt) {
+            is Prompt.Pack -> value >= N.PACK_ACT && value < N.PANEL_TAB
+            is Prompt.Smith -> p.view == "main" && value == SMITH_MAKE && p.options.getOrNull(value)?.state != N.OPT_OFF
+            else -> false
+        }
+        if (runsCommand) holdUntilNanos = System.nanoTime() + HOLD_NANOS
     }
 
     private fun pollMap(): Boolean {
@@ -238,7 +243,7 @@ class GameState {
                         meta[N.META_DEPTH], meta[N.META_EXP], meta[N.META_CONTEXT],
                         if (meta[N.META_FOE_X] < 0) null else Foe(meta[N.META_FOE_X], meta[N.META_FOE_Y], N.nativeFoeName(),
                             meta[N.META_FOE_HEALTH], meta[N.META_FOE_STANCE], meta[N.META_FOE_MORALE]),
-                        meta[N.META_NEW_EXP], meta[N.META_HP_WARN])
+                        meta[N.META_NEW_EXP], meta[N.META_HP_WARN], meta[N.META_AUTO_MORE] != 0)
         return true
     }
 
@@ -248,6 +253,7 @@ class GameState {
 
     private companion object {
         const val HOLD_NANOS = 800_000_000L
+        const val SMITH_MAKE = 5  // the main smithing view's "Make it"
         val YES_NO = Regex("""\[y/n\]""", RegexOption.IGNORE_CASE)
         val MORE = Regex("-more-")
         val AT_SIGN = Regex("by typing the '@'")

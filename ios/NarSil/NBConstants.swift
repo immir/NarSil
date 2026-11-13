@@ -28,7 +28,8 @@ enum NB {
     static let META_HP_WARN = 21
     static let META_TILE_ALERT = 22
     static let META_TILE_GLOW = 23
-    static let META_COUNT = 24
+    static let META_AUTO_MORE = 24
+    static let META_COUNT = 25
     static let STANCE_NONE = 0
     static let STANCE_SLEEPING = 1
     static let STANCE_UNWARY = 2

@@ -55,7 +55,7 @@ enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MA
  * overlay bits: NB_TILE_ALERT, NB_TILE_GLOW. */
 typedef struct { int32_t cp, attr_flags, tile, tile_bg, tile_flags; } map_cell;
 
-enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_REST };
+enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_REST, REQ_AUTO_MORE };
 typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; int dir; bool run; } request;
 
 /* Game thread only. */
@@ -279,6 +279,7 @@ void native_publish(bool at_prompt)
 	meta[NB_META_TARGET_X] = target.x;
 	meta[NB_META_TARGET_Y] = target.y;
 	meta[NB_META_HP_WARN] = player ? player->opts.hitpoint_warn : 0;
+	meta[NB_META_AUTO_MORE] = player && OPT(player, auto_more) ? 1 : 0;
 	meta[NB_META_TILE_ALERT] = meta[NB_META_TILE_GLOW] = -1;
 	if (tiles_on()) {
 		meta[NB_META_TILE_ALERT] = native_tile_overlay(false);
@@ -618,6 +619,11 @@ bool native_service(bool at_prompt)
 		return false;
 	}
 	if (r.kind == REQ_LOOK_LIST) { look_list(); publish_info(); return false; }
+	if (r.kind == REQ_AUTO_MORE) {
+		OPT(player, auto_more) = r.run;
+		native_publish(at_prompt);
+		return false;
+	}
 	if (!at_prompt) return false;
 	switch (r.kind) {
 		case REQ_PREVIEW: preview_path(r.grid); return false;
@@ -630,6 +636,7 @@ bool native_service(bool at_prompt)
 		case REQ_INSPECT:
 		case REQ_TARGET:
 		case REQ_LOOK_LIST:
+		case REQ_AUTO_MORE:
 		case REQ_NONE: return false;
 	}
 	return false;
@@ -818,6 +825,11 @@ void nb_set_tiles(bool on)
 void nb_request_target(int x, int y)
 {
 	post((request){ .kind = REQ_TARGET, .grid = loc(x, y) });
+}
+
+void nb_set_auto_more(bool on)
+{
+	post((request){ .kind = REQ_AUTO_MORE, .run = on });
 }
 
 void nb_request_look_list(void)

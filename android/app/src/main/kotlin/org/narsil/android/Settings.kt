@@ -99,7 +99,7 @@ fun TextScale(scale: Float, content: @Composable () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onExportSave: () -> Unit, onImportSave: () -> Unit,
+fun OptionsSheet(settings: Settings, autoMore: Boolean, autoMoreEnabled: Boolean, onAutoMore: (Boolean) -> Unit, onGameOptions: () -> Unit, onExportSave: () -> Unit, onImportSave: () -> Unit,
                  onSendLogs: () -> Unit, onDismiss: () -> Unit) {
     Box(
         Modifier.fillMaxSize().background(Color(0x99000000))
@@ -146,6 +146,15 @@ fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onExportSave: ()
                         Hint("Below the game's hitpoint warning (Game options → Hitpoint warning).")
                     }
                     Switch(settings.lowHealthBuzz, { settings.lowHealthBuzz = it })
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Label("Skip -more- prompts")
+                        Hint("Messages are not held for a tap to continue; the message log keeps all of them. This is the game's own " +
+                             "\"Automatically clear -more- prompts\" option, saved with the character." +
+                             if (autoMoreEnabled) "" else "  Change it from the map, or in Game options → User interface.")
+                    }
+                    Switch(autoMore, onAutoMore, enabled = autoMoreEnabled)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {

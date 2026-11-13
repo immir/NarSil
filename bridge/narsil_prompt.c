@@ -378,7 +378,7 @@ static int item_actions(const struct object *obj, action *a)
 
 enum { PACK_COLLAPSE = NB_PACK_COLLAPSE, PACK_EXPAND = NB_PACK_EXPAND, PACK_ACT = NB_PACK_ACT, PACK_ACT_STRIDE = NB_PACK_ACT_STRIDE };
 
-static struct { bool reopen; int focus; } pack_after;
+static struct { bool reopen; int tab; int focus; } pack_after;
 static bool more_forced;  /* auto_more is on only until the pack reopens (see pack_action()) */
 static bool pack_keep_place;  /* reopened after an action, or reached by a tab switch: the UI keeps its scroll */
 
@@ -430,10 +430,7 @@ static bool pack_action(struct object *obj, int k, int focus)
 	if (cmd == CMD_IGNORE) { native_ignore_menu(obj); return false; }
 	cmdq_push(cmd);
 	cmd_set_arg_item(cmdq_peek(), "item", obj);
-	pack_after.reopen = cmd != CMD_FIRE && cmd != CMD_THROW;
-	pack_after.focus = focus;
-	/* The pack reopens at the next command prompt, which a pending -more- would hold up. */
-	if (pack_after.reopen && !OPT(player, auto_more)) { OPT(player, auto_more) = true; more_forced = true; }
+	if (cmd != CMD_FIRE && cmd != CMD_THROW) native_panel_reopen(NB_TAB_PACK, focus);
 	return true;
 }
 
@@ -463,6 +460,18 @@ bool native_pack(int focus)
 	}
 }
 
+/*
+ * After the command just queued from a panel tab has run, that tab opens again at the next command prompt.  A -more- would
+ * hold that up, so -more- is skipped until then.
+ */
+void native_panel_reopen(int tab, int focus)
+{
+	pack_after.reopen = true;
+	pack_after.tab = tab;
+	pack_after.focus = focus;
+	if (!OPT(player, auto_more)) { OPT(player, auto_more) = true; more_forced = true; }
+}
+
 /* True while the pack is due to reopen at this command prompt. */
 bool native_pack_pending(void) { return pack_after.reopen; }
 
@@ -481,12 +490,14 @@ bool native_pack_resume(void)
 {
 	if (!pack_after.reopen) return false;
 	pack_after.reopen = false;
-	if (player->is_dead || !player->upkeep->playing || player->upkeep->generate_level || screen_save_depth > 0) {
+	/* Smithing interrupted mid-way: reopening would at once carry on with it, and could be interrupted again. */
+	const bool unfinished = pack_after.tab == NB_TAB_SMITH && player->smithing_leftover > 0;
+	if (player->is_dead || !player->upkeep->playing || player->upkeep->generate_level || screen_save_depth > 0 || unfinished) {
 		native_pack_restore_more();
 		return false;
 	}
 	pack_keep_place = true;
-	const bool queued = native_panel(NB_TAB_PACK, pack_after.focus);
+	const bool queued = native_panel(pack_after.tab, pack_after.focus);
 	pack_keep_place = false;
 	return queued;
 }
@@ -1019,6 +1030,7 @@ bool native_panel(int tab, int focus)
 	if (tab < 0) tab = last_tab;
 	/* Any -more- first, while the message strip is still in view. */
 	event_signal(EVENT_MESSAGE_FLUSH);
+	native_pack_restore_more();
 	bool queued = false;
 	for (;;) {
 		last_tab = tab;

@@ -170,6 +170,10 @@ rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=15 @answer=1001 @answer=100102 @prompt @answer=-1 @act=26 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qP '^prompt kind=13$'
 echo "$out" | grep -qP '^#O\t[0-9]+\t0\t0\tAutomatically clear'
+echo "== skip -more-: set from the UI side, shown by the game's option"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @automore=1 @act=26 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qP '^#O\t[0-9]+\t1\t0\tAutomatically clear'
 echo "== welcome: the splash screen is native (verse, welcome, Begin)"
 rm -rf "$work/data"
 out=$(run @prompt "${birth[@]}" "${quit[@]}")

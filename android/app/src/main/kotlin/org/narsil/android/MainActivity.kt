@@ -199,7 +199,9 @@ class MainActivity : ComponentActivity() {
                     router.intercept = { code -> if (code == Keys.ESCAPE) showOptions = false; code == Keys.ESCAPE }
                     onDispose { router.intercept = null }
                 }
-                OptionsSheet(settings, onGameOptions = { NarSilNative.nativeRequestAction(NarSilNative.ACT_OPTIONS) },
+                OptionsSheet(settings, autoMore = state.status.autoMore,
+                             autoMoreEnabled = state.atPrompt && state.prompt == null, onAutoMore = NarSilNative::nativeSetAutoMore,
+                             onGameOptions = { NarSilNative.nativeRequestAction(NarSilNative.ACT_OPTIONS) },
                              onExportSave = ::exportSave, onImportSave = { importSave.launch(arrayOf("*/*")) },
                              onSendLogs = { scope.launch { Share.file(this@MainActivity, Share.bugReport(applicationContext), "application/zip", "Send logs") } }) {
                     showOptions = false

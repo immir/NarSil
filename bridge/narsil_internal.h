@@ -56,6 +56,7 @@ bool native_pack(int focus_section);
 /* At the next command prompt after a pack action: reopen the pack.  True if it queued another command. */
 bool native_pack_resume(void);
 void native_pack_restore_more(void);
+void native_panel_reopen(int tab, int focus);
 bool native_pack_pending(void);
 
 /* Implemented by narsil_prompt.c (game thread): the character panel; true if a command was queued. */

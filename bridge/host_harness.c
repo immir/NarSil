@@ -178,6 +178,10 @@ static int run_token(const char *tok)
 			abs(meta[NB_META_PLAYER_X] - x0) > abs(meta[NB_META_PLAYER_Y] - y0) ? abs(meta[NB_META_PLAYER_X] - x0) : abs(meta[NB_META_PLAYER_Y] - y0));
 		return 0;
 	}
+	if (sscanf(tok, "@automore=%d%c", &mx, &tail) == 1) {
+		nb_set_auto_more(mx != 0);
+		return settle() ? 0 : 1;
+	}
 	if (strcmp(tok, "@prompt") == 0) {
 		static char text[NB_PROMPT_CAP];
 		const enum nb_prompt_kind kind = nb_prompt(text, sizeof(text));

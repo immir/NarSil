@@ -329,6 +329,12 @@ JNIEXPORT void JNICALL JNI_FN(nativeRequestTarget)(JNIEnv *env, jclass cls, jint
 	nb_request_target(x, y);
 }
 
+JNIEXPORT void JNICALL JNI_FN(nativeSetAutoMore)(JNIEnv *env, jclass cls, jboolean on)
+{
+	(void)env; (void)cls;
+	nb_set_auto_more(on);
+}
+
 JNIEXPORT void JNICALL JNI_FN(nativeRequestLookList)(JNIEnv *env, jclass cls)
 {
 	(void)env; (void)cls;
