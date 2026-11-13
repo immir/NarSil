@@ -52,7 +52,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import android.widget.Toast
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.em
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -303,14 +305,14 @@ class MainActivity : ComponentActivity() {
         /* The textui joins several messages on its top line; only show it when it is something else (a prompt). */
         val banner = line0.takeIf { it.isNotEmpty() && !more && state.messages.none { m -> line0.contains(m.text) } }
         Column(Modifier.fillMaxWidth().background(Color(0xFF141414)).clickable(onClick = onTap)
-            .padding(horizontal = 10.dp, vertical = 6.dp)) {
+            .padding(horizontal = 10.dp, vertical = 4.dp)) {
             recent.forEachIndexed { i, m ->
                 val alpha = 0.45f + 0.55f * (i + 1) / recent.size
                 Text(if (m.count > 1) "${m.text} (x${m.count})" else m.text,
-                     color = Color(state.colour(m.attr)).copy(alpha = alpha), fontSize = 14.sp, lineHeight = 16.sp, maxLines = 2)
+                     color = Color(state.colour(m.attr)).copy(alpha = alpha), fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)
             }
-            if (banner != null) Text(banner, color = Color(0xFFFFD54F), fontSize = 14.sp, lineHeight = 16.sp, maxLines = 2)
-            if (more) Text("▸ tap to continue", color = Color(0xFFFFD54F), fontSize = 13.sp, lineHeight = 15.sp)
+            if (banner != null) Text(banner, color = Color(0xFFFFD54F), fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)
+            if (more) Text("▸ tap to continue", color = Color(0xFFFFD54F), fontSize = 13.sp, lineHeight = 16.sp)
             if (recent.isEmpty() && banner == null && !more) Text(" ", fontSize = 14.sp)
         }
     }
@@ -474,10 +476,12 @@ class MainActivity : ComponentActivity() {
 
 /**
  * Material's styles fix line height in sp (bodyLarge: 24sp), which every Text
- * inherits even at 12sp; make it proportional to the font size instead.
+ * inherits even at 12sp; make it proportional to the font size instead, and
+ * drop Android's extra font padding above and below each line.
  */
 private fun compactTypography(): Typography = Typography().run {
-    fun TextStyle.fit() = copy(lineHeight = 1.3.em)
+    fun TextStyle.fit() = copy(lineHeight = 1.3.em, platformStyle = PlatformTextStyle(includeFontPadding = false),
+                               lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both))
     Typography(displayLarge.fit(), displayMedium.fit(), displaySmall.fit(), headlineLarge.fit(), headlineMedium.fit(),
                headlineSmall.fit(), titleLarge.fit(), titleMedium.fit(), titleSmall.fit(), bodyLarge.fit(), bodyMedium.fit(),
                bodySmall.fit(), labelLarge.fit(), labelMedium.fit(), labelSmall.fit())
