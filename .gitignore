@@ -78,3 +78,4 @@ src/version.h
 /lib/scores/
 /ios/*.xcodeproj
 /ios/NarSil/Info.plist
+__pycache__/
