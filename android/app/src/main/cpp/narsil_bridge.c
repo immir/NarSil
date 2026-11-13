@@ -15,6 +15,7 @@
 #include "init.h"
 #include "player-calcs.h"
 #include "savefile.h"
+#include "tutorial.h"
 #include "ui-display.h"
 #include "ui-event.h"
 #include "ui-game.h"
@@ -144,10 +145,11 @@ static void publish_frame(void)
 	pthread_mutex_unlock(&shared.lock);
 }
 
+/* Never in the tutorial: its character would replace the player's own save. */
 static bool safe_to_save(void)
 {
 	return game.at_command_prompt && character_generated && player
-		&& !player->is_dead;
+		&& !player->is_dead && !in_tutorial();
 }
 
 /*
@@ -336,10 +338,17 @@ static void reinit(void)
 	native_init();
 }
 
-/* The native death screen has already asked; a new character replaces the dead one. */
+static bool tutorial_chosen;
+
+/*
+ * The native death screen has already asked; a new character replaces the dead
+ * one.  After the tutorial, though, back to the player's own savefile.
+ */
 static enum game_mode_type play_again_new(void)
 {
-	return GAME_NEW;
+	if (!tutorial_chosen) return GAME_NEW;
+	tutorial_chosen = false;
+	return GAME_LOAD;
 }
 
 /*
@@ -385,8 +394,8 @@ static void *game_main(void *unused)
 	init_angband();
 	textui_init();
 	native_init();
-	native_welcome();
-	play_game(GAME_LOAD);
+	tutorial_chosen = native_welcome();
+	play_game(tutorial_chosen ? GAME_TUTORIAL : GAME_LOAD);
 
 	textui_cleanup();
 	cleanup_angband();

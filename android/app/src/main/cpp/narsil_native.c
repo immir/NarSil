@@ -259,6 +259,11 @@ void native_publish(bool at_prompt)
 		meta[NB_META_CONTEXT] = context_flags();
 		meta[NB_META_NEW_EXP] = player->new_exp;
 	}
+	struct loc target = loc(-1, -1);
+	if (visible && target_okay(0)) target_get(&target);
+	meta[NB_META_TARGET_X] = target.x;
+	meta[NB_META_TARGET_Y] = target.y;
+	meta[NB_META_HP_WARN] = player ? player->opts.hitpoint_warn : 0;
 	struct monster *const foe = visible ? tracked_foe() : NULL;
 	char foe_name[80] = "";
 	meta[NB_META_FOE_X] = meta[NB_META_FOE_Y] = -1;
@@ -582,6 +587,11 @@ bool native_service(bool at_prompt)
 	if (!map_visible()) return false;
 	if (r.kind == REQ_INSPECT) { inspect(r.grid); publish_info(); return false; }
 	if (r.kind == REQ_TARGET) {
+		if (r.grid.x < 0) {
+			target_set_monster(NULL);
+			native_publish(at_prompt);
+			return false;
+		}
 		if (target_set_monster(visible_monster(r.grid))) player->upkeep->redraw |= PR_HEALTH;
 		inspect(r.grid);
 		publish_info();

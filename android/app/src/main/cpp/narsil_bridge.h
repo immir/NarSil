@@ -88,6 +88,8 @@ enum nb_meta {
 	NB_META_FOE_STANCE, /* enum nb_stance */
 	NB_META_FOE_MORALE, /* as the sidebar shows it */
 	NB_META_NEW_EXP,    /* experience available to spend */
+	NB_META_TARGET_X, NB_META_TARGET_Y, /* the current target's grid, or -1 */
+	NB_META_HP_WARN,    /* the hitpoint warning, in tenths of maximum health (0 = off) */
 	NB_META_COUNT
 };
 
@@ -153,7 +155,8 @@ void nb_request_inspect(int x, int y);
 /* Rest (at the command prompt): a number of turns, or one of these (REST_* in player-util.h). */
 enum { NB_REST_HP_AND_VOICE = -1, NB_REST_AS_NEEDED = -2, NB_REST_HP_OR_VOICE = -3 };
 void nb_request_rest(int turns_or_mode);
-/* Make the visible monster at (x, y) the target, then re-inspect that grid (Inspect header field 4 = is the target). */
+/* Make the visible monster at (x, y) the target, then re-inspect that grid (Inspect header field 4 = is the target);
+ * (-1, -1) clears the target. */
 void nb_request_target(int x, int y);
 void nb_request_look_list(void);
 uint64_t nb_info_generation(void);

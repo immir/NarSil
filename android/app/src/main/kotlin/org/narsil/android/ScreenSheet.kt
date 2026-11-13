@@ -171,6 +171,10 @@ private fun Welcome(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
                     Text(o.label, fontSize = 17.sp)
                 }
             }
+            p.options.drop(1).forEach { o ->
+                TextButton(onClick = { onAnswer(o.index) }, modifier = Modifier.padding(top = 8.dp)) { Text(o.label, fontSize = 15.sp) }
+                if (o.summary.isNotEmpty()) Text(o.summary, color = SUB, fontSize = 12.sp, textAlign = TextAlign.Center)
+            }
             p.paragraphs.lastOrNull()?.let { Text(it, color = SUB, fontSize = 12.sp, modifier = Modifier.padding(top = 16.dp)) }
         }
     }

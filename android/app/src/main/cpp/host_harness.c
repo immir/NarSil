@@ -261,7 +261,8 @@ static int run_token(const char *tok)
 			}
 			putchar('\n');
 		}
-		const int32_t tile = cells[NB_MAP_CELL_INTS * ((size_t)py * w + (size_t)px) + 2];
+		const bool on_map = px >= 0 && py >= 0 && (size_t)px < w && (size_t)py < h;
+		const int32_t tile = on_map ? cells[NB_MAP_CELL_INTS * ((size_t)py * w + (size_t)px) + 2] : -1;
 		printf("player tile %d,%d\n", tile < 0 ? -1 : tile >> 8, tile < 0 ? -1 : tile & 0xFF);
 		free(cells);
 		return 0;

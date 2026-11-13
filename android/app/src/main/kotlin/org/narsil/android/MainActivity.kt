@@ -56,6 +56,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import android.widget.Toast
+import android.os.VibratorManager
+import android.os.Vibrator
+import android.os.VibrationEffect
+import android.os.Build
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.AlertDialog
 import androidx.activity.result.contract.ActivityResultContracts
@@ -465,13 +469,15 @@ when (prompt) {
 
     @Composable
     private fun StatusStrip(s: GameState.Status, line: String, stacked: Boolean) {
+        LowHealthBuzz(s.lowHp)
+        val hpColour = if (s.lowHp) Color(0xFFFF3B30) else Color(0xFFD04040)
         Column(Modifier.fillMaxWidth().background(Color(0xFF141414)).padding(horizontal = 8.dp, vertical = 4.dp)) {
             if (stacked) {
-                Meter("HP", s.hp, s.maxHp, Color(0xFFD04040), Modifier.fillMaxWidth())
+                Meter("HP", s.hp, s.maxHp, hpColour, Modifier.fillMaxWidth(), alarm = s.lowHp)
                 Meter("Voice", s.voice, s.maxVoice, Color(0xFF4080E0), Modifier.fillMaxWidth().padding(top = 4.dp))
                 Text("${s.depth * 50} ft", color = Color.White, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
             } else Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Meter("HP", s.hp, s.maxHp, Color(0xFFD04040), Modifier.weight(1f))
+                Meter("HP", s.hp, s.maxHp, hpColour, Modifier.weight(1f), alarm = s.lowHp)
                 Meter("Voice", s.voice, s.maxVoice, Color(0xFF4080E0), Modifier.weight(1f))
                 Text("${s.depth * 50} ft", color = Color.White, fontSize = 13.sp)
             }
@@ -479,6 +485,25 @@ when (prompt) {
                 Text(line.replace(Regex("\\s{2,}"), "  ·  "), color = Color(0xFFB0B0B0), fontSize = 12.sp, maxLines = if (stacked) 3 else 1)
             s.foe?.let { FoeLine(it) }
         }
+    }
+
+    /** A short double buzz each time health falls below the hitpoint warning. */
+    @Composable
+    private fun LowHealthBuzz(low: Boolean) {
+        var was by remember { mutableStateOf(low) }
+        LaunchedEffect(low) {
+            if (low && !was) buzz()
+            was = low
+        }
+    }
+
+    private fun buzz() {
+        val vibrator = if (Build.VERSION.SDK_INT >= 31) getSystemService(VibratorManager::class.java)?.defaultVibrator
+                       else @Suppress("DEPRECATION") getSystemService(Vibrator::class.java)
+        if (vibrator?.hasVibrator() != true) return
+        val pattern = longArrayOf(0, 70, 90, 70)
+        if (Build.VERSION.SDK_INT >= 26) vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
+        else @Suppress("DEPRECATION") vibrator.vibrate(pattern, -1)
     }
 
     /** Tracked monster: glyph, name, health, alertness/morale; tap to inspect. */
@@ -505,9 +530,10 @@ when (prompt) {
     }
 
     @Composable
-    private fun Meter(label: String, value: Int, max: Int, colour: Color, modifier: Modifier) {
+    private fun Meter(label: String, value: Int, max: Int, colour: Color, modifier: Modifier, alarm: Boolean = false) {
         Column(modifier) {
-            Text("$label $value/$max", color = Color.White, fontSize = 12.sp)
+            Text("$label $value/$max" + if (alarm) "  ⚠" else "", color = if (alarm) colour else Color.White, fontSize = 12.sp,
+                 fontWeight = if (alarm) FontWeight.Bold else FontWeight.Normal)
             LinearProgressIndicator(
                 progress = if (max > 0) value.toFloat() / max else 0f,
                 color = colour,

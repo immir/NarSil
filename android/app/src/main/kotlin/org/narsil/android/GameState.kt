@@ -141,8 +141,10 @@ class GameState {
 
     data class Status(val hp: Int = 0, val maxHp: Int = 0, val voice: Int = 0, val maxVoice: Int = 0,
                       val depth: Int = 0, val exp: Int = 0, val context: Int = 0, val foe: Foe? = null,
-                      val newExp: Int = 0) {
+                      val newExp: Int = 0, val hpWarn: Int = 0) {
         fun has(flag: Int) = context and flag != 0
+        /** Below the game's hitpoint warning (tenths of maximum health). */
+        val lowHp get() = maxHp > 0 && hpWarn > 0 && hp * 10 < maxHp * hpWarn
     }
 
     private var termGen = 0L
@@ -376,7 +378,7 @@ class GameState {
                         meta[N.META_DEPTH], meta[N.META_EXP], meta[N.META_CONTEXT],
                         if (meta[N.META_FOE_X] < 0) null else Foe(meta[N.META_FOE_X], meta[N.META_FOE_Y], N.nativeFoeName(),
                             meta[N.META_FOE_HEALTH], meta[N.META_FOE_STANCE], meta[N.META_FOE_MORALE]),
-                        meta[N.META_NEW_EXP])
+                        meta[N.META_NEW_EXP], meta[N.META_HP_WARN])
         return true
     }
 

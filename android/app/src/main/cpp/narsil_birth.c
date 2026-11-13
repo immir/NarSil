@@ -440,7 +440,7 @@ static bool strip_markup(char *s)
 	return marked;
 }
 
-void native_welcome(void)
+bool native_welcome(void)
 {
 	char path[1024], line[1024], prose[2048] = "";
 	begin("welcome", "NarSil");
@@ -459,7 +459,8 @@ void native_welcome(void)
 	if (fp) file_close(fp);
 	para("Version %s", buildver);
 	option(1, "Begin", NULL, NULL);
-	(void)ask_screen();
+	option(1, "Tutorial", "A short guided dungeon; your own character is untouched.", NULL);
+	return ask_screen() == 1;
 }
 
 /* ------------------------------------------------------------------------

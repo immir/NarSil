@@ -43,7 +43,10 @@ object NarSilNative {
     const val META_FOE_STANCE = 16
     const val META_FOE_MORALE = 17
     const val META_NEW_EXP = 18
-    const val META_COUNT = 19
+    const val META_TARGET_X = 19
+    const val META_TARGET_Y = 20
+    const val META_HP_WARN = 21
+    const val META_COUNT = 22
 
     /** enum nb_stance, as sidebar text. */
     val STANCE_NAMES = arrayOf("", "Sleeping", "Unwary", "Mindless", "Fleeing", "Confident", "Aggressive")

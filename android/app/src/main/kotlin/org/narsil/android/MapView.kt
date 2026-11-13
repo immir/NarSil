@@ -182,6 +182,10 @@ class MapView(context: Context, private val state: GameState, private val router
             } else painter.drawCell(canvas, ox + x * cw, oy + y * ch, map[i], map[i + 1] and 0xFFFF)
         }
         drawPath(canvas, ox, oy, cw, ch)
+        /* The current target, between shots (aiming draws its own). */
+        val tx = state.meta[N.META_TARGET_X]
+        val ty = state.meta[N.META_TARGET_Y]
+        if (tx >= 0 && aim == null) canvas.drawRect(ox + tx * cw, oy + ty * ch, ox + (tx + 1) * cw, oy + (ty + 1) * ch, targetPaint)
         val (px, py) = player
         canvas.drawRect(ox + px * cw, oy + py * ch, ox + (px + 1) * cw, oy + (py + 1) * ch, playerPaint)
     }
