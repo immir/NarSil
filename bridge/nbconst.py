@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Reads the NB_* enum constants out of narsil_bridge.h (shared by the Android drift check and the Swift generator)."""
 import re
 from pathlib import Path
