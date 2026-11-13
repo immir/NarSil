@@ -19,7 +19,7 @@ cmake --build "$build" -j"$(nproc)" >/dev/null
 run() { timeout 120 "$build/narsil_host" "$root/lib" "$work/data" "$@"; }
 # The native birth screens: race, house, sex (first of each), accept stats and
 # skills, keep the name, accept history, begin; dismiss the opening text.
-birth=(@enter @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc)
+birth=(@answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc)
 # Quit from the command prompt; the Escs first dismiss any -more- left on screen.
 quit=(@esc @esc ^x @enter @esc)
 
@@ -29,12 +29,12 @@ rm -rf "$work/data"
 run @messages | grep -q '^messages:'
 
 echo "== new game; save requested during birth is deferred to first command prompt"
-run @enter @save-async "${birth[@]:1}" @expect=Harness 6 4 @save ^x @enter @esc | tail -1 \
+run @answer=0 @save-async "${birth[@]:1}" @expect=Harness 6 4 @save ^x @enter @esc | tail -1 \
     | grep -qx 'state=2 exit="" saves=2'
 test -s "$work/data/save/Harness"
 
 echo "== reload the savefile"
-run @enter @expect=Harness @expect=50\' ^x @enter @esc | tail -1 | grep -qx 'state=2 exit="" saves=0'
+run @answer=0 @expect=Harness @expect=50\' ^x @enter @esc | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
 echo "== touch: tapping a line of a text menu (the command menu) selects it"
 rm -rf "$work/data"
@@ -125,7 +125,7 @@ echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
 echo "== native birth: random house, buy a stat, back from skills to stats, then on"
 rm -rf "$work/data"
-out=$(run @enter @answer=0 @answer=1000 @prompt @answer=0 @answer=100 @prompt @answer=2 @answer=-1 @prompt \
+out=$(run @answer=0 @answer=0 @answer=1000 @prompt @answer=0 @answer=100 @prompt @answer=2 @answer=-1 @prompt \
       @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc "${quit[@]}")
 echo "$out" | grep -qP '^Screen\tsex\tSex$'
 echo "$out" | grep -qP '^#S\tStrength\t1\t1\t'
@@ -153,7 +153,7 @@ echo "$out" | grep -qP '^#O\t1007\t1\t0\tAudible beep'
 echo "$out" | grep -qP '^#N\t10000\tHitpoint warning\t5\t'
 echo "$out" | grep -qP '^#O\t1046\t0\t1\tDisconnected stairs'
 rm -rf "$work/data"
-out=$(run @enter @answer=1001 @prompt @answer=1046 @prompt @answer=-1 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc "${quit[@]}")
+out=$(run @answer=0 @answer=1001 @prompt @answer=1046 @prompt @answer=-1 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc "${quit[@]}")
 echo "$out" | grep -qP '^#O\t1046\t1\t0\tDisconnected stairs'
 
 echo "== native pack: expand an item, act on it, the pack reopens with the result"
@@ -161,6 +161,13 @@ rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=15 @prompt @answer=1000 @prompt @answer=100000 @enter @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qP '^#A\t1\tEat$'
 echo "$out" | grep -qP '^#I\t0\ta\t[0-9]+\t[0-9]+\t[0-9]+\t2 Fragments of Lembas$'
+
+echo "== welcome: the splash screen is native (verse, welcome, Begin)"
+rm -rf "$work/data"
+out=$(run @prompt "${birth[@]}" "${quit[@]}")
+echo "$out" | grep -qP '^Screen\twelcome\tNarSil$'
+echo "$out" | grep -qP '^#V\tThe world was young'
+echo "$out" | grep -qP '^#O\t1\tBegin\t'
 
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"

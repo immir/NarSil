@@ -1,6 +1,10 @@
 package org.narsil.android
 
 import androidx.compose.foundation.background
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,6 +48,7 @@ private val CHOICE_STAGES = setOf("race", "house", "sex")
  */
 @Composable
 fun ScreenSheet(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit, onScum: (() -> Unit)? = null) {
+    if (p.stage == "welcome") { Welcome(p, onAnswer); return }
     val canGoBack = p.stage != "death" && p.stage != "race" && p.stage != "quickstart"
     Surface(color = Color(0xFF121214), modifier = Modifier.fillMaxSize()) {
         Column {
@@ -140,6 +145,33 @@ private fun Figures(p: GameState.Prompt.Screen) {
             FlowRow { p.skills.forEach { (k, v) -> Figure(k, v) } }
             Text("Combat", color = GOLD, fontSize = 14.sp)
             FlowRow { p.combat.forEach { (k, v) -> Figure(k, v) } }
+        }
+    }
+}
+
+/** The splash screen: the verse, the welcome, the version, and Begin. */
+@Composable
+private fun Welcome(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
+    Surface(color = Color(0xFF0E0E10), modifier = Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp, vertical = 32.dp),
+               horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text(p.title, color = GOLD, fontSize = 34.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+            Box(Modifier.padding(top = 28.dp))
+            p.verse.forEach { v ->
+                Text(v, color = Color(0xFF8FC3FF), fontSize = 16.sp, fontStyle = FontStyle.Italic, textAlign = TextAlign.Center)
+            }
+            Box(Modifier.padding(top = 24.dp))
+            p.paragraphs.dropLast(1).forEach { t ->
+                Text(t, color = Color(0xFFD0D0D4), fontSize = 16.sp, lineHeight = 23.sp, textAlign = TextAlign.Center,
+                     modifier = Modifier.padding(vertical = 4.dp))
+            }
+            Box(Modifier.padding(top = 36.dp))
+            p.options.firstOrNull()?.let { o ->
+                Button(onClick = { onAnswer(o.index) }, modifier = Modifier.fillMaxWidth(0.7f).heightIn(min = 52.dp)) {
+                    Text(o.label, fontSize = 17.sp)
+                }
+            }
+            p.paragraphs.lastOrNull()?.let { Text(it, color = SUB, fontSize = 12.sp, modifier = Modifier.padding(top = 16.dp)) }
         }
     }
 }

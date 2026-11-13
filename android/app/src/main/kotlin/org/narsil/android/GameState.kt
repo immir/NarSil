@@ -73,7 +73,8 @@ class GameState {
         data class Text(val title: String, val initial: String, val maxBytes: Int, val random: Boolean) : Prompt
         data class Screen(val stage: String, val title: String, val paragraphs: List<String>, val options: List<ScreenOption>,
                           val stats: List<BirthStat>, val pointsLeft: Int, val pointsTotal: Int,
-                          val skills: List<Pair<String, String>> = emptyList(), val combat: List<Pair<String, String>> = emptyList()) : Prompt
+                          val skills: List<Pair<String, String>> = emptyList(), val combat: List<Pair<String, String>> = emptyList(),
+                          val verse: List<String> = emptyList()) : Prompt
         data class Abilities(val expLeft: Int, val skills: List<AbilitySkill>, val abilities: List<Ability>) : Prompt
     }
 
@@ -264,7 +265,8 @@ class GameState {
                     of("#O").mapIndexed { i, f -> ScreenOption(i, f[1].toInt(), f[2], f.getOrElse(3) { "" }, f.getOrElse(4) { "" }) },
                     of("#S").mapIndexed { i, f -> BirthStat(i, f[1], f[2].toInt(), f[3].toInt(), f[4].toInt(), f[5] == "1", f[6] == "1") },
                     points?.get(1)?.toInt() ?: 0, points?.get(2)?.toInt() ?: 0,
-                    of("#K").map { it[1] to it.getOrElse(2) { "" } }, of("#C").map { it[1] to it.getOrElse(2) { "" } })
+                    of("#K").map { it[1] to it.getOrElse(2) { "" } }, of("#C").map { it[1] to it.getOrElse(2) { "" } },
+                    of("#V").map { it.getOrElse(1) { "" } })
             }
             N.PROMPT_ABILITIES -> Prompt.Abilities(fields(lines[0], 2).getOrNull(1)?.toIntOrNull() ?: 0,
                 lines[1].split('\t').map { it.split('/') }.map { f -> AbilitySkill(f[0], f.getOrNull(1)?.toIntOrNull() ?: 0, f.getOrNull(2)?.toIntOrNull() ?: 0) },

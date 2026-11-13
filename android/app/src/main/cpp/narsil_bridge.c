@@ -385,7 +385,7 @@ static void *game_main(void *unused)
 	init_angband();
 	textui_init();
 	native_init();
-	pause_line(Term);
+	native_welcome();
 	play_game(GAME_LOAD);
 
 	textui_cleanup();

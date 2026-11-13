@@ -32,6 +32,7 @@
 #include "player-calcs.h"
 #include "player-skills.h"
 #include "project.h"
+#include "buildid.h"
 #include "ui-birth.h"
 #include "ui-game.h"
 #include "ui-history.h"
@@ -417,6 +418,48 @@ void native_do_birth(void)
 		current = next;
 		cmdq_execute(CTX_BIRTH);
 	}
+}
+
+/* ------------------------------------------------------------------------
+ * Welcome (the splash screen, news.txt, and its "press any key")
+ * ------------------------------------------------------------------------ */
+
+/* Drops {colour}...{/} markup; true if the line had any (the verse is the coloured part). */
+static bool strip_markup(char *s)
+{
+	bool marked = false;
+	char *out = s;
+	for (const char *in = s; *in; ) {
+		if (*in == '{') {
+			const char *const close = strchr(in, '}');
+			if (close) { marked = true; in = close + 1; continue; }
+		}
+		*out++ = *in++;
+	}
+	*out = '\0';
+	return marked;
+}
+
+void native_welcome(void)
+{
+	char path[1024], line[1024], prose[2048] = "";
+	begin("welcome", "NarSil");
+	path_build(path, sizeof(path), ANGBAND_DIR_SCREENS, "news.txt");
+	ang_file *const fp = file_open(path, MODE_READ, FTYPE_TEXT);
+	while (fp && file_getl(fp, line, sizeof(line))) {
+		const bool verse = strip_markup(line);
+		const char *text = line;
+		while (*text == ' ') text++;
+		if (verse) { if (*text) native_prompt_add("#V\t%s\n", text); continue; }
+		if (!*text) { if (prose[0]) para("%s", prose); prose[0] = '\0'; continue; }
+		my_strcat(prose, prose[0] ? " " : "", sizeof(prose));
+		my_strcat(prose, text, sizeof(prose));
+	}
+	if (prose[0]) para("%s", prose);
+	if (fp) file_close(fp);
+	para("Version %s", buildver);
+	option(1, "Begin", NULL, NULL);
+	(void)ask_screen();
 }
 
 /* ------------------------------------------------------------------------

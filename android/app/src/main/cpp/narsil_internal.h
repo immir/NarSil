@@ -43,6 +43,8 @@ int native_skill_points(int cmd_context, bool reset);
 void native_birth_init(void);
 void native_do_birth(void);
 void native_death_screen(void);
+/* The splash screen (news.txt) and its pause, natively. */
+void native_welcome(void);
 void native_abilities(void);
 
 /* Implemented by narsil_prompt.c (game thread, command prompt): the pack.  True if a command was queued. */
