@@ -70,6 +70,8 @@ fun InspectSheet(info: GameState.Info.Inspect, state: GameState, onDismiss: () -
                         Text(m.name, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                         if (m.state.isNotEmpty()) Text(m.state, color = Color(0xFFFFB74D), fontSize = 14.sp)
                     }
+                    if (info.isTarget) Text("◎ Target", color = Color(0xFFFF8A80), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    else if (info.targetable) FilledTonalButton(onClick = { N.nativeRequestTarget(info.x, info.y) }) { Text("Target") }
                 }
                 if (m.recall.isNotEmpty()) Text(m.recall, color = Color(0xFFC8C8CC), fontSize = 14.sp)
             }

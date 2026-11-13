@@ -305,6 +305,12 @@ JNIEXPORT void JNICALL JNI_FN(nativeRequestInspect)(JNIEnv *env, jclass cls, jin
 	nb_request_inspect(x, y);
 }
 
+JNIEXPORT void JNICALL JNI_FN(nativeRequestTarget)(JNIEnv *env, jclass cls, jint x, jint y)
+{
+	(void)env; (void)cls;
+	nb_request_target(x, y);
+}
+
 JNIEXPORT void JNICALL JNI_FN(nativeRequestLookList)(JNIEnv *env, jclass cls)
 {
 	(void)env; (void)cls;

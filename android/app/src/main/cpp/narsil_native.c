@@ -53,7 +53,7 @@ enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MA
 
 typedef struct { int32_t cp, attr_flags; } map_cell;
 
-enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_LOOK_LIST, REQ_TEST_DIE };
+enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE };
 typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; int dir; bool run; } request;
 
 /* Game thread only. */
@@ -398,9 +398,10 @@ static void inspect(struct loc g)
 	info_len = 0;
 	info_buf[0] = '\0';
 	if (!square_in_bounds(cave, g)) return;
-	info_add("Inspect\t%d\t%d\n", g.x, g.y);
-
 	struct monster *const mon = visible_monster(g);
+	info_add("Inspect\t%d\t%d\t%d\t%d\n", g.x, g.y, mon && target_able(mon),
+		mon && target_okay(0) && target_get_monster() == mon);
+
 	if (mon) {
 		char name[80], state[80] = "";
 		monster_desc(name, sizeof(name), mon, MDESC_IND_VIS | MDESC_CAPITAL);
@@ -558,6 +559,12 @@ bool native_service(bool at_prompt)
 
 	if (!map_visible()) return false;
 	if (r.kind == REQ_INSPECT) { inspect(r.grid); publish_info(); return false; }
+	if (r.kind == REQ_TARGET) {
+		if (target_set_monster(visible_monster(r.grid))) player->upkeep->redraw |= PR_HEALTH;
+		inspect(r.grid);
+		publish_info();
+		return false;
+	}
 	if (r.kind == REQ_LOOK_LIST) { look_list(); publish_info(); return false; }
 	if (!at_prompt) return false;
 	switch (r.kind) {
@@ -568,10 +575,27 @@ bool native_service(bool at_prompt)
 		case REQ_MOVE:
 		case REQ_TEST_DIE: game.stashed = r; return true;
 		case REQ_INSPECT:
+		case REQ_TARGET:
 		case REQ_LOOK_LIST:
 		case REQ_NONE: return false;
 	}
 	return false;
+}
+
+/*
+ * do_cmd_fire_at_nearest(), except that a chosen target still in view is kept
+ * rather than replaced by the closest monster.
+ */
+static void fire_at_target_or_nearest(void)
+{
+	if (!target_okay(0) || !target_get_monster()) { do_cmd_fire_at_nearest(); return; }
+	const struct object *const bow = equipped_item_by_slot_name(player, "shooting");
+	struct object *const ammo1 = equipped_item_by_slot_name(player, "first quiver");
+	struct object *const ammo = ammo1 ? ammo1 : equipped_item_by_slot_name(player, "second quiver");
+	if (!bow || !player->state.ammo_tval || !ammo) { do_cmd_fire_at_nearest(); return; }  /* it explains */
+	cmdq_push(CMD_FIRE);
+	cmd_set_arg_item(cmdq_peek(), "item", ammo);
+	cmd_set_arg_target(cmdq_peek(), "target", DIR_TARGET);
 }
 
 /* Mirrors textui_process_click() for a left click on the map. */
@@ -614,7 +638,7 @@ static void run_action(enum nb_action a)
 		case NB_ACT_PICKUP: cmdq_push(CMD_PICKUP); break;
 		case NB_ACT_STEALTH: cmdq_push(CMD_TOGGLE_STEALTH); break;
 		case NB_ACT_SONG: cmdq_push(CMD_SING); break;
-		case NB_ACT_FIRE_NEAREST: if (player_can_fire_quiver1(player, true)) do_cmd_fire_at_nearest(); break;
+		case NB_ACT_FIRE_NEAREST: if (player_can_fire_quiver1(player, true)) fire_at_target_or_nearest(); break;
 		case NB_ACT_THROW_NEAREST: if (player_has_throwable(player, true)) do_cmd_automatic_throw(); break;
 		case NB_ACT_OPEN: cmdq_push(CMD_OPEN); break;
 		case NB_ACT_CLOSE: cmdq_push(CMD_CLOSE); break;
@@ -704,6 +728,11 @@ void nb_test_die(void)
 void nb_request_inspect(int x, int y)
 {
 	post((request){ .kind = REQ_INSPECT, .grid = loc(x, y) });
+}
+
+void nb_request_target(int x, int y)
+{
+	post((request){ .kind = REQ_TARGET, .grid = loc(x, y) });
 }
 
 void nb_request_look_list(void)

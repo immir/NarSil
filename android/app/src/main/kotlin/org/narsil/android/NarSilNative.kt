@@ -98,6 +98,7 @@ object NarSilNative {
 
     /** Read-only descriptions; see nb_request_inspect() in narsil_bridge.h for the format. */
     @JvmStatic external fun nativeRequestInspect(x: Int, y: Int)
+    @JvmStatic external fun nativeRequestTarget(x: Int, y: Int)
     @JvmStatic external fun nativeRequestLookList()
     @JvmStatic external fun nativeInfoGeneration(): Long
     @JvmStatic external fun nativeInfo(): String

@@ -148,6 +148,8 @@ void nb_request_action(enum nb_action a);
  * Only what the player knows is described.
  */
 void nb_request_inspect(int x, int y);
+/* Make the visible monster at (x, y) the target, then re-inspect that grid (Inspect header field 4 = is the target). */
+void nb_request_target(int x, int y);
 void nb_request_look_list(void);
 uint64_t nb_info_generation(void);
 size_t nb_info(char *text, size_t cap);

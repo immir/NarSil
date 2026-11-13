@@ -97,7 +97,8 @@ class GameState {
 
     /** Read-only descriptions the player asked for; dismissable, the game is not waiting on them. */
     sealed interface Info {
-        data class Inspect(val x: Int, val y: Int, val monster: Monster?, val objects: List<String>, val terrain: String?) : Info
+        data class Inspect(val x: Int, val y: Int, val monster: Monster?, val objects: List<String>, val terrain: String?,
+                           val targetable: Boolean = false, val isTarget: Boolean = false) : Info
         data class LookList(val entries: List<LookEntry>) : Info
         data class Character(val sections: List<Section>) : Info
     }
@@ -301,7 +302,7 @@ class GameState {
                     }
                     i++
                 }
-                Info.Inspect(head[1].toInt(), head[2].toInt(), monster, objects, terrain)
+                Info.Inspect(head[1].toInt(), head[2].toInt(), monster, objects, terrain, head.getOrNull(3) == "1", head.getOrNull(4) == "1")
             }
             else -> null
         }

@@ -47,7 +47,7 @@ private val TOUCH_GUIDE = listOf(
         "Tap a square next to you to step there, or to attack what is there.",
         "Tap a distant square to see a path to it; tap it again to walk there.",
         "Tap your own square to pick up what is there, use a forge, or wait a turn.",
-        "Long-press any square to describe it: creature recall, objects, terrain.",
+        "Long-press any square to describe it: creature recall, objects, terrain. For a creature, Target makes it your target.",
         "Swipe to step in that direction (or run, if \"Swipe on the map runs\" is on in Options).",
         "Pinch to zoom; drag with two fingers to look around. The view follows you again once you move.",
     )),
@@ -59,6 +59,8 @@ private val TOUCH_GUIDE = listOf(
     )),
     Section("Buttons", listOf(
         "The action bar shows what fits where you stand first (stairs, items, doors, a forge, a target), then Rest, Wait, Stealth, Song, Pack and Look.",
+        "Fire shoots your first quiver at your target while it is in view, otherwise at the nearest creature. Throw works the same way.",
+        "To pick what to shoot at each time, use Pack → your arrows → Fire: tap a ringed creature, a chip, or swipe a direction.",
         "Skills appears there once you have experience to spend.",
         "☰ holds everything else: gear, map, messages, character, abilities, smithing, options, help.",
         "Tap the message strip to scroll back through old messages. When it says \"tap to continue\", a tap dismisses -more-.",
