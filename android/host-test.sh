@@ -233,6 +233,16 @@ out=$(run @prompt @answer=1 @enter @save-async @dump)
 echo "$out" | grep -q 'Welcome to Sil. The game is set within a vast dungeon'
 [ "$(md5sum < "$work/data/save/Harness")" = "$before" ]
 
+echo "== save with the panel open succeeds (screen stays up); a save asked for during a command's own prompt waits"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=15 @prompt @save @prompt @answer=-1 "${quit[@]}" 2>&1)
+echo "$out" | grep -q 'save: done'
+echo "$out" | grep -qx 'panel tab=0'
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=15 @prompt @answer=1001 @prompt @answer=100103 @prompt @save-async @prompt @answer=1 @enter @enter @prompt @answer=-1 "${quit[@]}" 2>&1)
+echo "$out" | grep -q 'save: done'
+echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=1'
+
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @walk=1 @walk=2 @walk=3 @walk=4 @walk=6 @walk=7 @walk=8 @walk=9 @run=2 @run=4 @run=6 @run=8 @walk=5 "${quit[@]}")

@@ -59,6 +59,7 @@ static struct {
 	int cur_x, cur_y;
 	bool cur_visible;
 	bool at_command_prompt;
+	bool between_commands;  /* running the native screens the command prompt opened: a save point too */
 	int saved_depth;
 	int prompts_since_save;
 	uint64_t autosaves;
@@ -148,7 +149,7 @@ static void publish_frame(void)
 /* Never in the tutorial: its character would replace the player's own save. */
 static bool safe_to_save(void)
 {
-	return game.at_command_prompt && character_generated && player
+	return (game.at_command_prompt || game.between_commands) && character_generated && player
 		&& !player->is_dead && !in_tutorial();
 }
 
@@ -193,13 +194,9 @@ static errr term_event(bool wait)
 			continue;
 		}
 		if (shared.save_requested && safe_to_save()) {
-			shared.save_requested = false;
 			pthread_mutex_unlock(&shared.lock);
-			const bool ok = save_quietly();
-			log_line(ok ? "save: done" : "save: FAILED");
+			bridge_service_save();
 			pthread_mutex_lock(&shared.lock);
-			shared.saves_done++;
-			pthread_cond_broadcast(&shared.idle_cv);
 			continue;
 		}
 		if (shared.key_len > 0 || !wait) break;
@@ -300,13 +297,22 @@ static errr get_cmd(cmd_context ctx)
 	native_prompt_init();
 	game.at_command_prompt = ctx == CTX_GAME;
 	autosave_if_due();
-	if (ctx == CTX_GAME && native_pack_resume()) {
-		game.at_command_prompt = false;
-		return 0;
+	if (ctx == CTX_GAME) {
+		game.between_commands = true;
+		const bool queued = native_pack_resume();
+		game.between_commands = false;
+		if (queued) {
+			game.at_command_prompt = false;
+			return 0;
+		}
 	}
 	const errr r = textui_get_cmd(ctx);
 	game.at_command_prompt = false;
-	if (ctx == CTX_GAME) native_run_stashed();
+	if (ctx == CTX_GAME) {
+		game.between_commands = true;
+		native_run_stashed();
+		game.between_commands = false;
+	}
 	return r;
 }
 
@@ -491,6 +497,23 @@ void nb_request_save(void)
 	/* Not idle until the game thread has seen the request (saved or deferred); a prompt defers it. */
 	if (!shared.in_prompt) shared.waiting = false;
 	pthread_cond_signal(&shared.input_cv);
+	pthread_mutex_unlock(&shared.lock);
+	/* A native screen opened between commands saves too (bridge_service_save()). */
+	native_prompt_wake();
+}
+
+void bridge_service_save(void)
+{
+	pthread_mutex_lock(&shared.lock);
+	const bool due = shared.save_requested && safe_to_save();
+	if (due) shared.save_requested = false;
+	pthread_mutex_unlock(&shared.lock);
+	if (!due) return;
+	const bool ok = save_quietly();
+	log_line(ok ? "save: done" : "save: FAILED");
+	pthread_mutex_lock(&shared.lock);
+	shared.saves_done++;
+	pthread_cond_broadcast(&shared.idle_cv);
 	pthread_mutex_unlock(&shared.lock);
 }
 

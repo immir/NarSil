@@ -82,6 +82,13 @@ static struct {
 enum { PANEL_STAY = -1 };
 static int panel_next = PANEL_STAY;
 
+void native_prompt_wake(void)
+{
+	pthread_mutex_lock(&shared.lock);
+	pthread_cond_broadcast(&shared.answered_cv);
+	pthread_mutex_unlock(&shared.lock);
+}
+
 bool native_panel_leaving(void)
 {
 	return panel_next != PANEL_STAY;
@@ -125,9 +132,16 @@ static int32_t ask(enum nb_prompt_kind kind)
 	pthread_mutex_unlock(&shared.lock);
 
 	bridge_set_idle(true);
+	bridge_service_save();  /* one asked for before this prompt opened */
 	pthread_mutex_lock(&shared.lock);
-	while (shared.answer == ANSWER_PENDING)
+	while (shared.answer == ANSWER_PENDING) {
 		pthread_cond_wait(&shared.answered_cv, &shared.lock);
+		if (shared.answer != ANSWER_PENDING) break;
+		/* Woken by nb_request_save() (native_prompt_wake). */
+		pthread_mutex_unlock(&shared.lock);
+		bridge_service_save();
+		pthread_mutex_lock(&shared.lock);
+	}
 	const int32_t answer = shared.answer;
 	shared.kind = NB_PROMPT_NONE;
 	shared.gen++;

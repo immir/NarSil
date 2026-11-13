@@ -36,6 +36,7 @@
 #include "ui-event.h"
 
 #include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
@@ -128,11 +129,12 @@ static int run_token(const char *tok)
 	if (strcmp(tok, "@save") == 0) {
 		const uint64_t before = nb_save_count();
 		nb_request_save();
-		if (!settle() || nb_save_count() != before + 1) {
-			fprintf(stderr, "save did not complete\n");
-			return 1;
+		/* Behind an open prompt the game already counts as idle, so wait for the save itself. */
+		for (int ms = 0; nb_save_count() == before; ms += 5) {
+			if (ms > WAIT_MS) { fprintf(stderr, "save did not complete\n"); return 1; }
+			nanosleep(&(struct timespec){ .tv_nsec = 5000000 }, NULL);
 		}
-		return 0;
+		return settle() ? 0 : 1;
 	}
 	int mx, my;
 	char tail;

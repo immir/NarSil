@@ -17,6 +17,10 @@ struct smithing_cost;
 
 /* Implemented by narsil_bridge.c: wake the game thread if it is waiting for input. */
 void bridge_wake_game(void);
+/* Game thread: do a requested save now if this is a safe point (the command prompt, or a screen it opened). */
+void bridge_service_save(void);
+/* Implemented by narsil_prompt.c (any thread): wake a native prompt's wait, to service a save. */
+void native_prompt_wake(void);
 
 /*
  * Implemented by narsil_bridge.c: report whether the game thread is blocked
