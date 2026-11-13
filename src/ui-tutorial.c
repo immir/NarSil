@@ -678,7 +678,10 @@ void start_tutorial(void)
 	event_add_handler(EVENT_LEAVE_WORLD, tutorial_handle_leave_world, NULL);
 
 	/* Set up UI hooks for the tutorial. */
-	tutorial_textblock_show_hook = textui_tutorial_textblock_show;
+	/* A front end may have installed its own (the Android port shows notes natively). */
+	if (!tutorial_textblock_show_hook) {
+		tutorial_textblock_show_hook = textui_tutorial_textblock_show;
+	}
 	tutorial_textblock_append_command_phrase_hook =
 		textui_tutorial_textblock_append_command_phrase;
 	tutorial_textblock_append_direction_phrase_hook =
