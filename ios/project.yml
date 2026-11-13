@@ -1,0 +1,67 @@
+# XcodeGen spec: `xcodegen generate` writes NarSil.xcodeproj (not committed).  Build the core first: ./build-core.sh
+name: NarSil
+options:
+  bundleIdPrefix: org.narsil
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    # Set to your team to run on a device (a free Apple ID works): DEVELOPMENT_TEAM: XXXXXXXXXX
+    CODE_SIGN_STYLE: Automatic
+targets:
+  NarSil:
+    type: application
+    platform: iOS
+    sources: [NarSil]
+    dependencies:
+      - framework: build/NarSilCore.xcframework
+        embed: false
+    preBuildScripts:
+      - name: Check Swift constants match narsil_bridge.h
+        script: python3 "$SRCROOT/../bridge/gen-swift-constants.py" --check "$SRCROOT/NarSil/NBConstants.swift"
+        basedOnDependencyAnalysis: false
+      - name: Copy game data into the bundle
+        script: |
+          set -e
+          dest="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/lib"
+          src="$SRCROOT/../lib"
+          rm -rf "$dest"; mkdir -p "$dest/tiles"
+          for d in gamedata customize help screens; do cp -R "$src/$d" "$dest/$d"; done
+          cp "$src/tiles/list.txt" "$dest/tiles/"; cp -R "$src/tiles/microchasm" "$dest/tiles/"
+          find "$dest" -name Makefile -delete
+        basedOnDependencyAnalysis: false
+    info:
+      path: NarSil/Info.plist
+      properties:
+        CFBundleDisplayName: NarSil
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UIStatusBarHidden: true
+        UIRequiresFullScreen: true
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.narsil.NarSil
+        TARGETED_DEVICE_FAMILY: "1,2"
+  NarSilTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - NarSilTests
+      - path: ../android/app/src/test/resources/fixtures
+        type: folder
+    dependencies:
+      - target: NarSil
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/NarSil.app/NarSil"

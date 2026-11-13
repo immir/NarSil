@@ -76,3 +76,5 @@ src/version.h
 /fonts.dir
 /lib/save/
 /lib/scores/
+/ios/*.xcodeproj
+/ios/NarSil/Info.plist
