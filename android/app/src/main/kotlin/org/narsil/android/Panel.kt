@@ -126,12 +126,27 @@ fun PanelHost(tab: Int, onAnswer: (Int) -> Unit, content: @Composable () -> Unit
                         }
                         TextButton(onClick = { onAnswer(N.PANEL_CLOSE) }) { Text("✕", fontSize = 18.sp) }
                     }
-                    Box(Modifier.weight(1f).fillMaxWidth()) {
+                    Box(Modifier.weight(1f).fillMaxWidth().swipeBetweenTabs(tab, onAnswer)) {
                         CompositionLocalProvider(LocalInPanel provides true) { content() }
                     }
                 }
             }
     }
+}
+
+/**
+ * A sideways swipe across a tab's screen: left for the next tab, right for the
+ * previous (right on the first tab closes the panel).  Controls that scroll
+ * sideways themselves (skill tabs, sliders) take their own swipes first.
+ */
+private fun Modifier.swipeBetweenTabs(tab: Int, onAnswer: (Int) -> Unit) = pointerInput(tab) {
+    var dx = 0f
+    detectHorizontalDragGestures(onDragStart = { dx = 0f }, onDragEnd = {
+        when {
+            dx < -72.dp.toPx() && tab + 1 < N.TAB_COUNT -> onAnswer(N.PANEL_TAB + tab + 1)
+            dx > 72.dp.toPx() -> onAnswer(if (tab > 0) N.PANEL_TAB + tab - 1 else N.PANEL_CLOSE)
+        }
+    }) { _, d -> dx += d }
 }
 
 /** A swipe to the right over this element calls [onClose] (the tab strip: lists below scroll vertically). */

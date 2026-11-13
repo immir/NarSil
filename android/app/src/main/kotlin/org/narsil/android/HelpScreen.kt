@@ -67,7 +67,7 @@ private val TOUCH_GUIDE = listOf(
         "Tap the message strip to scroll back through old messages. When it says \"tap to continue\", a tap dismisses -more-.",
     )),
     Section("Menus and prompts", listOf(
-        "The @ button at the right of the message strip opens the character panel: Pack, Character, Skills, Abilities, Knowledge, Smithing and Options as tabs. Pack, Skills and the ☰ entries open it at their tab. Close it with ✕, Back, a tap on the map, or a swipe right on the tabs. (Options → Display and controls can also let a swipe in from the right edge open it.)",
+        "The @ button at the right of the message strip opens the character panel: Pack, Character, Skills, Abilities, Knowledge, Smithing and Options as tabs. Pack, Skills and the ☰ entries open it at their tab. Swipe sideways across a tab to move to the next or previous one. Close it with ✕, Back, a tap on the map, a swipe right on the tabs, or a swipe right on Pack. (Options → Display and controls can also let a swipe in from the right edge open it.)",
         "Pack lists everything you carry, wear and stand on. Tap an item to open it in place with its description and actions; tap another to switch. After an action the panel comes back, except after Fire and Throw.",
         "Skill points you buy are kept when you switch tabs; Cancel on the Skills tab undoes this visit's purchases. A smithing design is kept while you look at other tabs.",
         "Item lists, aiming, directions and yes/no questions appear as native sheets; Back or the system back gesture cancels.",
