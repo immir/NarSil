@@ -69,6 +69,8 @@ class GameState {
         data class Skills(val expLeft: Int, val skills: List<Skill>) : Prompt
         data class Smith(val view: String, val title: String, val notes: List<String>, val item: SmithItem?,
                          val costs: List<SmithCost>, val description: List<String>, val options: List<SmithOption>) : Prompt
+        /** The knowledge browser: [rows] in order; [expanded] (an entry index or -1) has [text]. */
+        data class Knowledge(val view: String, val title: String, val expanded: Int, val rows: List<KnowRow>, val text: String) : Prompt
         data class Options(val page: String, val title: String, val rows: List<OptionRow>) : Prompt
         data class Text(val title: String, val initial: String, val maxBytes: Int, val random: Boolean) : Prompt
         data class Screen(val stage: String, val title: String, val paragraphs: List<String>, val options: List<ScreenOption>,
@@ -80,6 +82,10 @@ class GameState {
 
     data class Neighbour(val dir: Int, val x: Int, val y: Int, val what: String)
     data class Option(val index: Int, val label: String, val description: String)
+    sealed interface KnowRow {
+        data class Group(val title: String) : KnowRow
+        data class Entry(val index: Int, val glyph: Int, val attr: Int, val name: String, val note: String) : KnowRow
+    }
     /** A line of the options screen (narsil_options.c). */
     sealed interface OptionRow {
         data class Heading(val text: String) : OptionRow
@@ -233,6 +239,20 @@ class GameState {
             }
             N.PROMPT_TEXT -> Prompt.Text(lines[0], lines.getOrElse(1) { "" }, lines.getOrNull(2)?.toIntOrNull() ?: 19,
                                          lines.getOrNull(3) == "1")
+            N.PROMPT_KNOWLEDGE -> {
+                val head = lines[0].split('\t')
+                var n = 0
+                Prompt.Knowledge(head[1], head[2], head[3].toInt(),
+                    lines.drop(1).mapNotNull { l ->
+                        val f = l.split('\t', limit = 5)
+                        when (f[0]) {
+                            "#G" -> KnowRow.Group(f[1].replaceFirstChar { it.uppercase() })
+                            "#E" -> KnowRow.Entry(n++, f[1].toInt(), f[2].toInt(), f[3], f.getOrElse(4) { "" })
+                            else -> null
+                        }
+                    },
+                    lines.filter { it.startsWith("#T\t") }.joinToString("\n") { it.removePrefix("#T\t") }.trim())
+            }
             N.PROMPT_PACK -> {
                 val head = lines[0].split('\t')
                 val recs = lines.drop(1).filter { it.isNotEmpty() }.map { it.split('\t', limit = 7) }

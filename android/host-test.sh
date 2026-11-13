@@ -169,6 +169,14 @@ echo "$out" | grep -qP '^Screen\twelcome\tNarSil$'
 echo "$out" | grep -qP '^#V\tThe world was young'
 echo "$out" | grep -qP '^#O\t1\tBegin\t'
 
+echo "== knowledge: sections, objects with a description, unknown flavours named with their kind"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=27 @prompt @answer=1 @prompt @answer=0 @prompt @answer=-1 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qP '^#E\t[0-9]+\t[0-9]+\tCreatures\t'
+echo "$out" | grep -qP '^Knowledge\tobjects\tObjects\t0$'
+echo "$out" | grep -qP '^#E\t[0-9]+\t[0-9]+\t\S+ amulet\tunknown$'
+echo "$out" | grep -qP '^#T\t\S'
+
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @walk=1 @walk=2 @walk=3 @walk=4 @walk=6 @walk=7 @walk=8 @walk=9 @run=2 @run=4 @run=6 @run=8 @walk=5 "${quit[@]}")

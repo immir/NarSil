@@ -92,6 +92,7 @@ object NarSilNative {
     const val ACT_CHARACTER_SCREEN = 24
     const val ACT_SMITH = 25
     const val ACT_OPTIONS = 26
+    const val ACT_KNOWLEDGE = 27
 
     /** Only honoured at the command prompt. */
     @JvmStatic external fun nativeRequestAction(action: Int)
@@ -134,6 +135,8 @@ object NarSilNative {
     const val PROMPT_SCREEN = 11
     const val PROMPT_OPTIONS = 12
     const val PROMPT_PACK = 13
+    const val PROMPT_KNOWLEDGE = 14
+    const val KNOW_COLLAPSE = 99999
     const val PACK_COLLAPSE = 999
     const val PACK_EXPAND = 1000
     const val PACK_ACT = 100000

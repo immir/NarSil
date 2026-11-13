@@ -657,6 +657,7 @@ static void run_action(enum nb_action a)
 		case NB_ACT_ABILITIES: native_abilities(); break;
 		case NB_ACT_HELP: do_cmd_help(); break;
 		case NB_ACT_OPTIONS: native_options(); break;
+		case NB_ACT_KNOWLEDGE: native_knowledge(); break;
 		case NB_ACT_SKILLS: native_gain_skills(); break;
 		case NB_ACT_COUNT: break;
 	}

@@ -52,6 +52,9 @@ bool native_pack(int focus_section);
 /* At the next command prompt after a pack action: reopen the pack.  True if it queued another command. */
 bool native_pack_resume(void);
 
+/* Implemented by narsil_knowledge.c (game thread): the knowledge browser. */
+void native_knowledge(void);
+
 /* Implemented by narsil_options.c (game thread): the options screens. */
 void native_options(void);
 void native_options_birth(void);

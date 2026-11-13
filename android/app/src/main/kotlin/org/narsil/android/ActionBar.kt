@@ -75,6 +75,7 @@ fun moreActions(router: KeyRouter, showMessages: () -> Unit, showOptions: () -> 
     BarAction("Skills", run = act(N.ACT_SKILLS)),
     BarAction("Character", run = act(N.ACT_CHARACTER)),
     BarAction("Abilities", run = act(N.ACT_ABILITIES)),
+    BarAction("Knowledge", run = act(N.ACT_KNOWLEDGE)),
     BarAction("Bash", run = act(N.ACT_BASH)),
     BarAction("Tunnel", run = act(N.ACT_TUNNEL)),
     BarAction("Disarm", run = act(N.ACT_DISARM)),

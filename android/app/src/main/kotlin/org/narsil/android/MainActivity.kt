@@ -167,6 +167,7 @@ class MainActivity : ComponentActivity() {
                     is GameState.Prompt.Smith -> SmithSheet(prompt, answer)
                     is GameState.Prompt.Text -> TextPrompt(prompt) { answer(-1) }
                     is GameState.Prompt.Options -> OptionsScreen(prompt, answer)
+                    is GameState.Prompt.Knowledge -> KnowledgeScreen(prompt, state::colour, answer)
                     is GameState.Prompt.Pack -> TextScale(settings.itemScale / settings.buttonScale) { PackSheet(prompt, state::colour, answer) }
                     is GameState.Prompt.Screen -> ScreenSheet(prompt, answer, onScum = { showScum = true }.takeIf { settings.scumming })
                     is GameState.Prompt.Aim, is GameState.Prompt.Direction -> Unit  // drawn by GameLayers over the map
@@ -231,6 +232,7 @@ class MainActivity : ComponentActivity() {
         is GameState.Prompt.Screen -> if (code == Keys.ESCAPE && prompt.stage != "death") -1 else null
         is GameState.Prompt.Options -> if (code == Keys.ESCAPE) -1 else null
         is GameState.Prompt.Pack -> if (code == Keys.ESCAPE) -1 else null
+        is GameState.Prompt.Knowledge -> if (code == Keys.ESCAPE) -1 else null
         is GameState.Prompt.Skills -> when (code) {
             Keys.ESCAPE -> -1
             Keys.ENTER -> NarSilNative.SKILL_ACCEPT
