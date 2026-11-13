@@ -51,6 +51,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import android.widget.Toast
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.em
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -83,7 +86,7 @@ class MainActivity : ComponentActivity() {
         settings = Settings(applicationContext)
         onBackPressedDispatcher.addCallback(this) { router.special(Keys.ESCAPE) }
         setContent {
-            MaterialTheme(colorScheme = darkColorScheme()) { App() }
+            MaterialTheme(colorScheme = darkColorScheme(), typography = compactTypography()) { App() }
         }
     }
 
@@ -467,4 +470,15 @@ class MainActivity : ComponentActivity() {
         finishAndRemoveTask()
         Process.killProcess(Process.myPid())
     }
+}
+
+/**
+ * Material's styles fix line height in sp (bodyLarge: 24sp), which every Text
+ * inherits even at 12sp; make it proportional to the font size instead.
+ */
+private fun compactTypography(): Typography = Typography().run {
+    fun TextStyle.fit() = copy(lineHeight = 1.3.em)
+    Typography(displayLarge.fit(), displayMedium.fit(), displaySmall.fit(), headlineLarge.fit(), headlineMedium.fit(),
+               headlineSmall.fit(), titleLarge.fit(), titleMedium.fit(), titleSmall.fit(), bodyLarge.fit(), bodyMedium.fit(),
+               bodySmall.fit(), labelLarge.fit(), labelMedium.fit(), labelSmall.fit())
 }
