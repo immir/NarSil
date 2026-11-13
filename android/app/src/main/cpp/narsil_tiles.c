@@ -143,9 +143,22 @@ static bool load_tiles(void)
 	return true;
 }
 
-int32_t native_tile(const struct grid_data *grid)
+/* (row << 8) | column, or -1 if (a, c) is not a tile position. */
+static int32_t tile_of(int a, wchar_t c)
+{
+	return (a & 0x80) && (c & 0x80) ? ((a & 0x7F) << 8) | (c & 0x7F) : -1;
+}
+
+/* The tile that overlays alert monsters and glowing objects, or -1. */
+int32_t native_tile_overlay(bool glow)
 {
 	if (!load_tiles()) return -1;
+	return glow ? tile_of(tile_set.glow_a, tile_set.glow_c) : tile_of(tile_set.alert_a, tile_set.alert_c);
+}
+
+bool native_tile(const struct grid_data *grid, struct native_tile_cell *out)
+{
+	if (!load_tiles()) return false;
 	const visuals ascii = live();
 	install(&tile_set);
 	use_graphics = tile_mode;
@@ -155,5 +168,9 @@ int32_t native_tile(const struct grid_data *grid)
 	grid_data_as_text(&g, &a, &c, &ta, &tc);
 	use_graphics = GRAPHICS_NONE;
 	install(&ascii);
-	return (a & 0x80) && (c & 0x80) ? ((a & 0x7F) << 8) | (c & 0x7F) : -1;
+	out->fg = tile_of(a, c);
+	out->bg = tile_of(ta, tc);
+	out->alert = (a & GRAPHICS_ALERT_MASK) != 0;
+	out->glow = (a & GRAPHICS_GLOW_MASK) != 0;
+	return true;
 }

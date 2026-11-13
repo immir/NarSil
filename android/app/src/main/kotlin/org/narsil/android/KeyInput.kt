@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 internal fun answerByKey(prompt: GameState.Prompt, code: Int): Int? = when (prompt) {
     is GameState.Prompt.Items -> if (code == Keys.ESCAPE) -1
         else prompt.items.firstOrNull { it.label != '-' && it.label.code == code }?.index
-    is GameState.Prompt.Actions -> if (code == Keys.ESCAPE) -1 else null
     is GameState.Prompt.Check -> when (code) {
         'y'.code, 'Y'.code -> 1
         'n'.code, 'N'.code, Keys.ESCAPE -> 0
@@ -100,9 +99,6 @@ internal fun extraKeys(router: KeyRouter): List<BarAction> = listOf(
     BarAction("Esc", run = { router.special(Keys.ESCAPE) }),
     BarAction("Enter", run = { router.special(Keys.ENTER) }),
     BarAction(if (router.ctrlLatched) "Ctrl ●" else "Ctrl", run = { router.ctrlLatched = !router.ctrlLatched }),
-    BarAction("Tab", run = { router.special(Keys.TAB) }),
     BarAction("⌫", run = { router.special(Keys.BACKSPACE) }),
     BarAction("Space", run = { router.char(' '.code) }),
-    BarAction("Page up", run = { router.special(Keys.PAGE_UP) }),
-    BarAction("Page down", run = { router.special(Keys.PAGE_DOWN) }),
-) + (1..9).map { d -> BarAction("$d", run = { router.char('0'.code + d) }) }
+)

@@ -33,6 +33,7 @@
 #include "player-skills.h"
 #include "project.h"
 #include "buildid.h"
+#include "tutorial.h"
 #include "ui-birth.h"
 #include "ui-game.h"
 #include "ui-history.h"
@@ -464,6 +465,33 @@ bool native_welcome(void)
 }
 
 /* ------------------------------------------------------------------------
+ * Tutorial notes (tutorial_textblock_show_hook): a card over the map
+ * ------------------------------------------------------------------------ */
+
+static void native_tutorial_note(textblock *tb, const char *header)
+{
+	char title[120];
+	my_strcpy(title, header ? header : "Note", sizeof(title));
+	begin("note", title);
+	char line[1024];
+	size_t n = 0;
+	for (const wchar_t *w = textblock_text(tb); ; w++) {
+		if (!*w || *w == L'\n') {
+			line[n] = '\0';
+			if (n) para("%s", line);
+			n = 0;
+			if (!*w) break;
+			continue;
+		}
+		char mb[8];
+		const int k = text_wctomb(mb, *w);
+		if (k > 0 && n + (size_t)k < sizeof(line)) { memcpy(line + n, mb, (size_t)k); n += (size_t)k; }
+	}
+	option(1, "Continue", NULL, NULL);
+	(void)ask_screen();
+}
+
+/* ------------------------------------------------------------------------
  * Death (death_screen() in ui-death.c)
  * ------------------------------------------------------------------------ */
 
@@ -550,4 +578,5 @@ void native_birth_init(void)
 	event_add_handler(EVENT_ENTER_BIRTH, on_enter_birth, NULL);
 	birth_hook = native_do_birth;
 	death_hook = native_death_screen;
+	tutorial_textblock_show_hook = native_tutorial_note;
 }

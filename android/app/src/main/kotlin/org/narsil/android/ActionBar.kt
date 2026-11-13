@@ -52,6 +52,8 @@ private fun act(id: Int): () -> Unit = { N.nativeRequestAction(id) }
 fun contextActions(s: GameState.Status): List<BarAction> = buildList {
     if (s.has(N.CTX_DOWN_STAIRS)) add(BarAction("Down ▼", emphasised = true, run = act(N.ACT_GO_DOWN)))
     if (s.has(N.CTX_UP_STAIRS)) add(BarAction("Up ▲", emphasised = true, run = act(N.ACT_GO_UP)))
+    if (s.has(N.CTX_DOWN_KNOWN) && !s.has(N.CTX_DOWN_STAIRS)) add(BarAction("To ▼", run = act(N.ACT_TRAVEL_DOWN)))
+    if (s.has(N.CTX_UP_KNOWN) && !s.has(N.CTX_UP_STAIRS)) add(BarAction("To ▲", run = act(N.ACT_TRAVEL_UP)))
     if (s.has(N.CTX_FLOOR_ITEMS)) add(BarAction("Pick up", emphasised = true, run = act(N.ACT_PICKUP)))
     if (s.has(N.CTX_FORGE)) add(BarAction("Forge", emphasised = true, run = act(N.ACT_SMITH)))
     if (s.has(N.CTX_CAN_FIRE)) add(BarAction("Fire", emphasised = true, run = act(N.ACT_FIRE_NEAREST)))
@@ -75,6 +77,7 @@ fun coreActions(s: GameState.Status, restOptions: () -> Unit): List<BarAction> =
     BarAction(if (s.has(N.CTX_SINGING)) "Song ♪" else "Song", active = s.has(N.CTX_SINGING), run = act(N.ACT_SONG)),
     BarAction("Pack", run = act(N.ACT_INVENTORY)),
     BarAction("Look", run = { N.nativeRequestLookList() }),
+    BarAction("Again", run = act(N.ACT_REPEAT)),
     BarAction("Skills (${s.newExp})", active = true, run = act(N.ACT_SKILLS)).takeIf { s.newExp >= 100 },
 )
 

@@ -51,8 +51,9 @@
 
 enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MAX = 40 };
 
-/* NB_MAP_CELL_INTS per grid: glyph, attr | flags << 16, tile (or -1). */
-typedef struct { int32_t cp, attr_flags, tile; } map_cell;
+/* NB_MAP_CELL_INTS per grid: glyph, attr | flags << 16, tile, terrain tile beneath it (each or -1), then the
+ * overlay bits: NB_TILE_ALERT, NB_TILE_GLOW. */
+typedef struct { int32_t cp, attr_flags, tile, tile_bg, tile_flags; } map_cell;
 
 enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_REST };
 typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; int dir; bool run; } request;
@@ -64,8 +65,11 @@ static struct {
 	bool dirty;
 	bool messages_dirty;
 	bool built_tiles;       /* whether the map was last built with tiles */
+	struct loc stairs_down, stairs_up;  /* nearest known staircases as of the last map build, or (-1, -1) */
 	request stashed;
 } game;
+
+static bool tiles_on(void);
 
 /* Shared; guarded by `lock`. */
 static struct {
@@ -160,6 +164,8 @@ static void build_map(void)
 	const bool tiles = shared.tiles;
 	pthread_mutex_unlock(&shared.lock);
 	game.built_tiles = tiles;
+	game.stairs_down = game.stairs_up = loc(-1, -1);
+	int best_down = INT_MAX, best_up = INT_MAX;
 	const size_t n = (size_t)cave->width * (size_t)cave->height;
 	if (n > game.work_cap) {
 		game.work = mem_realloc(game.work, n * sizeof(map_cell));
@@ -171,12 +177,19 @@ static void build_map(void)
 			struct grid_data g;
 			int a, ta;
 			wchar_t c, tc;
+			if (square_isknown(cave, grid)) {
+				const int d = distance(player->grid, grid);
+				if (square_isdownstairs(player->cave, grid) && d < best_down) { best_down = d; game.stairs_down = grid; }
+				if (square_isupstairs(player->cave, grid) && d < best_up) { best_up = d; game.stairs_up = grid; }
+			}
 			map_info(grid, &g);
-			const int32_t tile = tiles ? native_tile(&g) : -1;
+			struct native_tile_cell t = { -1, -1, false, false };
+			if (tiles) (void)native_tile(&g, &t);
 			grid_data_as_text(&g, &a, &c, &ta, &tc);
 			assert(a >= 0 && a < 0x10000);
 			game.work[(size_t)y * (size_t)cave->width + (size_t)x] = (map_cell){
-				.cp = (int32_t)c, .attr_flags = a | (cell_flags(&g, grid) << 16), .tile = tile,
+				.cp = (int32_t)c, .attr_flags = a | (cell_flags(&g, grid) << 16), .tile = t.fg, .tile_bg = t.bg,
+				.tile_flags = (t.alert ? NB_TILE_ALERT : 0) | (t.glow ? NB_TILE_GLOW : 0),
 			};
 		}
 	}
@@ -191,6 +204,8 @@ static int32_t context_flags(void)
 	if (square_isdownstairs(cave, g)) f |= NB_CTX_DOWN_STAIRS;
 	if (square_object(cave, g)) f |= NB_CTX_FLOOR_ITEMS;
 	if (square_isforge(cave, g)) f |= NB_CTX_FORGE;
+	if (game.stairs_down.x >= 0 && !square_isdownstairs(cave, g)) f |= NB_CTX_DOWN_KNOWN;
+	if (game.stairs_up.x >= 0 && !square_isupstairs(cave, g)) f |= NB_CTX_UP_KNOWN;
 	if (player_can_fire_quiver1(player, false)) f |= NB_CTX_CAN_FIRE;
 	if (player_has_throwable(player, false)) f |= NB_CTX_CAN_THROW;
 	if (player->stealth_mode) f |= NB_CTX_STEALTH;
@@ -264,6 +279,11 @@ void native_publish(bool at_prompt)
 	meta[NB_META_TARGET_X] = target.x;
 	meta[NB_META_TARGET_Y] = target.y;
 	meta[NB_META_HP_WARN] = player ? player->opts.hitpoint_warn : 0;
+	meta[NB_META_TILE_ALERT] = meta[NB_META_TILE_GLOW] = -1;
+	if (tiles_on()) {
+		meta[NB_META_TILE_ALERT] = native_tile_overlay(false);
+		meta[NB_META_TILE_GLOW] = native_tile_overlay(true);
+	}
 	struct monster *const foe = visible ? tracked_foe() : NULL;
 	char foe_name[80] = "";
 	meta[NB_META_FOE_X] = meta[NB_META_FOE_Y] = -1;
@@ -667,6 +687,9 @@ static void run_action(enum nb_action a)
 	native_prompt_set_intent(a);
 	switch (a) {
 		case NB_ACT_REST: push_choice(CMD_REST, REST_COMPLETE); break;
+		case NB_ACT_REPEAT: cmdq_push(CMD_REPEAT); break;
+		case NB_ACT_TRAVEL_DOWN: if (game.stairs_down.x >= 0) push_travel(game.stairs_down); break;
+		case NB_ACT_TRAVEL_UP: if (game.stairs_up.x >= 0) push_travel(game.stairs_up); break;
 		case NB_ACT_HOLD: cmdq_push(CMD_HOLD); break;
 		case NB_ACT_GO_DOWN: cmdq_push(CMD_GO_DOWN); break;
 		case NB_ACT_GO_UP: cmdq_push(CMD_GO_UP); break;
@@ -774,6 +797,14 @@ void nb_request_rest(int turns_or_mode)
 	assert(turns_or_mode > 0 || turns_or_mode == NB_REST_AS_NEEDED || turns_or_mode == NB_REST_HP_AND_VOICE
 		|| turns_or_mode == NB_REST_HP_OR_VOICE);
 	post((request){ .kind = REQ_REST, .dir = turns_or_mode });
+}
+
+static bool tiles_on(void)
+{
+	pthread_mutex_lock(&shared.lock);
+	const bool on = shared.tiles;
+	pthread_mutex_unlock(&shared.lock);
+	return on;
 }
 
 void nb_set_tiles(bool on)

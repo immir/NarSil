@@ -24,6 +24,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +62,9 @@ fun KnowledgeScreen(p: GameState.Prompt.Knowledge, colour: (Int) -> Int, onAnswe
 /** One view; [list] is its own, so each view starts at the top. */
 @Composable
 private fun Page(p: GameState.Prompt.Knowledge, main: Boolean, list: LazyListState, colour: (Int) -> Int, onAnswer: (Int) -> Unit) {
+    var query by remember { mutableStateOf("") }
+    val rows = remember(p.rows, query) { matching(p.rows, query) }
+    val searchable = !main && p.view != "scores" && p.rows.count { it is KnowRow.Entry } > 8
     Surface(color = BG, modifier = Modifier.fillMaxSize()) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -64,11 +72,13 @@ private fun Page(p: GameState.Prompt.Knowledge, main: Boolean, list: LazyListSta
                 Text(p.title, color = GOLD, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                 if (!main) Text("${p.rows.count { it is KnowRow.Entry }}", color = SUB, fontSize = 13.sp)
             }
+            if (searchable) OutlinedTextField(query, { query = it }, singleLine = true, placeholder = { Text("Search") },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
             if (!main && p.rows.none { it is KnowRow.Entry })
                 Text(when (p.view) { "history" -> "Nothing has happened yet."; "scores" -> "No characters have ended yet."; else -> "Nothing here yet." }, color = SUB, fontSize = 14.sp,
                      modifier = Modifier.padding(16.dp))
             LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = list, contentPadding = PaddingValues(bottom = 24.dp)) {
-                items(p.rows) { row ->
+                items(rows) { row ->
                     when (row) {
                         is KnowRow.Group -> Text(row.title, color = SUB, fontSize = 13.sp,
                                                  modifier = Modifier.padding(start = 16.dp, top = 14.dp, bottom = 4.dp))
@@ -79,6 +89,24 @@ private fun Page(p: GameState.Prompt.Knowledge, main: Boolean, list: LazyListSta
             }
         }
     }
+}
+
+/** The entries whose name or note contains [query], under the headings that still have any. */
+private fun matching(rows: List<KnowRow>, query: String): List<KnowRow> {
+    val q = query.trim()
+    if (q.isEmpty()) return rows
+    val out = mutableListOf<KnowRow>()
+    var heading: KnowRow.Group? = null
+    rows.forEach { row ->
+        when (row) {
+            is KnowRow.Group -> heading = row
+            is KnowRow.Entry -> if (row.name.contains(q, ignoreCase = true) || row.note.contains(q, ignoreCase = true)) {
+                heading?.let { out += it; heading = null }
+                out += row
+            }
+        }
+    }
+    return out
 }
 
 @Composable

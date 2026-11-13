@@ -60,6 +60,8 @@ class Settings(context: Context) {
     private val scum = mutableStateOf(prefs.getBoolean("scumming", false))
     private val edge = mutableStateOf(prefs.getBoolean("edgeSwipePanel", false))
     private val tile = mutableStateOf(prefs.getBoolean("tiles", false))
+    private val buzz = mutableStateOf(prefs.getBoolean("lowHealthBuzz", true))
+    private val msgLines = mutableIntStateOf(prefs.getInt("messageLines", 3))
 
     var buttonScale: Float get() = buttons.floatValue; set(v) { buttons.floatValue = v; save("buttonScale", v) }
     var messageScale: Float get() = messageText.floatValue; set(v) { messageText.floatValue = v; save("messageScale", v) }
@@ -73,6 +75,10 @@ class Settings(context: Context) {
     var swipeRuns: Boolean get() = swipe.value; set(v) { swipe.value = v; prefs.edit().putBoolean("swipeRuns", v).apply() }
     var scumming: Boolean get() = scum.value; set(v) { scum.value = v; prefs.edit().putBoolean("scumming", v).apply() }
     var edgeSwipePanel: Boolean get() = edge.value; set(v) { edge.value = v; prefs.edit().putBoolean("edgeSwipePanel", v).apply() }
+    /** A short buzz when health falls below the game's hitpoint warning. */
+    var lowHealthBuzz: Boolean get() = buzz.value; set(v) { buzz.value = v; prefs.edit().putBoolean("lowHealthBuzz", v).apply() }
+    /** How many recent messages the strip shows (2..5). */
+    var messageLines: Int get() = msgLines.intValue; set(v) { msgLines.intValue = v.coerceIn(2, 5); prefs.edit().putInt("messageLines", msgLines.intValue).apply() }
     /** MicroChasm tiles on the map (the game is told by NarSilNative.nativeSetTiles). */
     var tiles: Boolean get() = tile.value; set(v) { tile.value = v; prefs.edit().putBoolean("tiles", v).apply(); NarSilNative.nativeSetTiles(v) }
 
@@ -113,6 +119,10 @@ fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onExportSave: ()
                 }
                 Scale("Buttons and menus", settings.buttonScale) { settings.buttonScale = it }
                 Scale("Messages", settings.messageScale) { settings.messageScale = it }
+                Label("Messages shown")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    (2..5).forEach { n -> FilterChip(selected = settings.messageLines == n, onClick = { settings.messageLines = n }, label = { Text("$n") }) }
+                }
                 Scale("Inventory and items", settings.itemScale) { settings.itemScale = it }
                 Scale("Status", settings.statusScale) { settings.statusScale = it }
 
@@ -125,10 +135,17 @@ fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onExportSave: ()
                 }
                 Hint("Tap a key to step; hold it, or drag from the centre key towards it, to run.  " +
                      "Centre: tap to wait, hold to rest; on a floating pad hold the centre then drag to move it.  " +
-                     "Beside status is portrait only (it floats in landscape).")
+                     "Beside status sits under the status in portrait and in the side column in landscape.")
                 if (settings.dpad != Settings.DPAD_OFF) {
                     Label("D-pad size  ${settings.dpadSizeDp.roundToInt()} dp")
                     Slider(settings.dpadSizeDp, { settings.dpadSizeDp = it }, valueRange = 100f..220f)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Label("Buzz when health is low")
+                        Hint("Below the game's hitpoint warning (Game options → Hitpoint warning).")
+                    }
+                    Switch(settings.lowHealthBuzz, { settings.lowHealthBuzz = it })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {

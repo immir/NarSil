@@ -90,6 +90,7 @@ enum nb_meta {
 	NB_META_NEW_EXP,    /* experience available to spend */
 	NB_META_TARGET_X, NB_META_TARGET_Y, /* the current target's grid, or -1 */
 	NB_META_HP_WARN,    /* the hitpoint warning, in tenths of maximum health (0 = off) */
+	NB_META_TILE_ALERT, NB_META_TILE_GLOW, /* the overlay tiles (row << 8 | column) for alert monsters / glowing objects, or -1 */
 	NB_META_COUNT
 };
 
@@ -116,6 +117,8 @@ enum nb_context {
 	NB_CTX_ADJ_RUBBLE      = 1 << 9,
 	NB_CTX_ADJ_TRAP        = 1 << 10, /* known, disarmable */
 	NB_CTX_FORGE           = 1 << 11, /* standing on a forge */
+	NB_CTX_DOWN_KNOWN      = 1 << 12, /* a known down staircase elsewhere on the level (NB_ACT_TRAVEL_DOWN) */
+	NB_CTX_UP_KNOWN        = 1 << 13, /* likewise up */
 };
 
 /* One-tap actions; each does what its key would at the command prompt. */
@@ -135,6 +138,8 @@ enum nb_action {
 	NB_ACT_OPTIONS,       /* game options (NB_PROMPT_OPTIONS) */
 	NB_ACT_KNOWLEDGE,     /* knowledge browser (NB_PROMPT_KNOWLEDGE) */
 	NB_ACT_PANEL,         /* the character panel at its last tab */
+	NB_ACT_REPEAT,        /* repeat the previous command (the game's 'n') */
+	NB_ACT_TRAVEL_DOWN, NB_ACT_TRAVEL_UP, /* walk to the nearest known staircase */
 	NB_ACT_COUNT
 };
 
@@ -174,10 +179,12 @@ uint64_t nb_map_generation(void);
 
 /*
  * Map cells, NB_MAP_CELL_INTS ints each: glyph (Unicode), attr | NB_CELL_* << 16,
- * and the MicroChasm tile ((row << 8) | column, 16x16 pixels in
- * lib/tiles/microchasm/16x16.png) or -1 when tiles are off (nb_set_tiles).
+ * the MicroChasm tile ((row << 8) | column, 16x16 pixels in lib/tiles/microchasm/16x16.png) or -1
+ * when tiles are off (nb_set_tiles), the terrain tile beneath it (tiles are transparent), and
+ * NB_TILE_* bits: draw the alert / glow overlay tile (NB_META_TILE_*) on top.
  */
-enum { NB_MAP_CELL_INTS = 3 };
+enum { NB_MAP_CELL_INTS = 5, NB_TILE_ALERT = 1, NB_TILE_GLOW = 2 };
+
 /* Draw the map with tiles as well (any thread); the next map snapshot has them. */
 void nb_set_tiles(bool on);
 
@@ -217,7 +224,6 @@ size_t nb_path(int32_t *xy, size_t max_pairs);
 enum nb_prompt_kind {
 	NB_PROMPT_NONE = 0,
 	NB_PROMPT_ITEM = 1,    /* answer: item line index, -1 cancel */
-	NB_PROMPT_ACTIONS = 2, /* answer: action line index, -1 back to the item list */
 	NB_PROMPT_CHECK = 3,   /* answer: 1 yes, 0 no */
 	NB_PROMPT_AIM = 4,     /* answer: 1-9 direction, NB_AIM_*, or a grid; -1 cancel */
 	NB_PROMPT_DIRECTION = 5, /* adjacent direction: answer 1-9 (5 only if allowed), -1 cancel */

@@ -43,8 +43,8 @@ import androidx.compose.ui.unit.sp
  * textui's top line when it holds something else: a prompt, or -more- (tap = Enter).
  */
 @Composable
-internal fun MessageStrip(state: GameState, onTap: () -> Unit) {
-    val recent = state.messages.takeLast(3)
+internal fun MessageStrip(state: GameState, lines: Int, onTap: () -> Unit) {
+    val recent = state.messages.takeLast(lines)
     val line0 = state.messageLine
     val more = line0.contains("-more-")
     /* The textui joins several messages on its top line; only show it when it is something else (a prompt). */
@@ -75,10 +75,10 @@ internal fun PanelButton() {
 }
 
 @Composable
-internal fun StatusStrip(state: GameState, stacked: Boolean) {
+internal fun StatusStrip(state: GameState, stacked: Boolean, buzzOnLowHealth: Boolean) {
     val s = state.status
     val line = state.statusLine
-    LowHealthBuzz(s.lowHp)
+    LowHealthBuzz(s.lowHp && buzzOnLowHealth)
     val hpColour = if (s.lowHp) Color(0xFFFF3B30) else Color(0xFFD04040)
     Column(Modifier.fillMaxWidth().background(Color(0xFF141414)).padding(horizontal = 8.dp, vertical = 4.dp)) {
         if (stacked) {

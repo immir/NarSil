@@ -5,11 +5,8 @@
  *
  *  - item:    get_item_hook.  Candidates mirror textui_get_item(); the choice
  *             goes through get_item_allow() (!* inscriptions) as in the textui.
- *  - actions: browsing (get_item with CMD_NULL, i.e. 'i'/'e'): after an item is
- *             picked, offer its actions as context_menu_object() would, with
- *             the object description inline (replacing Inspect).  A chosen
- *             command is queued with the item and get_item reports "nothing
- *             chosen", so the browse screen closes and the command runs.
+ *  - pack:    the panel's Pack tab (also what 'i' and 'e' open): every item, one expanded with its
+ *             description and actions (context_menu_object() as buttons).
  *  - check:   get_check_hook (yes/no).
  *  - aim:     get_aim_dir_hook.  Targetable monsters are offered for tapping;
  *             any other grid targets that location; swipes give a direction.
@@ -373,48 +370,6 @@ static int item_actions(const struct object *obj, action *a)
 	return n;
 }
 
-/*
- * Serialised: line 0 = item name; line 1 = glyph \t attr; one line per action
- * (valid \t label); a line "--"; then the description (may span lines).
- */
-static void publish_actions(const struct object *obj, const action *a, int n)
-{
-	char name[160];
-	describe(name, sizeof(name), obj);
-	textblock *const tb = object_info(obj, OINFO_NONE);
-	const wchar_t *const w = textblock_text(tb);
-
-	pthread_mutex_lock(&shared.lock);
-	text_reset();
-	text_add("%s\n%d\t%d\n", name, (int)object_char(obj), (int)object_attr(obj));
-	for (int i = 0; i < n; i++) text_add("%d\t%s\n", a[i].valid ? 1 : 0, a[i].label);
-	text_add("--\n");
-	for (const wchar_t *p = w; p && *p; p++) text_add_utf8((uint32_t)*p);
-	pthread_mutex_unlock(&shared.lock);
-	textblock_free(tb);
-}
-
-/* Returns true if the action was taken (or refused); false to go back to the list. */
-static bool run_action(struct object *obj)
-{
-	action a[MAX_ACTIONS];
-	const int n = item_actions(obj, a);
-	publish_actions(obj, a, n);
-	const int32_t pick = ask(NB_PROMPT_ACTIONS);
-	if (pick < 0 || pick >= n || !a[pick].valid) return false;
-
-	const cmd_code cmd = a[pick].cmd;
-	const unsigned char key = cmd_lookup_key(cmd, keymode());
-	if (!key_confirm_command(key) || !get_item_allow(obj, key, cmd, false)) return true;
-	if (cmd == CMD_IGNORE) {
-		native_ignore_menu(obj);
-	} else {
-		cmdq_push(cmd);
-		cmd_set_arg_item(cmdq_peek(), "item", obj);
-	}
-	return true;
-}
-
 /* ------------------------------------------------------------------------
  * The pack: every item in one list; the UI expands one at a time to show its
  * description and actions.  After an action the pack reopens once the command
@@ -462,7 +417,7 @@ static void publish_pack(const candidate *c, int n, int expanded, int focus)
 	if (tb) textblock_free(tb);
 }
 
-/* The chosen action, as run_action() does it; true if a command was queued. */
+/* The chosen action (context_menu_object() as native buttons); true if a command was queued. */
 static bool pack_action(struct object *obj, int k, int focus)
 {
 	action a[MAX_ACTIONS];
@@ -523,6 +478,11 @@ static bool native_get_item(struct object **choice, const char *pmt, const char 
 
 	event_signal(EVENT_MESSAGE_FLUSH);
 	*choice = NULL;
+	/* Browsing the pack or the gear ('i', 'e'): the panel's Pack tab.  At death, a plain pick (the examine screen). */
+	if (cmd == CMD_NULL && !player->is_dead && (mode & (USE_INVEN | USE_EQUIP))) {
+		(void)native_panel(NB_TAB_PACK, (mode & USE_INVEN) ? NB_ITEM_INVENTORY : NB_ITEM_EQUIPMENT);
+		return false;
+	}
 	const int n = collect(c, cmd, tester, mode);
 	if (n == 0) {
 		if (str) msg("%s", str);
@@ -535,12 +495,6 @@ static bool native_get_item(struct object **choice, const char *pmt, const char 
 		if (pick < 0 || pick >= n) return false;
 		struct object *const obj = c[pick].obj;
 
-		if (cmd == CMD_NULL) {
-			/* Browsing: act on the item here; the caller's menu sees no choice. */
-			track_object(player->upkeep, obj);
-			if (run_action(obj)) return false;
-			continue;
-		}
 		if (!get_item_allow(obj, cmd_lookup_key(cmd, keymode()), cmd, (mode & IS_HARMLESS) != 0))
 			return false;
 		*choice = obj;

@@ -49,6 +49,7 @@ private val CHOICE_STAGES = setOf("race", "house", "sex")
 @Composable
 fun ScreenSheet(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit, onScum: (() -> Unit)? = null) {
     if (p.stage == "welcome") { Welcome(p, onAnswer); return }
+    if (p.stage == "note") { NoteCard(p, onAnswer); return }
     val canGoBack = p.stage != "death" && p.stage != "race" && p.stage != "quickstart"
     Surface(color = Color(0xFF121214), modifier = Modifier.fillMaxSize()) {
         Column {
@@ -176,6 +177,28 @@ private fun Welcome(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
                 if (o.summary.isNotEmpty()) Text(o.summary, color = SUB, fontSize = 12.sp, textAlign = TextAlign.Center)
             }
             p.paragraphs.lastOrNull()?.let { Text(it, color = SUB, fontSize = 12.sp, modifier = Modifier.padding(top = 16.dp)) }
+        }
+    }
+}
+
+/** A tutorial note: a card at the bottom over the map, which stays visible. */
+@Composable
+private fun NoteCard(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
+    Box(Modifier.fillMaxSize().background(Color(0x55000000)), contentAlignment = Alignment.BottomCenter) {
+        Surface(color = Color(0xFF1E1E22), shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(max = 480.dp)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(p.title, color = GOLD, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    p.paragraphs.forEach { t ->
+                        /* Diagrams (the direction keys) keep their spacing. */
+                        val art = t.contains("  ") || t.contains('\\') || t.contains('|')
+                        Text(t, color = Color(0xFFD0D0D4), fontSize = if (art) 13.sp else 15.sp,
+                             fontFamily = if (art) androidx.compose.ui.text.font.FontFamily.Monospace else null)
+                    }
+                }
+                Button(onClick = { onAnswer(0) }, modifier = Modifier.align(Alignment.End)) { Text(p.options.firstOrNull()?.label ?: "Continue") }
+            }
         }
     }
 }

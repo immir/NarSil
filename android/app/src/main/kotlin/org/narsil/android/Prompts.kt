@@ -43,45 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.narsil.android.NarSilNative as N
 
-/** What can be done with an item picked while browsing; the description replaces Inspect. */
-@Composable
-fun ActionSheet(prompt: GameState.Prompt.Actions, colour: (Int) -> Int, onAnswer: (Int) -> Unit) {
-    Box(
-        Modifier.fillMaxSize().background(Color(0x99000000))
-            .clickable(remember { MutableInteractionSource() }, indication = null) { onAnswer(-1) },
-        contentAlignment = Alignment.BottomCenter,
-    ) {
-        Surface(
-            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            color = Color(0xFF1C1C1E),
-            modifier = Modifier.fillMaxWidth()
-                .clickable(remember { MutableInteractionSource() }, indication = null) {},
-        ) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(String(Character.toChars(prompt.glyph)), color = Color(colour(prompt.attr)),
-                         fontFamily = FontFamily.Monospace, fontSize = 28.sp)
-                    Text(prompt.name, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold,
-                         modifier = Modifier.weight(1f))
-                }
-                if (prompt.description.isNotEmpty())
-                    Text(prompt.description, color = Color(0xFFC8C8CC), fontSize = 14.sp,
-                         modifier = Modifier.heightIn(max = 220.dp).verticalScroll(rememberScrollState()))
-                prompt.actions.chunked(2).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        row.forEach { a ->
-                            FilledTonalButton(onClick = { onAnswer(a.index) }, enabled = a.valid,
-                                              modifier = Modifier.weight(1f)) { Text(a.label, maxLines = 1) }
-                        }
-                        repeat(2 - row.size) { Spacer(Modifier.weight(1f)) }
-                    }
-                }
-                TextButton(onClick = { onAnswer(-1) }, modifier = Modifier.align(Alignment.End)) { Text("Back") }
-            }
-        }
-    }
-}
-
 /** get_check: yes/no.  Dismissal counts as no, as Escape does in the textui. */
 @Composable
 fun CheckDialog(prompt: GameState.Prompt.Check, onAnswer: (Int) -> Unit) {

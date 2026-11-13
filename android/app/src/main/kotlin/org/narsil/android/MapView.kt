@@ -174,11 +174,14 @@ class MapView(context: Context, private val state: GameState, private val router
             val i = N.MAP_CELL_INTS * (y * w + x)
             val tile = map[i + 2]
             if (sheet != null && tile >= 0) {
-                val col = tile and 0xFF
-                val row = tile shr 8
-                tileSrc.set(col * TILE_PX, row * TILE_PX, (col + 1) * TILE_PX, (row + 1) * TILE_PX)
                 tileDst.set(ox + x * cw, oy + y * ch, ox + (x + 1) * cw, oy + (y + 1) * ch)
-                canvas.drawBitmap(sheet, tileSrc, tileDst, tilePaint)
+                /* Tiles are transparent: the terrain goes beneath, the alert / glow marker on top. */
+                val bg = map[i + 3]
+                if (bg >= 0 && bg != tile) drawTile(canvas, sheet, bg)
+                drawTile(canvas, sheet, tile)
+                val flags = map[i + 4]
+                if (flags and N.TILE_ALERT != 0) drawTile(canvas, sheet, state.meta[N.META_TILE_ALERT])
+                if (flags and N.TILE_GLOW != 0) drawTile(canvas, sheet, state.meta[N.META_TILE_GLOW])
             } else painter.drawCell(canvas, ox + x * cw, oy + y * ch, map[i], map[i + 1] and 0xFFFF)
         }
         drawPath(canvas, ox, oy, cw, ch)
@@ -188,6 +191,15 @@ class MapView(context: Context, private val state: GameState, private val router
         if (tx >= 0 && aim == null) canvas.drawRect(ox + tx * cw, oy + ty * ch, ox + (tx + 1) * cw, oy + (ty + 1) * ch, targetPaint)
         val (px, py) = player
         canvas.drawRect(ox + px * cw, oy + py * ch, ox + (px + 1) * cw, oy + (py + 1) * ch, playerPaint)
+    }
+
+    /** Draws tile [t] ((row << 8) | column) of [sheet] into [tileDst]. */
+    private fun drawTile(canvas: Canvas, sheet: Bitmap, t: Int) {
+        if (t < 0) return
+        val col = t and 0xFF
+        val row = t shr 8
+        tileSrc.set(col * TILE_PX, row * TILE_PX, (col + 1) * TILE_PX, (row + 1) * TILE_PX)
+        canvas.drawBitmap(sheet, tileSrc, tileDst, tilePaint)
     }
 
     private val aim get() = state.prompt as? GameState.Prompt.Aim

@@ -46,7 +46,9 @@ object NarSilNative {
     const val META_TARGET_X = 19
     const val META_TARGET_Y = 20
     const val META_HP_WARN = 21
-    const val META_COUNT = 22
+    const val META_TILE_ALERT = 22
+    const val META_TILE_GLOW = 23
+    const val META_COUNT = 24
 
     /** enum nb_stance, as sidebar text. */
     val STANCE_NAMES = arrayOf("", "Sleeping", "Unwary", "Mindless", "Fleeing", "Confident", "Aggressive")
@@ -66,6 +68,8 @@ object NarSilNative {
     const val CTX_ADJ_RUBBLE = 1 shl 9
     const val CTX_ADJ_TRAP = 1 shl 10
     const val CTX_FORGE = 1 shl 11
+    const val CTX_DOWN_KNOWN = 1 shl 12
+    const val CTX_UP_KNOWN = 1 shl 13
 
     // enum nb_action (order matters)
     const val ACT_REST = 0
@@ -97,6 +101,9 @@ object NarSilNative {
     const val ACT_OPTIONS = 26
     const val ACT_KNOWLEDGE = 27
     const val ACT_PANEL = 28
+    const val ACT_REPEAT = 29
+    const val ACT_TRAVEL_DOWN = 30
+    const val ACT_TRAVEL_UP = 31
 
     /** Only honoured at the command prompt. */
     @JvmStatic external fun nativeRequestAction(action: Int)
@@ -106,7 +113,9 @@ object NarSilNative {
     @JvmStatic external fun nativeRequestTarget(x: Int, y: Int)
     /** Map cells carry a MicroChasm tile as well (MAP_CELL_INTS per cell either way). */
     @JvmStatic external fun nativeSetTiles(on: Boolean)
-    const val MAP_CELL_INTS = 3
+    const val MAP_CELL_INTS = 5
+    const val TILE_ALERT = 1
+    const val TILE_GLOW = 2
     /** Rest: a number of turns, or REST_*. */
     @JvmStatic external fun nativeRequestRest(turnsOrMode: Int)
     const val REST_HP_AND_VOICE = -1
@@ -135,7 +144,6 @@ object NarSilNative {
 
     const val PROMPT_NONE = 0
     const val PROMPT_ITEM = 1
-    const val PROMPT_ACTIONS = 2
     const val PROMPT_CHECK = 3
     const val PROMPT_AIM = 4
     const val PROMPT_DIRECTION = 5

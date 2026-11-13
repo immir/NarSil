@@ -19,13 +19,6 @@ object Parse {
                 val f = fields(line, 6)
                 Item(i, f[0].toInt(), f[1].first(), f[2].toInt(), f[3].toInt(), f[4].toInt(), f[5])
             })
-            N.PROMPT_ACTIONS -> {
-                val split = lines.indexOf("--").takeIf { it >= 0 } ?: lines.size
-                val (glyph, attr) = fields(lines[1], 2).map(String::toInt)
-                Prompt.Actions(lines[0], glyph, attr,
-                    lines.subList(2, split).mapIndexed { i, line -> fields(line, 2).let { Action(i, it[0] == "1", it[1]) } },
-                    lines.drop(split + 1).joinToString("\n").trim())
-            }
             N.PROMPT_CHECK -> Prompt.Check(lines.joinToString(" ").trim())
             N.PROMPT_AIM -> {
                 val (range, cx, cy) = fields(lines[1], 3).map(String::toInt)

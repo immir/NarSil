@@ -58,11 +58,11 @@ echo "$out" | grep -q 'renewed energy'
 echo "$out" | grep -q 'Eat which food'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
-echo "== browse actions (eat from 'i'), yes/no (retire? no), throw (first item) + aim east"
+echo "== 'i' opens the panel's Pack tab (eat from it), yes/no (retire? no), throw (first item) + aim east"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" i @pick=0 @prompt @answer=0 @messages \
+out=$(run "${birth[@]}" i @prompt @answer=1000 @answer=100000 @enter @prompt @answer=-1 @messages \
       Q @prompt @answer=0 t @prompt @pick=0 @prompt @answer=6 @messages "${quit[@]}")
-echo "$out" | grep -q 'prompt kind=2'
+echo "$out" | grep -q 'prompt kind=13'
 echo "$out" | grep -q 'renewed energy'
 echo "$out" | grep -q 'Do you really want to retire'
 echo "$out" | grep -q 'prompt kind=4'
@@ -226,13 +226,15 @@ rm -rf "$work/data"
 out=$(run "${birth[@]}" @map @tiles @map @act=15 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qx 'player tile -1,-1'
 echo "$out" | grep -qP '^player tile [0-9]+,[0-9]+$'
+echo "$out" | grep -qP '^player terrain tile [0-9]+,[0-9]+ overlays 3083,3086$'
 echo "$out" | grep -qP '^#I\t0\ta\t44\t'
 
 echo "== tutorial from the welcome screen; it never saves over the player's own save"
 rm -rf "$work/data"
 run "${birth[@]}" "${quit[@]}" >/dev/null
 before=$(md5sum < "$work/data/save/Harness")
-out=$(run @prompt @answer=1 @enter @save-async @dump)
+out=$(run @prompt @answer=1 @enter @prompt @answer=0 @save-async)
+echo "$out" | grep -qP '^Screen\tnote\t'
 echo "$out" | grep -q 'Welcome to Sil. The game is set within a vast dungeon'
 [ "$(md5sum < "$work/data/save/Harness")" = "$before" ]
 

@@ -63,8 +63,6 @@ class GameState {
         /** The whole pack; [expanded] (an item index, or -1) shows its [actions] and [description]. */
         data class Pack(val expanded: Int, val focus: Int, val weight: Int, val limit: Int, val items: List<Item>,
                         val actions: List<Action>, val description: String, val resumed: Boolean) : Prompt
-        data class Actions(val name: String, val glyph: Int, val attr: Int, val actions: List<Action>,
-                           val description: String) : Prompt
         data class Check(val question: String) : Prompt
         data class Aim(val range: Int, val current: Pair<Int, Int>?, val targets: List<Target>) : Prompt
         data class Direction(val allowHere: Boolean, val neighbours: List<Neighbour>) : Prompt

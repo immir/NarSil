@@ -226,7 +226,6 @@ class MainActivity : ComponentActivity() {
     private fun PromptUi(state: GameState, prompt: GameState.Prompt, answer: (Int) -> Unit) {
 when (prompt) {
             is GameState.Prompt.Items -> TextScale(settings.itemScale / settings.buttonScale) { ItemSheet(prompt, state::colour, answer) }
-            is GameState.Prompt.Actions -> TextScale(settings.itemScale / settings.buttonScale) { ActionSheet(prompt, state::colour, answer) }
             is GameState.Prompt.Check -> CheckDialog(prompt, answer)
             is GameState.Prompt.Choice -> ChoiceSheet(prompt, answer)
             is GameState.Prompt.Skills -> SkillsSheet(prompt, answer)
@@ -243,7 +242,6 @@ when (prompt) {
             CharacterSheet(prompt.info, state, onDismiss = { answer(-1) }, actions = listOf(
                 "Rename" to { answer(NarSilNative.CHARACTER_RENAME) },
                 "Share dump" to { shareDumpPending = true; answer(NarSilNative.CHARACTER_DUMP) },
-                "Flags…" to { answer(NarSilNative.CHARACTER_SCREEN) },
             ))
         }
             is GameState.Prompt.Knowledge -> KnowledgeScreen(prompt, state::colour, answer)
@@ -289,7 +287,7 @@ when (prompt) {
             Column(Modifier.weight(1f).fillMaxHeight()) {
                 /* At -more- a tap continues; otherwise it opens the scrollable history. */
                 if (state.mapMode) TextScale(settings.messageScale) {
-                    MessageStrip(state) { if (state.messageLine.contains("-more-")) router.special(Keys.ENTER) else showMessages = true }
+                    MessageStrip(state, settings.messageLines) { if (state.messageLine.contains("-more-")) router.special(Keys.ENTER) else showMessages = true }
                 }
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     AndroidView(
@@ -312,28 +310,28 @@ when (prompt) {
                 }
                 if (state.mapMode && !rail) TextScale(settings.statusScale) {
                     if (dpadMode() == Settings.DPAD_DOCKED) Row(Modifier.background(Color(0xFF141414)), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f)) { StatusStrip(state, stacked = true) }
+                        Box(Modifier.weight(1f)) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz) }
                         Box(Modifier.padding(4.dp)) { Dpad(settings.dpadSizeDp, { dpad(state, it) }) }
-                    } else StatusStrip(state, stacked = false)
+                    } else StatusStrip(state, stacked = false, buzzOnLowHealth = settings.lowHealthBuzz)
                 }
                 if (state.mapMode && !rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { showMore = true } }
                 if (!state.mapMode) TextScale(settings.buttonScale) { KeyBar(state.waiting, router, { terminal?.toggleKeyboard() }) { showKeys = true } }
             }
             if (rail) Column(Modifier.width(260.dp).fillMaxHeight().background(Color(0xFF141414))) {
-                TextScale(settings.statusScale) { StatusStrip(state, stacked = true) }
+                TextScale(settings.statusScale) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz) }
                 TextScale(settings.buttonScale) { ActionRail(barActions(state), Modifier.weight(1f)) { showMore = true } }
+                if (dpadMode() == Settings.DPAD_DOCKED) Box(Modifier.fillMaxWidth().padding(4.dp), contentAlignment = Alignment.Center) {
+                    Dpad(settings.dpadSizeDp.coerceAtMost(150f), { dpad(state, it) })
+                }
             }
         }
     }
 
     private fun barActions(state: GameState) = contextActions(state.status) + coreActions(state.status) { showRest = true }
 
-    /** Docked in portrait (beside the status, which then stacks), otherwise floating; or off. */
+    /** The d-pad as set (off, docked or floating); docked is beside the status in portrait, in the side column in landscape. */
     @Composable
-    private fun dpadMode(): Int {
-        val portrait = LocalConfiguration.current.orientation != Configuration.ORIENTATION_LANDSCAPE
-        return if (settings.dpad == Settings.DPAD_DOCKED && !portrait) Settings.DPAD_FLOATING else settings.dpad
-    }
+    private fun dpadMode(): Int = settings.dpad
 
     /**
      * A d-pad gesture: answers an open aim or direction prompt; at the map prompt
