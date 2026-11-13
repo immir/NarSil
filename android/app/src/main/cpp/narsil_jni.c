@@ -311,6 +311,12 @@ JNIEXPORT void JNICALL JNI_FN(nativeRequestInspect)(JNIEnv *env, jclass cls, jin
 	nb_request_inspect(x, y);
 }
 
+JNIEXPORT void JNICALL JNI_FN(nativeRequestRest)(JNIEnv *env, jclass cls, jint turns_or_mode)
+{
+	(void)env; (void)cls;
+	nb_request_rest(turns_or_mode);
+}
+
 JNIEXPORT void JNICALL JNI_FN(nativeRequestTarget)(JNIEnv *env, jclass cls, jint x, jint y)
 {
 	(void)env; (void)cls;

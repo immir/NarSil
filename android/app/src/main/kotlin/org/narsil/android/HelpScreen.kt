@@ -59,11 +59,11 @@ private val TOUCH_GUIDE = listOf(
         "A floating pad moves if you hold the centre key and then drag. Its size and position are in Options.",
     )),
     Section("Buttons", listOf(
-        "The action bar shows what fits where you stand first (stairs, items, doors, a forge, a target), then Rest, Wait, Stealth, Song, Pack and Look.",
+        "The action bar shows what fits where you stand first (stairs, items, doors, a forge, a target), then Rest, Wait, Stealth, Song, Pack and Look. Long-press Rest to choose how long to rest.",
         "Fire shoots your first quiver at your target while it is in view, otherwise at the nearest creature. Throw works the same way.",
         "To pick what to shoot at each time, use Pack → your arrows → Fire: tap a ringed creature, a chip, or swipe a direction.",
         "Skills appears there once you have experience to spend.",
-        "☰ holds everything else: gear, map, messages, character, abilities, smithing, options, help.",
+        "☰ holds the rest: the panel, the whole-level map, messages, bash, tunnel, disarm, exchange, app options and help.",
         "Tap the message strip to scroll back through old messages. When it says \"tap to continue\", a tap dismisses -more-.",
     )),
     Section("Menus and prompts", listOf(
@@ -76,6 +76,8 @@ private val TOUCH_GUIDE = listOf(
     )),
     Section("Saving", listOf(
         "The game saves when you switch away from the app and every so often while you play.",
+        "Options (☰, or the panel's Options tab → Display and controls) can export your save to another app, or import one back.",
+        "The Character tab can rename your character and share a character dump.",
         "For testing, Options → Save scumming adds Scum (keep a copy) and Restore to ☰.",
     )),
 )

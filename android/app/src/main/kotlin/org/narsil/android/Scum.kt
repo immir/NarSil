@@ -69,13 +69,17 @@ object Scum {
      * Saves the game (only possible at the command prompt), then copies the
      * savefile.  Returns a line for the user either way.
      */
-    suspend fun take(context: Context): String {
+    /** Asks the game to save (it can only at the command prompt); true once it has. */
+    private suspend fun saveNow(): Boolean {
         val before = NarSilNative.nativeSaveCount()
         NarSilNative.nativeRequestSave()
-        val saved = withTimeoutOrNull(3000) {
-            while (NarSilNative.nativeSaveCount() == before) delay(50)
-        } != null
-        if (!saved) return "Can't save right now: finish what you're doing first."
+        return withTimeoutOrNull(3000) { while (NarSilNative.nativeSaveCount() == before) delay(50) } != null
+    }
+
+    private const val CANT_SAVE = "Can't save right now: finish what you're doing first."
+
+    suspend fun take(context: Context): String {
+        if (!saveNow()) return CANT_SAVE
         return withContext(Dispatchers.IO) {
             val src = saveFile(context)
             check(src.isFile) { "no savefile at $src" }
@@ -84,6 +88,30 @@ object Scum {
             copies(context).drop(KEEP).forEach { it.file.delete() }
             "Scum save taken."
         }
+    }
+
+    /**
+     * Saves, then copies the savefile to a dated export file for sharing; null
+     * (with [onError] told why) if the game can't save right now.
+     */
+    suspend fun export(context: Context, onError: (String) -> Unit): File? {
+        if (!saveNow()) { onError(CANT_SAVE); return null }
+        return withContext(Dispatchers.IO) {
+            val dir = File(context.cacheDir, "exports").apply { mkdirs() }
+            dir.listFiles().orEmpty().forEach { it.delete() }
+            val stamp = SimpleDateFormat("yyyy-MM-dd-HHmm", Locale.US).format(Date())
+            saveFile(context).copyTo(File(dir, "NarSil-save-$stamp.sav"), overwrite = true)
+        }
+    }
+
+    /** Copies a savefile chosen by the user in as a scum copy, ready for [restore]. */
+    suspend fun import(context: Context, uri: android.net.Uri): Copy = withContext(Dispatchers.IO) {
+        val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
+        val dest = File(dir(context), "${GameLauncher.PLAYER}-$stamp")
+        checkNotNull(context.contentResolver.openInputStream(uri)) { "can't read $uri" }.use { input ->
+            dest.outputStream().use { input.copyTo(it) }
+        }
+        Copy(dest, "imported ${label(dest)}")
     }
 
     /** Marks [copy] to be restored, and restarts the app to load it. */

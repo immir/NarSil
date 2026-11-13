@@ -150,6 +150,9 @@ void nb_request_action(enum nb_action a);
  * Only what the player knows is described.
  */
 void nb_request_inspect(int x, int y);
+/* Rest (at the command prompt): a number of turns, or one of these (REST_* in player-util.h). */
+enum { NB_REST_HP_AND_VOICE = -1, NB_REST_AS_NEEDED = -2, NB_REST_HP_OR_VOICE = -3 };
+void nb_request_rest(int turns_or_mode);
 /* Make the visible monster at (x, y) the target, then re-inspect that grid (Inspect header field 4 = is the target). */
 void nb_request_target(int x, int y);
 void nb_request_look_list(void);
@@ -245,7 +248,10 @@ enum nb_panel_tab {
 	NB_TAB_PACK, NB_TAB_CHARACTER, NB_TAB_SKILLS, NB_TAB_ABILITIES, NB_TAB_KNOWLEDGE, NB_TAB_SMITH, NB_TAB_OPTIONS,
 	NB_TAB_COUNT
 };
-enum { NB_PANEL_TAB = 1 << 24, NB_PANEL_CLOSE = NB_PANEL_TAB + NB_TAB_COUNT, NB_CHARACTER_SCREEN = 1 };
+enum { NB_PANEL_TAB = 1 << 24, NB_PANEL_CLOSE = NB_PANEL_TAB + NB_TAB_COUNT };
+/* Character tab answers: the textui character screen (equipment flags), rename, write the character dump
+ * to <data>/user/character-dump.txt (for the UI to share). */
+enum { NB_CHARACTER_SCREEN = 1, NB_CHARACTER_RENAME = 2, NB_CHARACTER_DUMP = 3 };
 /* The open panel tab, or -1 (any thread). */
 int nb_panel_tab(void);
 

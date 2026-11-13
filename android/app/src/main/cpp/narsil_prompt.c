@@ -33,8 +33,10 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-abilities.h"
+#include "player-birth.h"
 #include "player-calcs.h"
 #include "ui-options.h"
+#include "ui-birth.h"
 #include "ui-output.h"
 #include "ui-player.h"
 #include "player-skills.h"
@@ -972,6 +974,35 @@ static void set_panel_tab(int tab)
 	pthread_mutex_unlock(&shared.lock);
 }
 
+/* The 'c' of do_cmd_change_name(), as a native text prompt (with Random). */
+static void rename_character(void)
+{
+	if (arg_force_name) { msg("You are not allowed to change your name!"); return; }
+	char name[PLAYER_NAME_LEN];
+	my_strcpy(name, player->full_name, sizeof(name));
+	for (;;) {
+		pthread_mutex_lock(&shared.lock);
+		text_reset();
+		text_add("Your name\n%s\n%d\n1\n", name, (int)sizeof(name) - 1);
+		pthread_mutex_unlock(&shared.lock);
+		const int32_t a = ask(NB_PROMPT_TEXT);
+		if (a == NB_TEXT_RANDOM) { player_random_name(name, sizeof(name)); continue; }
+		if (a != 1) return;
+		native_answer_text(name, sizeof(name));
+		if (name[0]) my_strcpy(player->full_name, name, sizeof(player->full_name));
+		return;
+	}
+}
+
+/* The 's' of do_cmd_change_name(), to a fixed file the UI can share. */
+static void share_character_dump(void)
+{
+	char path[1024];
+	path_build(path, sizeof(path), ANGBAND_DIR_USER, "character-dump.txt");
+	/* No flush: a -more- now would sit under the panel. */
+	msg(dump_save(path) ? "Character dump written." : "Character dump failed!");
+}
+
 static void character_tab(void)
 {
 	for (;;) {
@@ -979,8 +1010,10 @@ static void character_tab(void)
 		native_prompt_add("%s", native_character_text());
 		native_prompt_end();
 		const int32_t a = ask(NB_PROMPT_CHARACTER);
-		if (a != NB_CHARACTER_SCREEN) return;
-		do_cmd_change_name();
+		if (a == NB_CHARACTER_SCREEN) do_cmd_change_name();
+		else if (a == NB_CHARACTER_RENAME) rename_character();
+		else if (a == NB_CHARACTER_DUMP) share_character_dump();
+		else return;
 	}
 }
 

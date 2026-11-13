@@ -211,6 +211,13 @@ echo "$out" | grep -qP '^Knowledge\thistory\t'
 echo "$out" | grep -qP '^Knowledge\tscores\t'
 echo "$out" | grep -qP 'killed by the test harness at 50 ft\t'
 
+echo "== character tab: rename (text prompt) and write the dump for sharing"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=20 @prompt @answer=2 @prompt @text=Beren @prompt @answer=3 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qx 'Your name'
+echo "$out" | grep -qP '^#S\tBeren$'
+grep -q 'Name   Beren' "$work/data/user/character-dump.txt"
+
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @walk=1 @walk=2 @walk=3 @walk=4 @walk=6 @walk=7 @walk=8 @walk=9 @run=2 @run=4 @run=6 @run=8 @walk=5 "${quit[@]}")

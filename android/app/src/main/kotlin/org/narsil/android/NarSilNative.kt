@@ -101,6 +101,11 @@ object NarSilNative {
     /** Read-only descriptions; see nb_request_inspect() in narsil_bridge.h for the format. */
     @JvmStatic external fun nativeRequestInspect(x: Int, y: Int)
     @JvmStatic external fun nativeRequestTarget(x: Int, y: Int)
+    /** Rest: a number of turns, or REST_*. */
+    @JvmStatic external fun nativeRequestRest(turnsOrMode: Int)
+    const val REST_HP_AND_VOICE = -1
+    const val REST_AS_NEEDED = -2
+    const val REST_HP_OR_VOICE = -3
     @JvmStatic external fun nativeRequestLookList()
     @JvmStatic external fun nativeInfoGeneration(): Long
     @JvmStatic external fun nativeInfo(): String
@@ -151,6 +156,8 @@ object NarSilNative {
     const val PANEL_TAB = 1 shl 24
     const val PANEL_CLOSE = PANEL_TAB + TAB_COUNT
     const val CHARACTER_SCREEN = 1
+    const val CHARACTER_RENAME = 2
+    const val CHARACTER_DUMP = 3
     /** The open panel tab, or -1. */
     @JvmStatic external fun nativePanelTab(): Int
     const val KNOW_COLLAPSE = 99999

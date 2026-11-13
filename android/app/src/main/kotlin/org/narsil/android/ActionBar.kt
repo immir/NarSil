@@ -21,6 +21,12 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,7 +37,8 @@ import androidx.compose.ui.unit.sp
 import org.narsil.android.NarSilNative as N
 
 /** One tappable action: a native action id, or an arbitrary handler. */
-data class BarAction(val label: String, val emphasised: Boolean = false, val active: Boolean = false, val run: () -> Unit)
+data class BarAction(val label: String, val emphasised: Boolean = false, val active: Boolean = false,
+                     val longPress: (() -> Unit)? = null, val run: () -> Unit)
 
 private fun act(id: Int): () -> Unit = { N.nativeRequestAction(id) }
 
@@ -57,8 +64,9 @@ fun contextActions(s: GameState.Status): List<BarAction> = buildList {
  * Sil does not level you up: experience waits to be spent (the cheapest point costs 100),
  * which matters but is not urgent, so it comes last.
  */
-fun coreActions(s: GameState.Status): List<BarAction> = listOfNotNull(
-    BarAction("Rest", run = act(N.ACT_REST)),
+/** [restOptions] opens the rest choices (long press on Rest). */
+fun coreActions(s: GameState.Status, restOptions: () -> Unit): List<BarAction> = listOfNotNull(
+    BarAction("Rest", longPress = restOptions, run = act(N.ACT_REST)),
     BarAction("Wait", run = act(N.ACT_HOLD)),
     BarAction(if (s.has(N.CTX_STEALTH)) "Stealth ●" else "Stealth", active = s.has(N.CTX_STEALTH), run = act(N.ACT_STEALTH)),
     BarAction(if (s.has(N.CTX_SINGING)) "Song ♪" else "Song", active = s.has(N.CTX_SINGING), run = act(N.ACT_SONG)),
@@ -70,18 +78,14 @@ fun coreActions(s: GameState.Status): List<BarAction> = listOfNotNull(
 /** Less frequent but necessary: behind the ☰ button. */
 fun moreActions(router: KeyRouter, showMessages: () -> Unit, showOptions: () -> Unit, showHelp: () -> Unit, toggleMap: () -> Unit,
                 toggleKeyboard: () -> Unit): List<BarAction> = listOf(
-    BarAction("Gear", run = act(N.ACT_EQUIPMENT)),
+    /* Pack, gear, character, skills, abilities, knowledge, smithing and game options live in the panel (@). */
+    BarAction("Panel", run = act(N.ACT_PANEL)),
     BarAction("Map", run = toggleMap),
     BarAction("Messages", run = showMessages),
-    BarAction("Skills", run = act(N.ACT_SKILLS)),
-    BarAction("Character", run = act(N.ACT_CHARACTER)),
-    BarAction("Abilities", run = act(N.ACT_ABILITIES)),
-    BarAction("Knowledge", run = act(N.ACT_KNOWLEDGE)),
     BarAction("Bash", run = act(N.ACT_BASH)),
     BarAction("Tunnel", run = act(N.ACT_TUNNEL)),
     BarAction("Disarm", run = act(N.ACT_DISARM)),
     BarAction("Exchange", run = act(N.ACT_EXCHANGE)),
-    BarAction("Smithing", run = act(N.ACT_SMITH)),
     BarAction("All commands", run = { router.special(Keys.ENTER) }),
     BarAction("Help", run = showHelp),
     BarAction("Options", run = showOptions),
@@ -102,10 +106,19 @@ fun ActionBar(actions: List<BarAction>, onMore: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun BarButton(a: BarAction) {
     val padding = PaddingValues(horizontal = 14.dp)
     when {
+        /* Material buttons take no long press: the same look, drawn by hand. */
+        a.longPress != null -> Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.heightIn(min = 40.dp).combinedClickable(onLongClick = a.longPress, onClick = a.run)) {
+            Box(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
+                Text(a.label, style = MaterialTheme.typography.labelLarge)
+            }
+        }
         a.emphasised -> Button(onClick = a.run, contentPadding = padding) { Text(a.label, fontWeight = FontWeight.SemiBold) }
         a.active -> Button(onClick = a.run, contentPadding = padding,
                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A5F8A))) { Text(a.label) }
@@ -139,4 +152,28 @@ fun MoreSheet(actions: List<BarAction>, onDismiss: () -> Unit) {
             }
         }
     }
+}
+
+/** Long press on Rest: the game's rest modes, or a number of turns. */
+@Composable
+fun RestSheet(onDismiss: () -> Unit, onRest: (Int) -> Unit) {
+    val choices = listOf(
+        "As needed" to N.REST_AS_NEEDED,
+        "Until health and voice are full" to N.REST_HP_AND_VOICE,
+        "Until health or voice is full" to N.REST_HP_OR_VOICE,
+        "10 turns" to 10, "50 turns" to 50, "100 turns" to 100,
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Rest") },
+        text = {
+            Column {
+                choices.forEach { (label, turns) ->
+                    Text(label, fontSize = 16.sp, modifier = Modifier.fillMaxWidth().clickable { onDismiss(); onRest(turns) }
+                        .padding(vertical = 12.dp))
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }

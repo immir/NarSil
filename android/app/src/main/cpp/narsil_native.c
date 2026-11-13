@@ -53,7 +53,7 @@ enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MA
 
 typedef struct { int32_t cp, attr_flags; } map_cell;
 
-enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE };
+enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_REST };
 typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; int dir; bool run; } request;
 
 /* Game thread only. */
@@ -583,6 +583,7 @@ bool native_service(bool at_prompt)
 		case REQ_TRAVEL:
 		case REQ_ACTION:
 		case REQ_MOVE:
+		case REQ_REST:
 		case REQ_TEST_DIE: game.stashed = r; return true;
 		case REQ_INSPECT:
 		case REQ_TARGET:
@@ -688,6 +689,8 @@ void native_run_stashed(void)
 	} else if (r.kind == REQ_ACTION) {
 		publish_path(r.grid, NULL, 0);
 		run_action(r.action);
+	} else if (r.kind == REQ_REST) {
+		push_choice(CMD_REST, r.dir);
 	} else if (r.kind == REQ_TEST_DIE) {
 		take_hit(player, player->chp + 100, "the test harness");
 	} else if (r.kind == REQ_MOVE) {
@@ -742,6 +745,13 @@ void nb_test_die(void)
 void nb_request_inspect(int x, int y)
 {
 	post((request){ .kind = REQ_INSPECT, .grid = loc(x, y) });
+}
+
+void nb_request_rest(int turns_or_mode)
+{
+	assert(turns_or_mode > 0 || turns_or_mode == NB_REST_AS_NEEDED || turns_or_mode == NB_REST_HP_AND_VOICE
+		|| turns_or_mode == NB_REST_HP_OR_VOICE);
+	post((request){ .kind = REQ_REST, .dir = turns_or_mode });
 }
 
 void nb_request_target(int x, int y)

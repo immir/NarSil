@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- What the app may hand to other apps through FileProvider (Share.kt): the character dump and save exports. -->
+<paths>
+    <files-path name="user" path="data/user/" />
+    <cache-path name="exports" path="exports/" />
+</paths>

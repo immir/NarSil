@@ -56,6 +56,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import android.widget.Toast
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
@@ -86,6 +89,12 @@ class MainActivity : ComponentActivity() {
     private var showKeys by mutableStateOf(false)
     private var showScum by mutableStateOf(false)
     private var showHelp by mutableStateOf(false)
+    private var showRest by mutableStateOf(false)
+    private var shareDumpPending = false
+    private var pendingImport by mutableStateOf<Scum.Copy?>(null)
+    private val importSave = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let { scope.launch { pendingImport = runCatching { Scum.import(applicationContext, it) }.getOrNull() } }
+    }
     private val scope = MainScope()
     private lateinit var settings: Settings
 
@@ -201,9 +210,20 @@ class MainActivity : ComponentActivity() {
                     router.intercept = { code -> if (code == Keys.ESCAPE) showOptions = false; code == Keys.ESCAPE }
                     onDispose { router.intercept = null }
                 }
-                OptionsSheet(settings, onGameOptions = { NarSilNative.nativeRequestAction(NarSilNative.ACT_OPTIONS) }) { showOptions = false }
+                OptionsSheet(settings, onGameOptions = { NarSilNative.nativeRequestAction(NarSilNative.ACT_OPTIONS) },
+                             onExportSave = ::exportSave, onImportSave = { importSave.launch(arrayOf("*/*")) }) { showOptions = false }
             }
             if (showScum) ScumSheet(this@MainActivity) { showScum = false }
+            pendingImport?.let { copy ->
+                AlertDialog(
+                    onDismissRequest = { pendingImport = null },
+                    title = { Text("Load this save?") },
+                    text = { Text("The game restarts from the imported save. Anything not exported or scummed from the current game is lost.") },
+                    confirmButton = { TextButton(onClick = { Scum.restore(this@MainActivity, copy) }) { Text("Load") } },
+                    dismissButton = { TextButton(onClick = { copy.file.delete(); pendingImport = null }) { Text("Cancel") } },
+                )
+            }
+            if (showRest) RestSheet({ showRest = false }) { NarSilNative.nativeRequestRest(it) }
             if (showHelp) {
                 DisposableEffect(Unit) {
                     router.intercept = { code -> if (code == Keys.ESCAPE) showHelp = false; code == Keys.ESCAPE }
@@ -228,7 +248,17 @@ when (prompt) {
             is GameState.Prompt.Text -> TextPrompt(prompt) { answer(-1) }
         is GameState.Prompt.Quantity -> QuantityDialog(prompt, answer)
             is GameState.Prompt.Options -> OptionsScreen(prompt, answer, onAppSettings = { showOptions = true }.takeIf { LocalInPanel.current })
-        is GameState.Prompt.Character -> CharacterSheet(prompt.info, state, onDismiss = { answer(-1) }, onMore = { answer(NarSilNative.CHARACTER_SCREEN) })
+        is GameState.Prompt.Character -> {
+            /* The dump is written in answer to CHARACTER_DUMP; the tab comes back once it exists. */
+            LaunchedEffect(prompt) {
+                if (shareDumpPending) { shareDumpPending = false; Share.file(this@MainActivity, Share.characterDump(this@MainActivity), "text/plain", "Share character dump") }
+            }
+            CharacterSheet(prompt.info, state, onDismiss = { answer(-1) }, actions = listOf(
+                "Rename" to { answer(NarSilNative.CHARACTER_RENAME) },
+                "Share dump" to { shareDumpPending = true; answer(NarSilNative.CHARACTER_DUMP) },
+                "Flags…" to { answer(NarSilNative.CHARACTER_SCREEN) },
+            ))
+        }
             is GameState.Prompt.Knowledge -> KnowledgeScreen(prompt, state::colour, answer)
             is GameState.Prompt.Pack -> TextScale(settings.itemScale / settings.buttonScale) { PackSheet(prompt, state::colour, answer) }
             is GameState.Prompt.Screen -> ScreenSheet(prompt, answer, onScum = { showScum = true }.takeIf { settings.scumming })
@@ -348,7 +378,7 @@ when (prompt) {
                 } else StatusStrip(state.status, state.statusLine, stacked = false)
             }
             if (state.mapMode) TextScale(settings.buttonScale) {
-                ActionBar(contextActions(state.status) + coreActions(state.status)) { showMore = true }
+                ActionBar(contextActions(state.status) + coreActions(state.status) { showRest = true }) { showMore = true }
             }
             else TextScale(settings.buttonScale) { KeyBar(state.waiting) }
         }
@@ -536,6 +566,14 @@ when (prompt) {
     }
 
     /** Native game state is process-global and cannot be re-initialised; end the process. */
+    /** Options → Export save: save, then hand a copy to the share sheet. */
+    private fun exportSave() {
+        scope.launch {
+            Scum.export(applicationContext) { Toast.makeText(this@MainActivity, it, Toast.LENGTH_SHORT).show() }
+                ?.let { Share.file(this@MainActivity, it, "application/octet-stream", "Export save") }
+        }
+    }
+
     /** Save scumming's quick copy (Options → Save scumming). */
     private fun scumAction(): BarAction? = BarAction("Scum") {
         scope.launch { Toast.makeText(this@MainActivity, Scum.take(applicationContext), Toast.LENGTH_SHORT).show() }

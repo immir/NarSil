@@ -19,6 +19,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -89,7 +90,7 @@ fun TextScale(scale: Float, content: @Composable () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onDismiss: () -> Unit) {
+fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onExportSave: () -> Unit, onImportSave: () -> Unit, onDismiss: () -> Unit) {
     Box(
         Modifier.fillMaxSize().background(Color(0x99000000))
             .clickable(remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
@@ -146,6 +147,12 @@ fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onDismiss: () ->
                         Hint("Adds Scum (keep a copy of your save) and Restore scum save to the ☰ menu, and Restore to the death screen.")
                     }
                     Switch(settings.scumming, { settings.scumming = it })
+                }
+                Label("Saves")
+                Hint("Export sends a copy of your save to another app (Drive, mail…). Import loads one back, replacing the current game.")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilledTonalButton(onClick = { onDismiss(); onExportSave() }) { Text("Export save") }
+                    FilledTonalButton(onClick = { onDismiss(); onImportSave() }) { Text("Import save…") }
                 }
                 TextButton(onClick = { onDismiss(); onGameOptions() }) { Text("Game options…") }
             }

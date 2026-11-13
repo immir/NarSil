@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -132,7 +133,8 @@ fun MessagesSheet(state: GameState, onDismiss: () -> Unit) {
 
 /** The character sheet: identity, stats, skills, combat, progress, history. */
 @Composable
-fun CharacterSheet(info: GameState.Info.Character, state: GameState, onDismiss: () -> Unit, onMore: (() -> Unit)? = null) {
+fun CharacterSheet(info: GameState.Info.Character, state: GameState, onDismiss: () -> Unit,
+                   actions: List<Pair<String, () -> Unit>>? = null) {
     val inPanel = LocalInPanel.current
     BottomSheet(onDismiss, tall = true) {
         Column(Modifier.padding(top = 12.dp)) {
@@ -158,12 +160,11 @@ fun CharacterSheet(info: GameState.Info.Character, state: GameState, onDismiss: 
                 }
             }
             Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (!inPanel) {
-                    FilledTonalButton(onClick = { onDismiss(); N.nativeRequestAction(N.ACT_SKILLS) }, modifier = Modifier.weight(1f)) { Text("Skills") }
-                    FilledTonalButton(onClick = { onDismiss(); N.nativeRequestAction(N.ACT_ABILITIES) }, modifier = Modifier.weight(1f)) { Text("Abilities") }
+                (actions ?: listOf("Open in panel" to { onDismiss(); N.nativeRequestAction(N.ACT_CHARACTER) })).forEach { (label, run) ->
+                    FilledTonalButton(onClick = run, modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 6.dp)) {
+                        Text(label, maxLines = 1)
+                    }
                 }
-                FilledTonalButton(onClick = { onMore?.invoke() ?: run { onDismiss(); N.nativeRequestAction(N.ACT_CHARACTER_SCREEN) } },
-                                  modifier = Modifier.weight(1f)) { Text("Rename, flags, dump…") }
             }
         }
     }
