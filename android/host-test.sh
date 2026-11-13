@@ -176,6 +176,10 @@ echo "$out" | grep -qP '^#E\t[0-9]+\t[0-9]+\tCreatures\t'
 echo "$out" | grep -qP '^Knowledge\tobjects\tObjects\t0$'
 echo "$out" | grep -qP '^#E\t[0-9]+\t[0-9]+\t\S+ amulet\tunknown$'
 echo "$out" | grep -qP '^#T\t\S'
+out=$(run "${birth[@]}" @act=27 @prompt @answer=5 @prompt @answer=-1 @prompt @answer=6 @prompt @answer=-1 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qP '^Knowledge\tfeatures\tTerrain\t-1$'
+echo "$out" | grep -A1 -P '^Knowledge\tfeatures' | grep -qP '^#G\tFloors$'
+echo "$out" | grep -qP '^#G\tTraps$'
 
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"

@@ -64,7 +64,7 @@ private fun Page(p: GameState.Prompt.Knowledge, main: Boolean, list: LazyListSta
                 if (!main) Text("${p.rows.count { it is KnowRow.Entry }}", color = SUB, fontSize = 13.sp)
             }
             if (!main && p.rows.none { it is KnowRow.Entry })
-                Text(if (p.view == "history") "Nothing has happened yet." else "Nothing here yet.", color = SUB, fontSize = 14.sp,
+                Text(when (p.view) { "history" -> "Nothing has happened yet."; "scores" -> "No characters have ended yet."; else -> "Nothing here yet." }, color = SUB, fontSize = 14.sp,
                      modifier = Modifier.padding(16.dp))
             LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = list, contentPadding = PaddingValues(bottom = 24.dp)) {
                 items(p.rows) { row ->
@@ -105,7 +105,7 @@ private fun SectionCard(e: KnowRow.Entry, colour: (Int) -> Int, onAnswer: (Int) 
 @Composable
 private fun EntryRow(e: KnowRow.Entry, p: GameState.Prompt.Knowledge, colour: (Int) -> Int, onAnswer: (Int) -> Unit) {
     val open = e.index == p.expanded
-    val expandable = p.view != "history"
+    val expandable = p.view != "history" && p.view != "scores"
     Column(Modifier.fillMaxWidth().background(if (open) OPEN else Color.Transparent).animateContentSize()) {
         Row(Modifier.fillMaxWidth().then(if (expandable) Modifier.clickable { onAnswer(if (open) N.KNOW_COLLAPSE else e.index) } else Modifier)
                 .heightIn(min = 46.dp).padding(horizontal = 16.dp, vertical = 6.dp),
