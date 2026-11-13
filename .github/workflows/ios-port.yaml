@@ -1,0 +1,70 @@
+name: iOS port
+
+# The native SwiftUI app (ios/), built without owning a Mac: core + bridge xcframework, the app and its tests on the
+# simulator, and an unsigned .ipa for sideloading.  Not the same as upstream's SDL2 build.
+on:
+  push:
+    branches: [ android ]
+    paths: [ 'ios/**', 'bridge/**', 'src/**', 'lib/**', '.github/workflows/ios-port.yaml' ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-ios-port
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tools
+        run: |
+          brew install xcodegen
+          xcodebuild -version
+          cmake --version
+
+      - name: Core and bridge xcframework
+        run: ./build-core.sh
+
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      - name: Test on the simulator
+        run: |
+          set -o pipefail
+          udid=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devs = [d for rt, ds in json.load(sys.stdin)["devices"].items() if "iOS" in rt for d in ds if "iPhone" in d["name"]]
+          print(devs[-1]["udid"])')
+          xcodebuild test -project NarSil.xcodeproj -scheme NarSil -destination "id=$udid" \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee ../xcodebuild-test.log | tail -40
+
+      - name: Unsigned device build
+        run: |
+          set -o pipefail
+          xcodebuild build -project NarSil.xcodeproj -scheme NarSil -configuration Release -sdk iphoneos \
+            -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" 2>&1 | tee ../xcodebuild-device.log | tail -20
+          rm -rf build/ipa && mkdir -p build/ipa/Payload
+          cp -R build/dd/Build/Products/Release-iphoneos/NarSil.app build/ipa/Payload/
+          (cd build/ipa && zip -qry ../NarSil.ipa Payload)
+          ls -l build/NarSil.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NarSil-ios.ipa
+          path: ios/build/NarSil.ipa
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-logs
+          path: |
+            xcodebuild-*.log
+            ios/build/**/CMakeFiles/CMakeError.log
+          retention-days: 7

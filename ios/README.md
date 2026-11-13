@@ -18,13 +18,8 @@ Expect to fix a few compile errors on the first build; known risks are listed be
 | `NarSil/RootView.swift` | bring-up screen (status, messages, prompt, a d-pad); replaced in Phase 3 |
 | `NarSilTests/ParseTests.swift` | the Android parser tests, run on the same recorded fixtures |
 
-## First build on a Mac
-```
-brew install xcodegen cmake
-./build-core.sh          # a few minutes; also regenerates NBConstants.swift
-xcodegen generate        # set DEVELOPMENT_TEAM in project.yml first to run on a device
-open NarSil.xcodeproj    # or: xcodebuild test -scheme NarSil -destination 'platform=iOS Simulator,name=iPhone 15'
-```
+## Building
+See [BUILDING.md](BUILDING.md): GitHub Actions (workflow "iOS port") or Xcode on a Mac, and how to install on the iPhone.
 
 ## Things to check on the first compile
 - `nb_state` is both a C enum and a function: if `nb_state()` is ambiguous in `Native.state`, rename the enum in the header.
