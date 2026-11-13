@@ -130,6 +130,7 @@ enum nb_action {
 	NB_ACT_SKILLS,        /* spend experience on skills */
 	NB_ACT_CHARACTER_SCREEN, /* the textui character screen (rename, equipment flags, dump) */
 	NB_ACT_SMITH,         /* smithing (at a forge to make things; elsewhere to browse) */
+	NB_ACT_OPTIONS,       /* game options (NB_PROMPT_OPTIONS) */
 	NB_ACT_COUNT
 };
 
@@ -207,6 +208,7 @@ enum nb_prompt_kind {
 	NB_PROMPT_SMITH = 9,   /* smithing: answer an option index, -1 back (see narsil_smith.c) */
 	NB_PROMPT_TEXT = 10,   /* text entry: nb_answer_text(), NB_TEXT_RANDOM, or nb_answer(-1) to cancel */
 	NB_PROMPT_SCREEN = 11, /* birth and death screens: answer an option index, NB_SCREEN_*, -1 back */
+	NB_PROMPT_OPTIONS = 12, /* game options: answer a record's answer (see narsil_options.c), -1 back */
 };
 
 /* A buffer of NB_PROMPT_CAP always holds a whole prompt (plus its kind line). */

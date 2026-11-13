@@ -66,6 +66,7 @@ class GameState {
         data class Skills(val expLeft: Int, val skills: List<Skill>) : Prompt
         data class Smith(val view: String, val title: String, val notes: List<String>, val item: SmithItem?,
                          val costs: List<SmithCost>, val description: List<String>, val options: List<SmithOption>) : Prompt
+        data class Options(val page: String, val title: String, val rows: List<OptionRow>) : Prompt
         data class Text(val title: String, val initial: String, val maxBytes: Int, val random: Boolean) : Prompt
         data class Screen(val stage: String, val title: String, val paragraphs: List<String>, val options: List<ScreenOption>,
                           val stats: List<BirthStat>, val pointsLeft: Int, val pointsTotal: Int,
@@ -75,6 +76,13 @@ class GameState {
 
     data class Neighbour(val dir: Int, val x: Int, val y: Int, val what: String)
     data class Option(val index: Int, val label: String, val description: String)
+    /** A line of the options screen (narsil_options.c). */
+    sealed interface OptionRow {
+        data class Heading(val text: String) : OptionRow
+        data class Toggle(val answer: Int, val on: Boolean, val locked: Boolean, val description: String, val name: String) : OptionRow
+        data class Number(val base: Int, val label: String, val value: Int, val min: Int, val max: Int, val detail: String) : OptionRow
+        data class Link(val answer: Int, val label: String, val detail: String) : OptionRow
+    }
     data class ScreenOption(val index: Int, val state: Int, val label: String, val summary: String, val description: String)
     data class BirthStat(val index: Int, val name: String, val value: Int, val spent: Int, val nextCost: Int,
                          val canSell: Boolean, val canBuy: Boolean)
@@ -220,6 +228,19 @@ class GameState {
             }
             N.PROMPT_TEXT -> Prompt.Text(lines[0], lines.getOrElse(1) { "" }, lines.getOrNull(2)?.toIntOrNull() ?: 19,
                                          lines.getOrNull(3) == "1")
+            N.PROMPT_OPTIONS -> {
+                val head = lines[0].split('\t')
+                Prompt.Options(head.getOrElse(1) { "" }, head.getOrElse(2) { "" },
+                    lines.drop(1).filter { it.isNotEmpty() }.map { it.split('\t') }.mapNotNull { f ->
+                        when (f[0]) {
+                            "#H" -> OptionRow.Heading(f[1])
+                            "#O" -> OptionRow.Toggle(f[1].toInt(), f[2] == "1", f[3] == "1", f[4], f.getOrElse(5) { "" })
+                            "#N" -> OptionRow.Number(f[1].toInt(), f[2], f[3].toInt(), f[4].toInt(), f[5].toInt(), f.getOrElse(6) { "" })
+                            "#L" -> OptionRow.Link(f[1].toInt(), f[2], f.getOrElse(3) { "" })
+                            else -> null
+                        }
+                    })
+            }
             N.PROMPT_SCREEN -> {
                 val head = lines[0].split('\t')
                 val recs = lines.drop(1).filter { it.isNotEmpty() }.map { it.split('\t') }

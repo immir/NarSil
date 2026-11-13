@@ -155,6 +155,7 @@ class MainActivity : ComponentActivity() {
                     is GameState.Prompt.Abilities -> AbilitiesSheet(prompt, answer)
                     is GameState.Prompt.Smith -> SmithSheet(prompt, answer)
                     is GameState.Prompt.Text -> TextPrompt(prompt) { answer(-1) }
+                    is GameState.Prompt.Options -> OptionsScreen(prompt, answer)
                     is GameState.Prompt.Screen -> ScreenSheet(prompt, answer, onScum = { showScum = true }.takeIf { settings.scumming })
                     is GameState.Prompt.Aim, is GameState.Prompt.Direction -> Unit  // drawn by GameLayers over the map
                 }
@@ -179,14 +180,14 @@ class MainActivity : ComponentActivity() {
                 TextScale(settings.messageScale / settings.buttonScale) { MessagesSheet(state) { showMessages = false } }
             }
             if (showMore) MoreSheet(moreActions(router, { showMessages = true }, { showOptions = true }) { terminal?.toggleKeyboard() } +
-                                    listOfNotNull(BarAction("Restore scum save", run = { showScum = true }).takeIf { settings.scumming })) { showMore = false }
+                                    listOfNotNull(scumAction(), BarAction("Restore scum save", run = { showScum = true }).takeIf { settings.scumming })) { showMore = false }
             if (showKeys) MoreSheet(extraKeys()) { showKeys = false }
             if (showOptions) {
                 DisposableEffect(Unit) {
                     router.intercept = { code -> if (code == Keys.ESCAPE) showOptions = false; code == Keys.ESCAPE }
                     onDispose { router.intercept = null }
                 }
-                OptionsSheet(settings, onGameOptions = { router.char('='.code) }) { showOptions = false }
+                OptionsSheet(settings, onGameOptions = { NarSilNative.nativeRequestAction(NarSilNative.ACT_OPTIONS) }) { showOptions = false }
             }
             if (showScum) ScumSheet(this@MainActivity) { showScum = false }
         }
@@ -209,6 +210,7 @@ class MainActivity : ComponentActivity() {
         is GameState.Prompt.Abilities, is GameState.Prompt.Smith -> if (code == Keys.ESCAPE) -1 else null
         is GameState.Prompt.Text -> if (code == Keys.ESCAPE) -1 else null
         is GameState.Prompt.Screen -> if (code == Keys.ESCAPE && prompt.stage != "death") -1 else null
+        is GameState.Prompt.Options -> if (code == Keys.ESCAPE) -1 else null
         is GameState.Prompt.Skills -> when (code) {
             Keys.ESCAPE -> -1
             Keys.ENTER -> NarSilNative.SKILL_ACCEPT
@@ -270,7 +272,7 @@ class MainActivity : ComponentActivity() {
                 } else StatusStrip(state.status, state.statusLine, stacked = false)
             }
             if (state.mapMode) TextScale(settings.buttonScale) {
-                ActionBar(contextActions(state.status) + coreActions(state.status) + listOfNotNull(scumAction())) { showMore = true }
+                ActionBar(contextActions(state.status) + coreActions(state.status)) { showMore = true }
             }
             else TextScale(settings.buttonScale) { KeyBar(state.waiting) }
         }

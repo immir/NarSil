@@ -155,7 +155,7 @@ static enum birth_stage quickstart_stage(void)
 		option(arg_force_name ? 0 : 1, "Change name and history", NULL, NULL);
 		option(1, "Create a new character", NULL, NULL);
 		const int32_t a = ask_screen();
-		if (a == NB_SCREEN_OPTIONS) { do_cmd_options_birth(); continue; }
+		if (a == NB_SCREEN_OPTIONS) { native_options_birth(); continue; }
 		if (a == 0) { cmdq_push(CMD_ACCEPT_CHARACTER); return BIRTH_COMPLETE; }
 		if (a == 1 && !arg_force_name) return BIRTH_NAME_CHOICE;
 		if (a == 2) {
@@ -207,7 +207,7 @@ static enum birth_stage choice_stage(enum birth_stage current)
 			}
 		}
 		const int32_t a = ask_screen();
-		if (a == NB_SCREEN_OPTIONS) { do_cmd_options_birth(); continue; }
+		if (a == NB_SCREEN_OPTIONS) { native_options_birth(); continue; }
 		if (a < 0) return BIRTH_BACK;
 		const int pick = a == NB_SCREEN_RANDOM ? randint0(n) : a;
 		if (pick < 0 || pick >= n) continue;

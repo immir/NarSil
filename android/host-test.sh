@@ -146,6 +146,16 @@ out=$(run "${birth[@]}" @die @enter @prompt @answer=5 @answer=1 @prompt)
 echo "$out" | grep -qP '^Screen\tdeath\tYou have been slain$'
 echo "$out" | grep -qP '^Screen\trace\tRace$'
 
+echo "== native options: toggle, number, locked birth page; birth options editable at birth"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=26 @prompt @answer=1007 @prompt @answer=10005 @prompt @answer=100 @prompt @answer=-1 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qP '^#O\t1007\t1\t0\tAudible beep'
+echo "$out" | grep -qP '^#N\t10000\tHitpoint warning\t5\t'
+echo "$out" | grep -qP '^#O\t1046\t0\t1\tDisconnected stairs'
+rm -rf "$work/data"
+out=$(run @enter @answer=1001 @prompt @answer=1046 @prompt @answer=-1 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc "${quit[@]}")
+echo "$out" | grep -qP '^#O\t1046\t1\t0\tDisconnected stairs'
+
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @walk=1 @walk=2 @walk=3 @walk=4 @walk=6 @walk=7 @walk=8 @walk=9 @run=2 @run=4 @run=6 @run=8 @walk=5 "${quit[@]}")

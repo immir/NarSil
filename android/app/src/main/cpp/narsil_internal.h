@@ -45,6 +45,10 @@ void native_do_birth(void);
 void native_death_screen(void);
 void native_abilities(void);
 
+/* Implemented by narsil_options.c (game thread): the options screens. */
+void native_options(void);
+void native_options_birth(void);
+
 /*
  * Implemented by narsil_prompt.c (game thread): build a prompt's text between
  * begin (takes the prompt lock, clears the text) and end, then ask (blocks for

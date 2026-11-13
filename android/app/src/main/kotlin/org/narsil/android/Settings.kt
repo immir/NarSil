@@ -133,7 +133,7 @@ fun OptionsSheet(settings: Settings, onGameOptions: () -> Unit, onDismiss: () ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Label("Save scumming (for testing)")
-                        Hint("Adds a Scum button that keeps a copy of your save, and Restore scum save in ☰ and on the death screen.")
+                        Hint("Adds Scum (keep a copy of your save) and Restore scum save to the ☰ menu, and Restore to the death screen.")
                     }
                     Switch(settings.scumming, { settings.scumming = it })
                 }
