@@ -1,5 +1,7 @@
 package org.narsil.android
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import android.os.Bundle
 import android.os.Process
 import androidx.activity.ComponentActivity
@@ -8,15 +10,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.sp
 import android.view.View
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -25,55 +21,38 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import kotlin.math.roundToInt
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import android.widget.Toast
-import android.os.VibratorManager
-import android.os.Vibrator
-import android.os.VibrationEffect
-import android.os.Build
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.AlertDialog
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material3.Typography
-import androidx.compose.ui.text.PlatformTextStyle
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.LineHeightStyle
-import androidx.compose.ui.unit.em
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withContext
 
 private sealed interface Phase {
@@ -209,7 +188,7 @@ class MainActivity : ComponentActivity() {
             }
             if (showMore) MoreSheet(moreActions(router, { showMessages = true }, { showOptions = true }, { showHelp = true }, { mapView?.toggleOverview() }) { terminal?.toggleKeyboard() } +
                                     listOfNotNull(scumAction(), BarAction("Restore scum save", run = { showScum = true }).takeIf { settings.scumming })) { showMore = false }
-            if (showKeys) MoreSheet(extraKeys()) { showKeys = false }
+            if (showKeys) MoreSheet(extraKeys(router)) { showKeys = false }
             if (showOptions) {
                 DisposableEffect(Unit) {
                     router.intercept = { code -> if (code == Keys.ESCAPE) showOptions = false; code == Keys.ESCAPE }
@@ -302,57 +281,6 @@ when (prompt) {
         }
     }
 
-    /**
-     * Keyboard answers while a native prompt is open (all other keys are swallowed):
-     * Esc cancels; item letters pick by label; y/n answer checks; keypad digits,
-     * arrows, ' (nearest) and t/5 (current target) answer aims.
-     */
-    private fun answerByKey(prompt: GameState.Prompt, code: Int): Int? = when (prompt) {
-        is GameState.Prompt.Items -> if (code == Keys.ESCAPE) -1
-            else prompt.items.firstOrNull { it.label != '-' && it.label.code == code }?.index
-        is GameState.Prompt.Actions -> if (code == Keys.ESCAPE) -1 else null
-        is GameState.Prompt.Check -> when (code) {
-            'y'.code, 'Y'.code -> 1
-            'n'.code, 'N'.code, Keys.ESCAPE -> 0
-            else -> null
-        }
-        is GameState.Prompt.Abilities, is GameState.Prompt.Smith -> if (code == Keys.ESCAPE) -1 else null
-        is GameState.Prompt.Text -> if (code == Keys.ESCAPE) -1 else null
-        is GameState.Prompt.Screen -> if (code == Keys.ESCAPE && prompt.stage != "death") -1 else null
-        is GameState.Prompt.Options -> if (code == Keys.ESCAPE) -1 else null
-        is GameState.Prompt.Pack -> if (code == Keys.ESCAPE) -1 else null
-        is GameState.Prompt.Knowledge -> if (code == Keys.ESCAPE) -1 else null
-        is GameState.Prompt.Character -> if (code == Keys.ESCAPE) -1 else null
-        is GameState.Prompt.Quantity -> if (code == Keys.ESCAPE) -1 else null
-        is GameState.Prompt.Skills -> when (code) {
-            Keys.ESCAPE -> -1
-            Keys.ENTER -> NarSilNative.SKILL_ACCEPT
-            else -> null
-        }
-        is GameState.Prompt.Choice -> if (code == Keys.ESCAPE) -1
-            else (code - 'a'.code).takeIf { it in prompt.options.indices }
-        is GameState.Prompt.Direction -> when (code) {
-            Keys.ESCAPE -> -1
-            in '1'.code..'9'.code -> (code - '0'.code).takeIf { it != 5 || prompt.allowHere }
-            Keys.ARROW_UP -> 8
-            Keys.ARROW_DOWN -> 2
-            Keys.ARROW_LEFT -> 4
-            Keys.ARROW_RIGHT -> 6
-            else -> null
-        }
-        is GameState.Prompt.Aim -> when (code) {
-            Keys.ESCAPE -> -1
-            in '1'.code..'9'.code -> (code - '0'.code).takeIf { it != 5 } ?: NarSilNative.AIM_CURRENT
-            Keys.ARROW_UP -> 8
-            Keys.ARROW_DOWN -> 2
-            Keys.ARROW_LEFT -> 4
-            Keys.ARROW_RIGHT -> 6
-            '\''.code -> NarSilNative.AIM_NEAREST
-            't'.code -> NarSilNative.AIM_CURRENT
-            else -> null
-        }
-    }
-
     @Composable
     private fun GameLayers(state: GameState) {
         /* Landscape: status and actions move to a rail on the right, so the map gets the full height. */
@@ -384,57 +312,21 @@ when (prompt) {
                 }
                 if (state.mapMode && !rail) TextScale(settings.statusScale) {
                     if (dpadMode() == Settings.DPAD_DOCKED) Row(Modifier.background(Color(0xFF141414)), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f)) { StatusStrip(state.status, state.statusLine, stacked = true) }
+                        Box(Modifier.weight(1f)) { StatusStrip(state, stacked = true) }
                         Box(Modifier.padding(4.dp)) { Dpad(settings.dpadSizeDp, { dpad(state, it) }) }
-                    } else StatusStrip(state.status, state.statusLine, stacked = false)
+                    } else StatusStrip(state, stacked = false)
                 }
                 if (state.mapMode && !rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { showMore = true } }
-                if (!state.mapMode) TextScale(settings.buttonScale) { KeyBar(state.waiting) }
+                if (!state.mapMode) TextScale(settings.buttonScale) { KeyBar(state.waiting, router, { terminal?.toggleKeyboard() }) { showKeys = true } }
             }
             if (rail) Column(Modifier.width(260.dp).fillMaxHeight().background(Color(0xFF141414))) {
-                TextScale(settings.statusScale) { StatusStrip(state.status, state.statusLine, stacked = true) }
+                TextScale(settings.statusScale) { StatusStrip(state, stacked = true) }
                 TextScale(settings.buttonScale) { ActionRail(barActions(state), Modifier.weight(1f)) { showMore = true } }
             }
         }
     }
 
     private fun barActions(state: GameState) = contextActions(state.status) + coreActions(state.status) { showRest = true }
-
-    /**
-     * The last few messages (older ones dimmer, in their game colours), plus the
-     * textui's top line when it holds something else: a prompt, or -more- (tap = Enter).
-     */
-    @Composable
-    private fun MessageStrip(state: GameState, onTap: () -> Unit) {
-        val recent = state.messages.takeLast(3)
-        val line0 = state.messageLine
-        val more = line0.contains("-more-")
-        /* The textui joins several messages on its top line; only show it when it is something else (a prompt). */
-        val banner = line0.takeIf { it.isNotEmpty() && !more && state.messages.none { m -> line0.contains(m.text) } }
-        Row(Modifier.fillMaxWidth().background(Color(0xFF141414)), verticalAlignment = Alignment.Top) {
-        Column(Modifier.weight(1f).clickable(onClick = onTap).padding(horizontal = 10.dp, vertical = 4.dp)) {
-            recent.forEachIndexed { i, m ->
-                val alpha = 0.45f + 0.55f * (i + 1) / recent.size
-                Text(if (m.count > 1) "${m.text} (x${m.count})" else m.text,
-                     color = Color(state.colour(m.attr)).copy(alpha = alpha), fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)
-            }
-            if (banner != null) Text(banner, color = Color(0xFFFFD54F), fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)
-            if (more) Text("▸ tap to continue", color = Color(0xFFFFD54F), fontSize = 13.sp, lineHeight = 16.sp)
-            if (recent.isEmpty() && banner == null && !more) Text(" ", fontSize = 14.sp)
-        }
-            PanelButton()
-        }
-    }
-
-    /** Opens the character panel (pack, character, skills, …) at its last tab. */
-    @Composable
-    private fun PanelButton() {
-        Box(Modifier.padding(4.dp).size(40.dp).background(Color(0xFF26262B), RoundedCornerShape(10.dp))
-                .clickable { NarSilNative.nativeRequestAction(NarSilNative.ACT_PANEL) },
-            contentAlignment = Alignment.Center) {
-            Text("@", color = Color(0xFFF3D27A), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace)
-        }
-    }
 
     /** Docked in portrait (beside the status, which then stacks), otherwise floating; or off. */
     @Composable
@@ -479,130 +371,6 @@ when (prompt) {
         }
     }
 
-    @Composable
-    private fun StatusStrip(s: GameState.Status, line: String, stacked: Boolean) {
-        LowHealthBuzz(s.lowHp)
-        val hpColour = if (s.lowHp) Color(0xFFFF3B30) else Color(0xFFD04040)
-        Column(Modifier.fillMaxWidth().background(Color(0xFF141414)).padding(horizontal = 8.dp, vertical = 4.dp)) {
-            if (stacked) {
-                Meter("HP", s.hp, s.maxHp, hpColour, Modifier.fillMaxWidth(), alarm = s.lowHp)
-                Meter("Voice", s.voice, s.maxVoice, Color(0xFF4080E0), Modifier.fillMaxWidth().padding(top = 4.dp))
-                Text("${s.depth * 50} ft", color = Color.White, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
-            } else Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Meter("HP", s.hp, s.maxHp, hpColour, Modifier.weight(1f), alarm = s.lowHp)
-                Meter("Voice", s.voice, s.maxVoice, Color(0xFF4080E0), Modifier.weight(1f))
-                Text("${s.depth * 50} ft", color = Color.White, fontSize = 13.sp)
-            }
-            if (line.isNotEmpty())
-                Text(line.replace(Regex("\\s{2,}"), "  ·  "), color = Color(0xFFB0B0B0), fontSize = 12.sp, maxLines = if (stacked) 3 else 1)
-            s.foe?.let { FoeLine(it) }
-        }
-    }
-
-    /** A short double buzz each time health falls below the hitpoint warning. */
-    @Composable
-    private fun LowHealthBuzz(low: Boolean) {
-        var was by remember { mutableStateOf(low) }
-        LaunchedEffect(low) {
-            if (low && !was) buzz()
-            was = low
-        }
-    }
-
-    private fun buzz() {
-        val vibrator = if (Build.VERSION.SDK_INT >= 31) getSystemService(VibratorManager::class.java)?.defaultVibrator
-                       else @Suppress("DEPRECATION") getSystemService(Vibrator::class.java)
-        if (vibrator?.hasVibrator() != true) return
-        val pattern = longArrayOf(0, 70, 90, 70)
-        if (Build.VERSION.SDK_INT >= 26) vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
-        else @Suppress("DEPRECATION") vibrator.vibrate(pattern, -1)
-    }
-
-    /** Tracked monster: glyph, name, health, alertness/morale; tap to inspect. */
-    @Composable
-    private fun FoeLine(f: GameState.Foe) {
-        val state = checkNotNull(game)
-        val cell = state.mapCell(f.x, f.y)
-        val stance = NarSilNative.STANCE_NAMES.getOrElse(f.stance) { "" }
-        val healthColour = when {
-            f.healthPct >= 60 -> Color(0xFF66BB6A)
-            f.healthPct >= 25 -> Color(0xFFFFCA28)
-            else -> Color(0xFFEF5350)
-        }
-        Row(Modifier.fillMaxWidth().clickable { NarSilNative.nativeRequestInspect(f.x, f.y) }.padding(top = 4.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(cell?.let { String(Character.toChars(it.first)) } ?: "?", fontFamily = FontFamily.Monospace,
-                 color = Color(cell?.let { state.colour(it.second) } ?: 0xFFFFFFFF.toInt()), fontSize = 16.sp)
-            Text(f.name, color = Color.White, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1f))
-            LinearProgressIndicator(progress = f.healthPct / 100f, color = healthColour, trackColor = healthColour.copy(alpha = 0.25f),
-                                    modifier = Modifier.width(80.dp).height(6.dp))
-            val morale = if (f.stance >= 4) " ${f.morale}" else ""
-            Text("$stance$morale", color = Color(0xFF90CAF9), fontSize = 12.sp)
-        }
-    }
-
-    @Composable
-    private fun Meter(label: String, value: Int, max: Int, colour: Color, modifier: Modifier, alarm: Boolean = false) {
-        Column(modifier) {
-            Text("$label $value/$max" + if (alarm) "  ⚠" else "", color = if (alarm) colour else Color.White, fontSize = 12.sp,
-                 fontWeight = if (alarm) FontWeight.Bold else FontWeight.Normal)
-            LinearProgressIndicator(
-                progress = if (max > 0) value.toFloat() / max else 0f,
-                color = colour,
-                trackColor = colour.copy(alpha = 0.25f),
-                modifier = Modifier.fillMaxWidth().height(6.dp),
-            )
-        }
-    }
-
-    /**
-     * Bottom bar for the remaining textui screens.  Taps on the screen pick menu lines
-     * and swipes move, so the bar only offers what the screen is waiting for; the
-     * rarer keys are behind ⋯.
-     */
-    @Composable
-    private fun KeyBar(waiting: GameState.Waiting) {
-        val keys: List<Pair<String, () -> Unit>> = when (waiting) {
-            GameState.Waiting.YES_NO -> listOf("Yes" to { router.char('y'.code) }, "No" to { router.char('n'.code) })
-            GameState.Waiting.MORE, GameState.Waiting.ANY_KEY -> listOf("Continue" to { router.special(Keys.ENTER) })
-            GameState.Waiting.AT_SIGN -> listOf("Confirm (@)" to { router.char('@'.code) }, "Cancel" to { router.special(Keys.ESCAPE) })
-            GameState.Waiting.MENU -> listOf("Back" to { router.special(Keys.ESCAPE) }, "OK" to { router.special(Keys.ENTER) })
-        }
-        Row(
-            Modifier.fillMaxWidth().background(Color(0xFF101012)).padding(horizontal = 6.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            keys.forEachIndexed { i, (label, action) ->
-                val padding = PaddingValues(horizontal = 14.dp)
-                if (i == 0 && waiting != GameState.Waiting.MENU || label == "OK")
-                    Button(onClick = action, contentPadding = padding, modifier = Modifier.weight(1f)) { Text(label) }
-                else FilledTonalButton(onClick = action, contentPadding = padding, modifier = Modifier.weight(1f)) { Text(label) }
-            }
-            FilledTonalButton(onClick = { terminal?.toggleKeyboard() }, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("⌨") }
-            FilledTonalButton(onClick = { showKeys = true }, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("⋯") }
-        }
-    }
-
-    /** The rarely needed keys; Ctrl latches for the next key. */
-    private fun extraKeys(): List<BarAction> = listOf(
-        BarAction("Esc", run = { router.special(Keys.ESCAPE) }),
-        BarAction("Enter", run = { router.special(Keys.ENTER) }),
-        BarAction(if (router.ctrlLatched) "Ctrl ●" else "Ctrl", run = { router.ctrlLatched = !router.ctrlLatched }),
-        BarAction("Tab", run = { router.special(Keys.TAB) }),
-        BarAction("⌫", run = { router.special(Keys.BACKSPACE) }),
-        BarAction("Space", run = { router.char(' '.code) }),
-        BarAction("Page up", run = { router.special(Keys.PAGE_UP) }),
-        BarAction("Page down", run = { router.special(Keys.PAGE_DOWN) }),
-    ) + (1..9).map { d -> BarAction("$d", run = { router.char('0'.code + d) }) }
-
-    @Composable
-    private fun Centered(text: String, action: String? = null, onAction: () -> Unit = {}) {
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text, color = Color.White)
-            if (action != null) Button(onClick = onAction, modifier = Modifier.padding(top = 16.dp)) { Text(action) }
-        }
-    }
-
     /** Native game state is process-global and cannot be re-initialised; end the process. */
     /** Options → Export save: save, then hand a copy to the share sheet. */
     private fun exportSave() {
@@ -621,17 +389,4 @@ when (prompt) {
         finishAndRemoveTask()
         Process.killProcess(Process.myPid())
     }
-}
-
-/**
- * Material's styles fix line height in sp (bodyLarge: 24sp), which every Text
- * inherits even at 12sp; make it proportional to the font size instead, and
- * drop Android's extra font padding above and below each line.
- */
-private fun compactTypography(): Typography = Typography().run {
-    fun TextStyle.fit() = copy(lineHeight = 1.3.em, platformStyle = PlatformTextStyle(includeFontPadding = false),
-                               lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both))
-    Typography(displayLarge.fit(), displayMedium.fit(), displaySmall.fit(), headlineLarge.fit(), headlineMedium.fit(),
-               headlineSmall.fit(), titleLarge.fit(), titleMedium.fit(), titleSmall.fit(), bodyLarge.fit(), bodyMedium.fit(),
-               bodySmall.fit(), labelLarge.fit(), labelMedium.fit(), labelSmall.fit())
 }
