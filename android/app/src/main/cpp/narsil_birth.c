@@ -13,12 +13,14 @@
  *   #O \t state \t label \t summary \t description    options, answered by index
  *   #S \t stat \t value \t spent \t next cost \t can sell \t can buy     (stage "stats")
  *   #P \t points left \t points in all                                 (stage "stats")
+ *   #K \t skill \t total; #C \t combat line \t value                    (stage "stats")
  * Answers: an option index; -1 back; NB_SCREEN_* below; stats use NB_SKILL_*.
  */
 #include "narsil_internal.h"
 
 #include "angband.h"
 #include "cmd-core.h"
+#include "combat.h"
 #include "game-event.h"
 #include "game-input.h"
 #include "init.h"
@@ -29,6 +31,7 @@
 #include "player-birth.h"
 #include "player-calcs.h"
 #include "player-skills.h"
+#include "project.h"
 #include "ui-birth.h"
 #include "ui-game.h"
 #include "ui-history.h"
@@ -224,6 +227,23 @@ static void on_stat_points(game_event_type type, game_event_data *data, void *us
 	stat_pts.left = data->points.remaining;
 }
 
+/* What the stats feed: each skill, then the combat lines (only those that apply yet). */
+static void stat_figures(void)
+{
+	const struct player_state *const st = &player->state;
+	for (int s = 0; s < SKILL_MAX; s++)
+		native_prompt_add("#K\t%s\t%d\n", skill_names_b[s], st->skill_use[s]);
+	/* No kit yet at birth: show dice and protection only once there is some. */
+	const int pmin = protection_roll(player, PROJ_HURT, true, MINIMISE), pmax = protection_roll(player, PROJ_HURT, true, MAXIMISE);
+	native_prompt_add("#C\tAttack\t%s\n", st->mds > 1 ? format("(%+d, %dd%d)", st->skill_use[SKILL_MELEE], st->mdd, st->mds)
+		: format("%+d", st->skill_use[SKILL_MELEE]));
+	if (st->ads > 1) native_prompt_add("#C\tBows\t(%+d, %dd%d)\n", st->skill_use[SKILL_ARCHERY], st->add, st->ads);
+	native_prompt_add("#C\tDefence\t%s\n", pmax > 0 ? format("[%+d, %d-%d]", st->skill_use[SKILL_EVASION], pmin, pmax)
+		: format("%+d", st->skill_use[SKILL_EVASION]));
+	native_prompt_add("#C\tHealth\t%d\n", player->mhp);
+	native_prompt_add("#C\tVoice\t%d\n", player->msp);
+}
+
 /* stat_points_start/command/stop: one native screen per change. */
 static enum birth_stage stats_stage(void)
 {
@@ -240,6 +260,7 @@ static enum birth_stage stats_stage(void)
 			native_prompt_add("#S\t%s\t%d\t%d\t%d\t%d\t%d\n", stat_full[i], player->state.stat_use[i], stat_pts.spent[i],
 				stat_pts.inc[i], stat_pts.spent[i] > 0, stat_pts.inc[i] <= stat_pts.left);
 		native_prompt_add("#P\t%d\t%d\n", stat_pts.left, total);
+		stat_figures();
 		const int32_t a = ask_screen();
 		if (a >= NB_SKILL_BUY && a < NB_SKILL_BUY + STAT_MAX) {
 			cmdq_push(CMD_BUY_STAT);

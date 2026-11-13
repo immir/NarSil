@@ -130,6 +130,8 @@ out=$(run @enter @answer=0 @answer=1000 @prompt @answer=0 @answer=100 @prompt @a
 echo "$out" | grep -qP '^Screen\tsex\tSex$'
 echo "$out" | grep -qP '^#S\tStrength\t1\t1\t'
 echo "$out" | grep -qP '^#P\t12\t13$'
+echo "$out" | grep -qP '^#K\tMelee\t-?[0-9]+$'
+echo "$out" | grep -qP '^#C\tDefence\t[+-][0-9]+$'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
 echo "== death screen (by retiring): character, then a new character goes straight to birth"
