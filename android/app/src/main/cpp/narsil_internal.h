@@ -45,6 +45,11 @@ void native_do_birth(void);
 void native_death_screen(void);
 void native_abilities(void);
 
+/* Implemented by narsil_prompt.c (game thread, command prompt): the pack.  True if a command was queued. */
+bool native_pack(int focus_section);
+/* At the next command prompt after a pack action: reopen the pack.  True if it queued another command. */
+bool native_pack_resume(void);
+
 /* Implemented by narsil_options.c (game thread): the options screens. */
 void native_options(void);
 void native_options_birth(void);

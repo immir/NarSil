@@ -298,6 +298,10 @@ static errr get_cmd(cmd_context ctx)
 	native_prompt_init();
 	game.at_command_prompt = ctx == CTX_GAME;
 	autosave_if_due();
+	if (ctx == CTX_GAME && native_pack_resume()) {
+		game.at_command_prompt = false;
+		return 0;
+	}
 	const errr r = textui_get_cmd(ctx);
 	game.at_command_prompt = false;
 	if (ctx == CTX_GAME) native_run_stashed();

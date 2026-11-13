@@ -133,6 +133,11 @@ object NarSilNative {
     const val PROMPT_TEXT = 10
     const val PROMPT_SCREEN = 11
     const val PROMPT_OPTIONS = 12
+    const val PROMPT_PACK = 13
+    const val PACK_COLLAPSE = 999
+    const val PACK_EXPAND = 1000
+    const val PACK_ACT = 100000
+    const val PACK_ACT_STRIDE = 100
     const val TEXT_RANDOM = 2
     const val SCREEN_RANDOM = 1000
     const val SCREEN_OPTIONS = 1001

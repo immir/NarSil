@@ -156,6 +156,12 @@ rm -rf "$work/data"
 out=$(run @enter @answer=1001 @prompt @answer=1046 @prompt @answer=-1 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc "${quit[@]}")
 echo "$out" | grep -qP '^#O\t1046\t1\t0\tDisconnected stairs'
 
+echo "== native pack: expand an item, act on it, the pack reopens with the result"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=15 @prompt @answer=1000 @prompt @answer=100000 @enter @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qP '^#A\t1\tEat$'
+echo "$out" | grep -qP '^#I\t0\ta\t[0-9]+\t[0-9]+\t[0-9]+\t2 Fragments of Lembas$'
+
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @walk=1 @walk=2 @walk=3 @walk=4 @walk=6 @walk=7 @walk=8 @walk=9 @run=2 @run=4 @run=6 @run=8 @walk=5 "${quit[@]}")

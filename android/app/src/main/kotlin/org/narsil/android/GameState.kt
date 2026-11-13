@@ -57,6 +57,9 @@ class GameState {
     /** The game's open question; mirrors enum nb_prompt_kind. */
     sealed interface Prompt {
         data class Items(val title: String, val items: List<Item>) : Prompt
+        /** The whole pack; [expanded] (an item index, or -1) shows its [actions] and [description]. */
+        data class Pack(val expanded: Int, val focus: Int, val weight: Int, val limit: Int, val items: List<Item>,
+                        val actions: List<Action>, val description: String, val resumed: Boolean) : Prompt
         data class Actions(val name: String, val glyph: Int, val attr: Int, val actions: List<Action>,
                            val description: String) : Prompt
         data class Check(val question: String) : Prompt
@@ -229,6 +232,15 @@ class GameState {
             }
             N.PROMPT_TEXT -> Prompt.Text(lines[0], lines.getOrElse(1) { "" }, lines.getOrNull(2)?.toIntOrNull() ?: 19,
                                          lines.getOrNull(3) == "1")
+            N.PROMPT_PACK -> {
+                val head = lines[0].split('\t')
+                val recs = lines.drop(1).filter { it.isNotEmpty() }.map { it.split('\t', limit = 7) }
+                Prompt.Pack(head[1].toInt(), head[2].toInt(), head[3].toInt(), head[4].toInt(),
+                    recs.filter { it[0] == "#I" }.mapIndexed { i, f -> Item(i, f[1].toInt(), f[2].first(), f[3].toInt(), f[4].toInt(), f[5].toInt(), f[6]) },
+                    recs.filter { it[0] == "#A" }.mapIndexed { i, f -> Action(i, f[1] == "1", f[2]) },
+                    lines.filter { it.startsWith("#D\t") }.joinToString("\n") { it.removePrefix("#D\t") }.trim(),
+                    head.getOrNull(5) == "1")
+            }
             N.PROMPT_OPTIONS -> {
                 val head = lines[0].split('\t')
                 Prompt.Options(head.getOrElse(1) { "" }, head.getOrElse(2) { "" },

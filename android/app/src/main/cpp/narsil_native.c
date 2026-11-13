@@ -646,8 +646,8 @@ static void run_action(enum nb_action a)
 		case NB_ACT_TUNNEL: cmdq_push(CMD_TUNNEL); break;
 		case NB_ACT_BASH: cmdq_push(CMD_BASH); break;
 		case NB_ACT_EXCHANGE: cmdq_push(CMD_EXCHANGE); break;
-		case NB_ACT_INVENTORY: do_cmd_inven(); break;
-		case NB_ACT_EQUIPMENT: do_cmd_equip(); break;
+		case NB_ACT_INVENTORY: (void)native_pack(NB_ITEM_INVENTORY); break;
+		case NB_ACT_EQUIPMENT: (void)native_pack(NB_ITEM_EQUIPMENT); break;
 		case NB_ACT_MAP: do_cmd_view_map(); break;
 		case NB_ACT_LOOK: do_cmd_look(); break;
 		case NB_ACT_MESSAGES: do_cmd_messages(); break;

@@ -66,6 +66,7 @@ private val TOUCH_GUIDE = listOf(
         "Tap the message strip to scroll back through old messages. When it says \"tap to continue\", a tap dismisses -more-.",
     )),
     Section("Menus and prompts", listOf(
+        "Pack (and Gear in ☰) lists everything you carry, wear and stand on. Tap an item to open it in place with its description and actions; tap another to switch. After an action the pack comes back, except after Fire and Throw.",
         "Item lists, aiming, directions and yes/no questions appear as native sheets; Back or the system back gesture cancels.",
         "When aiming, tap a ringed creature or use the buttons; when asked for a direction, tap a neighbouring square or swipe.",
         "A few screens are still the game's text menus. Use the buttons at the bottom (Back, OK, Continue) or ⌨ for the keyboard; ⋯ has Esc, Enter, Ctrl and other keys.",

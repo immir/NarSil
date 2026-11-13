@@ -33,6 +33,7 @@
 #include "obj-util.h"
 #include "player-abilities.h"
 #include "player-calcs.h"
+#include "ui-output.h"
 #include "player-skills.h"
 #include "songs.h"
 #include "player-path.h"
@@ -313,6 +314,106 @@ static bool run_action(struct object *obj)
 		cmd_set_arg_item(cmdq_peek(), "item", obj);
 	}
 	return true;
+}
+
+/* ------------------------------------------------------------------------
+ * The pack: every item in one list; the UI expands one at a time to show its
+ * description and actions.  After an action the pack reopens once the command
+ * has run (see native_pack_resume()), except for aimed ones.
+ * ------------------------------------------------------------------------ */
+
+enum { PACK_COLLAPSE = NB_PACK_COLLAPSE, PACK_EXPAND = NB_PACK_EXPAND, PACK_ACT = NB_PACK_ACT, PACK_ACT_STRIDE = NB_PACK_ACT_STRIDE };
+
+static struct { bool reopen; int focus; } pack_after;
+static bool pack_resumed;  /* this showing reopens the pack after an action */
+
+/*
+ * Serialised: "Pack" \t expanded item (-1 none) \t section to show first \t
+ * weight carried \t limit (tenths of lb) \t 1 if reopened after an action; per item "#I \t section \t label \t
+ * glyph \t attr \t weight \t name"; then for the expanded item "#A \t valid
+ * \t label" per action and "#D \t line" per description line.
+ */
+static void publish_pack(const candidate *c, int n, int expanded, int focus)
+{
+	action a[MAX_ACTIONS];
+	const int na = expanded >= 0 ? item_actions(c[expanded].obj, a) : 0;
+	textblock *const tb = expanded >= 0 ? object_info(c[expanded].obj, OINFO_NONE) : NULL;
+
+	pthread_mutex_lock(&shared.lock);
+	text_reset();
+	text_add("Pack\t%d\t%d\t%d\t%d\t%d\n", expanded, focus, player->upkeep->total_weight, weight_limit(player->state), pack_resumed);
+	for (int i = 0; i < n; i++) {
+		const struct object *const obj = c[i].obj;
+		char name[160];
+		describe(name, sizeof(name), obj);
+		const char label = c[i].section == NB_ITEM_FLOOR ? 0 : gear_to_label(player, (struct object *)obj);
+		text_add("#I\t%d\t%c\t%d\t%d\t%d\t%s\n", (int)c[i].section, label ? label : '-',
+			(int)object_char(obj), (int)object_attr(obj), obj->weight * obj->number, name);
+	}
+	for (int i = 0; i < na; i++) text_add("#A\t%d\t%s\n", a[i].valid ? 1 : 0, a[i].label);
+	if (tb) {
+		text_add("#D\t");
+		for (const wchar_t *p = textblock_text(tb); p && *p; p++) {
+			if (*p == L'\n') text_add("\n#D\t");
+			else text_add_utf8(*p == L'\t' ? ' ' : (uint32_t)*p);
+		}
+		text_add("\n");
+	}
+	pthread_mutex_unlock(&shared.lock);
+	if (tb) textblock_free(tb);
+}
+
+/* The chosen action, as run_action() does it; true if a command was queued. */
+static bool pack_action(struct object *obj, int k, int focus)
+{
+	action a[MAX_ACTIONS];
+	const int n = item_actions(obj, a);
+	if (k < 0 || k >= n || !a[k].valid) return false;
+	const cmd_code cmd = a[k].cmd;
+	const unsigned char key = cmd_lookup_key(cmd, keymode());
+	if (!key_confirm_command(key) || !get_item_allow(obj, key, cmd, false)) return false;
+	if (cmd == CMD_IGNORE) { textui_cmd_ignore_menu(obj); return false; }
+	cmdq_push(cmd);
+	cmd_set_arg_item(cmdq_peek(), "item", obj);
+	pack_after.reopen = cmd != CMD_FIRE && cmd != CMD_THROW;
+	pack_after.focus = focus;
+	return true;
+}
+
+/* True if a command was queued (and should now run). */
+bool native_pack(int focus)
+{
+	event_signal(EVENT_MESSAGE_FLUSH);
+	pack_after.reopen = false;
+	int expanded = -1;
+	for (;;) {
+		candidate c[MAX_ITEMS];
+		const int n = collect(c, CMD_NULL, NULL, USE_INVEN | USE_EQUIP | USE_FLOOR);
+		if (expanded >= n) expanded = -1;
+		publish_pack(c, n, expanded, focus);
+		const int32_t a = ask(NB_PROMPT_PACK);
+		if (a < 0) return false;
+		if (a == PACK_COLLAPSE) { expanded = -1; continue; }
+		if (a >= PACK_EXPAND && a < PACK_EXPAND + n) {
+			expanded = a - PACK_EXPAND;
+			track_object(player->upkeep, c[expanded].obj);
+			continue;
+		}
+		const int i = (a - PACK_ACT) / PACK_ACT_STRIDE;
+		if (a >= PACK_ACT && i < n && pack_action(c[i].obj, (a - PACK_ACT) % PACK_ACT_STRIDE, focus)) return true;
+		handle_stuff(player);
+	}
+}
+
+bool native_pack_resume(void)
+{
+	if (!pack_after.reopen) return false;
+	pack_after.reopen = false;
+	if (player->is_dead || !player->upkeep->playing || player->upkeep->generate_level || screen_save_depth > 0) return false;
+	pack_resumed = true;
+	const bool queued = native_pack(pack_after.focus);
+	pack_resumed = false;
+	return queued;
 }
 
 static bool native_get_item(struct object **choice, const char *pmt, const char *str,
