@@ -22,11 +22,11 @@ in a zoomable terminal view underneath.
 
 | Path | Role |
 |---|---|
-| `app/src/main/cpp/narsil_bridge.{h,c}` | Public C API; game thread, z-term backend, key/mouse queue, double-buffered frames, safe-point saves, autosave |
-| `app/src/main/cpp/narsil_native.c` | Map/status/messages snapshots, path preview, travel, one-tap actions, inspect/look |
-| `app/src/main/cpp/narsil_prompt.c` | Native prompt hooks (item, actions, check, aim, direction, songs, skills) |
+| `../bridge/narsil_bridge.{h,c}` | Public C API; game thread, z-term backend, key/mouse queue, double-buffered frames, safe-point saves, autosave |
+| `../bridge/narsil_native.c` | Map/status/messages snapshots, path preview, travel, one-tap actions, inspect/look |
+| `../bridge/narsil_prompt.c` | Native prompt hooks (item, actions, check, aim, direction, songs, skills) |
 | `app/src/main/cpp/narsil_jni.c` | JNI glue (strings decoded safely: no `NewStringUTF` on game text) |
-| `app/src/main/cpp/host_harness.c` | Desktop driver: scripted keys, taps, actions and prompt answers |
+| `../bridge/host_harness.c` | Desktop driver: scripted keys, taps, actions and prompt answers |
 | `app/src/main/kotlin/...` | `GameState` (per-vsync poller), `MapView`, `TerminalView`, sheets and bars |
 
 ## Design points

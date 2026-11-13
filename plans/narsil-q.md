@@ -70,7 +70,7 @@ The design:
 - App: `android/app/build.gradle.kts`; `GameLauncher.kt`, `Settings.kt`, `MainActivity.kt`,
   `ScreenSheet.kt`, `Scum.kt` (all in `android/app/src/main/kotlin/org/narsil/android/`)
 - Bridge: `narsil_bridge.c` (game in the config), `narsil_birth.c` (picker), `narsil_native.c`
-  (minimum-depth meta), all in `android/app/src/main/cpp/`
+  (minimum-depth meta), all in `bridge/`
 
 ## 3. Benefits
 

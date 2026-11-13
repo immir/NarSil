@@ -10,7 +10,7 @@ out="$here/app/src/test/resources/fixtures"
 build="$work/build"
 T=16777216   # NB_PANEL_TAB: a tab switch answered to any prompt in the panel
 
-cmake -S "$here/app/src/main/cpp" -B "$build" -DCMAKE_BUILD_TYPE=Debug >/dev/null
+cmake -S "$root/bridge" -B "$build" -DCMAKE_BUILD_TYPE=Debug >/dev/null
 cmake --build "$build" -j"$(nproc)" >/dev/null
 run() {
     rm -rf "$work/data"

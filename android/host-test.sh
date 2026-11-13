@@ -12,7 +12,7 @@ san=${san:-address,undefined}
 build="$work/build-$san"
 cc=${MSAN:+clang}
 
-cmake -S "$here/app/src/main/cpp" -B "$build" -DCMAKE_BUILD_TYPE=Debug ${cc:+-DCMAKE_C_COMPILER=$cc} \
+cmake -S "$here/../bridge" -B "$build" -DCMAKE_BUILD_TYPE=Debug ${cc:+-DCMAKE_C_COMPILER=$cc} \
     -DCMAKE_C_FLAGS="-fsanitize=$san -fno-omit-frame-pointer -g" >/dev/null
 cmake --build "$build" -j"$(nproc)" >/dev/null
 

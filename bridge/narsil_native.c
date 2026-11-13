@@ -780,7 +780,7 @@ void nb_request_move(int dir, bool run)
 	post((request){ .kind = REQ_MOVE, .dir = dir, .run = run });
 }
 
-#ifndef __ANDROID__
+#ifdef NB_TEST_HOOKS
 void nb_test_die(void)
 {
 	post((request){ .kind = REQ_TEST_DIE });

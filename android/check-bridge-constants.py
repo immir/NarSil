@@ -6,8 +6,8 @@ import re
 import sys
 from pathlib import Path
 
-root = Path(__file__).resolve().parent / "app/src/main"
-header = (root / "cpp/narsil_bridge.h").read_text()
+root = Path(__file__).resolve().parent / "app/src/main"  # header lives in ../bridge
+header = (root.parents[2].parent / "bridge/narsil_bridge.h").read_text()
 kotlin = (root / "kotlin/org/narsil/android/NarSilNative.kt").read_text()
 
 

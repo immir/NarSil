@@ -390,7 +390,7 @@ static void *game_main(void *unused)
 	savefile_set_name(cfg.player_name, true, false);
 	create_needed_dirs();
 
-	ANGBAND_SYS = "android";
+	ANGBAND_SYS = NB_SYS_NAME;
 	init_main_term();
 	cmd_get_hook = get_cmd;
 	reinit_hook = reinit;
