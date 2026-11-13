@@ -74,6 +74,7 @@ class MainActivity : ComponentActivity() {
     private var showOptions by mutableStateOf(false)
     private var showKeys by mutableStateOf(false)
     private var showScum by mutableStateOf(false)
+    private var showHelp by mutableStateOf(false)
     private val scope = MainScope()
     private lateinit var settings: Settings
 
@@ -179,7 +180,7 @@ class MainActivity : ComponentActivity() {
                 }
                 TextScale(settings.messageScale / settings.buttonScale) { MessagesSheet(state) { showMessages = false } }
             }
-            if (showMore) MoreSheet(moreActions(router, { showMessages = true }, { showOptions = true }) { terminal?.toggleKeyboard() } +
+            if (showMore) MoreSheet(moreActions(router, { showMessages = true }, { showOptions = true }, { showHelp = true }) { terminal?.toggleKeyboard() } +
                                     listOfNotNull(scumAction(), BarAction("Restore scum save", run = { showScum = true }).takeIf { settings.scumming })) { showMore = false }
             if (showKeys) MoreSheet(extraKeys()) { showKeys = false }
             if (showOptions) {
@@ -190,6 +191,13 @@ class MainActivity : ComponentActivity() {
                 OptionsSheet(settings, onGameOptions = { NarSilNative.nativeRequestAction(NarSilNative.ACT_OPTIONS) }) { showOptions = false }
             }
             if (showScum) ScumSheet(this@MainActivity) { showScum = false }
+            if (showHelp) {
+                DisposableEffect(Unit) {
+                    router.intercept = { code -> if (code == Keys.ESCAPE) showHelp = false; code == Keys.ESCAPE }
+                    onDispose { router.intercept = null }
+                }
+                HelpScreen(this@MainActivity) { showHelp = false }
+            }
         }
     }
 
