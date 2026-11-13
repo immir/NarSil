@@ -5,7 +5,9 @@
 #include "narsil_bridge.h"
 
 #include <android/log.h>
+#include <assert.h>
 #include <jni.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -242,9 +244,12 @@ JNIEXPORT jlong JNICALL JNI_FN(nativePromptGeneration)(JNIEnv *env, jclass cls)
 JNIEXPORT jstring JNICALL JNI_FN(nativePrompt)(JNIEnv *env, jclass cls)
 {
 	(void)cls;
-	static char text[NB_PROMPT_CAP + 2];
-	text[0] = '0' + (char)nb_prompt(text + 2, sizeof(text) - 2);
-	text[1] = '\n';
+	enum { HEAD = 4 };  /* up to three digits and the newline */
+	static char text[NB_PROMPT_CAP + HEAD];
+	static char body[NB_PROMPT_CAP];
+	const enum nb_prompt_kind kind = nb_prompt(body, sizeof(body));
+	assert(kind >= 0 && kind < 1000);
+	snprintf(text, sizeof(text), "%d\n%s", (int)kind, body);
 	return new_string(env, text);
 }
 
