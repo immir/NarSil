@@ -181,6 +181,12 @@ echo "$out" | grep -qP '^Knowledge\tfeatures\tTerrain\t-1$'
 echo "$out" | grep -A1 -P '^Knowledge\tfeatures' | grep -qP '^#G\tFloors$'
 echo "$out" | grep -qP '^#G\tTraps$'
 
+echo "== knowledge: inscribe a rune, then change and remove the inscription offered"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=27 @prompt @answer=4 @prompt @answer=0 @prompt @answer=100000 @prompt @text=dig @prompt @answer=-1 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qP '^#E\t[0-9]+\t[0-9]+\tTunneling\t\{dig\}$'
+echo "$out" | grep -qP '^#A\t100001\tRemove inscription$'
+
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @walk=1 @walk=2 @walk=3 @walk=4 @walk=6 @walk=7 @walk=8 @walk=9 @run=2 @run=4 @run=6 @run=8 @walk=5 "${quit[@]}")

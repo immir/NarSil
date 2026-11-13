@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -118,6 +119,10 @@ private fun EntryRow(e: KnowRow.Entry, p: GameState.Prompt.Knowledge, colour: (I
         if (open && p.text.isNotEmpty())
             Text(p.text, color = Color(0xFFC8C8CC), fontSize = 14.sp, lineHeight = 19.sp,
                  modifier = Modifier.padding(start = 50.dp, end = 16.dp, bottom = 12.dp))
+        if (open && p.actions.isNotEmpty())
+            Row(Modifier.padding(start = 50.dp, end = 16.dp, bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                p.actions.forEach { (answer, label) -> FilledTonalButton(onClick = { onAnswer(answer) }) { Text(label) } }
+            }
         Divider(color = Color(0xFF2C2C2E), modifier = Modifier.padding(start = 50.dp))
     }
 }

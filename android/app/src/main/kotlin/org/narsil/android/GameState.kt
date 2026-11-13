@@ -70,7 +70,8 @@ class GameState {
         data class Smith(val view: String, val title: String, val notes: List<String>, val item: SmithItem?,
                          val costs: List<SmithCost>, val description: List<String>, val options: List<SmithOption>) : Prompt
         /** The knowledge browser: [rows] in order; [expanded] (an entry index or -1) has [text]. */
-        data class Knowledge(val view: String, val title: String, val expanded: Int, val rows: List<KnowRow>, val text: String) : Prompt
+        data class Knowledge(val view: String, val title: String, val expanded: Int, val rows: List<KnowRow>, val text: String,
+                             val actions: List<Pair<Int, String>> = emptyList()) : Prompt
         data class Options(val page: String, val title: String, val rows: List<OptionRow>) : Prompt
         data class Text(val title: String, val initial: String, val maxBytes: Int, val random: Boolean) : Prompt
         data class Screen(val stage: String, val title: String, val paragraphs: List<String>, val options: List<ScreenOption>,
@@ -251,7 +252,8 @@ class GameState {
                             else -> null
                         }
                     },
-                    lines.filter { it.startsWith("#T\t") }.joinToString("\n") { it.removePrefix("#T\t") }.trim())
+                    lines.filter { it.startsWith("#T\t") }.joinToString("\n") { it.removePrefix("#T\t") }.trim(),
+                    lines.filter { it.startsWith("#A\t") }.map { it.split('\t', limit = 3) }.map { f -> f[1].toInt() to f.getOrElse(2) { "" } })
             }
             N.PROMPT_PACK -> {
                 val head = lines[0].split('\t')

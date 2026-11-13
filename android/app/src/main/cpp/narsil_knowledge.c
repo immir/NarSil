@@ -10,8 +10,9 @@
  *   #G \t group heading
  *   #E \t glyph \t attr \t name \t note           entries, answered by index
  *   #T \t line                                   the expanded entry's text
+ *   #A \t answer \t label                        the expanded entry's actions (runes: inscribe)
  * Answers: an entry index (opens a view from the main page, else expands it),
- * NB_KNOW_COLLAPSE, or -1 back.
+ * NB_KNOW_COLLAPSE, an action's answer, or -1 back.
  */
 #include "narsil_internal.h"
 
@@ -21,12 +22,14 @@
 #include "obj-pile.h"
 #include "monster.h"
 #include "obj-desc.h"
+#include "obj-ignore.h"
 #include "obj-info.h"
 #include "obj-knowledge.h"
 #include "obj-make.h"
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
+#include "player-calcs.h"
 #include "player-history.h"
 #include "score.h"
 #include "trap.h"
@@ -49,6 +52,12 @@ static const char *const view_titles[VIEW_COUNT] = { "Knowledge", "Creatures", "
 
 /* An entry: what it is (a race, kind or artefact index), and its group. */
 typedef struct { int id; const char *group; int order; } entry;
+
+/* The current view's entries, as last published (game thread only). */
+enum { CAP = 2048 };
+static entry entries[CAP];
+
+enum { RUNE_INSCRIBE = NB_KNOW_ACTION, RUNE_UNINSCRIBE };
 
 static void add_text(textblock *tb)
 {
@@ -266,6 +275,31 @@ static void rune_text(const entry *e)
 	textblock_append(tb, "%s", rune_desc((size_t)e->id));
 	add_text(tb);
 	textblock_free(tb);
+	const bool noted = rune_note((size_t)e->id) != 0;
+	native_prompt_add("#A\t%d\t%s\n", RUNE_INSCRIBE, noted ? "Change inscription" : "Inscribe");
+	if (noted) native_prompt_add("#A\t%d\tRemove inscription\n", RUNE_UNINSCRIBE);
+}
+
+/* rune_xtra_act(): items with this rune get the inscription automatically. */
+static void inscribe_rune(int rune, bool remove)
+{
+	char text[80] = "";
+	const quark_t old = rune_note((size_t)rune);
+	if (!remove) {
+		native_prompt_begin();
+		native_prompt_add("Inscribe items with %s\n%s\n%d\n0\n", rune_name((size_t)rune), old ? quark_str(old) : "",
+			(int)sizeof(text) - 1);
+		native_prompt_end();
+		if (native_ask(NB_PROMPT_TEXT) != 1) return;
+		native_answer_text(text, sizeof(text));
+		if (!text[0]) return;
+	}
+	if (old) rune_set_note((size_t)rune, NULL);
+	if (!remove) {
+		rune_set_note((size_t)rune, text);
+		rune_autoinscribe(player, rune);
+	}
+	player->upkeep->redraw |= PR_INVEN | PR_EQUIP;
 }
 
 /* ---- Terrain and traps ---- */
@@ -373,8 +407,7 @@ static void publish(enum view v, int expanded)
 {
 	native_prompt_begin();
 	native_prompt_add("Knowledge\t%s\t%s\t%d\n", view_keys[v], view_titles[v], expanded);
-	enum { CAP = 2048 };
-	static entry e[CAP];
+	entry *const e = entries;
 	switch (v) {
 		case VIEW_MAIN:
 			add_entry(L'C', COLOUR_L_GREEN, "Creatures", "everything you have seen, with what you have learnt");
@@ -417,6 +450,10 @@ static void browse(enum view v)
 		publish(v, expanded);
 		const int32_t a = native_ask(NB_PROMPT_KNOWLEDGE);
 		if (a < 0) return;
+		if (a >= NB_KNOW_ACTION && expanded >= 0 && v == VIEW_RUNES) {
+			inscribe_rune(entries[expanded].id, a == RUNE_UNINSCRIBE);
+			continue;
+		}
 		expanded = a == NB_KNOW_COLLAPSE || a == expanded || v == VIEW_HISTORY || v == VIEW_SCORES ? -1 : a;
 	}
 }

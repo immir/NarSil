@@ -232,7 +232,7 @@ enum { NB_TEXT_RANDOM = 2 };
 /* Screen answers besides an option index.  The birth stats screen answers like skills (NB_SKILL_*). */
 enum { NB_SCREEN_RANDOM = 1000, NB_SCREEN_OPTIONS = 1001 };
 
-enum { NB_KNOW_COLLAPSE = 99999 };
+enum { NB_KNOW_COLLAPSE = 99999, NB_KNOW_ACTION = 100000 };
 
 /* Pack answers: collapse; expand item i; action k of item i. */
 enum { NB_PACK_COLLAPSE = 999, NB_PACK_EXPAND = 1000, NB_PACK_ACT = 100000, NB_PACK_ACT_STRIDE = 100 };
