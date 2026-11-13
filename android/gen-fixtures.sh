@@ -34,8 +34,8 @@ run "${birth[@]}" @act=15 $(P pack) @answer=1000 $(P pack_expanded) @answer=$((T
     @answer=$((T+2)) $(P skills) @answer=$((T+3)) $(P abilities) @answer=$((T+4)) $(P knowledge_main) \
     @answer=1 $(P knowledge_objects) @answer=-1 @answer=$((T+5)) $(P smith_main) @answer=$((T+6)) $(P options_main) \
     @answer=-1 "${quit[@]}"
-run "${birth[@]}" @act=15 @answer=1001 @answer=100103 $(P quantity) @answer=1 @enter @enter \
-    @answer=1000 @answer=100003 @enter $(P text) @text=lunch @answer=1000 @answer=100005 $(P choice_ignore) \
+run "${birth[@]}" @act=15 @answer=1001 @answer=100103 $(P quantity) @answer=1 \
+    @answer=1000 @answer=100003 $(P text) @text=lunch @answer=1000 @answer=100005 $(P choice_ignore) \
     @answer=-1 @answer=-1 "${quit[@]}"
 
 # An item prompt, a yes/no, an aim and a direction, and the knowledge views.

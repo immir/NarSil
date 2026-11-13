@@ -379,6 +379,7 @@ static int item_actions(const struct object *obj, action *a)
 enum { PACK_COLLAPSE = NB_PACK_COLLAPSE, PACK_EXPAND = NB_PACK_EXPAND, PACK_ACT = NB_PACK_ACT, PACK_ACT_STRIDE = NB_PACK_ACT_STRIDE };
 
 static struct { bool reopen; int focus; } pack_after;
+static bool more_forced;  /* auto_more is on only until the pack reopens (see pack_action()) */
 static bool pack_keep_place;  /* reopened after an action, or reached by a tab switch: the UI keeps its scroll */
 
 /*
@@ -431,6 +432,8 @@ static bool pack_action(struct object *obj, int k, int focus)
 	cmd_set_arg_item(cmdq_peek(), "item", obj);
 	pack_after.reopen = cmd != CMD_FIRE && cmd != CMD_THROW;
 	pack_after.focus = focus;
+	/* The pack reopens at the next command prompt, which a pending -more- would hold up. */
+	if (pack_after.reopen && !OPT(player, auto_more)) { OPT(player, auto_more) = true; more_forced = true; }
 	return true;
 }
 
@@ -438,6 +441,7 @@ static bool pack_action(struct object *obj, int k, int focus)
 bool native_pack(int focus)
 {
 	event_signal(EVENT_MESSAGE_FLUSH);
+	native_pack_restore_more();
 	pack_after.reopen = false;
 	int expanded = -1;
 	for (;;) {
@@ -459,11 +463,28 @@ bool native_pack(int focus)
 	}
 }
 
+/* True while the pack is due to reopen at this command prompt. */
+bool native_pack_pending(void) { return pack_after.reopen; }
+
+/*
+ * Puts the player's -more- setting back.  Done at every command prompt where the pack is not about to reopen, and
+ * otherwise as the pack opens, after it has cleared what the command left pending (so that needs no pause).
+ */
+void native_pack_restore_more(void)
+{
+	if (!more_forced) return;
+	more_forced = false;
+	if (player) OPT(player, auto_more) = false;
+}
+
 bool native_pack_resume(void)
 {
 	if (!pack_after.reopen) return false;
 	pack_after.reopen = false;
-	if (player->is_dead || !player->upkeep->playing || player->upkeep->generate_level || screen_save_depth > 0) return false;
+	if (player->is_dead || !player->upkeep->playing || player->upkeep->generate_level || screen_save_depth > 0) {
+		native_pack_restore_more();
+		return false;
+	}
 	pack_keep_place = true;
 	const bool queued = native_panel(NB_TAB_PACK, pack_after.focus);
 	pack_keep_place = false;

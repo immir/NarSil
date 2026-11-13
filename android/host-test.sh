@@ -60,7 +60,7 @@ echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
 echo "== 'i' opens the panel's Pack tab (eat from it), yes/no (retire? no), throw (first item) + aim east"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" i @prompt @answer=1000 @answer=100000 @enter @prompt @answer=-1 @messages \
+out=$(run "${birth[@]}" i @prompt @answer=1000 @answer=100000 @prompt @answer=-1 @messages \
       Q @prompt @answer=0 t @prompt @pick=0 @prompt @answer=6 @messages "${quit[@]}")
 echo "$out" | grep -q 'prompt kind=13'
 echo "$out" | grep -q 'renewed energy'
@@ -161,10 +161,15 @@ echo "$out" | grep -qP '^#O\t1046\t1\t0\tDisconnected stairs'
 
 echo "== native pack: expand an item, act on it, the pack reopens with the result"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" @act=15 @prompt @answer=1000 @prompt @answer=100000 @enter @prompt @answer=-1 "${quit[@]}")
+out=$(run "${birth[@]}" @act=15 @prompt @answer=1000 @prompt @answer=100000 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qP '^#A\t1\tEat$'
 echo "$out" | grep -qP '^#I\t0\ta\t[0-9]+\t[0-9]+\t[0-9]+\t2 Fragments of Lembas$'
 
+echo "== native pack: equipping (two messages, so a -more-) reopens the pack by itself, and the option is put back"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=15 @answer=1001 @answer=100102 @prompt @answer=-1 @act=26 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qP '^prompt kind=13$'
+echo "$out" | grep -qP '^#O\t[0-9]+\t0\t0\tAutomatically clear'
 echo "== welcome: the splash screen is native (verse, welcome, Begin)"
 rm -rf "$work/data"
 out=$(run @prompt "${birth[@]}" "${quit[@]}")
@@ -202,7 +207,7 @@ out=$(run "${birth[@]}" @act=25 @prompt @answer=0 @prompt @answer=0 @prompt @ans
 
 echo "== native quantity (drop part of a stack), text (inscribe), ignore choice; death history and scores"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" @act=15 @prompt @answer=1001 @prompt @answer=100103 @prompt @answer=1 @enter @enter @prompt @answer=1000 @prompt @answer=100003 @enter @prompt @text=lunch @prompt @answer=1000 @prompt @answer=100005 @prompt @answer=1 @prompt @answer=-1 "${quit[@]}")
+out=$(run "${birth[@]}" @act=15 @prompt @answer=1001 @prompt @answer=100103 @prompt @answer=1 @prompt @answer=1000 @prompt @answer=100003 @prompt @text=lunch @prompt @answer=1000 @prompt @answer=100005 @prompt @answer=1 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qx 'prompt kind=16'
 echo "$out" | grep -qP '^#I\t0\tb\t[0-9]+\t[0-9]+\t(20|40)\t(a|2) Wooden Torch'
 echo "$out" | grep -qx 'Inscribe with what'
@@ -244,7 +249,7 @@ out=$(run "${birth[@]}" @act=15 @prompt @save @prompt @answer=-1 "${quit[@]}" 2>
 echo "$out" | grep -q 'save: done'
 echo "$out" | grep -qx 'panel tab=0'
 rm -rf "$work/data"
-out=$(run "${birth[@]}" @act=15 @prompt @answer=1001 @prompt @answer=100103 @prompt @save-async @prompt @answer=1 @enter @enter @prompt @answer=-1 "${quit[@]}" 2>&1)
+out=$(run "${birth[@]}" @act=15 @prompt @answer=1001 @prompt @answer=100103 @prompt @save-async @prompt @answer=1 @prompt @answer=-1 "${quit[@]}" 2>&1)
 echo "$out" | grep -q 'save: done'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=1'
 

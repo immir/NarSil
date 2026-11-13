@@ -295,8 +295,11 @@ static errr get_cmd(cmd_context ctx)
 {
 	/* textui_init() (also re-run after death, after reinit_hook) resets the prompt hooks. */
 	native_prompt_init();
+	/* A reopening pack keeps -more- off until it opens (see pack_action()), and no save may hold that setting. */
+	const bool pack_due = ctx == CTX_GAME && native_pack_pending();
+	if (!pack_due) native_pack_restore_more();
 	game.at_command_prompt = ctx == CTX_GAME;
-	autosave_if_due();
+	if (!pack_due) autosave_if_due();
 	if (ctx == CTX_GAME) {
 		game.between_commands = true;
 		const bool queued = native_pack_resume();
