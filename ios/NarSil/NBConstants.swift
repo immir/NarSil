@@ -51,6 +51,7 @@ enum NB {
     static let CTX_FORGE = 2048
     static let CTX_DOWN_KNOWN = 4096
     static let CTX_UP_KNOWN = 8192
+    static let CTX_ADJ_CHEST = 16384
     static let ACT_REST = 0
     static let ACT_HOLD = 1
     static let ACT_GO_DOWN = 2

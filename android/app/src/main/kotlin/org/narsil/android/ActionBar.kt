@@ -58,7 +58,7 @@ fun contextActions(s: GameState.Status): List<BarAction> = buildList {
     if (s.has(N.CTX_FORGE)) add(BarAction("Forge", emphasised = true, run = act(N.ACT_SMITH)))
     if (s.has(N.CTX_CAN_FIRE)) add(BarAction("Fire", emphasised = true, run = act(N.ACT_FIRE_NEAREST)))
     if (s.has(N.CTX_CAN_THROW)) add(BarAction("Throw", emphasised = true, run = act(N.ACT_THROW_NEAREST)))
-    if (s.has(N.CTX_ADJ_CLOSED_DOOR)) add(BarAction("Open", emphasised = true, run = act(N.ACT_OPEN)))
+    if (s.has(N.CTX_ADJ_CLOSED_DOOR) || s.has(N.CTX_ADJ_CHEST)) add(BarAction("Open", emphasised = true, run = act(N.ACT_OPEN)))
     if (s.has(N.CTX_ADJ_OPEN_DOOR)) add(BarAction("Close", emphasised = true, run = act(N.ACT_CLOSE)))
     if (s.has(N.CTX_ADJ_TRAP)) add(BarAction("Disarm", emphasised = true, run = act(N.ACT_DISARM)))
     if (s.has(N.CTX_ADJ_RUBBLE)) add(BarAction("Tunnel", emphasised = true, run = act(N.ACT_TUNNEL)))

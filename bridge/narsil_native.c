@@ -20,7 +20,11 @@
 #include "project.h"
 #include "game-event.h"
 #include "game-world.h"
+#include "obj-chest.h"
 #include "obj-gear.h"
+#include "obj-make.h"
+#include "obj-pile.h"
+#include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
 #include "player-path.h"
@@ -55,7 +59,7 @@ enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MA
  * overlay bits: NB_TILE_ALERT, NB_TILE_GLOW. */
 typedef struct { int32_t cp, attr_flags, tile, tile_bg, tile_flags; } map_cell;
 
-enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_REST, REQ_AUTO_MORE };
+enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_TEST_CHEST, REQ_REST, REQ_AUTO_MORE };
 typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; int dir; bool run; } request;
 
 /* Game thread only. */
@@ -217,6 +221,12 @@ static int32_t context_flags(void)
 		if (square_isopendoor(cave, n)) f |= NB_CTX_ADJ_OPEN_DOOR;
 		if (square_isrubble(cave, n)) f |= NB_CTX_ADJ_RUBBLE;
 		if (square_isdisarmabletrap(cave, n) && square_isvisibletrap(cave, n)) f |= NB_CTX_ADJ_TRAP;
+	}
+	for (int d = 0; d < 9; d++) {
+		const struct loc n = loc_sum(g, ddgrid_ddd[d]);
+		if (!square_in_bounds(cave, n) || !square_isknown(cave, n)) continue;
+		if (chest_check(player, n, CHEST_OPENABLE)) f |= NB_CTX_ADJ_CHEST;
+		if (chest_check(player, n, CHEST_TRAPPED)) f |= NB_CTX_ADJ_TRAP;
 	}
 	return f;
 }
@@ -624,6 +634,16 @@ bool native_service(bool at_prompt)
 		native_publish(at_prompt);
 		return false;
 	}
+	if (r.kind == REQ_TEST_CHEST && at_prompt) {
+		struct object *const chest = object_new();
+		object_prep(chest, lookup_kind(TV_CHEST, lookup_sval(TV_CHEST, "Small wooden chest")), 5, RANDOMISE);
+		chest->pval = r.dir ? 5 : 1; /* trapped, or merely locked: see obj-chest.c */
+		drop_near(cave, &chest, 0, player->grid, false, false);
+		square_know_pile(cave, player->grid);
+		if (chest->known) chest->known->pval = chest->pval; /* a trap the player has noticed */
+		native_publish(at_prompt);
+		return false;
+	}
 	if (!at_prompt) return false;
 	switch (r.kind) {
 		case REQ_PREVIEW: preview_path(r.grid); return false;
@@ -633,6 +653,7 @@ bool native_service(bool at_prompt)
 		case REQ_MOVE:
 		case REQ_REST:
 		case REQ_TEST_DIE: game.stashed = r; return true;
+		case REQ_TEST_CHEST:
 		case REQ_INSPECT:
 		case REQ_TARGET:
 		case REQ_LOOK_LIST:
@@ -791,6 +812,11 @@ void nb_request_move(int dir, bool run)
 void nb_test_die(void)
 {
 	post((request){ .kind = REQ_TEST_DIE });
+}
+
+void nb_test_chest(bool trapped)
+{
+	post((request){ .kind = REQ_TEST_CHEST, .dir = trapped });
 }
 #endif
 

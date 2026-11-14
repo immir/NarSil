@@ -71,6 +71,7 @@ object NarSilNative {
     const val CTX_FORGE = 1 shl 11
     const val CTX_DOWN_KNOWN = 1 shl 12
     const val CTX_UP_KNOWN = 1 shl 13
+    const val CTX_ADJ_CHEST = 1 shl 14
 
     // enum nb_action (order matters)
     const val ACT_REST = 0

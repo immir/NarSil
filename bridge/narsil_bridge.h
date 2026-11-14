@@ -120,6 +120,7 @@ enum nb_context {
 	NB_CTX_FORGE           = 1 << 11, /* standing on a forge */
 	NB_CTX_DOWN_KNOWN      = 1 << 12, /* a known down staircase elsewhere on the level (NB_ACT_TRAVEL_DOWN) */
 	NB_CTX_UP_KNOWN        = 1 << 13, /* likewise up */
+	NB_CTX_ADJ_CHEST       = 1 << 14, /* a closed chest underfoot or adjacent (NB_ACT_OPEN); a known-trapped one also sets NB_CTX_ADJ_TRAP */
 };
 
 /* One-tap actions; each does what its key would at the command prompt. */
@@ -212,6 +213,7 @@ void nb_request_move(int dir, bool run);
 #ifdef NB_TEST_HOOKS
 /* Host tests only: at the command prompt, take a fatal hit (as a monster's blow would). */
 void nb_test_die(void);
+void nb_test_chest(bool trapped); /* a small chest (locked, or trapped) under the player */
 #endif
 
 /* Path as (x, y) pairs: the target first, then each step; 0 = no path. */

@@ -82,6 +82,16 @@ test -s "$work/data/save/Harness"
 echo "$out" | grep -q 'autosave: done'
 [ "$(echo "$out" | grep -o 'context=0x[0-9a-f]*' | sed -n 2p)" != "$(echo "$out" | grep -o 'context=0x[0-9a-f]*' | sed -n 1p)" ]
 
+echo "== a chest underfoot offers Open (flag 0x4000); a known-trapped one also offers Disarm (0x400)"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @ctx @chest @ctx "${quit[@]}")
+ctx=($(echo "$out" | grep -o 'context=0x[0-9a-f]*' | sed 's/context=//'))
+[ $(( ctx[0] & 0x4000 )) -eq 0 ] && [ $(( ctx[1] & 0x4000 )) -ne 0 ] && [ $(( ctx[1] & 0x400 )) -eq 0 ]
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @trapchest @ctx "${quit[@]}")
+ctx=($(echo "$out" | grep -o 'context=0x[0-9a-f]*' | sed 's/context=//'))
+[ $(( ctx[0] & 0x4000 )) -ne 0 ] && [ $(( ctx[0] & 0x400 )) -ne 0 ]
+
 echo "== look list and inspect are answered, read-only"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @look @inspect@0,0 "${quit[@]}")
