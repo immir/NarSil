@@ -92,6 +92,11 @@ out=$(run "${birth[@]}" @trapchest @ctx "${quit[@]}")
 ctx=($(echo "$out" | grep -o 'context=0x[0-9a-f]*' | sed 's/context=//'))
 [ $(( ctx[0] & 0x4000 )) -ne 0 ] && [ $(( ctx[0] & 0x400 )) -ne 0 ]
 
+echo "== a pile underfoot is one line in the message log, not a screen waiting for a key"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @pile @act=1 @messages "${quit[@]}")
+echo "$out" | grep -qP 'You see .*, .*, .* and 1 more\.'
+
 echo "== look list and inspect are answered, read-only"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @look @inspect@0,0 "${quit[@]}")

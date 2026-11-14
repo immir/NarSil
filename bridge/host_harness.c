@@ -17,7 +17,7 @@
  *   @inspect@DX,DY @look                          native inspect (relative) / look list
  *   @text=TEXT                                    answer a text prompt
  *   @info                                         print the latest info (e.g. after @act=20, the character)
- *   @chest, @trapchest                            drop a locked (or trapped) chest under the player
+ *   @chest, @trapchest, @pile                     drop a locked chest, a trapped one, or a pile of four under the player
  *   @ctx                                          print the context flags
  *   @answer=N                                     answer any native prompt (see nb_answer)
  *   @aim@DX,DY                                    answer an aim prompt with a grid relative to the player
@@ -244,8 +244,8 @@ static int run_token(const char *tok)
 		printf("info (gen moved=%d):\n%s", nb_info_generation() != before, text);
 		return 0;
 	}
-	if (strcmp(tok, "@chest") == 0 || strcmp(tok, "@trapchest") == 0) {
-		nb_test_chest(tok[1] == 't');
+	if (strcmp(tok, "@chest") == 0 || strcmp(tok, "@trapchest") == 0 || strcmp(tok, "@pile") == 0) {
+		nb_test_chest(tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
 		return settle() ? 0 : 1;
 	}
 	if (strcmp(tok, "@ctx") == 0) {

@@ -31,6 +31,7 @@
 #include "player-util.h"
 #include "player-timed.h"
 #include "ui-abilities.h"
+#include "ui-display.h"
 #include "ui-help.h"
 #include "ui-knowledge.h"
 #include "ui-map.h"
@@ -135,9 +136,25 @@ static void publish_messages(void)
 	pthread_mutex_unlock(&shared.lock);
 }
 
+/* The game would draw the pile over the map and wait for a key; here it is one line in the message strip
+ * (the action bar's Pick up takes it from there). */
+static void native_floor_pile(struct object **const list, const int num, const char *const verb)
+{
+	enum { NAMED = 3 };
+	char names[NAMED][80];
+	const int shown = MIN(num, NAMED);
+	for (int i = 0; i < shown; i++) object_desc(names[i], sizeof(names[i]), list[i], ODESC_PREFIX | ODESC_BASE, player);
+	const int more = num - shown;
+	event_signal(EVENT_MESSAGE_FLUSH);
+	if (more > 0) msg("You %s %s, %s, %s and %d more.", verb, names[0], names[1], names[2], more);
+	else if (shown == 3) msg("You %s %s, %s and %s.", verb, names[0], names[1], names[2]);
+	else msg("You %s %s and %s.", verb, names[0], names[1]);
+}
+
 void native_init(void)
 {
 	native_birth_init();
+	floor_pile_hook = native_floor_pile;
 	event_add_handler(EVENT_MESSAGE, mark_messages, NULL);
 	game.messages_dirty = true;
 	static game_event_type dirtying[] = {
@@ -635,12 +652,16 @@ bool native_service(bool at_prompt)
 		return false;
 	}
 	if (r.kind == REQ_TEST_CHEST && at_prompt) {
-		struct object *const chest = object_new();
-		object_prep(chest, lookup_kind(TV_CHEST, lookup_sval(TV_CHEST, "Small wooden chest")), 5, RANDOMISE);
-		chest->pval = r.dir ? 5 : 1; /* trapped, or merely locked: see obj-chest.c */
-		drop_near(cave, &chest, 0, player->grid, false, false);
-		square_know_pile(cave, player->grid);
-		if (chest->known) chest->known->pval = chest->pval; /* a trap the player has noticed */
+		const int count = r.dir == 2 ? 4 : 1; /* 2: a pile, as stepping on one reports it */
+		for (int i = 0; i < count; i++) {
+			struct object *const chest = object_new();
+			object_prep(chest, lookup_kind(TV_CHEST, lookup_sval(TV_CHEST, "Small wooden chest")), 5, RANDOMISE);
+			chest->pval = r.dir == 1 ? 5 : 1; /* trapped, or merely locked: see obj-chest.c */
+			drop_near(cave, &chest, 0, player->grid, false, true);
+			square_know_pile(cave, player->grid);
+			if (chest->known) chest->known->pval = chest->pval; /* a trap the player has noticed */
+		}
+		if (count > 1) event_signal(EVENT_SEEFLOOR);
 		native_publish(at_prompt);
 		return false;
 	}
@@ -814,9 +835,9 @@ void nb_test_die(void)
 	post((request){ .kind = REQ_TEST_DIE });
 }
 
-void nb_test_chest(bool trapped)
+void nb_test_chest(int kind)
 {
-	post((request){ .kind = REQ_TEST_CHEST, .dir = trapped });
+	post((request){ .kind = REQ_TEST_CHEST, .dir = kind });
 }
 #endif
 

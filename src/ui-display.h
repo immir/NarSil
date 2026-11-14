@@ -27,6 +27,10 @@ extern const char *stat_names[STAT_MAX];
 extern const char *stat_names_reduced[STAT_MAX];
 extern const char *window_flag_desc[32];
 
+/* A front end may list a pile of floor objects itself (verb: "see", "feel" or "have no room for");
+ * left NULL, the pile is drawn over the map and a key is awaited. */
+extern void (*floor_pile_hook)(struct object **list, int num, const char *verb);
+
 uint8_t health_attr(int current, int max);
 void cnv_stat(int val, char *out_val, size_t out_len);
 void allow_animations(void);

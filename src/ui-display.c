@@ -2507,6 +2507,8 @@ static void check_panel(game_event_type type, game_event_data *data, void *user)
 	verify_panel();
 }
 
+void (*floor_pile_hook)(struct object **list, int num, const char *verb);
+
 static void see_floor_items(game_event_type type, game_event_data *data,
 							void *user)
 {
@@ -2576,6 +2578,13 @@ static void see_floor_items(game_event_type type, game_event_data *data,
 			p = "have no room for the following objects";
 		else if (blind)
 			p = "feel something on the floor";
+
+		if (floor_pile_hook) {
+			floor_pile_hook(floor_list, floor_num,
+				!can_pickup ? "have no room for" : blind ? "feel" : "see");
+			mem_free(floor_list);
+			return;
+		}
 
 		/* Display objects on the floor */
 		screen_save();
