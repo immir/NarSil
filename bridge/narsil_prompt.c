@@ -410,6 +410,9 @@ static void publish_pack(const candidate *c, int n, int expanded, int focus)
 	action a[MAX_ACTIONS];
 	const int na = expanded >= 0 ? item_actions(c[expanded].obj, a) : 0;
 	textblock *const tb = expanded >= 0 ? object_info(c[expanded].obj, OINFO_NONE) : NULL;
+	char details[2048];
+	details[0] = '\0';
+	if (expanded >= 0 && native_item_details_on()) native_item_details(c[expanded].obj, details, sizeof(details));
 
 	pthread_mutex_lock(&shared.lock);
 	text_reset();
@@ -430,6 +433,9 @@ static void publish_pack(const candidate *c, int n, int expanded, int focus)
 			else text_add_utf8(*p == L'\t' ? ' ' : (uint32_t)*p);
 		}
 		text_add("\n");
+	}
+	if (details[0]) {
+		for (const char *line = strtok(details, "\n"); line; line = strtok(NULL, "\n")) text_add("#D\t%s\n", line);
 	}
 	pthread_mutex_unlock(&shared.lock);
 	if (tb) textblock_free(tb);

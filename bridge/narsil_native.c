@@ -100,6 +100,7 @@ static struct {
 	uint64_t info_gen;
 	char foe_name[80];
 	bool tiles;             /* nb_set_tiles() */
+	bool item_details;      /* nb_set_item_details() */
 } shared = { .lock = PTHREAD_MUTEX_INITIALIZER };
 
 /* ------------------------------------------------------------------------
@@ -716,6 +717,11 @@ bool native_service(bool at_prompt)
 		native_publish(at_prompt);
 		return false;
 	}
+	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 4) {
+		player->upkeep->monster_race = &r_info[1];  /* as if just looked at */
+		native_publish(at_prompt);
+		return false;
+	}
 	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 3) {
 		/* A short sword of Hador's House, known, into the pack with its "You have" message. */
 		struct object *sword = object_new(); /* mutable: inven_carry() takes the pointer */
@@ -723,12 +729,14 @@ bool native_service(bool at_prompt)
 		for (struct ego_item *e = e_info; e < e_info + z_info->e_max; e++)
 			if (e->name && strstr(e->name, "Hador")) sword->ego = e;
 		assert(sword->ego);
+		for (struct ability *a = sword->ego->abilities; a; a = a->next) add_ability(&sword->abilities, a);  /* as make_ego_item() */
 		sword->known = object_new();
 		sword->known->kind = sword->kind;
 		sword->known->tval = sword->tval;
 		sword->known->sval = sword->sval;
 		sword->known->number = sword->number;
 		sword->known->ego = sword->ego;
+		sword->ego->aware = true;  /* as learning the ego does: its abilities are then known */
 		inven_carry(player, sword, true, false);
 		char name[160];
 		object_desc(name, sizeof(name), sword, ODESC_PREFIX | ODESC_FULL, player);
@@ -990,6 +998,21 @@ void nb_set_tiles(bool on)
 	shared.tiles = on;
 	pthread_mutex_unlock(&shared.lock);
 	bridge_wake_game();
+}
+
+void nb_set_item_details(bool on)
+{
+	pthread_mutex_lock(&shared.lock);
+	shared.item_details = on;
+	pthread_mutex_unlock(&shared.lock);
+}
+
+bool native_item_details_on(void)
+{
+	pthread_mutex_lock(&shared.lock);
+	const bool on = shared.item_details;
+	pthread_mutex_unlock(&shared.lock);
+	return on;
 }
 
 void nb_request_target(int x, int y)

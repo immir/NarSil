@@ -51,6 +51,15 @@ void native_death_screen(void);
 bool native_welcome(void);
 void native_abilities(void);
 
+/* Implemented by narsil_native.c: the "extra item details" option (nb_set_item_details()). */
+bool native_item_details_on(void);
+/*
+ * Implemented by narsil_combat.c (game thread, at a prompt): extra description lines for an item, newline-separated.
+ * [obj] is MUTABLE only because the weapon numbers briefly swap it into the weapon slot to recompute the character's
+ * state; the slot is restored before the function returns.
+ */
+size_t native_item_details(struct object *obj, char *buf, size_t cap);
+
 /* Implemented by narsil_prompt.c: 2 for a known artefact, 1 for a known ego item, 3 for one with properties still unknown ("??"), else 0; the name it adds to the item's description. */
 int native_special_tier(const struct object *obj);
 const char *native_special_name(const struct object *obj);

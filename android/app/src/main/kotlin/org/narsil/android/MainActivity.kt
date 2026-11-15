@@ -118,7 +118,7 @@ class MainActivity : ComponentActivity() {
 
         LaunchedEffect(Unit) {
             phase = runCatching { withContext(Dispatchers.IO) { GameLauncher.ensureStarted(applicationContext) } }
-                .fold({ game = GameState().also { it.start() }; NarSilNative.nativeSetTiles(settings.tiles); Phase.Running }, { Phase.Failed(it.message ?: it.toString()) })
+                .fold({ game = GameState().also { it.start() }; NarSilNative.nativeSetTiles(settings.tiles); NarSilNative.nativeSetItemDetails(settings.itemDetails); Phase.Running }, { Phase.Failed(it.message ?: it.toString()) })
         }
         LaunchedEffect(phase) {
             var saves = -1L

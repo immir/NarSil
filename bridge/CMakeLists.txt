@@ -17,7 +17,7 @@ set_target_properties(narsil_core PROPERTIES C_STANDARD 99 POSITION_INDEPENDENT_
 target_compile_options(narsil_core PRIVATE -w)
 
 find_package(Threads REQUIRED)
-add_library(narsil_bridge STATIC narsil_bridge.c narsil_native.c narsil_prompt.c narsil_smith.c narsil_birth.c narsil_options.c narsil_knowledge.c narsil_tiles.c)
+add_library(narsil_bridge STATIC narsil_bridge.c narsil_native.c narsil_prompt.c narsil_smith.c narsil_birth.c narsil_options.c narsil_knowledge.c narsil_tiles.c narsil_combat.c)
 set_target_properties(narsil_bridge PROPERTIES C_STANDARD 11 POSITION_INDEPENDENT_CODE ON)
 # NB_SYS_NAME is the game's $SYS (pref-file conditions); NB_TEST_HOOKS builds the host-only test calls.
 set(NB_SYS_NAME "android" CACHE STRING "Platform name the game reports as $SYS (android, ios, host)")

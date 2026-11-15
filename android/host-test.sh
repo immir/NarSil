@@ -192,6 +192,20 @@ out=$(run "${birth[@]}" @ego @messages @act=15 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qP "^#I\t\d\t.\t\d+\t\d+\t\d+\t1\ta Shortsword .*of Hador's House"
 echo "$out" | grep -qP "You have .*\x011of Hador's House\x02"
 
+echo "== item details (option): off by default; on adds the ability's description and weapon numbers"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @ego @act=15 @answer=1002 @prompt @answer=-1 "${quit[@]}")
+! echo "$out" | grep -q 'Allows you to continue your attack'
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @details=1 @ego @act=15 @answer=1002 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qP '^#D\tFollow-Through: Allows you to continue your attack'
+echo "$out" | grep -qP '^#D\tLook at or fight a monster to see hit and damage numbers'
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @details=1 @foe @ego @act=15 @answer=1002 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qP '^#D\tAgainst the .* \(the last foe you looked at or fought\), about:'
+echo "$out" | grep -qP '^#D\thit [0-9]+%, critical [0-9]+% of blows; [0-9.]+ damage per blow, [0-9.]+ per round\.'
+echo "$out" | grep -qP '^#D\tYour (weapon|bare hands) now: hit'
+
 echo "== native pack: equipping (two messages, so a -more-) reopens the pack by itself, and the option is put back"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=15 @answer=1001 @answer=100102 @prompt @answer=-1 @act=26 @prompt @answer=-1 "${quit[@]}")

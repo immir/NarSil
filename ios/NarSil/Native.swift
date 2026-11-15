@@ -43,6 +43,7 @@ enum Native {
     static func requestPreview(x: Int, y: Int) { nb_request_preview(Int32(x), Int32(y)) }
     static func clearPreview() { nb_clear_preview() }
     static func setTiles(_ on: Bool) { nb_set_tiles(on) }
+    static func setItemDetails(_ on: Bool) { nb_set_item_details(on) }
 
     // Answers to the open prompt.
     static func answer(_ value: Int) { nb_answer(Int32(value)) }

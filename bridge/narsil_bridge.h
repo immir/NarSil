@@ -200,6 +200,12 @@ enum { NB_MAP_CELL_INTS = 5, NB_TILE_ALERT = 1, NB_TILE_GLOW = 2 };
 void nb_set_tiles(bool on);
 
 /*
+ * Extra lines in the pack's item description (default off): what a granted ability does and, for a melee weapon, hit,
+ * crit and damage numbers against the foe last looked at or fought, beside the wielded weapon.
+ */
+void nb_set_item_details(bool on);
+
+/*
  * Fills meta[NB_META_COUNT] and, if `cells` holds NB_MAP_CELL_INTS * width * height ints,
  * the map.  Returns the generation, or 0 if cells was too small (call again
  * with a buffer sized from meta).
@@ -219,7 +225,7 @@ void nb_request_move(int dir, bool run);
 #ifdef NB_TEST_HOOKS
 /* Host tests only: at the command prompt, take a fatal hit (as a monster's blow would). */
 void nb_test_die(void);
-void nb_test_chest(int kind); /* 0: a locked small chest under the player; 1: a trapped one; 2: a pile of four, reported as stepping on it would be; 3: a known short sword of Hador's House into the pack */
+void nb_test_chest(int kind); /* 0: a locked small chest under the player; 1: a trapped one; 2: a pile of four, reported as stepping on it would be; 3: a known short sword of Hador's House into the pack; 4: the tracked monster race is set */
 #endif
 
 /* Path as (x, y) pairs: the target first, then each step; 0 = no path. */

@@ -129,6 +129,7 @@ object NarSilNative {
     const val REST_HP_OR_VOICE = -3
     /** The game option "Automatically clear -more- prompts"; its value is META_AUTO_MORE. */
     @JvmStatic external fun nativeSetAutoMore(on: Boolean)
+    @JvmStatic external fun nativeSetItemDetails(on: Boolean)
     @JvmStatic external fun nativeRequestLookList()
     @JvmStatic external fun nativeRequestLookMonsters()
     @JvmStatic external fun nativeInfoGeneration(): Long

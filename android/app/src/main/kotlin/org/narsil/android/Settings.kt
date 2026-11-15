@@ -62,6 +62,7 @@ class Settings(context: Context) {
     private val scum = mutableStateOf(prefs.getBoolean("scumming", false))
     private val edge = mutableStateOf(prefs.getBoolean("edgeSwipePanel", false))
     private val tile = mutableStateOf(prefs.getBoolean("tiles", false))
+    private val details = mutableStateOf(prefs.getBoolean("itemDetails", false))
     private val buzz = mutableStateOf(prefs.getBoolean("lowHealthBuzz", true))
     private val msgLines = mutableIntStateOf(prefs.getInt("messageLines", 3))
     private val themeChoice = mutableIntStateOf(prefs.getInt("theme", 0))
@@ -86,6 +87,9 @@ class Settings(context: Context) {
     var messageLines: Int get() = msgLines.intValue; set(v) { msgLines.intValue = v.coerceIn(2, 5); prefs.edit().putInt("messageLines", msgLines.intValue).apply() }
     /** MicroChasm tiles on the map (the game is told by NarSilNative.nativeSetTiles). */
     var tiles: Boolean get() = tile.value; set(v) { tile.value = v; prefs.edit().putBoolean("tiles", v).apply(); NarSilNative.nativeSetTiles(v) }
+
+    /** Extra item description lines: what abilities do, and weapon numbers against the last foe (the game is told by nativeSetItemDetails). */
+    var itemDetails: Boolean get() = details.value; set(v) { details.value = v; prefs.edit().putBoolean("itemDetails", v).apply(); NarSilNative.nativeSetItemDetails(v) }
 
     companion object {
         const val DPAD_OFF = 0
@@ -175,6 +179,13 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                         Hint("MicroChasm's pictures instead of letters. Lists and menus keep the letters.")
                     }
                     Switch(settings.tiles, { settings.tiles = it })
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Label("Item details in the pack")
+                        Hint("Adds what a granted ability does and, for a weapon, about how often it hits and crits and the damage it deals, against the last monster you looked at or fought, compared with your own weapon.")
+                    }
+                    Switch(settings.itemDetails, { settings.itemDetails = it })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
