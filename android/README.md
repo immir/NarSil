@@ -16,7 +16,7 @@ are not yet replaced still work in a zoomable terminal view underneath.  The sam
 | Moving | Tap adjacent = step/attack; tap far = ghost path (game's `find_path`), tap again = go; swipe = step or run; d-pad (docked, floating or off) with run |
 | Inspect | Long press: monster state and lore recall, objects, terrain, and **Target**; **Look** lists what is in view |
 | Aiming | Tap a monster or grid, swipe, or Fire/Throw at the nearest; the current target stays marked on the map |
-| Action bar | Context buttons (Down/Up and travel to a known stair, Pick up, Fire, Throw, Open/Close, Disarm, Tunnel, Skills when experience waits) plus Rest (long-press for modes), Wait, Stealth, Song, Pack, Look, Again; ☰ for the rest |
+| Action bar | Context buttons (Down/Up on a stair, Pick up, Fire, Throw, Open/Close, Disarm, Tunnel, Skills when experience waits) plus Rest (long-press for modes), Wait, Stealth, Song, Pack, Look, Again; ☰ for the rest, including walking to a known stair |
 | The panel | One screen with tabs: **Pack**, **Character**, **Skills**, **Abilities**, **Knowledge**, **Smithing**, **Options**; swipe between tabs, opened from the action bar, the ☰ menu, `i`/`e`, or a swipe from the right edge |
 | Pack | Inventory, equipment and floor in one list; expand an item for its description and actions; stays open after equip, eat and the like, and closes only for an action that needs a map target |
 | Character and skills | Stats and skills with where each total comes from; rename and share a character dump; spend experience with undo; abilities per skill with what each still needs |

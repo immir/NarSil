@@ -52,8 +52,6 @@ private fun act(id: Int): () -> Unit = { N.nativeRequestAction(id) }
 fun contextActions(s: GameState.Status): List<BarAction> = buildList {
     if (s.has(N.CTX_DOWN_STAIRS)) add(BarAction("Down ▼", emphasised = true, run = act(N.ACT_GO_DOWN)))
     if (s.has(N.CTX_UP_STAIRS)) add(BarAction("Up ▲", emphasised = true, run = act(N.ACT_GO_UP)))
-    if (s.has(N.CTX_DOWN_KNOWN) && !s.has(N.CTX_DOWN_STAIRS)) add(BarAction("To ▼", run = act(N.ACT_TRAVEL_DOWN)))
-    if (s.has(N.CTX_UP_KNOWN) && !s.has(N.CTX_UP_STAIRS)) add(BarAction("To ▲", run = act(N.ACT_TRAVEL_UP)))
     if (s.has(N.CTX_FLOOR_ITEMS)) add(BarAction("Pick up", emphasised = true, run = act(N.ACT_PICKUP)))
     if (s.has(N.CTX_FORGE)) add(BarAction("Forge", emphasised = true, run = act(N.ACT_SMITH)))
     if (s.has(N.CTX_CAN_FIRE)) add(BarAction("Fire", emphasised = true, run = act(N.ACT_FIRE_NEAREST)))
@@ -82,11 +80,13 @@ fun coreActions(s: GameState.Status, restOptions: () -> Unit): List<BarAction> =
 )
 
 /** Less frequent but necessary: behind the ☰ button. */
-fun moreActions(router: KeyRouter, showMessages: () -> Unit, showOptions: () -> Unit, showHelp: () -> Unit, toggleMap: () -> Unit,
-                toggleKeyboard: () -> Unit): List<BarAction> = listOf(
+fun moreActions(s: GameState.Status, router: KeyRouter, showMessages: () -> Unit, showOptions: () -> Unit, showHelp: () -> Unit, toggleMap: () -> Unit,
+                toggleKeyboard: () -> Unit): List<BarAction> = listOfNotNull(
     /* Pack, gear, character, skills, abilities, knowledge, smithing and game options live in the panel (@). */
     BarAction("Panel", run = act(N.ACT_PANEL)),
     BarAction("Map", run = toggleMap),
+    BarAction("Walk to ▼", run = act(N.ACT_TRAVEL_DOWN)).takeIf { s.has(N.CTX_DOWN_KNOWN) && !s.has(N.CTX_DOWN_STAIRS) },
+    BarAction("Walk to ▲", run = act(N.ACT_TRAVEL_UP)).takeIf { s.has(N.CTX_UP_KNOWN) && !s.has(N.CTX_UP_STAIRS) },
     BarAction("Messages", run = showMessages),
     BarAction("Bash", run = act(N.ACT_BASH)),
     BarAction("Tunnel", run = act(N.ACT_TUNNEL)),

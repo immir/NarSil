@@ -62,7 +62,7 @@ private val TOUCH_GUIDE = listOf(
     )),
     Section("Buttons", listOf(
         "The action bar shows what fits where you stand first (stairs, items, doors, a forge, a target), then Rest, Wait, Stealth, Song, Pack, Look and Again. In landscape the buttons and status move to a column beside the map.",
-        "To ▼ and To ▲ appear when you know where a staircase is; they walk you to the nearest one. Again repeats your previous command.",
+        "Walk to ▼ and Walk to ▲ are in ☰ once you know where a staircase is; they walk you to the nearest one. Again repeats your previous command.",
         "Long-press Rest to choose how long to rest: as needed, until health and voice are full, until either is full, or a number of turns.",
         "Fire shoots your first quiver at your target while it is in view, otherwise at the nearest creature. Throw works the same way.",
         "To pick what to shoot at each time, use Pack → your arrows → Fire: tap a ringed creature, a chip, or swipe a direction.",

@@ -191,7 +191,7 @@ class MainActivity : ComponentActivity() {
                 }
                 TextScale(settings.messageScale / settings.buttonScale) { MessagesSheet(state) { showMessages = false } }
             }
-            if (showMore) MoreSheet(moreActions(router, { showMessages = true }, { showOptions = true }, { showHelp = true }, { mapView?.toggleOverview() }) { terminal?.toggleKeyboard() } +
+            if (showMore) MoreSheet(moreActions(state.status, router, { showMessages = true }, { showOptions = true }, { showHelp = true }, { mapView?.toggleOverview() }) { terminal?.toggleKeyboard() } +
                                     listOfNotNull(scumAction(), BarAction("Restore scum save", run = { showScum = true }).takeIf { settings.scumming })) { showMore = false }
             if (showKeys) MoreSheet(extraKeys(router)) { showKeys = false }
             if (showOptions) {
