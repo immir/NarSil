@@ -309,6 +309,11 @@ static errr get_cmd(cmd_context ctx)
 			return 0;
 		}
 	}
+	if (ctx == CTX_GAME) {
+		game.between_commands = true;
+		native_travel_report();
+		game.between_commands = false;
+	}
 	const errr r = textui_get_cmd(ctx);
 	game.at_command_prompt = false;
 	if (ctx == CTX_GAME) {

@@ -127,5 +127,6 @@ bool native_service(bool at_prompt);
 
 /* After textui_get_cmd returns: queue the stashed command, if any. */
 void native_run_stashed(void);
+void native_travel_report(void);
 
 #endif /* NARSIL_INTERNAL_H */

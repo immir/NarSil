@@ -72,6 +72,8 @@ static struct {
 	bool built_tiles;       /* whether the map was last built with tiles */
 	struct loc stairs_down, stairs_up;  /* nearest known staircases as of the last map build, or (-1, -1) */
 	request stashed;
+	/* A walk to a distant grid (CMD_PATHFIND): who was in view when it began, so a stop can say why. */
+	struct { bool active, hit_wall; struct loc target; int n_seen; int16_t seen[64]; } travel;
 } game;
 
 static bool tiles_on(void);
@@ -107,8 +109,9 @@ static void mark_dirty(game_event_type type, game_event_data *data, void *user)
 
 static void mark_messages(game_event_type type, game_event_data *data, void *user)
 {
-	(void)type; (void)data; (void)user;
+	(void)type; (void)user;
 	game.messages_dirty = true;
+	if (data && data->message.type == MSG_HITWALL) game.travel.hit_wall = true;
 }
 
 /*
@@ -701,6 +704,41 @@ static void fire_at_target_or_nearest(void)
 }
 
 /* Mirrors textui_process_click() for a left click on the map. */
+static void begin_travel(const struct loc target)
+{
+	game.travel.active = true;
+	game.travel.hit_wall = false;
+	game.travel.target = target;
+	game.travel.n_seen = 0;
+	for (int i = 1; i < cave_monster_max(cave) && game.travel.n_seen < (int)N_ELEMENTS(game.travel.seen); i++) {
+		const struct monster *const mon = cave_monster(cave, i);
+		if (mon && mon->race && monster_is_visible(mon)) game.travel.seen[game.travel.n_seen++] = (int16_t)i;
+	}
+}
+
+/* A walk that ended short of its goal says why: a wall already said so; otherwise the newcomer in view (now tracked as the foe). */
+void native_travel_report(void)
+{
+	if (!game.travel.active) return;
+	game.travel.active = false;
+	if (!map_visible() || loc_eq(player->grid, game.travel.target) || game.travel.hit_wall) return;
+	const struct monster *const at_goal = square_monster(cave, game.travel.target);
+	if (at_goal && monster_is_visible(at_goal)) return;  /* walking up to a monster ends in an attack, not a stop */
+	struct monster *newcomer = NULL;
+	for (int i = 1; i < cave_monster_max(cave); i++) {
+		struct monster *const mon = cave_monster(cave, i);
+		if (!mon || !mon->race || !monster_is_visible(mon)) continue;
+		bool known = false;
+		for (int k = 0; k < game.travel.n_seen; k++) known = known || game.travel.seen[k] == i;
+		if (!known && (!newcomer || distance(player->grid, mon->grid) < distance(player->grid, newcomer->grid))) newcomer = mon;
+	}
+	if (!newcomer) { msg("You stop: something disturbed you."); return; }
+	char name[80];
+	monster_desc(name, sizeof(name), newcomer, MDESC_IND_VIS);
+	health_track(player->upkeep, newcomer);
+	msg("You stop: you see %s.", name);
+}
+
 static void push_travel(struct loc target)
 {
 	if (!square_in_bounds_fully(cave, target)) return;
@@ -716,6 +754,7 @@ static void push_travel(struct loc target)
 		cmdq_push(CMD_WALK);
 		cmd_set_arg_direction(cmdq_peek(), "direction", motion_dir(player->grid, target));
 	} else {
+		begin_travel(target);
 		cmdq_push(CMD_PATHFIND);
 		cmd_set_arg_point(cmdq_peek(), "point", target);
 	}
@@ -776,6 +815,7 @@ void native_run_stashed(void)
 	native_prompt_set_intent(-1);
 	const request r = game.stashed;
 	game.stashed.kind = REQ_NONE;
+	game.travel.active = false;
 	if (!map_visible()) return;
 	if (r.kind == REQ_TRAVEL) {
 		publish_path(r.grid, NULL, 0);
