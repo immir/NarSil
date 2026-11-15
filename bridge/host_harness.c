@@ -253,6 +253,10 @@ static int run_token(const char *tok)
 		nb_test_chest(strcmp(tok, "@ego") == 0 ? 3 : tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
 		return settle() ? 0 : 1;
 	}
+	if (strcmp(tok, "@shield") == 0) {
+		nb_test_chest(5);
+		return settle() ? 0 : 1;
+	}
 	if (strcmp(tok, "@foe") == 0) {
 		nb_test_chest(4);
 		return settle() ? 0 : 1;

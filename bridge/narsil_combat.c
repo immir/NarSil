@@ -13,6 +13,7 @@
 
 #include "angband.h"
 #include "combat.h"
+#include "mon-blows.h"
 #include "mon-lore.h"
 #include "monster.h"
 #include "obj-gear.h"
@@ -30,34 +31,45 @@
 
 enum { MAX_DAM = 512 };
 
-/* The probability of each total of n dice with s sides: pmf[0..n*s] (clamped to MAX_DAM). */
-static void dice_pmf(double pmf[MAX_DAM], const int n, const int s)
+/* A distribution of dice totals: pmf[0..top], starting as "0 with certainty", grown one group of dice at a time. */
+typedef struct { double p[MAX_DAM]; int top; } dice_dist;
+
+static void dist_start(dice_dist *const d)
 {
-	memset(pmf, 0, sizeof(double) * MAX_DAM);
-	pmf[0] = 1.0;
-	int top = 0;
+	memset(d, 0, sizeof(*d));
+	d->p[0] = 1.0;
+}
+
+static void dist_add(dice_dist *const d, const int n, const int s)
+{
 	for (int i = 0; i < n && s > 0; i++) {
 		double next[MAX_DAM] = { 0 };
-		for (int v = 0; v <= top; v++)
-			for (int f = 1; f <= s && v + f < MAX_DAM; f++) next[v + f] += pmf[v] / s;
-		top = MIN(top + s, MAX_DAM - 1);
-		memcpy(pmf, next, sizeof(next));
+		for (int v = 0; v <= d->top; v++)
+			for (int f = 1; f <= s && v + f < MAX_DAM; f++) next[v + f] += d->p[v] / s;
+		d->top = MIN(d->top + s, MAX_DAM - 1);
+		memcpy(d->p, next, sizeof(next));
 	}
+}
+
+/* E[max(damage - protection * percent / 100, 0)] for two distributions. */
+static double expected_after(const dice_dist *const dam, const dice_dist *const prt, const int prt_percent)
+{
+	double total = 0;
+	for (int d = 0; d <= dam->top; d++) {
+		if (dam->p[d] == 0) continue;
+		for (int p = 0; p <= prt->top; p++)
+			if (prt->p[p] > 0) total += dam->p[d] * prt->p[p] * MAX(d - p * prt_percent / 100, 0);
+	}
+	return total;
 }
 
 /* The expected damage of n dice of s sides after the monster's protection dice (each reduced to prt_percent). */
 static double expected_net(const int n, const int s, const struct monster_race *const race, const int prt_percent)
 {
-	double dam[MAX_DAM], prt[MAX_DAM];
-	dice_pmf(dam, n, s);
-	dice_pmf(prt, race->pd, race->ps);
-	double total = 0;
-	for (int d = 0; d < MAX_DAM; d++) {
-		if (dam[d] == 0) continue;
-		for (int p = 0; p < MAX_DAM; p++)
-			if (prt[p] > 0) total += dam[d] * prt[p] * MAX(d - p * prt_percent / 100, 0);
-	}
-	return total;
+	dice_dist dam, prt;
+	dist_start(&dam); dist_add(&dam, n, s);
+	dist_start(&prt); dist_add(&prt, race->pd, race->ps);
+	return expected_after(&dam, &prt, prt_percent);
 }
 
 /* The race the weapon numbers are against: the one chosen in the pack, else the last looked at or fought. Game thread. */
@@ -106,14 +118,18 @@ typedef struct { blow_odds main; double per_round; } melee_odds;
  * for the duration of calc_bonuses() and restored before returning (it recomputes only into [out]; with known_only,
  * unknown runes do not leak).  Game thread, at a prompt: nothing else reads the slot meanwhile.
  */
-static void state_with_weapon(struct object *const weapon, struct player_state *const out)
+static void state_with_item(const int slot, struct object *const item, struct player_state *const out)
 {
-	const int slot = slot_by_name(player, "weapon");
-	assert(slot >= 0);
+	assert(slot >= 0 && slot < player->body.count);
 	struct object *const worn = player->body.slots[slot].obj;
-	player->body.slots[slot].obj = weapon;
+	player->body.slots[slot].obj = item;
 	calc_bonuses(player, out, true, false);
 	player->body.slots[slot].obj = worn;
+}
+
+static void state_with_weapon(struct object *const weapon, struct player_state *const out)
+{
+	state_with_item(slot_by_name(player, "weapon"), weapon, out);
 }
 
 static melee_odds melee_with(struct object *const weapon, const struct monster_race *const race)
@@ -179,12 +195,100 @@ static void weapon_text(struct object *const obj, char *const buf, const size_t 
 	else add_line(buf, cap, "That is %+.1f damage per round.", mine.per_round - now.per_round);
 }
 
+
+/* What a set of worn items does against melee: evasion, stealth, and the protection dice (as protection_roll() adds them). */
+enum { MAX_GROUPS = 24 };
+typedef struct { int evasion, stealth; int pd[MAX_GROUPS], ps[MAX_GROUPS], groups; } armour_profile;
+
+
+static armour_profile profile_with(const int slot, struct object *const item)
+{
+	struct player_state st;
+	armour_profile a = { 0 };
+	struct object *const worn = player->body.slots[slot].obj;
+	player->body.slots[slot].obj = item;   /* MUTABLE for this block, see state_with_item() */
+	calc_bonuses(player, &st, true, false);
+	a.evasion = st.skill_use[SKILL_EVASION];
+	a.stealth = st.skill_use[SKILL_STEALTH];
+	for (int i = 0; i < player->body.count && a.groups < MAX_GROUPS; i++) {
+		const struct object *const o = player->body.slots[i].obj;
+		if (!o || (slot_type_is(player, i, EQUIP_SHIELD) && tval_is_weapon(o))) continue;
+		const int pd = o->pd, ps = o->ps;
+		if (ps > 0 && (slot_type_is(player, i, EQUIP_SHIELD) ? pd > 0 : true)) { a.pd[a.groups] = pd; a.ps[a.groups] = ps; a.groups++; }
+	}
+	player->body.slots[slot].obj = worn;
+	return a;
+}
+
+/* The foe's melee as it lands on this armour: the chance a blow hits, and the average damage of one attack after protection. */
+typedef struct { double hit, per_attack, protection; } defence;
+
+static defence defence_vs(const armour_profile *const a, const struct monster_race *const race)
+{
+	dice_dist prt;
+	dist_start(&prt);
+	defence d = { 0, 0, 0 };
+	for (int g = 0; g < a->groups; g++) { dist_add(&prt, a->pd[g], a->ps[g]); d.protection += a->pd[g] * (a->ps[g] + 1) / 2.0; }
+	/* One blow per attack: the second kind a third of the time when the race has one (make_attack_normal()). */
+	const int kinds = race->blow[1].method ? 2 : 1;
+	for (int k = 0; k < kinds; k++) {
+		const struct monster_blow *const b = &race->blow[k];
+		if (!b->method) continue;
+		const double weight = kinds == 2 ? (k == 0 ? 2.0 / 3 : 1.0 / 3) : 1.0;
+		const int att = b->dice.base, dd = b->dice.dice, ds = b->dice.sides;
+		double hit = 0, dam = 0;
+		for (int x = 1; x <= 10; x++)
+			for (int y = 1; y <= 10; y++) {
+				const int margin = att + x - a->evasion - y;
+				if (margin <= 0) continue;
+				hit += 0.01;
+				const int crit = b->method->prt ? MIN(crit_bonus(player, margin, 20 * dd, NULL, SKILL_MELEE, false), 12) : 0;
+				dice_dist roll;
+				dist_start(&roll);
+				dist_add(&roll, dd + crit, ds);
+				dam += 0.01 * (b->method->prt ? expected_after(&roll, &prt, 100) : (double)((dd + crit) * (ds + 1)) / 2);
+			}
+		d.hit += weight * hit;
+		d.per_attack += weight * dam;
+	}
+	return d;
+}
+
+static void armour_text(struct object *const obj, char *const buf, const size_t cap)
+{
+	if (!tval_is_armor(obj) && !tval_is_jewelry(obj)) return;
+	const struct monster_race *const race = foe();
+	if (!race) {
+		add_line(buf, cap, "Look at or fight a monster to see what this does against its attacks.");
+		return;
+	}
+	const int slot = wield_slot(obj);
+	if (slot < 0 || slot >= player->body.count) return;
+	struct object *const worn = player->body.slots[slot].obj;
+	if (obj != worn && equipped_item_slot(player->body, obj) < player->body.count) return;  /* worn in another slot */
+
+	const armour_profile with = profile_with(slot, obj);
+	const defence mine = defence_vs(&with, race);
+	add_line(buf, cap, "Against the %s %s, about:", race->name, chosen_foe ? "(your choice)" : "(the last foe you looked at or fought)");
+	add_line(buf, cap, "its attacks hit you %.0f%% of the time for %.1f damage each (your protection averages %.1f).",
+		mine.hit * 100, mine.per_attack, mine.protection);
+	if (obj == worn) return;
+	const armour_profile without = profile_with(slot, worn);
+	const defence now = defence_vs(&without, race);
+	add_line(buf, cap, "%s: hit %.0f%%, %.1f damage each (protection averages %.1f).",
+		worn ? "What you wear there now" : "With nothing worn there", now.hit * 100, now.per_attack, now.protection);
+	if (now.per_attack >= 0.5) add_line(buf, cap, "Damage taken per attack: %+.0f%%.", (mine.per_attack / now.per_attack - 1) * 100);
+	else add_line(buf, cap, "Damage taken per attack: %+.1f.", mine.per_attack - now.per_attack);
+	add_line(buf, cap, "Evasion %d (now %d), stealth %d (now %d).", with.evasion, without.evasion, with.stealth, without.stealth);
+}
+
 size_t native_item_details(struct object *const obj, char *const buf, const size_t cap)
 {
 	assert(cap > 0);
 	buf[0] = '\0';
 	abilities_text(obj, buf, cap);
 	weapon_text(obj, buf, cap);
+	armour_text(obj, buf, cap);
 	return strlen(buf);
 }
 

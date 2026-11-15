@@ -183,7 +183,7 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Label("Item details in the pack")
-                        Hint("Adds what a granted ability does and, for a weapon, about how often it hits and crits and the damage it deals, against a monster you choose (by default the last you looked at or fought), compared with your own weapon.")
+                        Hint("Adds what a granted ability does and, for a weapon, about how often it hits and crits and the damage it deals, and for armour how much damage you take, against a monster you choose (by default the last you looked at or fought), compared with your own weapon.")
                     }
                     Switch(settings.itemDetails, { settings.itemDetails = it })
                 }
