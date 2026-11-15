@@ -54,7 +54,7 @@ object Scum {
     private const val AUTO_GAP_MS = 5 * 60 * 1000L
     private const val MARKER = "restore"
 
-    data class Copy(val file: File, val label: String)
+    data class Copy(val file: File, val label: String, val auto: Boolean = false)
 
     private fun dataDir(context: Context) = File(context.filesDir, "data")
     private fun saveFile(context: Context) = File(dataDir(context), "save/${GameLauncher.PLAYER}")
@@ -65,11 +65,14 @@ object Scum {
             .sortedByDescending { it.name }
             .map { Copy(it, label(it)) }
 
+    /** Manual copies and autosaves together, newest first. */
+    fun all(context: Context): List<Copy> = (copies(context) + autosaves(context)).sortedByDescending { it.file.lastModified() }
+
     /** Copies of the game's own autosaves, newest first. */
     fun autosaves(context: Context): List<Copy> =
         dir(context).listFiles { f -> f.name.startsWith("auto-${GameLauncher.PLAYER}-") }.orEmpty()
             .sortedByDescending { it.name }
-            .map { Copy(it, label(it)) }
+            .map { Copy(it, label(it), auto = true) }
 
     /**
      * Called after the game has saved: keeps a copy unless the newest kept one is under [AUTO_GAP_MS] old, so the few
@@ -158,11 +161,10 @@ object Scum {
     }
 }
 
-/** The scum copies, newest first: tap one to go back to it. */
+/** The scum copies and autosaves, interleaved newest first: tap one to go back to it. */
 @Composable
 fun ScumSheet(context: Context, onDismiss: () -> Unit) {
-    var copies by remember { mutableStateOf(Scum.copies(context)) }
-    val autos = remember { Scum.autosaves(context) }
+    var all by remember { mutableStateOf(Scum.all(context)) }
     var chosen by remember { mutableStateOf<Scum.Copy?>(null) }
     Box(
         Modifier.fillMaxSize().background(Color(0x99000000))
@@ -179,24 +181,20 @@ fun ScumSheet(context: Context, onDismiss: () -> Unit) {
                     TextButton(onClick = onDismiss) { Text("Close") }
                 }
                 LazyColumn {
-                    item { Text("Your scum saves", color = Color(0xFF9A9AA0), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
-                    if (copies.isEmpty()) item {
-                        Text("None yet. Use the Scum button while playing.", color = Color(0xFF9A9AA0), fontSize = 14.sp, modifier = Modifier.padding(16.dp))
+                    item {
+                        Text("Your saves in white, the game's autosaves in blue.", color = Color(0xFF9A9AA0), fontSize = 13.sp,
+                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                     }
-                    items(copies, key = { it.file.name }) { c ->
+                    if (all.isEmpty()) item {
+                        Text("None yet. Use the Scum button while playing; autosaves appear every few minutes.", color = Color(0xFF9A9AA0), fontSize = 14.sp, modifier = Modifier.padding(16.dp))
+                    }
+                    items(all, key = { it.file.name }) { c ->
                         Row(Modifier.fillMaxWidth().clickable { chosen = c }.padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(c.label, color = Color.White, fontSize = 15.sp, modifier = Modifier.weight(1f))
-                            TextButton(onClick = { c.file.delete(); copies = Scum.copies(context) }) { Text("Delete") }
+                            Text(if (c.auto) "${c.label}  (auto)" else c.label, color = if (c.auto) Color(0xFF6EB1FF) else Color.White,
+                                 fontSize = 15.sp, modifier = Modifier.weight(1f))
+                            if (!c.auto) TextButton(onClick = { c.file.delete(); all = Scum.all(context) }) { Text("Delete") }
                         }
-                    }
-                    item { Text("Recent autosaves", color = Color(0xFF9A9AA0), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
-                    if (autos.isEmpty()) item {
-                        Text("None yet: the game keeps one every few minutes while you play.", color = Color(0xFF9A9AA0), fontSize = 14.sp, modifier = Modifier.padding(16.dp))
-                    }
-                    items(autos, key = { it.file.name }) { c ->
-                        Text(c.label, color = Color.White, fontSize = 15.sp,
-                             modifier = Modifier.fillMaxWidth().clickable { chosen = c }.padding(horizontal = 16.dp, vertical = 12.dp))
                     }
                 }
             }
