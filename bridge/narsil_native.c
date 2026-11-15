@@ -718,7 +718,8 @@ bool native_service(bool at_prompt)
 		return false;
 	}
 	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 4) {
-		player->upkeep->monster_race = &r_info[1];  /* as if just looked at */
+		player->upkeep->monster_race = &r_info[1];  /* as if just looked at, and so seen */
+		l_list[1].tsights = 1;
 		native_publish(at_prompt);
 		return false;
 	}

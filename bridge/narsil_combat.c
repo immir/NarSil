@@ -22,6 +22,8 @@
 #include "player-attack.h"
 #include "player-calcs.h"
 #include "player-util.h"
+#include "monster.h"
+#include "init.h"
 
 #include <assert.h>
 #include <string.h>
@@ -56,6 +58,19 @@ static double expected_net(const int n, const int s, const struct monster_race *
 			if (prt[p] > 0) total += dam[d] * prt[p] * MAX(d - p * prt_percent / 100, 0);
 	}
 	return total;
+}
+
+/* The race the weapon numbers are against: the one chosen in the pack, else the last looked at or fought. Game thread. */
+static const struct monster_race *chosen_foe;
+
+void native_set_compare_foe(const unsigned ridx)
+{
+	chosen_foe = ridx > 0 && ridx < z_info->r_max ? &r_info[ridx] : NULL;
+}
+
+static const struct monster_race *foe(void)
+{
+	return chosen_foe ? chosen_foe : player->upkeep->monster_race;
 }
 
 typedef struct { double hit, crit, per_blow; } blow_odds;
@@ -132,7 +147,7 @@ static void abilities_text(const struct object *const obj, char *const buf, cons
 {
 	const bool known_kind = obj->kind && obj->kind->aware;
 	const bool known_ego = obj->ego && obj->ego->aware;
-	for (const struct ability *a = obj->abilities; a; a = a->next) {
+	for (struct ability *a = obj->abilities; a; a = a->next) {
 		const bool known = (known_kind && locate_ability(obj->kind->abilities, a))
 			|| (known_ego && locate_ability(obj->ego->abilities, a))
 			|| (obj->known && locate_ability(obj->known->abilities, a));
@@ -143,7 +158,7 @@ static void abilities_text(const struct object *const obj, char *const buf, cons
 static void weapon_text(struct object *const obj, char *const buf, const size_t cap)
 {
 	if (!tval_is_melee_weapon(obj)) return;
-	const struct monster_race *const race = player->upkeep->monster_race;
+	const struct monster_race *const race = foe();
 	if (!race) {
 		add_line(buf, cap, "Look at or fight a monster to see hit and damage numbers for this weapon against it.");
 		return;
@@ -153,7 +168,7 @@ static void weapon_text(struct object *const obj, char *const buf, const size_t 
 	if (obj != wielded && equipped_item_slot(player->body, obj) < player->body.count) return;  /* worn in another slot (off hand) */
 
 	const melee_odds mine = melee_with(obj, race);
-	add_line(buf, cap, "Against the %s (the last foe you looked at or fought), about:", race->name);
+	add_line(buf, cap, "Against the %s %s, about:", race->name, chosen_foe ? "(your choice)" : "(the last foe you looked at or fought)");
 	add_line(buf, cap, "hit %.0f%%, critical %.0f%% of blows; %.1f damage per blow, %.1f per round.",
 		mine.main.hit * 100, mine.main.crit * 100, mine.main.per_blow, mine.per_round);
 	if (obj == wielded) return;
@@ -170,5 +185,45 @@ size_t native_item_details(struct object *const obj, char *const buf, const size
 	buf[0] = '\0';
 	abilities_text(obj, buf, cap);
 	weapon_text(obj, buf, cap);
+	return strlen(buf);
+}
+
+typedef struct { unsigned ridx; bool in_view; int distance; } foe_choice;
+
+static int by_nearness(const void *const a, const void *const b)
+{
+	const foe_choice *const x = a, *const y = b;
+	if (x->in_view != y->in_view) return x->in_view ? -1 : 1;
+	return x->distance != y->distance ? x->distance - y->distance : (int)x->ridx - (int)y->ridx;
+}
+
+/*
+ * Foes the weapon numbers can be compared against: "#F <chosen race or 0> <name>", then "#R <race> <name> <level> <in view>"
+ * for the monsters in view, then those seen before, nearest to the current depth first.
+ */
+size_t native_foe_choices(char *const buf, const size_t cap)
+{
+	assert(cap > 0);
+	foe_choice *const all = mem_zalloc(sizeof(*all) * z_info->r_max);
+	unsigned n = 0;
+	for (unsigned i = 1; i < z_info->r_max; i++) {
+		const struct monster_race *const r = &r_info[i];
+		if (!r->name || !(l_list[i].all_known || l_list[i].tsights)) continue;
+		all[n++] = (foe_choice){ i, false, abs(r->level - player->depth) };
+	}
+	for (int m = 1; m < cave_monster_max(cave); m++) {
+		const struct monster *const mon = cave_monster(cave, m);
+		if (!mon || !mon->race || !monster_is_visible(mon)) continue;
+		bool listed = false;
+		for (unsigned i = 0; i < n; i++) if (all[i].ridx == mon->race->ridx) { all[i].in_view = true; listed = true; }
+		if (!listed) all[n++] = (foe_choice){ mon->race->ridx, true, 0 };
+	}
+	qsort(all, n, sizeof(*all), by_nearness);
+	buf[0] = '\0';
+	const struct monster_race *const cur = chosen_foe;
+	add_line(buf, cap, "#F\t%u\t%s", cur ? cur->ridx : 0, foe() ? foe()->name : "");
+	for (unsigned i = 0; i < n && i < 150; i++)
+		add_line(buf, cap, "#R\t%u\t%s\t%d\t%d", all[i].ridx, r_info[all[i].ridx].name, r_info[all[i].ridx].level, all[i].in_view ? 1 : 0);
+	mem_free(all);
 	return strlen(buf);
 }

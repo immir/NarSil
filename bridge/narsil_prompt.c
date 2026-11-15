@@ -393,7 +393,7 @@ static int item_actions(const struct object *obj, action *a)
  * has run (see native_pack_resume()), except for aimed ones.
  * ------------------------------------------------------------------------ */
 
-enum { PACK_COLLAPSE = NB_PACK_COLLAPSE, PACK_EXPAND = NB_PACK_EXPAND, PACK_ACT = NB_PACK_ACT, PACK_ACT_STRIDE = NB_PACK_ACT_STRIDE };
+enum { PACK_COLLAPSE = NB_PACK_COLLAPSE, PACK_EXPAND = NB_PACK_EXPAND, PACK_ACT = NB_PACK_ACT, PACK_ACT_STRIDE = NB_PACK_ACT_STRIDE, PACK_FOE = NB_PACK_FOE };
 
 static struct { bool reopen; int tab; int focus; } pack_after;
 static bool more_forced;  /* auto_more is on only until the pack reopens (see pack_action()) */
@@ -412,7 +412,12 @@ static void publish_pack(const candidate *c, int n, int expanded, int focus)
 	textblock *const tb = expanded >= 0 ? object_info(c[expanded].obj, OINFO_NONE) : NULL;
 	char details[2048];
 	details[0] = '\0';
-	if (expanded >= 0 && native_item_details_on()) native_item_details(c[expanded].obj, details, sizeof(details));
+	char foes[16 * 1024];
+	foes[0] = '\0';
+	if (expanded >= 0 && native_item_details_on()) {
+		native_item_details(c[expanded].obj, details, sizeof(details));
+		if (tval_is_melee_weapon(c[expanded].obj)) native_foe_choices(foes, sizeof(foes));
+	}
 
 	pthread_mutex_lock(&shared.lock);
 	text_reset();
@@ -437,6 +442,7 @@ static void publish_pack(const candidate *c, int n, int expanded, int focus)
 	if (details[0]) {
 		for (const char *line = strtok(details, "\n"); line; line = strtok(NULL, "\n")) text_add("#D\t%s\n", line);
 	}
+	text_add("%s", foes);
 	pthread_mutex_unlock(&shared.lock);
 	if (tb) textblock_free(tb);
 }
@@ -477,6 +483,7 @@ bool native_pack(int focus)
 			track_object(player->upkeep, c[expanded].obj);
 			continue;
 		}
+		if (a >= PACK_FOE) { native_set_compare_foe((unsigned)(a - PACK_FOE)); continue; }
 		const int i = (a - PACK_ACT) / PACK_ACT_STRIDE;
 		if (a >= PACK_ACT && i < n && pack_action(c[i].obj, (a - PACK_ACT) % PACK_ACT_STRIDE, focus)) return true;
 		handle_stuff(player);

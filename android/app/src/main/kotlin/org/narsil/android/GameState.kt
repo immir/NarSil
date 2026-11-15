@@ -60,6 +60,8 @@ class GameState {
     data class Item(val index: Int, val section: Int, val label: Char, val glyph: Int, val attr: Int,
                     val weightTenthsLb: Int, val name: String,
                     /** 0 ordinary, 1 known ego item, 2 known artefact, 3 properties still unknown ("??"). */ val special: Int = 0)
+    data class FoePick(val race: Int, val name: String)
+    data class FoeChoice(val race: Int, val name: String, val level: Int, val inView: Boolean)
     data class Action(val index: Int, val valid: Boolean, val label: String)
     data class Target(val x: Int, val y: Int, val inRange: Boolean, val name: String)
     data class Message(val attr: Int, val count: Int, val text: String, val spans: List<Span> = emptyList()) {
@@ -72,7 +74,9 @@ class GameState {
         data class Items(val title: String, val items: List<Item>) : Prompt
         /** The whole pack; [expanded] (an item index, or -1) shows its [actions] and [description]. */
         data class Pack(val expanded: Int, val focus: Int, val weight: Int, val limit: Int, val items: List<Item>,
-                        val actions: List<Action>, val description: String, val resumed: Boolean) : Prompt
+                        val actions: List<Action>, val description: String, val resumed: Boolean,
+                        /** The foe weapon numbers compare against ([FoePick.race] 0: the last looked at or fought) and the ones to choose from; null when the numbers are off. */
+                        val foe: FoePick? = null, val foes: List<FoeChoice> = emptyList()) : Prompt
         data class Check(val question: String) : Prompt
         data class Aim(val range: Int, val current: Pair<Int, Int>?, val targets: List<Target>) : Prompt
         data class Direction(val allowHere: Boolean, val neighbours: List<Neighbour>) : Prompt
@@ -234,7 +238,7 @@ class GameState {
     /** Called with every answer the UI sends: an action from the pack keeps the pack on screen until it reopens. */
     fun answered(value: Int) {
         val runsCommand = when (val p = prompt) {
-            is Prompt.Pack -> value >= N.PACK_ACT && value < N.PANEL_TAB
+            is Prompt.Pack -> value >= N.PACK_ACT && value < N.PACK_FOE
             is Prompt.Smith -> p.view == "main" && value == SMITH_MAKE && p.options.getOrNull(value)?.state != N.OPT_OFF
             else -> false
         }

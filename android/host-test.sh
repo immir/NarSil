@@ -205,6 +205,13 @@ out=$(run "${birth[@]}" @details=1 @foe @ego @act=15 @answer=1002 @prompt @answe
 echo "$out" | grep -qP '^#D\tAgainst the .* \(the last foe you looked at or fought\), about:'
 echo "$out" | grep -qP '^#D\thit [0-9]+%, critical [0-9]+% of blows; [0-9.]+ damage per blow, [0-9.]+ per round\.'
 echo "$out" | grep -qP '^#D\tYour (weapon|bare hands) now: hit'
+echo "$out" | grep -qP '^#F\t0\t'
+echo "$out" | grep -qP '^#R\t[0-9]+\t.+\t[0-9]+\t[01]$'
+echo "== item details: choosing a foe in the pack"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @details=1 @foe @ego @act=15 @answer=1002 @answer=10000003 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qP '^#F\t3\t'
+echo "$out" | grep -qP '^#D\tAgainst the .* \(your choice\), about:'
 
 echo "== native pack: equipping (two messages, so a -more-) reopens the pack by itself, and the option is put back"
 rm -rf "$work/data"

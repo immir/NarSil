@@ -145,6 +145,7 @@ enum NB {
     static let PACK_EXPAND = 1000
     static let PACK_ACT = 100000
     static let PACK_ACT_STRIDE = 100
+    static let PACK_FOE = 10000000
     static let SKILL_RESET = 1
     static let SKILL_ACCEPT = 2
     static let SKILL_BUY = 100

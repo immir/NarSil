@@ -70,7 +70,7 @@ private val TOUCH_GUIDE = listOf(
         "Skills appears there once you have experience to spend.",
         "☰ holds the rest: the panel, the whole-level map, messages, bash, tunnel, disarm, exchange, app options and help.",
         "Tap the message strip to scroll back through old messages; Options sets how many recent messages it shows. When it says \"tap to continue\", a tap dismisses -more-. Known ego items and artefacts are highlighted (cyan and gold) in the pack and wherever a message names them; items with properties still to discover (marked ??) are lilac in the pack.",
-        "Options → Item details in the pack (off by default) adds, to an expanded pack item, what a granted ability does and, for a weapon, about how often it hits and crits and its damage per blow and per round against the last monster you looked at or fought, beside your own weapon (slays, brands and special attacks are not counted).",
+        "Options → Item details in the pack (off by default) adds, to an expanded pack item, what a granted ability does and, for a weapon, about how often it hits and crits and its damage per blow and per round against the last monster you looked at or fought (or any you choose with Compare against: those in view, then ones you have seen), beside your own weapon (slays, brands and special attacks are not counted).",
         "When health falls below the game's hitpoint warning the phone buzzes and the HP bar turns red (Options turns the buzz off).",
     )),
     Section("Menus and prompts", listOf(

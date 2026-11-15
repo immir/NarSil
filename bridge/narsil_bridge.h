@@ -292,7 +292,8 @@ enum { NB_CHARACTER_SCREEN = 1, NB_CHARACTER_RENAME = 2, NB_CHARACTER_DUMP = 3 }
 int nb_panel_tab(void);
 
 /* Pack answers: collapse; expand item i; action k of item i. */
-enum { NB_PACK_COLLAPSE = 999, NB_PACK_EXPAND = 1000, NB_PACK_ACT = 100000, NB_PACK_ACT_STRIDE = 100 };
+enum { NB_PACK_COLLAPSE = 999, NB_PACK_EXPAND = 1000, NB_PACK_ACT = 100000, NB_PACK_ACT_STRIDE = 100,
+       NB_PACK_FOE = 10000000 /* + race index (0: the last foe looked at or fought): the weapon numbers compare against it */ };
 
 /* Skill answers: buy/sell a point in skill i, reset this session, or accept. */
 enum { NB_SKILL_RESET = 1, NB_SKILL_ACCEPT = 2, NB_SKILL_BUY = 100, NB_SKILL_SELL = 200 };

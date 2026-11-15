@@ -60,6 +60,11 @@ bool native_item_details_on(void);
  */
 size_t native_item_details(struct object *obj, char *buf, size_t cap);
 
+/* Implemented by narsil_combat.c (game thread): choose the race the weapon numbers use (0: the last looked at or fought). */
+void native_set_compare_foe(unsigned ridx);
+/* The pack's foe picker as prompt records: "#F" (the choice, its name), then "#R" per foe (see narsil_combat.c). */
+size_t native_foe_choices(char *buf, size_t cap);
+
 /* Implemented by narsil_prompt.c: 2 for a known artefact, 1 for a known ego item, 3 for one with properties still unknown ("??"), else 0; the name it adds to the item's description. */
 int native_special_tier(const struct object *obj);
 const char *native_special_name(const struct object *obj);
