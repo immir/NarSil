@@ -198,7 +198,7 @@ enum Parse {
         let ls = lines(raw)
         let head = fields(try line(ls, 0))
         switch head[0] {
-        case "Look":
+        case "Look", "Monsters":
             return .lookList(try nonEmpty(Array(ls.dropFirst())).map { l in
                 let f = fields(l, 3)
                 return LookEntry(x: try int(f, 0), y: try int(f, 1), summary: str(f, 2))

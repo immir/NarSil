@@ -92,6 +92,10 @@ enum nb_meta {
 	NB_META_HP_WARN,    /* the hitpoint warning, in tenths of maximum health (0 = off) */
 	NB_META_TILE_ALERT, NB_META_TILE_GLOW, /* the overlay tiles (row << 8 | column) for alert monsters / glowing objects, or -1 */
 	NB_META_AUTO_MORE,  /* the game's "Automatically clear -more- prompts" option (see nb_set_auto_more()) */
+	NB_META_THREATS,        /* monsters the look list would show: visible ones in view */
+	NB_META_THREATS_ALERT,  /* of those, how many are awake to you (alert or more) */
+	NB_META_THREAT_NEAREST, /* distance to the nearest of them, or -1 */
+	NB_META_LIGHT_TURNS,    /* turns left on the wielded torch or lantern, or -1 if the light does not burn out (or none) */
 	NB_META_COUNT
 };
 
@@ -166,6 +170,8 @@ void nb_request_rest(int turns_or_mode);
  * (-1, -1) clears the target. */
 void nb_request_target(int x, int y);
 void nb_request_look_list(void);
+/* The same list, monsters only (the header line is "Monsters" instead of "Look"). */
+void nb_request_look_monsters(void);
 
 /* Sets the game's "Automatically clear -more- prompts" option (saved with the character); shown in NB_META_AUTO_MORE. */
 void nb_set_auto_more(bool on);

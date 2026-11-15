@@ -49,7 +49,11 @@ object NarSilNative {
     const val META_TILE_ALERT = 22
     const val META_TILE_GLOW = 23
     const val META_AUTO_MORE = 24
-    const val META_COUNT = 25
+    const val META_THREATS = 25
+    const val META_THREATS_ALERT = 26
+    const val META_THREAT_NEAREST = 27
+    const val META_LIGHT_TURNS = 28
+    const val META_COUNT = 29
 
     /** enum nb_stance, as sidebar text. */
     val STANCE_NAMES = arrayOf("", "Sleeping", "Unwary", "Mindless", "Fleeing", "Confident", "Aggressive")
@@ -126,6 +130,7 @@ object NarSilNative {
     /** The game option "Automatically clear -more- prompts"; its value is META_AUTO_MORE. */
     @JvmStatic external fun nativeSetAutoMore(on: Boolean)
     @JvmStatic external fun nativeRequestLookList()
+    @JvmStatic external fun nativeRequestLookMonsters()
     @JvmStatic external fun nativeInfoGeneration(): Long
     @JvmStatic external fun nativeInfo(): String
 

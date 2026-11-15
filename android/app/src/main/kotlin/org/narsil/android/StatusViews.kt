@@ -12,6 +12,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -77,10 +79,10 @@ internal fun PanelButton() {
 @Composable
 internal fun StatusStrip(state: GameState, stacked: Boolean, buzzOnLowHealth: Boolean) {
     val s = state.status
-    val line = state.statusLine
     LowHealthBuzz(s.lowHp && buzzOnLowHealth)
     val hpColour = if (s.lowHp) Color(0xFFFF3B30) else Color(0xFFD04040)
-    Column(Modifier.fillMaxWidth().background(Color(0xFF141414)).padding(horizontal = 8.dp, vertical = 4.dp)) {
+    Column(Modifier.fillMaxWidth().background(Color(0xFF141414)).clickable { NarSilNative.nativeRequestAction(NarSilNative.ACT_CHARACTER) }
+               .padding(horizontal = 8.dp, vertical = 4.dp)) {
         if (stacked) {
             Meter("HP", s.hp, s.maxHp, hpColour, Modifier.fillMaxWidth(), alarm = s.lowHp)
             Meter("Voice", s.voice, s.maxVoice, Color(0xFF4080E0), Modifier.fillMaxWidth().padding(top = 4.dp))
@@ -90,8 +92,7 @@ internal fun StatusStrip(state: GameState, stacked: Boolean, buzzOnLowHealth: Bo
             Meter("Voice", s.voice, s.maxVoice, Color(0xFF4080E0), Modifier.weight(1f))
             Text("${s.depth * 50} ft", color = Color.White, fontSize = 13.sp)
         }
-        if (line.isNotEmpty())
-            Text(line.replace(Regex("\\s{2,}"), "  ·  "), color = Color(0xFFB0B0B0), fontSize = 12.sp, maxLines = if (stacked) 3 else 1)
+        StatusChips(state)
         s.foe?.let { FoeLine(it, state) }
     }
 }
@@ -158,4 +159,32 @@ internal fun Centered(text: String, action: String? = null, onAction: () -> Unit
         Text(text, color = Color.White)
         if (action != null) Button(onClick = onAction, modifier = Modifier.padding(top = 16.dp)) { Text(action) }
     }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun StatusChips(state: GameState) {
+    val s = state.status
+    val amber = Color(0xFFFFCA28)
+    val red = Color(0xFFEF5350)
+    val segments = state.statusSegments().filterNot { (text, _) -> text.matches(Regex("""\d+'?\s*(ft)?""")) }
+    val light = segments.firstOrNull { it.first.startsWith("Light") }
+    val others = segments.filter { it !== light }
+    FlowRow(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (s.newExp > 0) Chip("Exp ${s.newExp}", if (s.newExp >= 100) Color(0xFF90CAF9) else Color(0xFFB0B0B0)) { NarSilNative.nativeRequestAction(NarSilNative.ACT_SKILLS) }
+        if (light != null || s.lightTurns >= 0) {
+            val turns = s.lightTurns
+            val colour = when { turns in 0..99 -> red; turns in 0..299 -> amber; else -> light?.second?.let { Color(it) } ?: Color(0xFFB0B0B0) }
+            Chip(listOfNotNull(light?.first, if (turns >= 0) "${turns}t" else null).joinToString(" · "), colour)
+        }
+        others.forEach { (text, colour) -> Chip(text, Color(colour)) }
+        if (s.threats > 0) Chip("${s.threats} in view · ${s.threatNearest} away", if (s.threatsAlert > 0) red else Color(0xFFB0B0B0)) { NarSilNative.nativeRequestLookMonsters() }
+    }
+}
+
+@Composable
+private fun Chip(text: String, colour: Color, onClick: (() -> Unit)? = null) {
+    Text(text, color = colour, fontSize = 12.sp, maxLines = 1,
+         modifier = Modifier.background(colour.copy(alpha = 0.16f), RoundedCornerShape(8.dp))
+             .let { if (onClick != null) it.clickable(onClick = onClick) else it }.padding(horizontal = 8.dp, vertical = 3.dp))
 }

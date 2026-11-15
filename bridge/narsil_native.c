@@ -24,6 +24,7 @@
 #include "obj-gear.h"
 #include "obj-make.h"
 #include "obj-pile.h"
+#include "obj-tval.h"
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
@@ -77,6 +78,8 @@ static struct {
 } game;
 
 static bool tiles_on(void);
+static void threat_counts(int32_t *count, int32_t *alert, int32_t *nearest);
+static int32_t light_turns_left(void);
 
 /* Shared; guarded by `lock`. */
 static struct {
@@ -303,6 +306,8 @@ void native_publish(bool at_prompt)
 		meta[NB_META_EXP] = player->exp;
 		meta[NB_META_CONTEXT] = context_flags();
 		meta[NB_META_NEW_EXP] = player->new_exp;
+		threat_counts(&meta[NB_META_THREATS], &meta[NB_META_THREATS_ALERT], &meta[NB_META_THREAT_NEAREST]);
+		meta[NB_META_LIGHT_TURNS] = light_turns_left();
 	}
 	struct loc target = loc(-1, -1);
 	if (visible && target_okay(0)) target_get(&target);
@@ -509,18 +514,46 @@ static int look_rank(struct loc g)
 	return 2;
 }
 
+/* What the look list would show as monsters: how many, how many awake to the player, and the nearest one's distance. */
+static void threat_counts(int32_t *const count, int32_t *const alert, int32_t *const nearest)
+{
+	*count = *alert = 0;
+	*nearest = -1;
+	struct point_set *const pts = target_get_monsters(TARGET_LOOK, NULL, false);
+	for (int i = 0; i < point_set_size(pts); i++) {
+		const struct loc g = pts->pts[i];
+		const struct monster *const mon = loc_eq(g, player->grid) ? NULL : visible_monster(g);
+		if (!mon) continue;
+		(*count)++;
+		if (mon->alertness >= ALERTNESS_ALERT) (*alert)++;
+		const int d = distance(player->grid, g);
+		if (*nearest < 0 || d < *nearest) *nearest = d;
+	}
+	point_set_dispose(pts);
+}
+
+/* Turns left on the wielded light, or -1 when it never burns out or there is none. */
+static int32_t light_turns_left(void)
+{
+	for (int i = 0; i < player->body.count; i++) {
+		const struct object *const obj = slot_object(player, i);
+		if (obj && tval_is_light(obj) && !of_has(obj->flags, OF_NO_FUEL)) return obj->timeout;
+	}
+	return -1;
+}
+
 /*
  * Serialised: "Look"; then per interesting grid: x \t y \t summary; monsters
  * first, then objects, then features, each nearest first.
  */
-static void look_list(void)
+static void look_list(const bool monsters_only)
 {
 	info_len = 0;
 	info_buf[0] = '\0';
-	info_add("Look\n");
+	info_add(monsters_only ? "Monsters\n" : "Look\n");
 	struct point_set *const pts = target_get_monsters(TARGET_LOOK, NULL, false);
 	int listed = 0;
-	for (int rank = 0; rank <= 2; rank++)
+	for (int rank = 0; rank <= (monsters_only ? 0 : 2); rank++)
 		for (int i = 0; i < point_set_size(pts) && listed < LOOK_MAX; i++) {
 			const struct loc g = pts->pts[i];
 			if (loc_eq(g, player->grid) || look_rank(g) != rank) continue;
@@ -648,7 +681,7 @@ bool native_service(bool at_prompt)
 		publish_info();
 		return false;
 	}
-	if (r.kind == REQ_LOOK_LIST) { look_list(); publish_info(); return false; }
+	if (r.kind == REQ_LOOK_LIST) { look_list(r.run); publish_info(); return false; }
 	if (r.kind == REQ_AUTO_MORE) {
 		OPT(player, auto_more) = r.run;
 		native_publish(at_prompt);
@@ -657,7 +690,7 @@ bool native_service(bool at_prompt)
 	if (r.kind == REQ_TEST_CHEST && at_prompt) {
 		const int count = r.dir == 2 ? 4 : 1; /* 2: a pile, as stepping on one reports it */
 		for (int i = 0; i < count; i++) {
-			struct object *const chest = object_new();
+			struct object *chest = object_new(); /* mutable: drop_near() takes the pointer and clears it */
 			object_prep(chest, lookup_kind(TV_CHEST, lookup_sval(TV_CHEST, "Small wooden chest")), 5, RANDOMISE);
 			chest->pval = r.dir == 1 ? 5 : 1; /* trapped, or merely locked: see obj-chest.c */
 			drop_near(cave, &chest, 0, player->grid, false, true);
@@ -922,6 +955,11 @@ void nb_set_auto_more(bool on)
 void nb_request_look_list(void)
 {
 	post((request){ .kind = REQ_LOOK_LIST });
+}
+
+void nb_request_look_monsters(void)
+{
+	post((request){ .kind = REQ_LOOK_LIST, .run = true });
 }
 
 size_t nb_foe_name(char *text, size_t cap)

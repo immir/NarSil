@@ -86,11 +86,11 @@ fun LookSheet(info: GameState.Info.LookList, state: GameState, onDismiss: () -> 
     BottomSheet(onDismiss) {
         Column(Modifier.padding(top = 12.dp)) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("In view", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Text(if (info.monstersOnly) "Monsters in view" else "In view", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                 TextButton(onClick = onDismiss) { Text("Close") }
             }
             if (info.entries.isEmpty())
-                Text("Nothing of interest.", color = Color(0xFF9A9AA0), modifier = Modifier.padding(16.dp))
+                Text(if (info.monstersOnly) "No monsters in view." else "Nothing of interest.", color = Color(0xFF9A9AA0), modifier = Modifier.padding(16.dp))
             LazyColumn {
                 items(info.entries) { e ->
                     Row(Modifier.fillMaxWidth().clickable { N.nativeRequestInspect(e.x, e.y) }.heightIn(min = 48.dp)

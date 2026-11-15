@@ -97,6 +97,12 @@ rm -rf "$work/data"
 out=$(run "${birth[@]}" @pile @act=1 @messages "${quit[@]}")
 echo "$out" | grep -qP 'You see .*, .*, .* and 1 more\.'
 
+echo "== the status area's data: a lit torch has turns left; the monsters-only look list has its own header"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @ctx @lookm "${quit[@]}")
+echo "$out" | grep -qE '^threats=0 light=([0-9]+|-1)$'
+echo "$out" | grep -q '^Monsters$'
+
 echo "== look list and inspect are answered, read-only"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @look @inspect@0,0 "${quit[@]}")

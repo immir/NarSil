@@ -232,11 +232,12 @@ static int run_token(const char *tok)
 		printf("%s", text);
 		return 0;
 	}
-	if (sscanf(tok, "@inspect@%d,%d%c", &mx, &my, &tail) == 2 || strcmp(tok, "@look") == 0) {
+	if (sscanf(tok, "@inspect@%d,%d%c", &mx, &my, &tail) == 2 || strcmp(tok, "@look") == 0 || strcmp(tok, "@lookm") == 0) {
 		int32_t meta[NB_META_COUNT];
 		nb_map_snapshot(meta, NULL, 0);
 		const uint64_t before = nb_info_generation();
-		if (tok[1] == 'l') nb_request_look_list();
+		if (strcmp(tok, "@lookm") == 0) nb_request_look_monsters();
+		else if (tok[1] == 'l') nb_request_look_list();
 		else nb_request_inspect(meta[NB_META_PLAYER_X] + mx, meta[NB_META_PLAYER_Y] + my);
 		if (!settle()) return 1;
 		static char text[32 * 1024];
@@ -251,7 +252,7 @@ static int run_token(const char *tok)
 	if (strcmp(tok, "@ctx") == 0) {
 		int32_t meta[NB_META_COUNT];
 		nb_map_snapshot(meta, NULL, 0);
-		printf("context=0x%x\n", (unsigned)meta[NB_META_CONTEXT]);
+		printf("context=0x%x\nthreats=%d light=%d\n", (unsigned)meta[NB_META_CONTEXT], meta[NB_META_THREATS], meta[NB_META_LIGHT_TURNS]);
 		return 0;
 	}
 	if (sscanf(tok, "@answer=%d%c", &mx, &tail) == 1) {

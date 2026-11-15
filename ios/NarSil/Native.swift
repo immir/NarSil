@@ -39,6 +39,7 @@ enum Native {
     static func requestTarget(x: Int, y: Int) { nb_request_target(Int32(x), Int32(y)) }
     static func requestRest(_ turnsOrMode: Int) { nb_request_rest(Int32(turnsOrMode)) }
     static func requestLookList() { nb_request_look_list() }
+    static func requestLookMonsters() { nb_request_look_monsters() }
     static func requestPreview(x: Int, y: Int) { nb_request_preview(Int32(x), Int32(y)) }
     static func clearPreview() { nb_clear_preview() }
     static func setTiles(_ on: Bool) { nb_set_tiles(on) }

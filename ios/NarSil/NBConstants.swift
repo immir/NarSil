@@ -29,7 +29,11 @@ enum NB {
     static let META_TILE_ALERT = 22
     static let META_TILE_GLOW = 23
     static let META_AUTO_MORE = 24
-    static let META_COUNT = 25
+    static let META_THREATS = 25
+    static let META_THREATS_ALERT = 26
+    static let META_THREAT_NEAREST = 27
+    static let META_LIGHT_TURNS = 28
+    static let META_COUNT = 29
     static let STANCE_NONE = 0
     static let STANCE_SLEEPING = 1
     static let STANCE_UNWARY = 2

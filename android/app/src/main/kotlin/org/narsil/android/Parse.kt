@@ -113,9 +113,9 @@ object Parse {
         val lines = raw.split('\n')
         val head = lines.firstOrNull()?.split('\t') ?: return null
         return when (head[0]) {
-            "Look" -> Info.LookList(lines.drop(1).filter { it.isNotEmpty() }.map { l ->
+            "Look", "Monsters" -> Info.LookList(lines.drop(1).filter { it.isNotEmpty() }.map { l ->
                 l.split('\t', limit = 3).let { LookEntry(it[0].toInt(), it[1].toInt(), it[2]) }
-            })
+            }, monstersOnly = head[0] == "Monsters")
             "Character" -> Info.Character(buildList {
                 lines.drop(1).filter { it.isNotEmpty() }.forEach { l ->
                     val f = l.split('\t')

@@ -341,6 +341,12 @@ JNIEXPORT void JNICALL JNI_FN(nativeRequestLookList)(JNIEnv *env, jclass cls)
 	nb_request_look_list();
 }
 
+JNIEXPORT void JNICALL JNI_FN(nativeRequestLookMonsters)(JNIEnv *env, jclass cls)
+{
+	(void)env; (void)cls;
+	nb_request_look_monsters();
+}
+
 JNIEXPORT jlong JNICALL JNI_FN(nativeInfoGeneration)(JNIEnv *env, jclass cls)
 {
 	(void)env; (void)cls;

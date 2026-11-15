@@ -121,7 +121,7 @@ class GameState {
     sealed interface Info {
         data class Inspect(val x: Int, val y: Int, val monster: Monster?, val objects: List<String>, val terrain: String?,
                            val targetable: Boolean = false, val isTarget: Boolean = false) : Info
-        data class LookList(val entries: List<LookEntry>) : Info
+        data class LookList(val entries: List<LookEntry>, val monstersOnly: Boolean = false) : Info
         data class Character(val sections: List<Section>) : Info
     }
     data class Monster(val name: String, val state: String, val recall: String)
@@ -145,7 +145,8 @@ class GameState {
 
     data class Status(val hp: Int = 0, val maxHp: Int = 0, val voice: Int = 0, val maxVoice: Int = 0,
                       val depth: Int = 0, val exp: Int = 0, val context: Int = 0, val foe: Foe? = null,
-                      val newExp: Int = 0, val hpWarn: Int = 0, val autoMore: Boolean = false) {
+                      val newExp: Int = 0, val hpWarn: Int = 0, val autoMore: Boolean = false,
+                      val threats: Int = 0, val threatsAlert: Int = 0, val threatNearest: Int = -1, val lightTurns: Int = -1) {
         fun has(flag: Int) = context and flag != 0
         /** Below the game's hitpoint warning (tenths of maximum health). */
         val lowHp get() = maxHp > 0 && hpWarn > 0 && hp * 10 < maxHp * hpWarn
@@ -250,8 +251,30 @@ class GameState {
                         meta[N.META_DEPTH], meta[N.META_EXP], meta[N.META_CONTEXT],
                         if (meta[N.META_FOE_X] < 0) null else Foe(meta[N.META_FOE_X], meta[N.META_FOE_Y], N.nativeFoeName(),
                             meta[N.META_FOE_HEALTH], meta[N.META_FOE_STANCE], meta[N.META_FOE_MORALE]),
-                        meta[N.META_NEW_EXP], meta[N.META_HP_WARN], meta[N.META_AUTO_MORE] != 0)
+                        meta[N.META_NEW_EXP], meta[N.META_HP_WARN], meta[N.META_AUTO_MORE] != 0,
+                        meta[N.META_THREATS], meta[N.META_THREATS_ALERT], meta[N.META_THREAT_NEAREST], meta[N.META_LIGHT_TURNS])
         return true
+    }
+
+    /** The game's bottom status line as its separate pieces, each with its game colour (runs of 2+ spaces separate them). */
+    fun statusSegments(): List<Pair<String, Int>> {
+        if (rows == 0) return emptyList()
+        val y = rows - 1
+        val out = mutableListOf<Pair<String, Int>>()
+        val text = StringBuilder()
+        var attr = 0
+        var spaces = 0
+        fun flush() { if (text.isNotEmpty()) out += text.toString() to colour(attr % 256 % 32); text.setLength(0) }
+        for (x in 0 until cols) {
+            val cp = term[2 * (y * cols + x)]
+            if (cp == ' '.code || cp == 0) { if (++spaces >= 2) flush(); continue }
+            if (spaces == 1) text.append(' ')
+            if (text.isEmpty()) attr = term[2 * (y * cols + x) + 1]
+            spaces = 0
+            text.appendCodePoint(cp)
+        }
+        flush()
+        return out
     }
 
     private fun rowText(y: Int): String = buildString(cols) {
