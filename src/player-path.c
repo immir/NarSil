@@ -73,6 +73,11 @@ static bool is_valid_pf(struct player *p, struct loc grid)
 		return false;
 	}
 
+	/* Chasms count as passable (missiles and fliers cross them) but walking in means falling */
+	if (square_ischasm(p->cave, grid)) {
+		return false;
+	}
+
 	/* All remaining passable terrain is okay. */
 	if (square_ispassable(p->cave, grid)) {
 		return true;
