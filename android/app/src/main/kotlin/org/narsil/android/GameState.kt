@@ -17,8 +17,14 @@ class GameState {
 
     val term = IntArray(2 * cols * rows)
     val termCursor = IntArray(3)
+    /** The game's own colours (0xRRGGBB) and the themed ones the UI draws with (ARGB). */
+    var gamePalette = IntArray(0)
+        private set
     var palette = IntArray(0)
         private set
+    /** Index into [Theme.ALL]; changing it recolours at the next frame (the next poll sees a new generation). */
+    var themeIndex = 0
+        set(v) { if (v != field) { field = v; termGen = -1; mapGen = -1 } }
 
     val meta = IntArray(N.META_COUNT)
     var map = IntArray(0)
@@ -171,7 +177,8 @@ class GameState {
     private fun poll() {
         if (N.nativeGeneration() != termGen) {
             termGen = N.nativeSnapshot(term, termCursor)
-            palette = N.nativePalette()
+            gamePalette = N.nativePalette()
+            palette = Theme.byIndex(themeIndex).apply(gamePalette)
             messageLine = rowText(0)
             statusLine = rowText(rows - 1)
             waiting = (0 until rows).map(::rowText).let { text ->

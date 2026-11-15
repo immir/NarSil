@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -200,7 +201,7 @@ class MainActivity : ComponentActivity() {
                     router.intercept = { code -> if (code == Keys.ESCAPE) showOptions = false; code == Keys.ESCAPE }
                     onDispose { router.intercept = null }
                 }
-                OptionsSheet(settings, autoMore = state.status.autoMore,
+                OptionsSheet(settings, state.gamePalette, autoMore = state.status.autoMore,
                              autoMoreEnabled = state.atPrompt && state.prompt == null, onAutoMore = NarSilNative::nativeSetAutoMore,
                              onGameOptions = { NarSilNative.nativeRequestAction(NarSilNative.ACT_OPTIONS) },
                              onExportSave = ::exportSave, onImportSave = { importSave.launch(arrayOf("*/*")) },
@@ -289,6 +290,7 @@ when (prompt) {
 
     @Composable
     private fun GameLayers(state: GameState) {
+        SideEffect { state.themeIndex = settings.theme }
         /* Landscape: the status moves to a rail on the right and the buttons run along the whole bottom edge. */
         val rail = state.mapMode && LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
         Column(Modifier.fillMaxSize()) {

@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -62,6 +64,7 @@ class Settings(context: Context) {
     private val tile = mutableStateOf(prefs.getBoolean("tiles", false))
     private val buzz = mutableStateOf(prefs.getBoolean("lowHealthBuzz", true))
     private val msgLines = mutableIntStateOf(prefs.getInt("messageLines", 3))
+    private val themeChoice = mutableIntStateOf(prefs.getInt("theme", 0))
 
     var buttonScale: Float get() = buttons.floatValue; set(v) { buttons.floatValue = v; save("buttonScale", v) }
     var messageScale: Float get() = messageText.floatValue; set(v) { messageText.floatValue = v; save("messageScale", v) }
@@ -77,6 +80,8 @@ class Settings(context: Context) {
     var edgeSwipePanel: Boolean get() = edge.value; set(v) { edge.value = v; prefs.edit().putBoolean("edgeSwipePanel", v).apply() }
     /** A short buzz when health falls below the game's hitpoint warning. */
     var lowHealthBuzz: Boolean get() = buzz.value; set(v) { buzz.value = v; prefs.edit().putBoolean("lowHealthBuzz", v).apply() }
+    /** Index into [Theme.ALL]. */
+    var theme: Int get() = themeChoice.intValue; set(v) { themeChoice.intValue = v; prefs.edit().putInt("theme", v).apply() }
     /** How many recent messages the strip shows (2..5). */
     var messageLines: Int get() = msgLines.intValue; set(v) { msgLines.intValue = v.coerceIn(2, 5); prefs.edit().putInt("messageLines", msgLines.intValue).apply() }
     /** MicroChasm tiles on the map (the game is told by NarSilNative.nativeSetTiles). */
@@ -99,7 +104,7 @@ fun TextScale(scale: Float, content: @Composable () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OptionsSheet(settings: Settings, autoMore: Boolean, autoMoreEnabled: Boolean, onAutoMore: (Boolean) -> Unit, onGameOptions: () -> Unit, onExportSave: () -> Unit, onImportSave: () -> Unit,
+fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, autoMoreEnabled: Boolean, onAutoMore: (Boolean) -> Unit, onGameOptions: () -> Unit, onExportSave: () -> Unit, onImportSave: () -> Unit,
                  onSendLogs: () -> Unit, onDismiss: () -> Unit) {
     Box(
         Modifier.fillMaxSize().background(Color(0x99000000))
@@ -123,6 +128,14 @@ fun OptionsSheet(settings: Settings, autoMore: Boolean, autoMoreEnabled: Boolean
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     (2..5).forEach { n -> FilterChip(selected = settings.messageLines == n, onClick = { settings.messageLines = n }, label = { Text("$n") }) }
                 }
+                Label("Colours")
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Theme.ALL.forEachIndexed { i, t -> FilterChip(selected = settings.theme == i, onClick = { settings.theme = i }, label = { Text(t.name) }) }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Theme.byIndex(settings.theme).swatch(gamePalette).forEach { c -> Box(Modifier.size(28.dp).background(Color(c), RoundedCornerShape(6.dp))) }
+                }
+                Hint("Bright lifts the game's dark blues and reds so they read on black; Original is the game's own palette.")
                 Scale("Inventory and items", settings.itemScale) { settings.itemScale = it }
                 Scale("Status", settings.statusScale) { settings.statusScale = it }
 
