@@ -112,20 +112,6 @@ fun ActionBar(actions: List<BarAction>, onMore: () -> Unit) {
     }
 }
 
-/** The landscape rail's actions: the same buttons, wrapped into rows, scrolling if need be. */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun ActionRail(actions: List<BarAction>, modifier: Modifier = Modifier, onMore: () -> Unit) {
-    FlowRow(
-        modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(6.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        actions.forEach { BarButton(it) }
-        FilledTonalButton(onClick = onMore, contentPadding = PaddingValues(horizontal = 14.dp)) { Text("☰", fontSize = 18.sp) }
-    }
-}
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun BarButton(a: BarAction) {

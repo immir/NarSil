@@ -24,6 +24,7 @@ import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -288,9 +289,10 @@ when (prompt) {
 
     @Composable
     private fun GameLayers(state: GameState) {
-        /* Landscape: status and actions move to a rail on the right, so the map gets the full height. */
+        /* Landscape: the status moves to a rail on the right and the buttons run along the whole bottom edge. */
         val rail = state.mapMode && LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-        Row(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize()) {
+        Row(Modifier.weight(1f).fillMaxWidth()) {
             Column(Modifier.weight(1f).fillMaxHeight()) {
                 /* At -more- a tap continues; otherwise it opens the scrollable history. */
                 if (state.mapMode) TextScale(settings.messageScale) {
@@ -326,11 +328,13 @@ when (prompt) {
             }
             if (rail) Column(Modifier.width(260.dp).fillMaxHeight().background(Color(0xFF141414))) {
                 TextScale(settings.statusScale) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz) }
-                TextScale(settings.buttonScale) { ActionRail(barActions(state), Modifier.weight(1f)) { showMore = true } }
+                Spacer(Modifier.weight(1f))
                 if (dpadMode() == Settings.DPAD_DOCKED) Box(Modifier.fillMaxWidth().padding(4.dp), contentAlignment = Alignment.Center) {
                     Dpad(settings.dpadSizeDp.coerceAtMost(150f), { dpad(state, it) })
                 }
             }
+        }
+        if (rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { showMore = true } }
         }
     }
 
