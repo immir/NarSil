@@ -58,10 +58,14 @@ class GameState {
         private set
 
     data class Item(val index: Int, val section: Int, val label: Char, val glyph: Int, val attr: Int,
-                    val weightTenthsLb: Int, val name: String)
+                    val weightTenthsLb: Int, val name: String,
+                    /** 0 ordinary, 1 known ego item, 2 known artefact. */ val special: Int = 0)
     data class Action(val index: Int, val valid: Boolean, val label: String)
     data class Target(val x: Int, val y: Int, val inRange: Boolean, val name: String)
-    data class Message(val attr: Int, val count: Int, val text: String)
+    data class Message(val attr: Int, val count: Int, val text: String, val spans: List<Span> = emptyList()) {
+        /** A special item's name inside [text]; [tier] as in [Item.special]. */
+        data class Span(val start: Int, val end: Int, val tier: Int)
+    }
 
     /** The game's open question; mirrors enum nb_prompt_kind. */
     sealed interface Prompt {

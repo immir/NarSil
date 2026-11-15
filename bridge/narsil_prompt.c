@@ -258,6 +258,21 @@ static int collect(candidate *c, cmd_code cmd, item_tester tester, int mode)
 	return n;
 }
 
+int native_special_tier(const struct object *obj)
+{
+	if (object_is_known_artifact(obj)) return 2;
+	return obj->known && obj->known->ego ? 1 : 0;
+}
+
+const char *native_special_name(const struct object *obj)
+{
+	switch (native_special_tier(obj)) {
+		case 2: return obj->artifact->name;
+		case 1: return obj->ego->name;
+		default: return NULL;
+	}
+}
+
 static void describe(char *buf, size_t cap, const struct object *obj)
 {
 	object_desc(buf, cap, obj, ODESC_PREFIX | ODESC_FULL, player);
@@ -275,8 +290,8 @@ static void publish_items(const char *pmt, const candidate *c, int n)
 		describe(name, sizeof(name), obj);
 		const char label = c[i].section == NB_ITEM_FLOOR ? 0
 			: gear_to_label(player, (struct object *)obj);
-		text_add("%d\t%c\t%d\t%d\t%d\t%s\n", (int)c[i].section, label ? label : '-',
-			(int)object_char(obj), (int)object_attr(obj), obj->weight * obj->number, name);
+		text_add("%d\t%c\t%d\t%d\t%d\t%d\t%s\n", (int)c[i].section, label ? label : '-',
+			(int)object_char(obj), (int)object_attr(obj), obj->weight * obj->number, native_special_tier(obj), name);
 	}
 	pthread_mutex_unlock(&shared.lock);
 }
@@ -402,8 +417,8 @@ static void publish_pack(const candidate *c, int n, int expanded, int focus)
 		char name[160];
 		describe(name, sizeof(name), obj);
 		const char label = c[i].section == NB_ITEM_FLOOR ? 0 : gear_to_label(player, (struct object *)obj);
-		text_add("#I\t%d\t%c\t%d\t%d\t%d\t%s\n", (int)c[i].section, label ? label : '-',
-			(int)object_char(obj), (int)object_attr(obj), obj->weight * obj->number, name);
+		text_add("#I\t%d\t%c\t%d\t%d\t%d\t%d\t%s\n", (int)c[i].section, label ? label : '-',
+			(int)object_char(obj), (int)object_attr(obj), obj->weight * obj->number, native_special_tier(obj), name);
 	}
 	for (int i = 0; i < na; i++) text_add("#A\t%d\t%s\n", a[i].valid ? 1 : 0, a[i].label);
 	if (tb) {

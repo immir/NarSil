@@ -219,7 +219,7 @@ void nb_request_move(int dir, bool run);
 #ifdef NB_TEST_HOOKS
 /* Host tests only: at the command prompt, take a fatal hit (as a monster's blow would). */
 void nb_test_die(void);
-void nb_test_chest(int kind); /* 0: a locked small chest under the player; 1: a trapped one; 2: a pile of four, reported as stepping on it would be */
+void nb_test_chest(int kind); /* 0: a locked small chest under the player; 1: a trapped one; 2: a pile of four, reported as stepping on it would be; 3: a known short sword of Hador's House into the pack */
 #endif
 
 /* Path as (x, y) pairs: the target first, then each step; 0 = no path. */
@@ -307,7 +307,8 @@ uint64_t nb_prompt_generation(void);
 
 /*
  * The open prompt, if any, serialised as UTF-8 lines with tab-separated fields:
- *  ITEM:    prompt; then per item: section, label, glyph, attr, weight (1/10 lb), name
+ *  ITEM:    prompt; then per item: section, label, glyph, attr, weight (1/10 lb), special (0 ordinary,
+ *           1 known ego item, 2 known artefact), name
  *  ACTIONS: item name; glyph, attr; per action: valid (0/1), label; "--"; description
  *  CHECK:   the question
  *  AIM:     "Aim"; range, current target x, y (-1 if none); per targetable
@@ -331,9 +332,12 @@ void nb_answer_item(int index);
 
 /*
  * The message log (the newest few hundred), oldest first, one per line:
- * attr \t repeat count \t text.  The generation moves whenever a message is added.
+ * attr \t repeat count \t text.  The first mention of a special item's added name (its artefact or ego name)
+ * is wrapped as NB_MARK_BEGIN, tier digit (1 ego, 2 artefact), name, NB_MARK_END.  The generation moves whenever a message is added.
  * A buffer of NB_MESSAGES_CAP always holds the whole log.
  */
+#define NB_MARK_BEGIN '\x01'
+#define NB_MARK_END '\x02'
 enum { NB_MESSAGES_CAP = 160 * 1024 };
 uint64_t nb_messages_generation(void);
 size_t nb_messages(char *text, size_t cap);

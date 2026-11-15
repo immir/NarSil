@@ -50,9 +50,9 @@ enum Parse {
         switch kind {
         case NB.PROMPT_ITEM:
             let items = try nonEmpty(Array(ls.dropFirst())).enumerated().map { i, l -> Item in
-                let f = fields(l, 6)
+                let f = fields(l, 7)
                 return Item(index: i, section: try int(f, 0), label: try char(f, 1), glyph: try int(f, 2),
-                            attr: try int(f, 3), weightTenthsLb: try int(f, 4), name: str(f, 5))
+                            attr: try int(f, 3), weightTenthsLb: try int(f, 4), name: str(f, 6), special: try int(f, 5))
             }
             return .items(ItemsPrompt(title: trimmed(try line(ls, 0)), items: items))
         case NB.PROMPT_CHECK:
@@ -121,10 +121,10 @@ enum Parse {
                                               rows: rows, text: text(ls, tag: "#T"), actions: actions))
         case NB.PROMPT_PACK:
             let head = fields(try line(ls, 0))
-            let recs = nonEmpty(Array(ls.dropFirst())).map { fields($0, 7) }
+            let recs = nonEmpty(Array(ls.dropFirst())).map { fields($0, 8) }
             let items = try recs.filter { $0.first == "#I" }.enumerated().map { i, f in
                 Item(index: i, section: try int(f, 1), label: try char(f, 2), glyph: try int(f, 3),
-                     attr: try int(f, 4), weightTenthsLb: try int(f, 5), name: str(f, 6))
+                     attr: try int(f, 4), weightTenthsLb: try int(f, 5), name: str(f, 7), special: try int(f, 6))
             }
             let actions = recs.filter { $0.first == "#A" }.enumerated().map { i, f in
                 PackAction(index: i, valid: flag(f, 1), label: str(f, 2))
@@ -242,13 +242,23 @@ enum Parse {
         }
     }
 
+    /// The bridge wraps a special item's name as U+0001, tier digit, name, U+0002; the iOS UI does not colour it yet.
+    static func withoutSpecialMarks(_ t: String) -> String {
+        var out = "", skipDigit = false
+        for c in t.unicodeScalars {
+            if skipDigit { skipDigit = false; continue }
+            if c == "\u{1}" { skipDigit = true } else if c != "\u{2}" { out.unicodeScalars.append(c) }
+        }
+        return out
+    }
+
     /// Drops the textui's blank and "=====" separator lines.
     static func messages(_ raw: String) -> [Message] {
         lines(raw).compactMap { l in
             let f = fields(l, 3)
             let t = trimmed(str(f, 2))
             guard !t.isEmpty, !t.allSatisfy({ $0 == "=" }), let attr = Int(str(f, 0)), let count = Int(str(f, 1)) else { return nil }
-            return Message(attr: attr, count: count, text: t)
+            return Message(attr: attr, count: count, text: withoutSpecialMarks(t))
         }
     }
 }

@@ -51,6 +51,10 @@ void native_death_screen(void);
 bool native_welcome(void);
 void native_abilities(void);
 
+/* Implemented by narsil_prompt.c: 2 for a known artefact, 1 for a known ego item, else 0; the name it adds to the item's description. */
+int native_special_tier(const struct object *obj);
+const char *native_special_name(const struct object *obj);
+
 /* Implemented by narsil_prompt.c (game thread, command prompt): the pack.  True if a command was queued. */
 bool native_pack(int focus_section);
 /* At the next command prompt after a pack action: reopen the pack.  True if it queued another command. */

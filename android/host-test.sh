@@ -184,7 +184,13 @@ echo "== native pack: expand an item, act on it, the pack reopens with the resul
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=15 @prompt @answer=1000 @prompt @answer=100000 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qP '^#A\t1\tEat$'
-echo "$out" | grep -qP '^#I\t0\ta\t[0-9]+\t[0-9]+\t[0-9]+\t2 Fragments of Lembas$'
+echo "$out" | grep -qP '^#I\t0\ta\t[0-9]+\t[0-9]+\t[0-9]+\t0\t2 Fragments of Lembas$'
+
+echo "== special items: tier on the pack line, and the name marked in the message"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @ego @messages @act=15 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qP "^#I\t\d\t.\t\d+\t\d+\t\d+\t1\ta Shortsword .*of Hador's House"
+echo "$out" | grep -qP "You have .*\x011of Hador's House\x02"
 
 echo "== native pack: equipping (two messages, so a -more-) reopens the pack by itself, and the option is put back"
 rm -rf "$work/data"
@@ -234,7 +240,7 @@ echo "== native quantity (drop part of a stack), text (inscribe), ignore choice;
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=15 @prompt @answer=1001 @prompt @answer=100103 @prompt @answer=1 @prompt @answer=1000 @prompt @answer=100003 @prompt @text=lunch @prompt @answer=1000 @prompt @answer=100005 @prompt @answer=1 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qx 'prompt kind=16'
-echo "$out" | grep -qP '^#I\t0\tb\t[0-9]+\t[0-9]+\t(20|40)\t(a|2) Wooden Torch'
+echo "$out" | grep -qP '^#I\t0\tb\t[0-9]+\t[0-9]+\t(20|40)\t0\t(a|2) Wooden Torch'
 echo "$out" | grep -qx 'Inscribe with what'
 echo "$out" | grep -qP 'Fragments of Lembas \{lunch\}$'
 echo "$out" | grep -qP '^All Fragments of Lembas\t'

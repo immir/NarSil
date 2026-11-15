@@ -22,6 +22,8 @@
 #include "game-world.h"
 #include "obj-chest.h"
 #include "obj-gear.h"
+#include "init.h"
+#include "obj-knowledge.h"
 #include "obj-make.h"
 #include "obj-pile.h"
 #include "obj-tval.h"
@@ -118,6 +120,32 @@ static void mark_messages(game_event_type type, game_event_data *data, void *use
 }
 
 /*
+ * Wraps the first mention of each special item's added name (artefact name or ego name) that the player carries,
+ * wears or can see underfoot in MARK_BEGIN, tier digit, name, MARK_END; the app colours what is between.
+ */
+static void mark_special(char *text, const size_t cap)
+{
+	const struct object *candidates[64];
+	size_t n = 0;
+	for (const struct object *o = player->gear; o && n < N_ELEMENTS(candidates); o = o->next) candidates[n++] = o;
+	struct object *floor[16];
+	const int k = scan_floor(floor, (int)N_ELEMENTS(floor), player, OFLOOR_SENSE | OFLOOR_VISIBLE, NULL);
+	for (int i = 0; i < k && n < N_ELEMENTS(candidates); i++) candidates[n++] = floor[i];
+	for (size_t i = 0; i < n; i++) {
+		const char *const name = native_special_name(candidates[i]);
+		char *const at = name ? strstr(text, name) : NULL;
+		if (!at || (at >= text + 2 && at[-2] == NB_MARK_BEGIN)) continue;  /* none, or already marked */
+		char marked[512 + 32];
+		const size_t before = (size_t)(at - text);
+		const char *const after = at + strlen(name);
+		my_strcpy(marked, text, MIN(sizeof(marked), before + 1));
+		strnfcat(marked, sizeof(marked), &(size_t){ before }, "%c%d%s%c%s", NB_MARK_BEGIN,
+			native_special_tier(candidates[i]), name, NB_MARK_END, after);
+		my_strcpy(text, marked, cap);
+	}
+}
+
+/*
  * Oldest first; tabs/newlines in message text flattened so records stay one per line.
  * As many of the newest messages as fit (a record is at most ~530 bytes).
  */
@@ -129,9 +157,10 @@ static void publish_messages(void)
 	buf[0] = '\0';  /* the log is empty at startup, before a savefile loads */
 	const int n = MIN(MIN((int)messages_num(), MESSAGES_SHOWN), (int)(sizeof(buf) / RECORD_MAX));
 	for (int age = n - 1; age >= 0; age--) {
-		char text[512];
+		char text[512 + 32];
 		my_strcpy(text, message_str((uint16_t)age), sizeof(text));
 		for (char *p = text; *p; p++) if (*p == '\t' || *p == '\n') *p = ' ';
+		mark_special(text, sizeof(text));
 		len += (size_t)strnfmt(buf + len, sizeof(buf) - len, "%d\t%d\t%s\n",
 			(int)message_color((uint16_t)age), (int)message_count((uint16_t)age), text);
 		assert(len < sizeof(buf));
@@ -684,6 +713,27 @@ bool native_service(bool at_prompt)
 	if (r.kind == REQ_LOOK_LIST) { look_list(r.run); publish_info(); return false; }
 	if (r.kind == REQ_AUTO_MORE) {
 		OPT(player, auto_more) = r.run;
+		native_publish(at_prompt);
+		return false;
+	}
+	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 3) {
+		/* A short sword of Hador's House, known, into the pack with its "You have" message. */
+		struct object *sword = object_new(); /* mutable: inven_carry() takes the pointer */
+		object_prep(sword, lookup_kind(TV_SWORD, lookup_sval(TV_SWORD, "Shortsword")), 5, RANDOMISE);
+		for (struct ego_item *e = e_info; e < e_info + z_info->e_max; e++)
+			if (e->name && strstr(e->name, "Hador")) sword->ego = e;
+		assert(sword->ego);
+		sword->known = object_new();
+		sword->known->kind = sword->kind;
+		sword->known->tval = sword->tval;
+		sword->known->sval = sword->sval;
+		sword->known->number = sword->number;
+		sword->known->ego = sword->ego;
+		inven_carry(player, sword, true, false);
+		char name[160];
+		object_desc(name, sizeof(name), sword, ODESC_PREFIX | ODESC_FULL, player);
+		message_add(format("You have %s.", name), MSG_GENERIC); /* straight into the log: msg() would wait for -more- here */
+		game.messages_dirty = true;
 		native_publish(at_prompt);
 		return false;
 	}

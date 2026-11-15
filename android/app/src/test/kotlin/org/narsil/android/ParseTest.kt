@@ -125,4 +125,11 @@ class ParseTest {
         assertEquals(null, Parse.prompt("0\n"))
         assertEquals(null, Parse.info("Nonsense\t1"))
     }
+
+    @Test fun specialNamesInMessagesBecomeSpans() {
+        val m = Parse.message(1, 1, "You have a Shortsword \u00011of Hador's House\u0002 (+0,1d7) [+1].")
+        assertEquals("You have a Shortsword of Hador's House (+0,1d7) [+1].", m.text)
+        assertEquals(listOf(GameState.Message.Span(22, 38, 1)), m.spans)
+        assertEquals("of Hador's House", m.text.substring(22, 38))
+    }
 }

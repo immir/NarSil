@@ -17,6 +17,7 @@
  *   @inspect@DX,DY @look                          native inspect (relative) / look list
  *   @text=TEXT                                    answer a text prompt
  *   @info                                         print the latest info (e.g. after @act=20, the character)
+ *   @ego                                          a known short sword of Hador's House into the pack
  *   @chest, @trapchest, @pile                     drop a locked chest, a trapped one, or a pile of four under the player
  *   @ctx                                          print the context flags
  *   @answer=N                                     answer any native prompt (see nb_answer)
@@ -245,8 +246,9 @@ static int run_token(const char *tok)
 		printf("info (gen moved=%d):\n%s", nb_info_generation() != before, text);
 		return 0;
 	}
-	if (strcmp(tok, "@chest") == 0 || strcmp(tok, "@trapchest") == 0 || strcmp(tok, "@pile") == 0) {
-		nb_test_chest(tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
+	if (strcmp(tok, "@chest") == 0 || strcmp(tok, "@trapchest") == 0 || strcmp(tok, "@pile") == 0
+		|| strcmp(tok, "@ego") == 0) {
+		nb_test_chest(strcmp(tok, "@ego") == 0 ? 3 : tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
 		return settle() ? 0 : 1;
 	}
 	if (strcmp(tok, "@ctx") == 0) {

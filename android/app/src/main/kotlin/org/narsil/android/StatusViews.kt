@@ -55,7 +55,7 @@ internal fun MessageStrip(state: GameState, lines: Int, onTap: () -> Unit) {
     Column(Modifier.weight(1f).clickable(onClick = onTap).padding(horizontal = 10.dp, vertical = 4.dp)) {
         recent.forEachIndexed { i, m ->
             val alpha = 0.45f + 0.55f * (i + 1) / recent.size
-            Text(if (m.count > 1) "${m.text} (x${m.count})" else m.text,
+            Text(Special.styled(m, if (m.count > 1) " (x${m.count})" else ""),
                  color = Color(state.colour(m.attr)).copy(alpha = alpha), fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)
         }
         if (banner != null) Text(banner, color = Color(0xFFFFD54F), fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)

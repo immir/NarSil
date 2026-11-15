@@ -87,7 +87,7 @@ private fun ItemRow(item: GameState.Item, colour: (Int) -> Int, onClick: () -> U
              fontSize = 22.sp, modifier = Modifier.width(24.dp))
         Text(if (item.label == '-') "" else "${item.label})", color = Color(0xFF9A9AA0), fontFamily = FontFamily.Monospace,
              fontSize = 14.sp, modifier = Modifier.width(24.dp))
-        Text(item.name, color = Color.White, fontSize = 16.sp, maxLines = 2, overflow = TextOverflow.Ellipsis,
+        Text(item.name, color = Special.colour(item.special) ?: Color.White, fontSize = 16.sp, maxLines = 2, overflow = TextOverflow.Ellipsis,
              modifier = Modifier.weight(1f))
         if (item.weightTenthsLb > 0)
             Text("%d.%d lb".format(item.weightTenthsLb / 10, item.weightTenthsLb % 10), color = Color(0xFF9A9AA0), fontSize = 13.sp)

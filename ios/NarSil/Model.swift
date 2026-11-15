@@ -9,6 +9,8 @@ struct Item: Equatable {
     let label: Character
     let glyph: Int, attr: Int, weightTenthsLb: Int
     let name: String
+    /// 0 ordinary, 1 known ego item, 2 known artefact.
+    var special = 0
 }
 struct PackAction: Equatable { let index: Int; let valid: Bool; let label: String }
 struct Target: Equatable { let x: Int, y: Int; let inRange: Bool; let name: String }

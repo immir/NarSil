@@ -109,7 +109,7 @@ private fun PackRow(item: GameState.Item, p: GameState.Prompt.Pack, colour: (Int
                  fontSize = 22.sp, modifier = Modifier.width(24.dp))
             Text(if (item.label == '-') "" else "${item.label})", color = SUB, fontFamily = FontFamily.Monospace,
                  fontSize = 14.sp, modifier = Modifier.width(24.dp))
-            Text(item.name, color = Color.White, fontSize = 16.sp, fontWeight = if (open) FontWeight.SemiBold else FontWeight.Normal,
+            Text(item.name, color = Special.colour(item.special) ?: Color.White, fontSize = 16.sp, fontWeight = if (open) FontWeight.SemiBold else FontWeight.Normal,
                  maxLines = if (open) 3 else 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             if (item.weightTenthsLb > 0) Text(lb(item.weightTenthsLb), color = SUB, fontSize = 13.sp)
         }

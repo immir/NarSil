@@ -16,8 +16,8 @@ object Parse {
         fun fields(line: String, n: Int) = line.split('\t', limit = n)
         return when (kind) {
             N.PROMPT_ITEM -> Prompt.Items(lines[0].trim(), lines.drop(1).filter { it.isNotEmpty() }.mapIndexed { i, line ->
-                val f = fields(line, 6)
-                Item(i, f[0].toInt(), f[1].first(), f[2].toInt(), f[3].toInt(), f[4].toInt(), f[5])
+                val f = fields(line, 7)
+                Item(i, f[0].toInt(), f[1].first(), f[2].toInt(), f[3].toInt(), f[4].toInt(), f[6], special = f[5].toInt())
             })
             N.PROMPT_CHECK -> Prompt.Check(lines.joinToString(" ").trim())
             N.PROMPT_AIM -> {
@@ -62,9 +62,9 @@ object Parse {
             }
             N.PROMPT_PACK -> {
                 val head = lines[0].split('\t')
-                val recs = lines.drop(1).filter { it.isNotEmpty() }.map { it.split('\t', limit = 7) }
+                val recs = lines.drop(1).filter { it.isNotEmpty() }.map { it.split('\t', limit = 8) }
                 Prompt.Pack(head[1].toInt(), head[2].toInt(), head[3].toInt(), head[4].toInt(),
-                    recs.filter { it[0] == "#I" }.mapIndexed { i, f -> Item(i, f[1].toInt(), f[2].first(), f[3].toInt(), f[4].toInt(), f[5].toInt(), f[6]) },
+                    recs.filter { it[0] == "#I" }.mapIndexed { i, f -> Item(i, f[1].toInt(), f[2].first(), f[3].toInt(), f[4].toInt(), f[5].toInt(), f[7], special = f[6].toInt()) },
                     recs.filter { it[0] == "#A" }.mapIndexed { i, f -> Action(i, f[1] == "1", f[2]) },
                     lines.filter { it.startsWith("#D\t") }.joinToString("\n") { it.removePrefix("#D\t") }.trim(),
                     head.getOrNull(5) == "1")
@@ -155,6 +155,27 @@ object Parse {
     fun messages(raw: String): List<Message> = raw.split('\n').mapNotNull { line ->
         val f = line.split('\t', limit = 3)
         val text = f.getOrNull(2)?.trim().orEmpty()
-        if (text.isEmpty() || text.all { it == '=' }) null else Message(f[0].toInt(), f[1].toInt(), text)
+        if (text.isEmpty() || text.all { it == '=' }) null else message(f[0].toInt(), f[1].toInt(), text)
     }
+
+    /** A log line whose special item names are wrapped as MARK_BEGIN, tier digit, name, MARK_END (see nb_messages()). */
+    fun message(attr: Int, count: Int, raw: String): Message {
+        val plain = StringBuilder()
+        val spans = mutableListOf<Message.Span>()
+        var open = -1
+        var tier = 0
+        var i = 0
+        while (i < raw.length) {
+            when (raw[i]) {
+                MARK_BEGIN -> if (i + 1 < raw.length && raw[i + 1].isDigit()) { tier = raw[i + 1] - '0'; open = plain.length; i++ }
+                MARK_END -> if (open >= 0) { spans += Message.Span(open, plain.length, tier); open = -1 }
+                else -> plain.append(raw[i])
+            }
+            i++
+        }
+        return Message(attr, count, plain.toString(), spans)
+    }
+
+    private const val MARK_BEGIN = '\u0001'
+    private const val MARK_END = '\u0002'
 }

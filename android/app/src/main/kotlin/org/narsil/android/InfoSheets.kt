@@ -122,7 +122,7 @@ fun MessagesSheet(state: GameState, onDismiss: () -> Unit) {
             if (messages.isEmpty()) Text("No messages yet.", color = Color(0xFF9A9AA0), modifier = Modifier.padding(16.dp))
             LazyColumn(Modifier.fillMaxWidth(), state = list) {
                 items(messages) { m ->
-                    Text(if (m.count > 1) "${m.text} (x${m.count})" else m.text, color = Color(state.colour(m.attr)), fontSize = 15.sp,
+                    Text(Special.styled(m, if (m.count > 1) " (x${m.count})" else ""), color = Color(state.colour(m.attr)), fontSize = 15.sp,
                          lineHeight = 18.sp, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp))
                 }
                 item { Box(Modifier.padding(bottom = 12.dp)) }
