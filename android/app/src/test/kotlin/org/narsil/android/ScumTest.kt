@@ -34,6 +34,12 @@ class ScumTest {
         assertTrue(names.all { it.startsWith("auto-P-") })
     }
 
+    @Test fun aSaveIdenticalToAManualCopyIsNotKeptAgain() = withSave { save, dir ->
+        File(dir, "P-20260101-000000").writeText("state")
+        Scum.keepRecent(save, dir, "P", t0)
+        assertEquals(listOf("P-20260101-000000"), kept(dir))
+    }
+
     @Test fun otherPlayersAndManualCopiesAreLeftAlone() = withSave { save, dir ->
         File(dir, "P-20260101-000000").writeText("manual")
         File(dir, "auto-Q-20260101-000000").writeText("other")

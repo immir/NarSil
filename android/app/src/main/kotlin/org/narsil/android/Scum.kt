@@ -86,10 +86,13 @@ object Scum {
         fun kept() = dir.listFiles { f -> f.name.startsWith("auto-$player-") }.orEmpty().sortedByDescending { it.name }
         val newest = kept().firstOrNull()
         if (!src.isFile || (newest != null && nowMs - newest.lastModified() < AUTO_GAP_MS)) return
+        if (dir.listFiles { f -> f.name.startsWith("$player-") }.orEmpty().any { sameBytes(it, src) }) return
         val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date(nowMs))
         runCatching { src.copyTo(File(dir, "auto-$player-$stamp"), overwrite = true).setLastModified(nowMs) }
         kept().drop(AUTO_KEEP).forEach { it.delete() }
     }
+
+    private fun sameBytes(a: File, b: File) = a.length() == b.length() && a.readBytes().contentEquals(b.readBytes())
 
     private fun label(f: File) =
         SimpleDateFormat("EEE d MMM, HH:mm:ss", Locale.getDefault()).format(Date(f.lastModified()))
@@ -114,6 +117,8 @@ object Scum {
             check(src.isFile) { "no savefile at $src" }
             val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
             src.copyTo(File(dir(context), "${GameLauncher.PLAYER}-$stamp"), overwrite = true)
+            /* The save just made may also have been noticed as an autosave: keep only the manual one. */
+            autosaves(context).filter { sameBytes(it.file, src) }.forEach { it.file.delete() }
             copies(context).drop(KEEP).forEach { it.file.delete() }
             "Scum save taken."
         }
