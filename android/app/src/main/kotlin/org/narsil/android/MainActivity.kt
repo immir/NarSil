@@ -121,9 +121,14 @@ class MainActivity : ComponentActivity() {
                 .fold({ game = GameState().also { it.start() }; NarSilNative.nativeSetTiles(settings.tiles); Phase.Running }, { Phase.Failed(it.message ?: it.toString()) })
         }
         LaunchedEffect(phase) {
+            var saves = -1L
             while (phase == Phase.Running) {
                 if (NarSilNative.nativeState() == NarSilNative.STATE_EXITED)
                     phase = Phase.Exited(NarSilNative.nativeExitMessage())
+                /* Each save the game makes (autosave, level change, leaving the app) may become a kept recent autosave. */
+                NarSilNative.nativeSaveCount().let { n ->
+                    if (n != saves) { if (saves >= 0) withContext(Dispatchers.IO) { Scum.noteSave(applicationContext) }; saves = n }
+                }
                 delay(500)
             }
         }

@@ -49,6 +49,9 @@ import kotlin.system.exitProcess
  */
 object Scum {
     private const val KEEP = 12
+    /** Recent autosaves kept, at least this far apart (the game saves every few commands and on each new level). */
+    private const val AUTO_KEEP = 3
+    private const val AUTO_GAP_MS = 5 * 60 * 1000L
     private const val MARKER = "restore"
 
     data class Copy(val file: File, val label: String)
@@ -61,6 +64,29 @@ object Scum {
         dir(context).listFiles { f -> f.name.startsWith("${GameLauncher.PLAYER}-") }.orEmpty()
             .sortedByDescending { it.name }
             .map { Copy(it, label(it)) }
+
+    /** Copies of the game's own autosaves, newest first. */
+    fun autosaves(context: Context): List<Copy> =
+        dir(context).listFiles { f -> f.name.startsWith("auto-${GameLauncher.PLAYER}-") }.orEmpty()
+            .sortedByDescending { it.name }
+            .map { Copy(it, label(it)) }
+
+    /**
+     * Called after the game has saved: keeps a copy unless the newest kept one is under [AUTO_GAP_MS] old, so the few
+     * copies reach back a quarter of an hour or more instead of being the last three commands.
+     */
+    fun noteSave(context: Context, nowMs: Long = System.currentTimeMillis()) =
+        keepRecent(saveFile(context), dir(context), GameLauncher.PLAYER, nowMs)
+
+    /** The policy of [noteSave] on plain files, so it can be tested: [src] copied into [dir] unless the newest kept copy is under the gap. */
+    internal fun keepRecent(src: File, dir: File, player: String, nowMs: Long) {
+        fun kept() = dir.listFiles { f -> f.name.startsWith("auto-$player-") }.orEmpty().sortedByDescending { it.name }
+        val newest = kept().firstOrNull()
+        if (!src.isFile || (newest != null && nowMs - newest.lastModified() < AUTO_GAP_MS)) return
+        val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date(nowMs))
+        runCatching { src.copyTo(File(dir, "auto-$player-$stamp"), overwrite = true).setLastModified(nowMs) }
+        kept().drop(AUTO_KEEP).forEach { it.delete() }
+    }
 
     private fun label(f: File) =
         SimpleDateFormat("EEE d MMM, HH:mm:ss", Locale.getDefault()).format(Date(f.lastModified()))
@@ -136,6 +162,7 @@ object Scum {
 @Composable
 fun ScumSheet(context: Context, onDismiss: () -> Unit) {
     var copies by remember { mutableStateOf(Scum.copies(context)) }
+    val autos = remember { Scum.autosaves(context) }
     var chosen by remember { mutableStateOf<Scum.Copy?>(null) }
     Box(
         Modifier.fillMaxSize().background(Color(0x99000000))
@@ -151,16 +178,25 @@ fun ScumSheet(context: Context, onDismiss: () -> Unit) {
                          modifier = Modifier.weight(1f))
                     TextButton(onClick = onDismiss) { Text("Close") }
                 }
-                if (copies.isEmpty())
-                    Text("No scum saves yet. Use the Scum button while playing.", color = Color(0xFF9A9AA0), fontSize = 14.sp,
-                         modifier = Modifier.padding(16.dp))
                 LazyColumn {
+                    item { Text("Your scum saves", color = Color(0xFF9A9AA0), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
+                    if (copies.isEmpty()) item {
+                        Text("None yet. Use the Scum button while playing.", color = Color(0xFF9A9AA0), fontSize = 14.sp, modifier = Modifier.padding(16.dp))
+                    }
                     items(copies, key = { it.file.name }) { c ->
                         Row(Modifier.fillMaxWidth().clickable { chosen = c }.padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(c.label, color = Color.White, fontSize = 15.sp, modifier = Modifier.weight(1f))
                             TextButton(onClick = { c.file.delete(); copies = Scum.copies(context) }) { Text("Delete") }
                         }
+                    }
+                    item { Text("Recent autosaves", color = Color(0xFF9A9AA0), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
+                    if (autos.isEmpty()) item {
+                        Text("None yet: the game keeps one every few minutes while you play.", color = Color(0xFF9A9AA0), fontSize = 14.sp, modifier = Modifier.padding(16.dp))
+                    }
+                    items(autos, key = { it.file.name }) { c ->
+                        Text(c.label, color = Color.White, fontSize = 15.sp,
+                             modifier = Modifier.fillMaxWidth().clickable { chosen = c }.padding(horizontal = 16.dp, vertical = 12.dp))
                     }
                 }
             }

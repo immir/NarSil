@@ -194,7 +194,7 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Label("Save scumming (for testing)")
-                        Hint("Adds Scum (keep a copy of your save) and Restore scum save to the ☰ menu, and Restore to the death screen.")
+                        Hint("Adds Scum (keep a copy of your save) and Restore scum save to the ☰ menu, and Restore to the death screen. Restore also lists the last three autosaves, at least five minutes apart.")
                     }
                     Switch(settings.scumming, { settings.scumming = it })
                 }

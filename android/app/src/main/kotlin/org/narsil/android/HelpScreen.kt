@@ -90,7 +90,7 @@ private val TOUCH_GUIDE = listOf(
         "Options (☰, or the panel's Options tab → Display and controls) can export your save to another app, or import one back.",
         "Options → Send logs shares a zip of the app's log, your save and your character dump, for a bug report.",
         "The Character tab can rename your character and share a character dump.",
-        "For testing, Options → Save scumming adds Scum (keep a copy) and Restore to ☰.",
+        "For testing, Options → Save scumming adds Scum (keep a copy) and Restore to ☰; Restore also offers the last three autosaves, kept at least five minutes apart.",
     )),
 )
 
