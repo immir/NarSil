@@ -308,7 +308,8 @@ uint64_t nb_prompt_generation(void);
 /*
  * The open prompt, if any, serialised as UTF-8 lines with tab-separated fields:
  *  ITEM:    prompt; then per item: section, label, glyph, attr, weight (1/10 lb), special (0 ordinary,
- *           1 known ego item, 2 known artefact), name
+ *           1 known ego item, 2 known artefact,
+ *           3 properties still unknown), name
  *  ACTIONS: item name; glyph, attr; per action: valid (0/1), label; "--"; description
  *  CHECK:   the question
  *  AIM:     "Aim"; range, current target x, y (-1 if none); per targetable

@@ -69,7 +69,7 @@ private val TOUCH_GUIDE = listOf(
         "To pick what to shoot at each time, use Pack → your arrows → Fire: tap a ringed creature, a chip, or swipe a direction.",
         "Skills appears there once you have experience to spend.",
         "☰ holds the rest: the panel, the whole-level map, messages, bash, tunnel, disarm, exchange, app options and help.",
-        "Tap the message strip to scroll back through old messages; Options sets how many recent messages it shows. When it says \"tap to continue\", a tap dismisses -more-. Known ego items and artefacts are highlighted (cyan and gold) in the pack and wherever a message names them.",
+        "Tap the message strip to scroll back through old messages; Options sets how many recent messages it shows. When it says \"tap to continue\", a tap dismisses -more-. Known ego items and artefacts are highlighted (cyan and gold) in the pack and wherever a message names them; items with properties still to discover (marked ??) are lilac in the pack.",
         "When health falls below the game's hitpoint warning the phone buzzes and the HP bar turns red (Options turns the buzz off).",
     )),
     Section("Menus and prompts", listOf(

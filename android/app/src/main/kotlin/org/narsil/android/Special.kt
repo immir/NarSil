@@ -7,12 +7,13 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 
-/** How special items stand out: ego items in cyan, artefacts in gold (bold), in the pack and in the message log. */
+/** How special items stand out: ego items in cyan, artefacts in gold (bold), items with properties still to discover in lilac; in the pack and, for the named ones, the message log. */
 object Special {
     private val EGO = Color(0xFF5CE1E6)
     private val ARTEFACT = Color(0xFFFFB000)
+    private val UNKNOWN = Color(0xFFD7A6FF)
 
-    fun colour(tier: Int): Color? = when (tier) { 1 -> EGO; 2 -> ARTEFACT; else -> null }
+    fun colour(tier: Int): Color? = when (tier) { 1 -> EGO; 2 -> ARTEFACT; 3 -> UNKNOWN; else -> null }
 
     private fun style(tier: Int) = SpanStyle(color = colour(tier) ?: Color.Unspecified, fontWeight = FontWeight.SemiBold)
 

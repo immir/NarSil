@@ -261,7 +261,9 @@ static int collect(candidate *c, cmd_code cmd, item_tester tester, int mode)
 int native_special_tier(const struct object *obj)
 {
 	if (object_is_known_artifact(obj)) return 2;
-	return obj->known && obj->known->ego ? 1 : 0;
+	if (obj->known && obj->known->ego) return 1;
+	/* The "??" of the description: properties still to be found, which makes it worth a look. */
+	return obj->known && !object_runes_known(obj) && (obj->known->notice & OBJ_NOTICE_ASSESSED) ? 3 : 0;
 }
 
 const char *native_special_name(const struct object *obj)

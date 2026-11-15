@@ -51,7 +51,7 @@ void native_death_screen(void);
 bool native_welcome(void);
 void native_abilities(void);
 
-/* Implemented by narsil_prompt.c: 2 for a known artefact, 1 for a known ego item, else 0; the name it adds to the item's description. */
+/* Implemented by narsil_prompt.c: 2 for a known artefact, 1 for a known ego item, 3 for one with properties still unknown ("??"), else 0; the name it adds to the item's description. */
 int native_special_tier(const struct object *obj);
 const char *native_special_name(const struct object *obj);
 
