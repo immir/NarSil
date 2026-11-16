@@ -327,9 +327,9 @@ size_t native_item_details(struct object *const obj, char *const buf, const size
 {
 	assert(cap > 0);
 	buf[0] = '\0';
+	if (!native_item_details_on()) return 0;
 	ego_text(obj, buf, cap);
 	abilities_text(obj, buf, cap);
-	if (!native_item_details_on()) return strlen(buf);
 	weapon_text(obj, buf, cap);
 	armour_text(obj, buf, cap);
 	return strlen(buf);
