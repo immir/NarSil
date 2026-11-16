@@ -414,9 +414,9 @@ static void publish_pack(const candidate *c, int n, int expanded, int focus)
 	details[0] = '\0';
 	char foes[16 * 1024];
 	foes[0] = '\0';
-	if (expanded >= 0 && native_item_details_on()) {
+	if (expanded >= 0) {
 		native_item_details(c[expanded].obj, details, sizeof(details));
-		if (tval_is_melee_weapon(c[expanded].obj) || tval_is_armor(c[expanded].obj) || tval_is_jewelry(c[expanded].obj)) native_foe_choices(foes, sizeof(foes));
+		if (native_item_details_on() && (tval_is_melee_weapon(c[expanded].obj) || tval_is_armor(c[expanded].obj) || tval_is_jewelry(c[expanded].obj))) native_foe_choices(foes, sizeof(foes));
 	}
 
 	pthread_mutex_lock(&shared.lock);

@@ -868,8 +868,14 @@ textblock *object_info_ego(struct ego_item *ego)
 	obj.ego = ego;
 	ego_apply_magic(&obj, 0);
 
+	/* object_info_out() needs the player's view of the object: all of it */
+	struct object *known = object_new();
+	object_copy(known, &obj);
+	obj.known = known;
 
 	result = object_info_out(&obj, OINFO_NONE | OINFO_EGO);
+	object_delete(NULL, NULL, &known);
+	obj.known = NULL;
 	object_wipe(&obj);
 	return result;
 }

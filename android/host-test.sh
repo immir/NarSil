@@ -192,10 +192,17 @@ out=$(run "${birth[@]}" @ego @messages @act=15 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qP "^#I\t\d\t.\t\d+\t\d+\t\d+\t1\ta Shortsword .*of Hador's House"
 echo "$out" | grep -qP "You have .*\x011of Hador's House\x02"
 
-echo "== item details (option): off by default; on adds the ability's description and weapon numbers"
+echo "== a known ego says in general what it gives, option or not"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @ego @act=15 @answer=1002 @prompt @answer=-1 "${quit[@]}")
-! echo "$out" | grep -q 'Allows you to continue your attack'
+echo "$out" | grep -qP "^#D\tIn general, items of Hador's House have:"
+echo "$out" | grep -qP '^#D\tA random bonus of 1 to the sides of each damage die\.'
+echo "$out" | grep -qP '^#D\tFollow-Through: Allows you to continue'
+
+echo "== item details (option): off by default, no weapon numbers; on adds them"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @ego @act=15 @answer=1002 @prompt @answer=-1 "${quit[@]}")
+! echo "$out" | grep -q 'per blow'
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @details=1 @ego @act=15 @answer=1002 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qP '^#D\tFollow-Through: Allows you to continue your attack'
