@@ -15,7 +15,9 @@ Expect to fix a few compile errors on the first build; known risks are listed be
 | `NarSil/GameState.swift` | polls the bridge once per display frame, only when a generation counter moves |
 | `NarSil/GameLauncher.swift` | starts the game: data from the bundle's `lib/`, saves in `Documents/data` (visible in Files) |
 | `NarSil/NarSilApp.swift` | app entry; saves when the app goes to the background |
-| `NarSil/RootView.swift` | bring-up screen (status, messages, prompt, a d-pad); replaced in Phase 3 |
+| `NarSil/RootView.swift` | the map screen: message strip, map, status, d-pad, action bar, More and Rest sheets (prompts and the panel are not ported yet) |
+| `NarSil/MapView.swift`, `GlyphPainter.swift` | the zoomable map (UIKit: glyphs or tiles, path, aim and direction overlays, tap / long press / swipe / pinch / two-finger pan) |
+| `NarSil/Dpad.swift`, `ActionBar.swift`, `StatusViews.swift`, `Input.swift` | the touch controls and status pieces, ported from Dpad.kt, ActionBar.kt, StatusViews.kt |
 | `NarSilTests/ParseTests.swift` | the Android parser tests, run on the same recorded fixtures |
 
 ## Building

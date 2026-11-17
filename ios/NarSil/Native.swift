@@ -57,6 +57,29 @@ enum Native {
     static var messagesGeneration: UInt64 { nb_messages_generation() }
     static var infoGeneration: UInt64 { nb_info_generation() }
     static var panelTab: Int { Int(nb_panel_tab()) }
+    static var termGeneration: UInt64 { nb_generation() }
+
+    /// The game's colours as 0xRRGGBB, indexed by Angband colour.
+    static func palette() -> [UInt32] {
+        var rgb = [UInt32](repeating: 0, count: 32)
+        let n = rgb.withUnsafeMutableBufferPointer { nb_palette($0.baseAddress, $0.count) }
+        return Array(rgb.prefix(Int(n)))
+    }
+
+    /// The textui's top line (a prompt or -more-), trimmed; "" before the first frame.
+    static func topLine() -> String {
+        let cols = Int(nb_cols()), rows = Int(nb_rows())
+        guard cols > 0, rows > 0 else { return "" }
+        var cells = [Int32](repeating: 0, count: 2 * cols * rows)
+        var cx: Int32 = 0, cy: Int32 = 0, visible = false
+        let gen = cells.withUnsafeMutableBufferPointer { nb_snapshot($0.baseAddress, $0.count, &cx, &cy, &visible) }
+        guard gen != 0 else { return "" }
+        var line = String.UnicodeScalarView()
+        for x in 0..<cols {
+            if let u = Unicode.Scalar(UInt32(max(0, cells[2 * x]))) { line.append(u) }
+        }
+        return String(line).trimmingCharacters(in: .whitespaces)
+    }
 
     /// Fills `meta` (NB.META_COUNT ints) and `cells` (NB.MAP_CELL_INTS per grid); 0 if `cells` is too small for the level.
     static func mapSnapshot(meta: inout [Int32], cells: inout [Int32]) -> UInt64 {

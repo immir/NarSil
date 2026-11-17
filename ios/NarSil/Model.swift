@@ -136,6 +136,9 @@ struct Status: Equatable {
     var foe: Foe?
     var newExp = 0, hpWarn = 0
     var autoMore = false
+    var threats = 0, threatsAlert = 0, threatNearest = 0
+    /// Turns of light left, or -1 when there is no light source to count.
+    var lightTurns = -1
 
     func has(_ flag: Int) -> Bool { context & flag != 0 }
     /// Below the game's hitpoint warning (tenths of maximum health).

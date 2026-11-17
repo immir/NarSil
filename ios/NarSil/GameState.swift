@@ -31,6 +31,10 @@ final class GameState: ObservableObject {
     @Published private(set) var panelTab = -1
     @Published private(set) var messages: [Message] = []
     @Published var info: Info?
+    /// The game's colours, 0xRRGGBB by Angband colour index; refreshed with every map frame.
+    private(set) var palette = [UInt32]()
+    /// The textui's top line: a prompt the native UI does not cover, or -more-.
+    @Published private(set) var topLine = ""
     /// Bumped whenever the map, the path or the aim targets change.
     @Published private(set) var mapVersion = 0
 
@@ -90,9 +94,17 @@ final class GameState: ObservableObject {
                                                     morale: m(NB.META_FOE_MORALE))
         status = Status(hp: m(NB.META_HP), maxHp: m(NB.META_MAX_HP), voice: m(NB.META_VOICE), maxVoice: m(NB.META_MAX_VOICE),
                         depth: m(NB.META_DEPTH), exp: m(NB.META_EXP), context: m(NB.META_CONTEXT), foe: foe,
-                        newExp: m(NB.META_NEW_EXP), hpWarn: m(NB.META_HP_WARN), autoMore: m(NB.META_AUTO_MORE) != 0)
+                        newExp: m(NB.META_NEW_EXP), hpWarn: m(NB.META_HP_WARN), autoMore: m(NB.META_AUTO_MORE) != 0,
+                        threats: m(NB.META_THREATS), threatsAlert: m(NB.META_THREATS_ALERT),
+                        threatNearest: m(NB.META_THREAT_NEAREST), lightTurns: m(NB.META_LIGHT_TURNS))
+        palette = Native.palette()
+        let line = Native.topLine()
+        if line != topLine { topLine = line }
         return true
     }
+
+    /// The game's colour `index` (an attr's low byte), white if unknown.
+    func colour(_ index: Int) -> UInt32 { palette.indices.contains(index) ? palette[index] : 0xFFFFFF }
 
     /// Glyph and attr the map shows at (x, y), or nil off the map.
     func mapCell(x: Int, y: Int) -> (glyph: Int, attr: Int)? {
