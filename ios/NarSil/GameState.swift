@@ -35,6 +35,15 @@ final class GameState: ObservableObject {
     private(set) var palette = [UInt32]()
     /// The textui's top line: a prompt the native UI does not cover, or -more-.
     @Published private(set) var topLine = ""
+    /// What a textui screen is waiting for, judged from its text; picks the key bar's buttons.
+    enum Waiting { case menu, yesNo, more, anyKey, atSign }
+    @Published private(set) var waiting = Waiting.menu
+    /// Bumped whenever the textui grid changes.
+    @Published private(set) var termVersion = 0
+    private(set) var term = [Int32]()
+    private(set) var termCols = 0, termRows = 0
+    private(set) var termCursor: (x: Int, y: Int, visible: Bool) = (0, 0, false)
+    private var termGen: UInt64 = 0
     /// Bumped whenever the map, the path or the aim targets change.
     @Published private(set) var mapVersion = 0
 
@@ -56,7 +65,22 @@ final class GameState: ObservableObject {
 
     func pathPoint(_ i: Int) -> Point { Point(x: Int(path[2 * i]), y: Int(path[2 * i + 1])) }
 
+    private func pollTerm() {
+        guard Native.termGeneration != termGen else { return }
+        let snap = Native.termSnapshot(into: &term)
+        guard snap.generation != 0 else { return }
+        termGen = snap.generation; termCols = snap.cols; termRows = snap.rows; termCursor = snap.cursor
+        palette = Native.palette()
+        let text = (0..<termRows).map { y in
+            String(String.UnicodeScalarView((0..<termCols).compactMap { x in Unicode.Scalar(UInt32(max(0, term[2 * (y * termCols + x)]))) }))
+        }
+        func any(_ needle: String) -> Bool { text.contains { $0.range(of: needle, options: .caseInsensitive) != nil } }
+        waiting = any("by typing the '@'") ? .atSign : any("[y/n]") ? .yesNo : any("-more-") ? .more : any("any key") ? .anyKey : .menu
+        termVersion += 1
+    }
+
     func poll() {
+        pollTerm()
         var changed = pollMap()
         let pg = Native.pathGeneration
         if pg != pathGen { pathGen = pg; pathPairs = Native.path(into: &path); changed = true }

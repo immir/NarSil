@@ -66,6 +66,15 @@ enum Native {
         return Array(rgb.prefix(Int(n)))
     }
 
+    /// The textui's grid: (codepoint, attr) per cell, row by row; the cursor as (x, y, visible); the generation (0 before the first frame).
+    static func termSnapshot(into cells: inout [Int32]) -> (generation: UInt64, cols: Int, rows: Int, cursor: (x: Int, y: Int, visible: Bool)) {
+        let cols = Int(nb_cols()), rows = Int(nb_rows())
+        if cells.count != 2 * cols * rows { cells = [Int32](repeating: 0, count: 2 * cols * rows) }
+        var cx: Int32 = 0, cy: Int32 = 0, visible = false
+        let gen = cells.withUnsafeMutableBufferPointer { nb_snapshot($0.baseAddress, $0.count, &cx, &cy, &visible) }
+        return (gen, cols, rows, (Int(cx), Int(cy), visible))
+    }
+
     /// The textui's top line (a prompt or -more-), trimmed; "" before the first frame.
     static func topLine() -> String {
         let cols = Int(nb_cols()), rows = Int(nb_rows())

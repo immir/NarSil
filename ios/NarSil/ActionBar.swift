@@ -44,7 +44,7 @@ func coreActions(_ s: Status, restOptions: @escaping () -> Void) -> [BarAction] 
 }
 
 /// Less frequent but necessary: behind the ☰ button.  Pack, character, skills and the rest live in the panel (@).
-func moreActions(_ s: Status, toggleMap: @escaping () -> Void, toggleTiles: @escaping () -> Void, tilesOn: Bool) -> [BarAction] {
+func moreActions(_ s: Status, messages: @escaping () -> Void, toggleMap: @escaping () -> Void, toggleTiles: @escaping () -> Void, tilesOn: Bool) -> [BarAction] {
     var out = [
         BarAction(label: "Panel", run: act(NB.ACT_PANEL)),
         BarAction(label: "Map", run: toggleMap),
@@ -52,7 +52,7 @@ func moreActions(_ s: Status, toggleMap: @escaping () -> Void, toggleTiles: @esc
     if s.has(NB.CTX_DOWN_KNOWN) && !s.has(NB.CTX_DOWN_STAIRS) { out.append(BarAction(label: "Walk to ▼", run: act(NB.ACT_TRAVEL_DOWN))) }
     if s.has(NB.CTX_UP_KNOWN) && !s.has(NB.CTX_UP_STAIRS) { out.append(BarAction(label: "Walk to ▲", run: act(NB.ACT_TRAVEL_UP))) }
     out += [
-        BarAction(label: "Messages", run: act(NB.ACT_MESSAGES)),
+        BarAction(label: "Messages", run: messages),
         BarAction(label: "Bash", run: act(NB.ACT_BASH)),
         BarAction(label: "Tunnel", run: act(NB.ACT_TUNNEL)),
         BarAction(label: "Disarm", run: act(NB.ACT_DISARM)),

@@ -102,6 +102,22 @@ void messages_free(void)
 }
 
 /**
+ * Forget every message (a new character starts with an empty log); the colours stay.
+ */
+void messages_clear(void)
+{
+	message_t *m = messages->head;
+	while (m) {
+		message_t *older = m->older;
+		mem_free(m->str);
+		mem_free(m);
+		m = older;
+	}
+	messages->head = messages->tail = NULL;
+	messages->count = 0;
+}
+
+/**
  * Return the current number of messages stored.
  */
 uint16_t messages_num(void)

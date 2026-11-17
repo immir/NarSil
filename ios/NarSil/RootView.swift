@@ -9,6 +9,8 @@ struct RootView: View {
     @AppStorage("swipeRuns") private var swipeRuns = false
     @State private var showMore = false
     @State private var showRest = false
+    @State private var showMessages = false
+    @StateObject private var abilities = AbilitiesNav()
     private let map = MapHandle()
 
     private var padSize: CGFloat { 140 }
@@ -19,6 +21,10 @@ struct RootView: View {
             ZStack(alignment: .bottom) {
                 Color.black.ignoresSafeArea()
                 if rail { landscape } else { portrait }
+                if !game.mapMode { TerminalScreen(game: game) }
+                promptLayer
+                PanelLayer(game: game, abilities: abilities)
+                infoLayer
                 if showMore { sheet(MoreSheet(actions: more, dismiss: { showMore = false })) }
                 if showRest { sheet(RestSheet(dismiss: { showRest = false })) }
             }
@@ -28,7 +34,7 @@ struct RootView: View {
 
     private var portrait: some View {
         VStack(spacing: 0) {
-            MessageStrip(game: game, lines: 3, onPanel: { Native.requestAction(NB.ACT_PANEL) })
+            MessageStrip(game: game, lines: 3, onPanel: { Native.requestAction(NB.ACT_PANEL) }, onMessages: { showMessages = true })
             MapView(game: game, handle: map, swipeRuns: swipeRuns, tiles: tiles)
             HStack(alignment: .center, spacing: 0) {
                 StatusStrip(game: game, stacked: true)
@@ -42,7 +48,7 @@ struct RootView: View {
     private var landscape: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
-                MessageStrip(game: game, lines: 2, onPanel: { Native.requestAction(NB.ACT_PANEL) })
+                MessageStrip(game: game, lines: 2, onPanel: { Native.requestAction(NB.ACT_PANEL) }, onMessages: { showMessages = true })
                 MapView(game: game, handle: map, swipeRuns: swipeRuns, tiles: tiles)
                 promptBar
                 ActionBar(actions: bar) { showMore = true }
@@ -58,15 +64,61 @@ struct RootView: View {
 
     private var bar: [BarAction] { contextActions(game.status) + coreActions(game.status) { showRest = true } }
     private var more: [BarAction] {
-        moreActions(game.status, toggleMap: { map.toggleOverview() }, toggleTiles: { tiles.toggle(); Native.setTiles(tiles) }, tilesOn: tiles)
+        moreActions(game.status, messages: { showMore = false; showMessages = true }, toggleMap: { map.toggleOverview() }, toggleTiles: { tiles.toggle(); Native.setTiles(tiles) }, tilesOn: tiles)
     }
 
-    /// Anything but aiming and direction prompts has no screen yet: offer a way out.
+    /// The prompt's own screen, over the map; aim and direction prompts live in `promptBar` so the map stays usable.
+    @ViewBuilder private var promptLayer: some View {
+        switch game.prompt {
+        case .screen(let p)?: ScreenSheet(p: p, answer: Native.answer)
+        case .items(let p)?: ItemSheet(prompt: p, colour: { game.colour($0) }, answer: Native.answer)
+        case .check(let q)?: CheckDialog(question: q, answer: Native.answer)
+        case .choice(let p)?: ChoiceSheet(prompt: p, answer: Native.answer)
+        case .quantity(let p)?: QuantityDialog(prompt: p, answer: Native.answer)
+        case .text(let p)?: TextPromptView(prompt: p, answer: Native.answer)
+        /* Asked outside the panel (spending experience at birth, an ability confirmation): a sheet. */
+        case .skills(let p)? where game.panelTab < 0:
+            BottomSheet(maxHeight: 640, cancel: {}) { SkillsView(prompt: p, answer: Native.answer) }
+        case .abilities(let p)? where game.panelTab < 0:
+            BottomSheet(maxHeight: 640, cancel: { Native.answer(-1) }) { AbilitiesView(prompt: p, nav: abilities, answer: Native.answer) }
+        default: EmptyView()
+        }
+    }
+
+    /// Read-only descriptions the player asked for (long-press inspect, the look list, the character sheet); the game is not waiting on them.
+    @ViewBuilder private var infoLayer: some View {
+        if game.prompt == nil, let info = game.info {
+            let close = { game.info = nil }
+            switch info {
+            case .inspect(let x, let y, let monster, let objects, let terrain, let targetable, let isTarget):
+                InspectSheet(game: game, x: x, y: y, monster: monster, objects: objects, terrain: terrain, targetable: targetable, isTarget: isTarget, dismiss: close)
+            case .lookList(let entries): LookSheet(game: game, entries: entries, dismiss: close)
+            case .character(let sections):
+                BottomSheet(maxHeight: 700, cancel: close) {
+                    VStack(spacing: 0) {
+                        CharacterView(game: game, sections: sections, actions: [("Open in panel", { close(); Native.requestAction(NB.ACT_CHARACTER) }), ("Close", close)])
+                    }
+                }
+            }
+        }
+        if showMessages { MessagesSheet(game: game) { showMessages = false } }
+    }
+
+    private var promptName: String {
+        guard let p = game.prompt else { return "none" }
+        return String(String(describing: p).prefix { $0 != "(" })
+    }
+
+    /// Aim and direction choices under the map; prompts without a screen yet get a way out.
     @ViewBuilder private var promptBar: some View {
         switch game.prompt {
-        case nil, .aim?, .direction?: EmptyView()
+        case .aim(let p)?: AimBar(prompt: p, answer: Native.answer)
+        case .direction(let p)?: DirectionBar(prompt: p, answer: Native.answer)
+        case nil, .screen?, .items?, .check?, .choice?, .quantity?, .text?: EmptyView()
+        case .skills? where game.panelTab < 0, .abilities? where game.panelTab < 0: EmptyView()
+        case let p? where p.isPanelContent && game.panelTab >= 0: EmptyView()
         default:
-            Button("Close the open prompt") { Native.answer(-1) }
+            Button("Close the open prompt (\(promptName)) — map \(game.mapMode ? "on" : "off")") { Native.answer(-1) }
                 .frame(maxWidth: .infinity, minHeight: 44).background(Color(red: 0.35, green: 0.2, blue: 0.2)).foregroundColor(.white)
         }
     }

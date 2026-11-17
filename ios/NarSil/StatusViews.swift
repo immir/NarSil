@@ -17,6 +17,7 @@ struct MessageStrip: View {
     @ObservedObject var game: GameState
     let lines: Int
     let onPanel: () -> Void
+    let onMessages: () -> Void
 
     var body: some View {
         let recent = Array(game.messages.suffix(lines))
@@ -39,7 +40,7 @@ struct MessageStrip: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 10).padding(.vertical, 4)
             .contentShape(Rectangle())
-            .onTapGesture { if more { Native.pushKey(Keys.enter) } else { Native.requestAction(NB.ACT_MESSAGES) } }
+            .onTapGesture { if more { Native.pushKey(Keys.enter) } else { onMessages() } }
             Button(action: onPanel) {
                 Text("@").font(.system(size: 20, weight: .semibold, design: .monospaced))
                     .foregroundColor(Color(red: 0xF3 / 255, green: 0xD2 / 255, blue: 0x7A / 255))

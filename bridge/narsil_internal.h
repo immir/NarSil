@@ -131,6 +131,8 @@ void native_init(void);
  * command prompt with no overlay screen, so native commands may run.
  */
 void native_publish(bool at_prompt);
+/* The message log changed behind the event handler's back (cleared for a new character): publish it again. */
+void native_messages_changed(void);
 
 /* Any request waiting for the game thread?  Any thread. */
 bool native_has_request(void);

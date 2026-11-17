@@ -5,6 +5,7 @@ import UIKit
 enum Keys {
     static let enter = 0x9C
     static let escape = 0xE000
+    static let backspace = 0x9F
 }
 
 enum Direction {

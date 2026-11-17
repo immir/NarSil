@@ -1,7 +1,7 @@
 # Building NarSil for iOS
 
-Status: the native app skeleton (`ios/NarSil/`) has never been built on a Mac.  Two routes: GitHub Actions
-(no Mac needed to *compile*, a Mac or PC needed to *install*), and Xcode on a Mac (compile, run, debug).
+Status: the app builds in CI and on Linux (xtool), and runs on an iPhone 8 (iOS 16.7).  Three routes: GitHub Actions
+(compile and test, no Mac), xtool (build, sign and install from Linux), and Xcode on a Mac.
 
 ## What gets built
 1. **The core** (`src/*.c`, the Sil game) plus the **bridge** (`bridge/`, the platform-neutral C API) as static
@@ -34,6 +34,23 @@ open NarSil.xcodeproj    # pick an iPhone simulator, press Run (or Cmd-U to run 
 ```
 The simulator needs no Apple ID.  Command line: `xcodebuild test -project NarSil.xcodeproj -scheme NarSil
 -destination 'platform=iOS Simulator,name=iPhone 16'` (use a simulator that `xcrun simctl list devices` shows).
+
+## Route C: xtool on Linux (build, sign and install, no Mac)
+`ios/Package.swift` and `ios/xtool.yml` describe the app as a SwiftPM package (the core and bridge as C targets over
+symlinks to `src/` and `bridge/`) for [xtool](https://github.com/xtool-org/xtool).  Needs, once: xtool, a Swift 6
+toolchain, `usbmuxd`, the Darwin SDK built from an Xcode.app (`xtool sdk install Xcode.app --slim`), and
+`xtool auth login` (a free Apple ID works; run it in a normal terminal, it asks for the 2FA code).
+```
+export PATH=$HOME/.local/swift/usr/bin:$HOME/.local/bin:$PATH   # wherever swift and xtool live
+cd ios
+./xtool-prepare.sh      # stages lib/ (the game data) and regenerates NBConstants.swift
+xtool dev build         # ios/xtool/NarSil.app
+xtool dev               # build, sign, install and launch on the connected iPhone (run in a normal terminal)
+```
+Free-account installs expire after 7 days; run `xtool dev` again.  Check after a build that the binary does not link
+`SwiftUICore` (it does not exist before iOS 18 and the app would die at launch):
+`llvm-otool -L xtool/NarSil.app/NarSil | grep SwiftUICore` must print nothing.  `Package.swift` links SwiftUI
+explicitly for this; if it ever comes back, that is the first place to look.  Crash reports: `idevicecrashreport -e -k dir`.
 
 ## Putting it on the iPhone
 **From Xcode (free Apple ID):**

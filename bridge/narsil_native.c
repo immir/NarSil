@@ -305,6 +305,8 @@ static enum nb_stance foe_stance(const struct monster *mon)
 	}
 }
 
+void native_messages_changed(void) { game.messages_dirty = true; }
+
 void native_publish(bool at_prompt)
 {
 	if (game.messages_dirty) {

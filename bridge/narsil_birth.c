@@ -367,6 +367,8 @@ void native_do_birth(void)
 {
 	enum birth_stage current = BIRTH_RESET, prev = BIRTH_BACK, next = current;
 	bool done = false;
+	messages_clear();
+	native_messages_changed();
 	cmdq_push(CMD_BIRTH_INIT);
 	cmdq_execute(CTX_BIRTH);
 	while (!done) {

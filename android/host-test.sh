@@ -5,7 +5,7 @@
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(dirname "$here")
-work=${WORK:-$(mktemp -d)}
+if [ -z "${WORK:-}" ]; then work=$(mktemp -d); trap 'rm -rf "$work"' EXIT; else work=$WORK; fi
 san=${TSAN:+thread}
 san=${san:-${MSAN:+memory}}
 san=${san:-address,undefined}
@@ -166,9 +166,11 @@ echo "$out" | grep -qP '^Screen\trace\tRace$'
 
 echo "== death screen (slain): -more-, then the death screen, then a new character"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" @die @enter @prompt @answer=5 @answer=1 @prompt)
+out=$(run "${birth[@]}" @die @enter @messages @prompt @answer=5 @answer=1 @prompt @messages)
 echo "$out" | grep -qP '^Screen\tdeath\tYou have been slain$'
 echo "$out" | grep -qP '^Screen\trace\tRace$'
+echo "== ...and the new character starts with an empty message log"
+echo "$out" | awk '/^messages:/{n++} n==2' | sed -n 2p | grep -q '^state='  # nothing between the header and the final state line
 
 echo "== native options: toggle, number, locked birth page; birth options editable at birth"
 rm -rf "$work/data"

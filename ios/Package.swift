@@ -40,7 +40,9 @@ let package = Package(
             name: "NarSil",
             dependencies: ["NarSilCore"],
             path: "NarSil",
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            swiftSettings: [.swiftLanguageMode(.v5)],
+            /* Linked first, so SwiftUI's symbols resolve through SwiftUI and not SwiftUICore (absent before iOS 18). */
+            linkerSettings: [.linkedFramework("SwiftUI")]
         ),
     ]
 )

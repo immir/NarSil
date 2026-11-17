@@ -1,0 +1,220 @@
+import SwiftUI
+
+/// Stages whose options are chosen once (race, house, sex): a random pick and birth options are offered.
+private let choiceStages: Set<String> = ["race", "house", "sex"]
+
+/// Birth, death, welcome and tutorial-note screens (narsil_birth.c), ported from ScreenSheet.kt.
+struct ScreenSheet: View {
+    let p: ScreenPrompt
+    let answer: (Int) -> Void
+
+    var body: some View {
+        switch p.stage {
+        case "welcome": Welcome(p: p, answer: answer)
+        case "note": NoteCard(p: p, answer: answer)
+        default: Birth(p: p, answer: answer)
+        }
+    }
+}
+
+private struct Birth: View {
+    let p: ScreenPrompt
+    let answer: (Int) -> Void
+    private var canGoBack: Bool { !["death", "race", "quickstart"].contains(p.stage) }
+
+    var body: some View {
+        ZStack {
+            Palette.screen.ignoresSafeArea()
+            VStack(spacing: 0) {
+                HStack {
+                    if canGoBack { Button("‹ Back") { answer(-1) } }
+                    Text(p.title).font(.system(size: 22, weight: .semibold)).foregroundColor(Palette.gold)
+                        .padding(.leading, canGoBack ? 0 : 12)
+                    Spacer()
+                    if choiceStages.contains(p.stage) { Button("Random") { answer(NB.SCREEN_RANDOM) } }
+                }
+                .padding(.horizontal, 8).padding(.top, 8).padding(.bottom, 4)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(Array(p.paragraphs.enumerated()), id: \.offset) { _, t in
+                            Text(t).font(.system(size: 15)).foregroundColor(Palette.body)
+                                .padding(.horizontal, 16).padding(.vertical, 4).frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        if p.stage == "stats" {
+                            Text("Points left: \(p.pointsLeft) of \(p.pointsTotal)").font(.system(size: 15)).foregroundColor(Palette.gold)
+                                .padding(.horizontal, 16).padding(.vertical, 8)
+                            ForEach(p.stats, id: \.index) { s in StatRow(s: s, answer: answer) }
+                            if !p.skills.isEmpty { Figures(p: p) }
+                        } else {
+                            ForEach(p.options, id: \.index) { o in OptionCard(o: o, answer: answer) }
+                        }
+                        Color.clear.frame(height: 12)
+                    }
+                }
+                HStack(spacing: 8) {
+                    Spacer()
+                    if choiceStages.contains(p.stage) || p.stage == "quickstart" {
+                        Button("Birth options") { answer(NB.SCREEN_OPTIONS) }
+                    }
+                    if p.stage == "stats" {
+                        Button("Reset") { answer(NB.SKILL_RESET) }
+                        Button("Accept") { answer(NB.SKILL_ACCEPT) }.buttonStyle(.borderedProminent)
+                    }
+                    if p.stage == "text" { Button("Done") { answer(-1) }.buttonStyle(.borderedProminent) }
+                }
+                .padding(12)
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+}
+
+private struct OptionCard: View {
+    let o: ScreenOption
+    let answer: (Int) -> Void
+
+    var body: some View {
+        let enabled = o.state != 0
+        Button { answer(o.index) } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(o.label).font(.system(size: 17, weight: .semibold)).foregroundColor(enabled ? .white : Color(rgb: 0x55555A))
+                if !o.summary.isEmpty { Text(o.summary).font(.system(size: 13)).foregroundColor(Palette.summary) }
+                if !o.description.isEmpty { Text(o.description).font(.system(size: 13)).foregroundColor(Palette.sub) }
+            }
+            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).padding(14)
+            .background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .buttonStyle(.plain).disabled(!enabled)
+        .padding(.horizontal, 12).padding(.vertical, 5)
+    }
+}
+
+private struct StatRow: View {
+    let s: BirthStat
+    let answer: (Int) -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            VStack(alignment: .leading) {
+                Text(s.name).font(.system(size: 16)).foregroundColor(.white)
+                Text(s.spent > 0 ? "\(s.spent) point\(s.spent == 1 ? "" : "s") spent" : "").font(.system(size: 12)).foregroundColor(Palette.sub)
+            }
+            Spacer()
+            Text("\(s.value)").font(.system(size: 20, weight: .semibold)).foregroundColor(.white).padding(.trailing, 4)
+            Button("−") { answer(NB.SKILL_SELL + s.index) }.buttonStyle(.bordered).disabled(!s.canSell)
+            Button("+ \(s.nextCost)") { answer(NB.SKILL_BUY + s.index) }.buttonStyle(.borderedProminent).disabled(!s.canBuy)
+        }
+        .frame(minHeight: 56).padding(.horizontal, 16)
+    }
+}
+
+/// First signed number in a figure ("(+3, 1d8)" → 3, "[+2, 1-4]" → 2).
+private func lead(_ v: String) -> Int? {
+    guard let r = v.range(of: "-?[0-9]+", options: .regularExpression) else { return nil }
+    return Int(v[r])
+}
+
+/// Skills and combat as the stats now give them; what the last purchase changed is coloured.
+private struct Figures: View {
+    let p: ScreenPrompt
+    @State private var previous: [String: String] = [:]
+
+    private var all: [NamedValue] { p.skills + p.combat }
+    private func delta(_ f: NamedValue) -> Int { previous[f.name].map { (lead(f.value) ?? 0) - (lead($0) ?? 0) } ?? 0 }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Skills").font(.system(size: 14)).foregroundColor(Palette.gold)
+            flow(p.skills)
+            Text("Combat").font(.system(size: 14)).foregroundColor(Palette.gold)
+            flow(p.combat)
+        }
+        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+        .background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 12).padding(.vertical, 8)
+        .onChange(of: all) { new in previous = Dictionary(new.map { ($0.name, $0.value) }, uniquingKeysWith: { $1 }) }
+        .onAppear { previous = Dictionary(all.map { ($0.name, $0.value) }, uniquingKeysWith: { $1 }) }
+    }
+
+    /// Wrapped rows of figures (two per row is enough at phone width).
+    private func flow(_ items: [NamedValue]) -> some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), alignment: .leading)], alignment: .leading, spacing: 4) {
+            ForEach(items, id: \.name) { f in figure(f) }
+        }
+    }
+
+    private func figure(_ f: NamedValue) -> some View {
+        let d = delta(f)
+        let tint: Color = d > 0 ? Palette.good : d < 0 ? Palette.bad : .white
+        return HStack(spacing: 4) {
+            Text(f.name).font(.system(size: 13)).foregroundColor(Palette.sub)
+            Text(f.value).font(.system(size: 14, weight: .semibold)).foregroundColor(tint)
+            if d != 0 { Text(d > 0 ? "▲" : "▼").font(.system(size: 11)).foregroundColor(tint) }
+        }
+    }
+}
+
+/// The splash screen: the verse, the welcome, the version, and Begin.
+private struct Welcome: View {
+    let p: ScreenPrompt
+    let answer: (Int) -> Void
+
+    var body: some View {
+        ZStack {
+            Palette.splash.ignoresSafeArea()
+            ScrollView {
+                VStack(spacing: 4) {
+                    Text(p.title).font(.system(size: 34, weight: .semibold)).tracking(2).foregroundColor(Palette.gold).padding(.top, 28)
+                    ForEach(Array(p.verse.enumerated()), id: \.offset) { _, v in
+                        Text(v).font(.system(size: 16).italic()).foregroundColor(Palette.verse).multilineTextAlignment(.center)
+                    }
+                    Color.clear.frame(height: 20)
+                    ForEach(Array(p.paragraphs.dropLast().enumerated()), id: \.offset) { _, t in
+                        Text(t).font(.system(size: 16)).foregroundColor(Palette.body).multilineTextAlignment(.center).padding(.vertical, 4)
+                    }
+                    Color.clear.frame(height: 28)
+                    if let first = p.options.first {
+                        Button { answer(first.index) } label: { Text(first.label).font(.system(size: 17)).frame(maxWidth: .infinity, minHeight: 44) }
+                            .buttonStyle(.borderedProminent).padding(.horizontal, 48)
+                    }
+                    ForEach(Array(p.options.dropFirst()), id: \.index) { o in
+                        Button(o.label) { answer(o.index) }.padding(.top, 8)
+                        if !o.summary.isEmpty { Text(o.summary).font(.system(size: 12)).foregroundColor(Palette.sub).multilineTextAlignment(.center) }
+                    }
+                    if let last = p.paragraphs.last { Text(last).font(.system(size: 12)).foregroundColor(Palette.sub).padding(.top, 16) }
+                }
+                .padding(.horizontal, 28).padding(.bottom, 32).frame(maxWidth: .infinity)
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+}
+
+/// A tutorial note: a card at the bottom over the map, which stays visible.
+private struct NoteCard: View {
+    let p: ScreenPrompt
+    let answer: (Int) -> Void
+
+    var body: some View {
+        VStack {
+            Spacer()
+            VStack(alignment: .leading, spacing: 8) {
+                Text(p.title).font(.system(size: 18, weight: .semibold)).foregroundColor(Palette.gold)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(Array(p.paragraphs.enumerated()), id: \.offset) { _, t in
+                            /* Diagrams (the direction keys) keep their spacing. */
+                            let art = t.contains("  ") || t.contains("\\") || t.contains("|")
+                            Text(t).font(art ? .system(size: 13, design: .monospaced) : .system(size: 15)).foregroundColor(Palette.body)
+                        }
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxHeight: 360)
+                Button(p.options.first?.label ?? "Continue") { answer(0) }.buttonStyle(.borderedProminent).frame(maxWidth: .infinity, alignment: .trailing)
+            }
+            .padding(16).background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 16)).padding(.horizontal, 8)
+        }
+        .background(Color.black.opacity(0.33).ignoresSafeArea())
+        .preferredColorScheme(.dark)
+    }
+}
