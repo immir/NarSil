@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,7 +31,7 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ScrollableTabRow
-import androidx.compose.material3.TabRow
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -152,11 +154,10 @@ fun PanelHost(gameTab: Int, tabStyle: Int, onAnswer: (Int) -> Unit, content: @Co
                             }
                         } else {
                             /* Icons fit the panel's width, so there is nothing to scroll. */
-                            TabRow(selectedTabIndex = tab.coerceIn(0, TAB_TITLES.lastIndex), containerColor = PANEL_BG, modifier = Modifier.weight(1f)) {
+                            Row(Modifier.weight(1f)) {
                                 TAB_TITLES.forEachIndexed { i, t ->
-                                    Tab(selected = i == tab, onClick = { if (i != tab) answer(N.PANEL_TAB + i) },
-                                        icon = { Icon(TAB_ICONS[i], contentDescription = t, modifier = Modifier.size(22.dp)) },
-                                        text = if (tabStyle == Settings.TABS_ICONS_AND_NAMES) ({ Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) }) else null)
+                                    IconTab(TAB_ICONS[i], t, showName = tabStyle == Settings.TABS_ICONS_AND_NAMES, selected = i == tab,
+                                            modifier = Modifier.weight(1f)) { if (i != tab) answer(N.PANEL_TAB + i) }
                                 }
                             }
                         }
@@ -187,6 +188,17 @@ private fun Modifier.swipeBetweenTabs(tab: Int, onAnswer: (Int) -> Unit) = point
             dx < -far && tab + 1 < N.TAB_COUNT -> { done = true; onAnswer(N.PANEL_TAB + tab + 1) }
             dx > far -> { done = true; onAnswer(if (tab > 0) N.PANEL_TAB + tab - 1 else N.PANEL_CLOSE) }
         }
+    }
+}
+
+/** One panel tab as an icon with its name under it; no padding, so seven fit across the panel. */
+@Composable
+private fun IconTab(icon: ImageVector, name: String, showName: Boolean, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val tint = if (selected) Color(0xFFF3D27A) else Color(0xFF9A9AA0)
+    Column(modifier.clickable(onClick = onClick).padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(icon, contentDescription = name, tint = tint, modifier = Modifier.size(22.dp))
+        if (showName) Text(name, color = tint, fontSize = 10.sp, maxLines = 1, softWrap = false, modifier = Modifier.padding(top = 2.dp))
+        Box(Modifier.padding(top = 6.dp).fillMaxWidth().height(2.dp).background(if (selected) tint else Color.Transparent))
     }
 }
 
