@@ -1,0 +1,5 @@
+version: 1
+bundleID: org.narsil.NarSil
+resources:
+  - lib
+infoPath: xtool-Info.plist

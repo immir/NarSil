@@ -1,0 +1,1 @@
+../../../../bridge/narsil_bridge.h
