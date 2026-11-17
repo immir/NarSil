@@ -204,36 +204,6 @@ echo "$out" | grep -qP "^#D\tIn general, items of Hador's House have:"
 echo "$out" | grep -qP '^#D\tA random bonus of 1 to the sides of each damage die\.'
 echo "$out" | grep -qP '^#D\tFollow-Through: Allows you to continue'
 
-echo "== item details (option): off by default, no weapon numbers; on adds them"
-rm -rf "$work/data"
-out=$(run "${birth[@]}" @ego @act=15 @answer=1002 @prompt @answer=-1 "${quit[@]}")
-! echo "$out" | grep -q 'per blow'
-rm -rf "$work/data"
-out=$(run "${birth[@]}" @details=1 @ego @act=15 @answer=1002 @prompt @answer=-1 "${quit[@]}")
-echo "$out" | grep -qP '^#D\tFollow-Through: Allows you to continue your attack'
-echo "$out" | grep -qP '^#D\tLook at or fight a monster to see hit and damage numbers'
-rm -rf "$work/data"
-out=$(run "${birth[@]}" @details=1 @foe @ego @act=15 @answer=1002 @prompt @answer=-1 "${quit[@]}")
-echo "$out" | grep -qP '^#D\tAgainst the .* \(the last foe you looked at or fought\), about:'
-echo "$out" | grep -qP '^#D\thit [0-9]+%, critical [0-9]+% of blows; [0-9.]+ damage per blow, [0-9.]+ per round\.'
-echo "$out" | grep -qP '^#D\tYour (weapon|bare hands) now: hit'
-echo "$out" | grep -qP '^#F\t0\t'
-echo "$out" | grep -qP '^#R\t[0-9]+\t.+\t[0-9]+\t[01]$'
-echo "== item details: choosing a foe in the pack"
-rm -rf "$work/data"
-out=$(run "${birth[@]}" @details=1 @foe @ego @act=15 @answer=1002 @answer=10000003 @prompt @answer=-1 "${quit[@]}")
-echo "$out" | grep -qP '^#F\t3\t'
-echo "$out" | grep -qP '^#D\tAgainst the .* \(your choice\), about:'
-
-echo "== item details: armour against the foe, compared with the slot's current item"
-rm -rf "$work/data"
-out=$(run "${birth[@]}" @details=1 @foe @shield @act=15 @answer=1002 @prompt @answer=-1 "${quit[@]}")
-echo "$out" | grep -qP '^#D\tits attacks hit you [0-9]+% of the time for [0-9.]+ damage each'
-echo "$out" | grep -qP '^#D\tWith nothing worn there: hit'
-echo "$out" | grep -qP '^#D\tDamage taken per attack: '
-echo "$out" | grep -qP '^#D\tEvasion -?[0-9]+ \(now -?[0-9]+\), stealth'
-echo "$out" | grep -qP '^#F\t0\t'
-
 echo "== native pack: equipping (two messages, so a -more-) reopens the pack by itself, and the option is put back"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=15 @answer=1001 @answer=100102 @prompt @answer=-1 @act=26 @prompt @answer=-1 "${quit[@]}")

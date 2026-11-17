@@ -17,7 +17,6 @@
  *   @inspect@DX,DY @look                          native inspect (relative) / look list
  *   @text=TEXT                                    answer a text prompt
  *   @info                                         print the latest info (e.g. after @act=20, the character)
- *   @foe                                          the monster race last looked at, as the item details use it
  *   @details=0|1                                  the extra item details option
  *   @ego                                          a known short sword of Hador's House into the pack
  *   @chest, @trapchest, @pile                     drop a locked chest, a trapped one, or a pile of four under the player
@@ -251,14 +250,6 @@ static int run_token(const char *tok)
 	if (strcmp(tok, "@chest") == 0 || strcmp(tok, "@trapchest") == 0 || strcmp(tok, "@pile") == 0
 		|| strcmp(tok, "@ego") == 0) {
 		nb_test_chest(strcmp(tok, "@ego") == 0 ? 3 : tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
-		return settle() ? 0 : 1;
-	}
-	if (strcmp(tok, "@shield") == 0) {
-		nb_test_chest(5);
-		return settle() ? 0 : 1;
-	}
-	if (strcmp(tok, "@foe") == 0) {
-		nb_test_chest(4);
 		return settle() ? 0 : 1;
 	}
 	if (sscanf(tok, "@details=%d%c", &mx, &tail) == 1) {

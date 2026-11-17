@@ -4,6 +4,10 @@ import SwiftUI
    in from the right (Panel.kt).  The game owns the tabs; a tab tap answers PANEL_TAB + tab. */
 
 private let tabTitles = ["Pack", "Character", "Skills", "Abilities", "Knowledge", "Smithing", "Options"]
+private let tabIcons = ["bag.fill", "person.fill", "chart.bar.fill", "star.fill", "book.fill", "hammer.fill", "gearshape.fill"]
+
+/// How the panel's tabs are drawn (Settings → Display and controls).
+enum TabStyle: Int { case iconsAndNames = 0, iconsOnly = 1, names = 2 }
 
 extension Prompt {
     /// The prompts that are a tab's own screen (anything else, e.g. a yes/no, is asked over it).
@@ -27,6 +31,7 @@ final class AbilitiesNav: ObservableObject {
 struct PanelLayer: View {
     @ObservedObject var game: GameState
     @ObservedObject var abilities: AbilitiesNav
+    let onAppSettings: () -> Void
     @State private var shown: Prompt?
     @State private var tab = 0
     /// The tab asked for shows at once; the game's answer (its new screen) follows.
@@ -54,7 +59,7 @@ struct PanelLayer: View {
         }
         return PanelHost(tab: current, answer: send) {
             ZStack {
-                if let c = shown { PanelContent(prompt: c, game: game, abilities: abilities, answer: interactive ? send : { _ in }) }
+                if let c = shown { PanelContent(prompt: c, game: game, abilities: abilities, onAppSettings: onAppSettings, answer: interactive ? send : { _ in }) }
                 if dimmed { Color.black.opacity(0.33) }
             }
         }
@@ -62,9 +67,45 @@ struct PanelLayer: View {
 }
 
 private struct PanelHost<Content: View>: View {
+    @AppStorage("panelTabs") private var tabStyle = TabStyle.iconsAndNames.rawValue
     let tab: Int
     let answer: (Int) -> Void
     @ViewBuilder let content: Content
+
+    /// Icons fit the panel's width without scrolling; the names are the fallback for those who prefer words.
+    @ViewBuilder private var tabStrip: some View {
+        let style = TabStyle(rawValue: tabStyle) ?? .iconsAndNames
+        if style == .names {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    ForEach(Array(tabTitles.enumerated()), id: \.offset) { i, t in
+                        Button { if i != tab { answer(NB.PANEL_TAB + i) } } label: {
+                            Text(t).font(.system(size: 14, weight: i == tab ? .semibold : .regular))
+                                .foregroundColor(i == tab ? Palette.gold : Palette.sub)
+                                .padding(.horizontal, 12).padding(.vertical, 12)
+                                .overlay(alignment: .bottom) { if i == tab { Palette.gold.frame(height: 2) } }
+                        }.buttonStyle(.plain)
+                    }
+                }.padding(.horizontal, 4)
+            }
+        } else {
+            HStack(spacing: 0) {
+                ForEach(Array(tabTitles.enumerated()), id: \.offset) { i, t in
+                    Button { if i != tab { answer(NB.PANEL_TAB + i) } } label: {
+                        VStack(spacing: 2) {
+                            Image(systemName: tabIcons[i]).font(.system(size: 18))
+                            if style == .iconsAndNames { Text(t).font(.system(size: 9)).lineLimit(1).minimumScaleFactor(0.7) }
+                        }
+                        .foregroundColor(i == tab ? Palette.gold : Palette.sub)
+                        .frame(maxWidth: .infinity, minHeight: 44).padding(.top, 4)
+                        .overlay(alignment: .bottom) { if i == tab { Palette.gold.frame(height: 2) } }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain).accessibilityLabel(t)
+                }
+            }.padding(.horizontal, 4)
+        }
+    }
 
     var body: some View {
         GeometryReader { g in
@@ -73,26 +114,15 @@ private struct PanelHost<Content: View>: View {
                 Color.black.opacity(0.47).ignoresSafeArea().onTapGesture { answer(NB.PANEL_CLOSE) }
                 VStack(spacing: 0) {
                     HStack(spacing: 0) {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 0) {
-                                ForEach(Array(tabTitles.enumerated()), id: \.offset) { i, t in
-                                    Button { if i != tab { answer(NB.PANEL_TAB + i) } } label: {
-                                        Text(t).font(.system(size: 14, weight: i == tab ? .semibold : .regular))
-                                            .foregroundColor(i == tab ? Palette.gold : Palette.sub)
-                                            .padding(.horizontal, 12).padding(.vertical, 12)
-                                            .overlay(alignment: .bottom) { if i == tab { Palette.gold.frame(height: 2) } }
-                                    }.buttonStyle(.plain)
-                                }
-                            }.padding(.horizontal, 4)
-                        }
+                        tabStrip
                         Button("✕") { answer(NB.PANEL_CLOSE) }.font(.system(size: 18)).padding(.horizontal, 12)
                     }
                     content.frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .gesture(DragGesture(minimumDistance: 40).onEnded { v in
+                        .simultaneousGesture(DragGesture(minimumDistance: 40).onEnded { v in
                             guard abs(v.translation.width) > 2 * abs(v.translation.height) else { return }
                             if v.translation.width < 0, tab + 1 < NB.TAB_COUNT { answer(NB.PANEL_TAB + tab + 1) }
                             else if v.translation.width > 0 { answer(tab > 0 ? NB.PANEL_TAB + tab - 1 : NB.PANEL_CLOSE) }
-                        }, including: .gesture)
+                        })
                 }
                 .frame(width: width).frame(maxHeight: .infinity).background(Palette.sheet)
                 .clipShape(UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16))
@@ -107,6 +137,7 @@ private struct PanelContent: View {
     let prompt: Prompt
     @ObservedObject var game: GameState
     @ObservedObject var abilities: AbilitiesNav
+    let onAppSettings: () -> Void
     let answer: (Int) -> Void
 
     var body: some View {
@@ -118,7 +149,7 @@ private struct PanelContent: View {
             CharacterView(game: game, sections: sections, actions: [("Rename", { answer(NB.CHARACTER_RENAME) }), ("Share dump", { answer(NB.CHARACTER_DUMP) })])
         case .knowledge(let p): KnowledgeView(prompt: p, colour: { game.colour($0) }, answer: answer)
         case .smith(let p): SmithView(prompt: p, answer: answer)
-        case .options(let p): OptionsView(prompt: p, answer: answer)
+        case .options(let p): OptionsView(prompt: p, onAppSettings: onAppSettings, answer: answer)
         default:
             VStack(spacing: 8) {
                 Spacer()

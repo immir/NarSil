@@ -3,6 +3,7 @@ import SwiftUI
 /// The game's own options (narsil_options.c); changes apply at once.
 struct OptionsView: View {
     let prompt: OptionsPrompt
+    var onAppSettings: (() -> Void)?
     let answer: (Int) -> Void
 
     private var main: Bool { prompt.page == "main" }
@@ -15,6 +16,18 @@ struct OptionsView: View {
             if prompt.page == "cheat" { note("Switching one on marks this character as a cheater for good, even if you switch it off again.") }
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
+                    if main, let onAppSettings {
+                        Button(action: onAppSettings) {
+                            card(HStack {
+                                VStack(alignment: .leading) {
+                                    Text("Display and controls").font(.system(size: 15)).foregroundColor(Color(rgb: 0xE6E6EA))
+                                    Text("Tiles, swipe to run, item details").font(.system(size: 12)).foregroundColor(Palette.sub)
+                                }
+                                Spacer()
+                                Text("›").font(.system(size: 20)).foregroundColor(Palette.sub)
+                            }.frame(minHeight: 56).padding(.horizontal, 14).padding(.vertical, 8).contentShape(Rectangle()))
+                        }.buttonStyle(.plain)
+                    }
                     ForEach(Array(prompt.rows.enumerated()), id: \.offset) { _, row in
                         switch row {
                         case .heading(let t):

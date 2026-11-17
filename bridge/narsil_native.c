@@ -719,24 +719,6 @@ bool native_service(bool at_prompt)
 		native_publish(at_prompt);
 		return false;
 	}
-	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 5) {
-		struct object *shield = object_new(); /* mutable: inven_carry() takes the pointer */
-		object_prep(shield, lookup_kind(TV_SHIELD, lookup_sval(TV_SHIELD, "Round Shield")), 5, RANDOMISE);
-		shield->known = object_new();
-		shield->known->kind = shield->kind;
-		shield->known->tval = shield->tval;
-		shield->known->sval = shield->sval;
-		shield->known->number = shield->number;
-		inven_carry(player, shield, true, false);
-		native_publish(at_prompt);
-		return false;
-	}
-	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 4) {
-		player->upkeep->monster_race = &r_info[1];  /* as if just looked at, and so seen */
-		l_list[1].tsights = 1;
-		native_publish(at_prompt);
-		return false;
-	}
 	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 3) {
 		/* A short sword of Hador's House, known, into the pack with its "You have" message. */
 		struct object *sword = object_new(); /* mutable: inven_carry() takes the pointer */

@@ -28,10 +28,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -120,7 +118,6 @@ private fun PackRow(item: GameState.Item, p: GameState.Prompt.Pack, colour: (Int
         if (open) {
             Column(Modifier.padding(start = 68.dp, end = 16.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (p.description.isNotEmpty()) Text(p.description, color = Color(0xFFC8C8CC), fontSize = 14.sp, lineHeight = 19.sp)
-                p.foe?.let { FoeRow(it, p.foes, onAnswer) }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     p.actions.forEach { a ->
                         FilledTonalButton(onClick = { onAnswer(N.PACK_ACT + item.index * N.PACK_ACT_STRIDE + a.index) }, enabled = a.valid) {
@@ -132,30 +129,4 @@ private fun PackRow(item: GameState.Item, p: GameState.Prompt.Pack, colour: (Int
         }
         Divider(color = Color(0xFF2C2C2E), modifier = Modifier.padding(start = 68.dp))
     }
-}
-
-/** Which monster a weapon's numbers are against: tap to choose from those in view and those seen before. */
-@Composable
-private fun FoeRow(pick: GameState.FoePick, foes: List<GameState.FoeChoice>, onAnswer: (Int) -> Unit) {
-    var choosing by remember { mutableStateOf(false) }
-    Text(if (pick.name.isEmpty()) "Compare against: choose a monster ▸" else "Compare against: ${pick.name}${if (pick.race == 0) " (last seen)" else ""} ▸",
-         color = Color(0xFF8AB4F8), fontSize = 14.sp, modifier = Modifier.clickable { choosing = true }.padding(vertical = 6.dp))
-    if (choosing) AlertDialog(
-        onDismissRequest = { choosing = false },
-        title = { Text("Compare against") },
-        text = {
-            LazyColumn(Modifier.heightIn(max = 420.dp)) {
-                item {
-                    Text("The last monster I looked at or fought", fontSize = 16.sp,
-                         modifier = Modifier.fillMaxWidth().clickable { choosing = false; onAnswer(N.PACK_FOE) }.padding(vertical = 12.dp))
-                }
-                items(foes, key = { it.race }) { f ->
-                    Text("${f.name}  ·  level ${f.level}${if (f.inView) "  ·  in view" else ""}", fontSize = 16.sp,
-                         fontWeight = if (f.race == pick.race) FontWeight.Bold else FontWeight.Normal,
-                         modifier = Modifier.fillMaxWidth().clickable { choosing = false; onAnswer(N.PACK_FOE + f.race) }.padding(vertical = 12.dp))
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = { choosing = false }) { Text("Cancel") } },
-    )
 }

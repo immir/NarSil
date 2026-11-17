@@ -67,9 +67,7 @@ object Parse {
                     recs.filter { it[0] == "#I" }.mapIndexed { i, f -> Item(i, f[1].toInt(), f[2].first(), f[3].toInt(), f[4].toInt(), f[5].toInt(), f[7], special = f[6].toInt()) },
                     recs.filter { it[0] == "#A" }.mapIndexed { i, f -> Action(i, f[1] == "1", f[2]) },
                     lines.filter { it.startsWith("#D\t") }.joinToString("\n") { it.removePrefix("#D\t") }.trim(),
-                    head.getOrNull(5) == "1",
-                    recs.firstOrNull { it[0] == "#F" }?.let { FoePick(it[1].toInt(), it.getOrElse(2) { "" }) },
-                    recs.filter { it[0] == "#R" }.map { FoeChoice(it[1].toInt(), it[2], it[3].toInt(), it[4] == "1") })
+                    head.getOrNull(5) == "1")
             }
             N.PROMPT_QUANTITY -> Prompt.Quantity(lines[0], lines.getOrNull(1)?.toIntOrNull() ?: 1, lines.getOrNull(2)?.toIntOrNull() ?: 1)
             N.PROMPT_CHARACTER -> (info(raw.substringAfter('\n')) as? Info.Character)?.let { Prompt.Character(it) }

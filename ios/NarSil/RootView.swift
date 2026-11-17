@@ -10,6 +10,9 @@ struct RootView: View {
     @State private var showMore = false
     @State private var showRest = false
     @State private var showMessages = false
+    @State private var showSettings = false
+    @AppStorage("itemDetails") private var itemDetails = false
+    @AppStorage("panelTabs") private var panelTabs = TabStyle.iconsAndNames.rawValue
     @StateObject private var abilities = AbilitiesNav()
     private let map = MapHandle()
 
@@ -23,13 +26,15 @@ struct RootView: View {
                 if rail { landscape } else { portrait }
                 if !game.mapMode { TerminalScreen(game: game) }
                 promptLayer
-                PanelLayer(game: game, abilities: abilities)
+                PanelLayer(game: game, abilities: abilities, onAppSettings: { showSettings = true })
                 infoLayer
                 if showMore { sheet(MoreSheet(actions: more, dismiss: { showMore = false })) }
                 if showRest { sheet(RestSheet(dismiss: { showRest = false })) }
             }
         }
-        .onAppear { Native.setTiles(tiles); game.start() }
+        .onAppear { Native.setTiles(tiles); Native.setItemDetails(itemDetails); game.start() }
+        .onChange(of: tiles) { Native.setTiles($0) }
+        .onChange(of: itemDetails) { Native.setItemDetails($0) }
     }
 
     private var portrait: some View {
@@ -101,6 +106,7 @@ struct RootView: View {
                 }
             }
         }
+        if showSettings { SettingsSheet(tiles: $tiles, swipeRuns: $swipeRuns, itemDetails: $itemDetails, panelTabs: $panelTabs) { showSettings = false } }
         if showMessages { MessagesSheet(game: game) { showMessages = false } }
     }
 

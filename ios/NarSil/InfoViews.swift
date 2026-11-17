@@ -127,7 +127,7 @@ struct CharacterView: View {
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
                     Text(sections.first?.title ?? "Character").font(.system(size: 18, weight: .semibold)).foregroundColor(.white)
                         .padding(.horizontal, 16).padding(.top, 12).padding(.bottom, 4)
                     ForEach(Array(sections.enumerated()), id: \.offset) { i, sec in

@@ -200,8 +200,8 @@ enum { NB_MAP_CELL_INTS = 5, NB_TILE_ALERT = 1, NB_TILE_GLOW = 2 };
 void nb_set_tiles(bool on);
 
 /*
- * Extra lines in the pack's item description (default off): what a granted ability does and, for a melee weapon, hit,
- * crit and damage numbers against the foe last looked at or fought, beside the wielded weapon.
+ * Extra lines in the pack's item description (default off): what an ego item gives in general, and what each
+ * ability the item grants does.
  */
 void nb_set_item_details(bool on);
 
@@ -225,7 +225,7 @@ void nb_request_move(int dir, bool run);
 #ifdef NB_TEST_HOOKS
 /* Host tests only: at the command prompt, take a fatal hit (as a monster's blow would). */
 void nb_test_die(void);
-void nb_test_chest(int kind); /* 0: a locked small chest under the player; 1: a trapped one; 2: a pile of four, reported as stepping on it would be; 3: a known short sword of Hador's House into the pack; 4: the tracked monster race is set; 5: a round shield into the pack */
+void nb_test_chest(int kind); /* 0: a locked small chest under the player; 1: a trapped one; 2: a pile of four, reported as stepping on it would be; 3: a known short sword of Hador's House into the pack*/
 #endif
 
 /* Path as (x, y) pairs: the target first, then each step; 0 = no path. */
@@ -292,8 +292,7 @@ enum { NB_CHARACTER_SCREEN = 1, NB_CHARACTER_RENAME = 2, NB_CHARACTER_DUMP = 3 }
 int nb_panel_tab(void);
 
 /* Pack answers: collapse; expand item i; action k of item i. */
-enum { NB_PACK_COLLAPSE = 999, NB_PACK_EXPAND = 1000, NB_PACK_ACT = 100000, NB_PACK_ACT_STRIDE = 100,
-       NB_PACK_FOE = 10000000 /* + race index (0: the last foe looked at or fought): the weapon numbers compare against it */ };
+enum { NB_PACK_COLLAPSE = 999, NB_PACK_EXPAND = 1000, NB_PACK_ACT = 100000, NB_PACK_ACT_STRIDE = 100 };
 
 /* Skill answers: buy/sell a point in skill i, reset this session, or accept. */
 enum { NB_SKILL_RESET = 1, NB_SKILL_ACCEPT = 2, NB_SKILL_BUY = 100, NB_SKILL_SELL = 200 };
