@@ -44,6 +44,7 @@ enum Native {
     static func clearPreview() { nb_clear_preview() }
     static func setTiles(_ on: Bool) { nb_set_tiles(on) }
     static func setItemDetails(_ on: Bool) { nb_set_item_details(on) }
+    static func setAutoMore(_ on: Bool) { nb_set_auto_more(on) }
 
     // Answers to the open prompt.
     static func answer(_ value: Int) { nb_answer(Int32(value)) }

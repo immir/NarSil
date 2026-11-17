@@ -21,7 +21,7 @@ struct OptionsView: View {
                             card(HStack {
                                 VStack(alignment: .leading) {
                                     Text("Display and controls").font(.system(size: 15)).foregroundColor(Color(rgb: 0xE6E6EA))
-                                    Text("Tiles, swipe to run, item details").font(.system(size: 12)).foregroundColor(Palette.sub)
+                                    Text("Messages, panel tabs, tiles, d-pad, swipes").font(.system(size: 12)).foregroundColor(Palette.sub)
                                 }
                                 Spacer()
                                 Text("›").font(.system(size: 20)).foregroundColor(Palette.sub)

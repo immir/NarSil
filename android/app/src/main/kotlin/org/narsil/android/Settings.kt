@@ -65,6 +65,7 @@ class Settings(context: Context) {
     private val details = mutableStateOf(prefs.getBoolean("itemDetails", false))
     private val buzz = mutableStateOf(prefs.getBoolean("lowHealthBuzz", true))
     private val msgLines = mutableIntStateOf(prefs.getInt("messageLines", 3))
+    private val panelTabStyle = mutableIntStateOf(prefs.getInt("panelTabs", TABS_ICONS_AND_NAMES))
     private val themeChoice = mutableIntStateOf(prefs.getInt("theme", 0))
 
     var buttonScale: Float get() = buttons.floatValue; set(v) { buttons.floatValue = v; save("buttonScale", v) }
@@ -81,6 +82,8 @@ class Settings(context: Context) {
     var edgeSwipePanel: Boolean get() = edge.value; set(v) { edge.value = v; prefs.edit().putBoolean("edgeSwipePanel", v).apply() }
     /** A short buzz when health falls below the game's hitpoint warning. */
     var lowHealthBuzz: Boolean get() = buzz.value; set(v) { buzz.value = v; prefs.edit().putBoolean("lowHealthBuzz", v).apply() }
+    /** How the panel's tabs are drawn: [TABS_ICONS_AND_NAMES], [TABS_ICONS] or [TABS_NAMES] (a scrolling strip). */
+    var panelTabs: Int get() = panelTabStyle.intValue; set(v) { panelTabStyle.intValue = v; prefs.edit().putInt("panelTabs", v).apply() }
     /** Index into [Theme.ALL]. */
     var theme: Int get() = themeChoice.intValue; set(v) { themeChoice.intValue = v; prefs.edit().putInt("theme", v).apply() }
     /** How many recent messages the strip shows (2..5). */
@@ -88,10 +91,13 @@ class Settings(context: Context) {
     /** MicroChasm tiles on the map (the game is told by NarSilNative.nativeSetTiles). */
     var tiles: Boolean get() = tile.value; set(v) { tile.value = v; prefs.edit().putBoolean("tiles", v).apply(); NarSilNative.nativeSetTiles(v) }
 
-    /** Extra item description lines: what abilities do, and weapon numbers against the last foe (the game is told by nativeSetItemDetails). */
+    /** Extra item description lines: what an ego item gives, and what its abilities do (the game is told by nativeSetItemDetails). */
     var itemDetails: Boolean get() = details.value; set(v) { details.value = v; prefs.edit().putBoolean("itemDetails", v).apply(); NarSilNative.nativeSetItemDetails(v) }
 
     companion object {
+        const val TABS_ICONS_AND_NAMES = 0
+        const val TABS_ICONS = 1
+        const val TABS_NAMES = 2
         const val DPAD_OFF = 0
         const val DPAD_DOCKED = 1
         const val DPAD_FLOATING = 2
@@ -128,10 +134,6 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                 }
                 Scale("Buttons and menus", settings.buttonScale) { settings.buttonScale = it }
                 Scale("Messages", settings.messageScale) { settings.messageScale = it }
-                Label("Messages shown")
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    (2..5).forEach { n -> FilterChip(selected = settings.messageLines == n, onClick = { settings.messageLines = n }, label = { Text("$n") }) }
-                }
                 Label("Colours")
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Theme.ALL.forEachIndexed { i, t -> FilterChip(selected = settings.theme == i, onClick = { settings.theme = i }, label = { Text(t.name) }) }
@@ -142,7 +144,25 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                 Hint("Bright lifts the game's dark blues and reds so they read on black; Original is the game's own palette.")
                 Scale("Inventory and items", settings.itemScale) { settings.itemScale = it }
                 Scale("Status", settings.statusScale) { settings.statusScale = it }
-
+                Label("Messages shown")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    (2..5).forEach { n -> FilterChip(selected = settings.messageLines == n, onClick = { settings.messageLines = n }, label = { Text("$n") }) }
+                }
+                Label("Panel tabs")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(Settings.TABS_ICONS_AND_NAMES to "Icons and names", Settings.TABS_ICONS to "Icons", Settings.TABS_NAMES to "Names")
+                        .forEach { (style, label) ->
+                            FilterChip(selected = settings.panelTabs == style, onClick = { settings.panelTabs = style }, label = { Text(label) })
+                        }
+                }
+                Hint("Icons fit the panel without scrolling; names are the scrolling strip.")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Label("Tiles on the map")
+                        Hint("MicroChasm's pictures instead of letters. Lists and menus keep the letters.")
+                    }
+                    Switch(settings.tiles, { settings.tiles = it })
+                }
                 Label("D-pad")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(Settings.DPAD_OFF to "Off", Settings.DPAD_DOCKED to "Beside status", Settings.DPAD_FLOATING to "Floating")
@@ -159,10 +179,10 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Label("Buzz when health is low")
-                        Hint("Below the game's hitpoint warning (Game options → Hitpoint warning).")
+                        Label("Swipe on the map runs")
+                        Hint("Otherwise a swipe takes one step.")
                     }
-                    Switch(settings.lowHealthBuzz, { settings.lowHealthBuzz = it })
+                    Switch(settings.swipeRuns, { settings.swipeRuns = it })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
@@ -175,24 +195,17 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Label("Tiles on the map")
-                        Hint("MicroChasm's pictures instead of letters. Lists and menus keep the letters.")
-                    }
-                    Switch(settings.tiles, { settings.tiles = it })
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
                         Label("Item details in the pack")
-                        Hint("Adds what a granted ability does and, for a weapon, about how often it hits and crits and the damage it deals, and for armour how much damage you take, against a monster you choose (by default the last you looked at or fought), compared with your own weapon.")
+                        Hint("Says what an ego item gives in general, and what each ability an item grants does, when you open it in the pack.")
                     }
                     Switch(settings.itemDetails, { settings.itemDetails = it })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Label("Swipe on the map runs")
-                        Hint("Otherwise a swipe takes one step.")
+                        Label("Buzz when health is low")
+                        Hint("Below the game's hitpoint warning (Game options → Hitpoint warning).")
                     }
-                    Switch(settings.swipeRuns, { settings.swipeRuns = it })
+                    Switch(settings.lowHealthBuzz, { settings.lowHealthBuzz = it })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {

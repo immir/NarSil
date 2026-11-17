@@ -282,7 +282,7 @@ when (prompt) {
         val interactive = prompt != null && prompt === shown
         /* Dimmed under a question asked over it; not in the moment between two tabs (no prompt yet). */
         val dimmed = prompt != null && prompt !== shown
-        if (live) PanelHost(tab, answer) {
+        if (live) PanelHost(tab, settings.panelTabs, answer) {
             shown?.let { c ->
                 Box(Modifier.fillMaxSize()) {
                     PromptUi(state, c, if (interactive) answer else { _ -> })

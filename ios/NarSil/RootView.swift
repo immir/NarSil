@@ -12,6 +12,9 @@ struct RootView: View {
     @State private var showMessages = false
     @State private var showSettings = false
     @AppStorage("itemDetails") private var itemDetails = false
+    @AppStorage("messageLines") private var messageLines = 3
+    @AppStorage("dpad") private var pad = PadMode.docked.rawValue
+    @AppStorage("lowHealthBuzz") private var lowHealthBuzz = true
     @AppStorage("panelTabs") private var panelTabs = TabStyle.iconsAndNames.rawValue
     @StateObject private var abilities = AbilitiesNav()
     private let map = MapHandle()
@@ -35,15 +38,16 @@ struct RootView: View {
         .onAppear { Native.setTiles(tiles); Native.setItemDetails(itemDetails); game.start() }
         .onChange(of: tiles) { Native.setTiles($0) }
         .onChange(of: itemDetails) { Native.setItemDetails($0) }
+        .onChange(of: game.status.lowHp) { low in if low && lowHealthBuzz { UINotificationFeedbackGenerator().notificationOccurred(.warning) } }
     }
 
     private var portrait: some View {
         VStack(spacing: 0) {
-            MessageStrip(game: game, lines: 3, onPanel: { Native.requestAction(NB.ACT_PANEL) }, onMessages: { showMessages = true })
+            MessageStrip(game: game, lines: messageLines, onPanel: { Native.requestAction(NB.ACT_PANEL) }, onMessages: { showMessages = true })
             MapView(game: game, handle: map, swipeRuns: swipeRuns, tiles: tiles)
             HStack(alignment: .center, spacing: 0) {
                 StatusStrip(game: game, stacked: true)
-                Dpad(size: padSize, onAction: pad).padding(4)
+                if pad != PadMode.off.rawValue { Dpad(size: padSize, onAction: padAction).padding(4) }
             }.background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
             promptBar
             ActionBar(actions: bar) { showMore = true }
@@ -53,7 +57,7 @@ struct RootView: View {
     private var landscape: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
-                MessageStrip(game: game, lines: 2, onPanel: { Native.requestAction(NB.ACT_PANEL) }, onMessages: { showMessages = true })
+                MessageStrip(game: game, lines: messageLines, onPanel: { Native.requestAction(NB.ACT_PANEL) }, onMessages: { showMessages = true })
                 MapView(game: game, handle: map, swipeRuns: swipeRuns, tiles: tiles)
                 promptBar
                 ActionBar(actions: bar) { showMore = true }
@@ -61,7 +65,7 @@ struct RootView: View {
             VStack(spacing: 0) {
                 StatusStrip(game: game, stacked: true)
                 Spacer(minLength: 0)
-                Dpad(size: min(padSize, 150), onAction: pad).padding(4)
+                if pad != PadMode.off.rawValue { Dpad(size: min(padSize, 150), onAction: padAction).padding(4) }
             }
             .frame(width: 260).background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
         }
@@ -106,7 +110,9 @@ struct RootView: View {
                 }
             }
         }
-        if showSettings { SettingsSheet(tiles: $tiles, swipeRuns: $swipeRuns, itemDetails: $itemDetails, panelTabs: $panelTabs) { showSettings = false } }
+        if showSettings { SettingsSheet(messageLines: $messageLines, panelTabs: $panelTabs, tiles: $tiles, pad: $pad, swipeRuns: $swipeRuns,
+                          autoMore: game.status.autoMore, autoMoreEnabled: game.atPrompt && game.prompt == nil, onAutoMore: Native.setAutoMore,
+                          itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz) { showSettings = false } }
         if showMessages { MessagesSheet(game: game) { showMessages = false } }
     }
 
@@ -138,7 +144,7 @@ struct RootView: View {
 
     /// A d-pad gesture: answers an open aim or direction prompt; at the map prompt steps, runs, waits or rests;
     /// elsewhere (-more-) it sends the keypad digit.
-    private func pad(_ a: PadAction) {
+    private func padAction(_ a: PadAction) {
         let dir: Int
         switch a {
         case .step(let d), .run(let d): dir = d

@@ -19,7 +19,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.systemGestureExclusion
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -73,6 +83,8 @@ fun rememberScrollPlace(key: String): ScrollState {
 val LocalInPanel = staticCompositionLocalOf { false }
 
 private val TAB_TITLES = listOf("Pack", "Character", "Skills", "Abilities", "Knowledge", "Smithing", "Options")
+private val TAB_ICONS = listOf(Icons.Default.ShoppingCart, Icons.Default.Person, Icons.Default.Menu, Icons.Default.Star,
+                               Icons.Default.Search, Icons.Default.Build, Icons.Default.Settings)
 private val PANEL_BG = Color(0xFF1C1C1E)
 
 /** The prompts that are a tab's own screen (anything else, e.g. a yes/no, is asked over it). */
@@ -111,7 +123,7 @@ fun PanelAwareSheet(onDismiss: (() -> Unit)?, heightFraction: Float? = null, max
  * draws the open tab's screen.
  */
 @Composable
-fun PanelHost(gameTab: Int, onAnswer: (Int) -> Unit, content: @Composable () -> Unit) {
+fun PanelHost(gameTab: Int, tabStyle: Int, onAnswer: (Int) -> Unit, content: @Composable () -> Unit) {
     /* The tab asked for shows at once; the game's answer (its new screen) follows. */
     var asked by remember { mutableStateOf(-1) }
     LaunchedEffect(gameTab) { asked = -1 }
@@ -131,10 +143,21 @@ fun PanelHost(gameTab: Int, onAnswer: (Int) -> Unit, content: @Composable () -> 
                         .clickable(remember { MutableInteractionSource() }, indication = null) {}) {
                 Column {
                     Row(Modifier.fillMaxWidth().swipeRightToClose { answer(N.PANEL_CLOSE) }, verticalAlignment = Alignment.CenterVertically) {
-                        ScrollableTabRow(selectedTabIndex = tab.coerceIn(0, TAB_TITLES.lastIndex), containerColor = PANEL_BG,
-                                         edgePadding = 4.dp, modifier = Modifier.weight(1f)) {
-                            TAB_TITLES.forEachIndexed { i, t ->
-                                Tab(selected = i == tab, onClick = { if (i != tab) answer(N.PANEL_TAB + i) }, text = { Text(t, fontSize = 14.sp) })
+                        if (tabStyle == Settings.TABS_NAMES) {
+                            ScrollableTabRow(selectedTabIndex = tab.coerceIn(0, TAB_TITLES.lastIndex), containerColor = PANEL_BG,
+                                             edgePadding = 4.dp, modifier = Modifier.weight(1f)) {
+                                TAB_TITLES.forEachIndexed { i, t ->
+                                    Tab(selected = i == tab, onClick = { if (i != tab) answer(N.PANEL_TAB + i) }, text = { Text(t, fontSize = 14.sp) })
+                                }
+                            }
+                        } else {
+                            /* Icons fit the panel's width, so there is nothing to scroll. */
+                            TabRow(selectedTabIndex = tab.coerceIn(0, TAB_TITLES.lastIndex), containerColor = PANEL_BG, modifier = Modifier.weight(1f)) {
+                                TAB_TITLES.forEachIndexed { i, t ->
+                                    Tab(selected = i == tab, onClick = { if (i != tab) answer(N.PANEL_TAB + i) },
+                                        icon = { Icon(TAB_ICONS[i], contentDescription = t, modifier = Modifier.size(22.dp)) },
+                                        text = if (tabStyle == Settings.TABS_ICONS_AND_NAMES) ({ Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) }) else null)
+                                }
                             }
                         }
                         TextButton(onClick = { answer(N.PANEL_CLOSE) }) { Text("✕", fontSize = 18.sp) }
