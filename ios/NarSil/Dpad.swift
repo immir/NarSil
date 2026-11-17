@@ -74,22 +74,27 @@ struct Dpad: View {
             }
     }
 
+    private static let keyLit = Color(red: 58.0 / 255.0, green: 95.0 / 255.0, blue: 138.0 / 255.0, opacity: 0.82)
+    private static let keyIdle = Color(red: 38.0 / 255.0, green: 38.0 / 255.0, blue: 43.0 / 255.0, opacity: 0.55)
+
     var body: some View {
-        Canvas { ctx, sz in
-            let k = min(sz.width, sz.height) / 3, gap: CGFloat = 3
+        let lit = self.lit
+        return Canvas { ctx, sz in
+            let k: CGFloat = min(sz.width, sz.height) / 3
+            let gap: CGFloat = 3
             for (row, dirs) in Self.layout.enumerated() {
                 for (col, dir) in dirs.enumerated() {
                     let r = CGRect(x: CGFloat(col) * k + gap / 2, y: CGFloat(row) * k + gap / 2, width: k - gap, height: k - gap)
                     let shape = Path(roundedRect: r, cornerRadius: 6)
-                    ctx.fill(shape, with: .color(dir == lit ? Color(red: 0x3A / 255, green: 0x5F / 255, blue: 0x8A / 255, opacity: 0.82)
-                                                            : Color(red: 0x26 / 255, green: 0x26 / 255, blue: 0x2B / 255, opacity: 0.55)))
-                    ctx.stroke(shape, with: .color(.white.opacity(0.19)), lineWidth: 1)
-                    let ink = Color.white.opacity(dir == lit ? 1 : 0.8)
-                    let mid = CGPoint(x: r.midX, y: r.midY)
+                    let on = dir == lit
+                    ctx.fill(shape, with: .color(on ? Self.keyLit : Self.keyIdle))
+                    ctx.stroke(shape, with: .color(Color.white.opacity(0.19)), lineWidth: 1)
+                    let ink = Color.white.opacity(on ? 1.0 : 0.8)
                     if dir == 5 {
-                        ctx.fill(Path(ellipseIn: CGRect(x: mid.x - k * 0.07, y: mid.y - k * 0.07, width: k * 0.14, height: k * 0.14)), with: .color(ink))
+                        let d: CGFloat = k * 0.14
+                        ctx.fill(Path(ellipseIn: CGRect(x: r.midX - d / 2, y: r.midY - d / 2, width: d, height: d)), with: .color(ink))
                     } else {
-                        ctx.fill(Self.arrow(at: mid, dir: dir, key: k), with: .color(ink))
+                        ctx.fill(Self.arrow(at: CGPoint(x: r.midX, y: r.midY), dir: dir, key: k), with: .color(ink))
                     }
                 }
             }
@@ -101,14 +106,18 @@ struct Dpad: View {
 
     /// A small triangle pointing along `dir`.
     private static func arrow(at mid: CGPoint, dir: Int, key: CGFloat) -> Path {
-        let angle: [Int: Double] = [6: 0, 3: 45, 2: 90, 1: 135, 4: 180, 7: 225, 8: 270, 9: 315]
-        let a = key * 0.16
-        let theta = (angle[dir] ?? 0) * .pi / 180
-        let points = [CGPoint(x: a, y: 0), CGPoint(x: -a * 0.7, y: -a * 0.85), CGPoint(x: -a * 0.7, y: a * 0.85)].map {
-            CGPoint(x: mid.x + $0.x * cos(theta) - $0.y * sin(theta), y: mid.y + $0.x * sin(theta) + $0.y * cos(theta))
-        }
+        let degrees: [Int: Double] = [6: 0, 3: 45, 2: 90, 1: 135, 4: 180, 7: 225, 8: 270, 9: 315]
+        let theta = CGFloat((degrees[dir] ?? 0) * Double.pi / 180)
+        let c = cos(theta), s = sin(theta)
+        let a: CGFloat = key * 0.16
+        let local: [CGPoint] = [CGPoint(x: a, y: 0), CGPoint(x: -a * 0.7, y: -a * 0.85), CGPoint(x: -a * 0.7, y: a * 0.85)]
         var p = Path()
-        p.move(to: points[0]); p.addLine(to: points[1]); p.addLine(to: points[2]); p.closeSubpath()
+        for (i, q) in local.enumerated() {
+            let x: CGFloat = mid.x + q.x * c - q.y * s
+            let y: CGFloat = mid.y + q.x * s + q.y * c
+            if i == 0 { p.move(to: CGPoint(x: x, y: y)) } else { p.addLine(to: CGPoint(x: x, y: y)) }
+        }
+        p.closeSubpath()
         return p
     }
 }
