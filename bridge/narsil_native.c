@@ -63,7 +63,7 @@ enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MA
  * overlay bits: NB_TILE_ALERT, NB_TILE_GLOW. */
 typedef struct { int32_t cp, attr_flags, tile, tile_bg, tile_flags; } map_cell;
 
-enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_TEST_CHEST, REQ_REST, REQ_AUTO_MORE, REQ_USE_KIND };
+enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_TEST_DEPTH, REQ_TEST_CHEST, REQ_REST, REQ_AUTO_MORE, REQ_USE_KIND };
 typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; int dir; bool run; } request;
 
 /* Game thread only. */
@@ -811,7 +811,8 @@ bool native_service(bool at_prompt)
 		case REQ_MOVE:
 		case REQ_REST:
 		case REQ_USE_KIND:
-		case REQ_TEST_DIE: game.stashed = r; return true;
+		case REQ_TEST_DIE:
+		case REQ_TEST_DEPTH: game.stashed = r; return true;
 		case REQ_TEST_CHEST:
 		case REQ_INSPECT:
 		case REQ_TARGET:
@@ -971,6 +972,8 @@ void native_run_stashed(void)
 		if (obj) native_use_object(obj);
 	} else if (r.kind == REQ_TEST_DIE) {
 		take_hit(player, player->chp + 100, "the test harness");
+	} else if (r.kind == REQ_TEST_DEPTH) {
+		dungeon_change_level(player, r.dir);
 	} else if (r.kind == REQ_MOVE) {
 		publish_path(r.grid, NULL, 0);
 		/* Running confused would be refused; the game makes walking stagger instead. */
@@ -1023,6 +1026,22 @@ void nb_request_move(int dir, bool run)
 void nb_test_die(void)
 {
 	post((request){ .kind = REQ_TEST_DIE });
+}
+
+void nb_test_depth(int level)
+{
+	post((request){ .kind = REQ_TEST_DEPTH, .dir = level });
+}
+
+int nb_test_forges(int *fixed_made, int *depth)
+{
+	int n = 0;
+	for (int y = 0; y < cave->height; y++)
+		for (int x = 0; x < cave->width; x++)
+			if (square_isforge(cave, loc(x, y))) n++;
+	*fixed_made = player->fixed_forge_count;
+	*depth = player->depth;
+	return n;
 }
 
 void nb_test_chest(int kind)

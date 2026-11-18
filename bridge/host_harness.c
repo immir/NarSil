@@ -287,6 +287,16 @@ static int run_token(const char *tok)
 		nb_answer_text(tok + 6);
 		return settle() ? 0 : 1;
 	}
+	if (strncmp(tok, "@depth=", 7) == 0) {
+		nb_test_depth(atoi(tok + 7));
+		return settle() ? 0 : 1;
+	}
+	if (strcmp(tok, "@forges") == 0) {
+		int fixed, depth;
+		const int n = nb_test_forges(&fixed, &depth);
+		printf("forges %d fixed %d depth %d\n", n, fixed, depth);
+		return 0;
+	}
 	if (strcmp(tok, "@die") == 0) {
 		nb_test_die();
 		return settle() ? 0 : 1;

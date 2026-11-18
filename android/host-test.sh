@@ -70,6 +70,13 @@ run "${birth[@]}" @save "${quit[@]}" >/dev/null 2>&1
 head -c 8 "$work/data/save/Harness" | grep -q '^SaveUSLQ$'
 timeout 120 "$build/narsil_host" "$root/lib" "$work/data" @answer=0 @esc @esc 2>/dev/null | tail -1 | grep -q 'exit="Broken savefile"'
 rm -rf "$work/data"
+
+echo "== NarSil-Q: a guaranteed forge on the first level at or below 100', 300' and 500', three in all"
+out=$(run "${birth[@]}" @depth=2 @act=1 @esc @forges @depth=3 @act=1 @esc @forges @depth=6 @act=1 @esc @forges \
+      @depth=10 @act=1 @esc @forges @depth=12 @act=1 @esc @forges "${quit[@]}" 2>/dev/null)
+echo "$out" | grep '^forges' | awk '{print $4}' | tr '\n' ' ' | grep -qx '1 1 2 3 3 '
+echo "$out" | grep -E '^forges [0-9]+ fixed [123] depth (2|6|10)$' | awk '$2 < 1 {bad=1} END {exit bad}'
+rm -rf "$work/data"
 fi
 
 echo "== bridge constants: narsil_bridge.h and NarSilNative.kt agree"

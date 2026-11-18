@@ -500,7 +500,8 @@ void place_forge(struct chunk *c, struct loc grid)
 	int i;
 	int effective_depth = c->depth;
 	int power = 1;
-	int uses = damroll(2, 2);
+	/* NarSil-Q's forges have at least three uses */
+	int uses = z_info->rule_forge_depths ? 2 + damroll(1, 2) : damroll(2, 2);
 
 	if (square_isgreatervault(c, grid)) {
 		effective_depth *= 2;

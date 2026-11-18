@@ -646,6 +646,15 @@ static void cleanup_dun_data(struct dun_data *dd)
 }
 
 /**
+ * NarSil-Q (rules:forge-depths): a forge is due on the first level reached at
+ * or below 100', 300' and 500' (levels 2, 6 and 10), until all three are made.
+ */
+bool fixed_forge_due(const struct player *p)
+{
+	return p->fixed_forge_count < 3 && p->depth >= 2 + 4 * p->fixed_forge_count;
+}
+
+/**
  * Generate a random level.
  *
  * Confusingly, this function also generates the town level (level 0).
@@ -799,6 +808,8 @@ void prepare_next_level(struct player *p)
 	event_signal_flag(EVENT_GEN_LEVEL_END, true);
 
 	/* Note any forges generated, done here in case generation fails earlier */
+	const bool fixed_due = z_info->rule_forge_depths && fixed_forge_due(player);
+	bool forged = false;
 	for (y = 0; y < cave->height; y++) {
 		for (x = 0; x < cave->width; x++) {
 			if (square_isforge(cave, loc(x, y))) {
@@ -806,9 +817,11 @@ void prepare_next_level(struct player *p)
 				 * with a forge is generated */
 				player->forge_drought = 0;
 				player->forge_count++;
+				forged = true;
 			}
 		}
 	}
+	if (fixed_due && forged) player->fixed_forge_count++;
 
 	/* The dungeon is ready */
 	character_dungeon = true;

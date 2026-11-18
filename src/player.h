@@ -516,6 +516,7 @@ struct player {
 
 	uint16_t forge_drought;	/* Number of turns since a forge was generated */
 	uint16_t forge_count;	/* The number of forges that have been generated */
+	uint8_t fixed_forge_count;	/* NarSil-Q: guaranteed forges made so far (rules:forge-depths) */
 
 	uint8_t stealth_mode;	/* Stealth mode */
 
