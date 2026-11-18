@@ -372,7 +372,44 @@ def convert_items(kind, silq, gamedata, new_objects):
         print(f"{kind}: dropped {flag}: {', '.join(owners[:6])}{' ...' if len(owners) > 6 else ''} ({len(owners)})", file=sys.stderr)
 
 
+def convert_ability(silq, gamedata, new_objects):
+    """Sil-Q's whole ability tree in NarSil's format: skills in order, abilities by Sil-Q's number within each."""
+    tb = Tables(silq, gamedata, new_objects)
+    entries = read_entries(f"{silq}/ability.txt", r"^N:\d+:(.*)")
+    by_skill = {i: [] for i in range(len(SKILLS))}
+    for name, lines in entries.items():
+        i = next((l[2:].split(":") for l in lines if l.startswith("I:")), None)
+        if i:
+            by_skill[int(i[0])].append((int(i[1]), name, int(i[2]), lines))
+    head = open(f"{gamedata}/ability.txt").read().split("\n")
+    first = next(i for i, l in enumerate(head) if l.startswith("# Melee"))
+    print("\n".join(head[:first]).rstrip() + "\n")
+    for sk, items in by_skill.items():
+        print(f"# {SKILLS[sk]} ---------------------------------------------\n\nskill:{SKILLS[sk]}\n")
+        for _, name, level, lines in sorted(items):
+            out = [f"name:{name}", f"level:{level}"]
+            for l in lines:
+                if l.startswith("P:"):
+                    for pair in l[2:].split(":"):
+                        psk, pab = pair.strip().split("/")
+                        pname = tb.abilities.get((int(psk), int(pab)))
+                        if pname:
+                            out.append(f"prerequisite:{SKILLS[int(psk)]}:{pname}")
+            out += [l.replace("D:", "desc:", 1) for l in lines if l.startswith("D:")]
+            for l in lines:
+                if l.startswith("T:"):
+                    tv, lo, hi = (int(x) for x in l.split("#")[0][2:].split(":")[:3])
+                    ty = tb.type_of_tval.get(tv)
+                    names = tb.sval_names(tv, lo, hi)
+                    if ty:
+                        out += [f"type:{ty}"] if names is None else [f"item:{ty}:{bare(n)}" for n in names]
+            print("\n".join(out) + "\n")
+
+
 def main():
+    if len(sys.argv) == 5 and sys.argv[1] == "ability":
+        convert_ability(sys.argv[2], sys.argv[3], sys.argv[4])
+        return
     if len(sys.argv) == 5 and sys.argv[1] in ("special", "artefact"):
         convert_items(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
         return
