@@ -8,7 +8,7 @@ internal val TOUCH_GUIDE: List<Pair<String, List<String>>> = listOf(
         "Tap a square next to you to step there, or to attack what is there.",
         "Tap a distant square to see a path to it; tap it again to walk there.",
         "Tap your own square to pick up what is there, use a forge, or wait a turn.",
-        "Long-press any square to describe it: creature recall, objects, terrain. For a creature, Target makes it your target; a gold outline then marks the target on the map until it dies or you clear it (◎ Clear target in the same description).",
+        "Long-press any square to describe it: creature recall, objects, terrain. For a creature in view, Fire or Throw (when you can) shoots at it directly; Target makes it your target; a gold outline then marks the target on the map until it dies or you clear it (◎ Clear target in the same description).",
         "Swipe to step in that direction (or run, if \"Swipe on the map runs\" is on in Options).",
         "Pinch to zoom; drag with two fingers to look around. The view follows you again once you move.",
         "☰ → Map zooms out to fit the whole level; tap it again, or just move, to zoom back.",

@@ -957,6 +957,11 @@ void native_run_stashed(void)
 		push_travel(r.grid);
 	} else if (r.kind == REQ_ACTION) {
 		publish_path(r.grid, NULL, 0);
+		/* nb_request_action_at: the shot or throw is at the monster on that grid, if one is in view. */
+		if (r.dir == 1) {
+			struct monster *const mon = visible_monster(r.grid);
+			if (mon && target_set_monster(mon)) player->upkeep->redraw |= PR_HEALTH;
+		}
 		run_action(r.action);
 	} else if (r.kind == REQ_REST) {
 		push_choice(CMD_REST, r.dir);
@@ -994,6 +999,12 @@ void nb_request_preview(int x, int y)
 void nb_clear_preview(void)
 {
 	post((request){ .kind = REQ_CLEAR_PREVIEW });
+}
+
+void nb_request_action_at(enum nb_action a, int x, int y)
+{
+	if (a != NB_ACT_FIRE_NEAREST && a != NB_ACT_THROW_NEAREST) return;
+	post((request){ .kind = REQ_ACTION, .action = a, .grid = loc(x, y), .dir = 1 });
 }
 
 void nb_request_action(enum nb_action a)

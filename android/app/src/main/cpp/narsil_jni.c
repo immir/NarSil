@@ -309,6 +309,12 @@ JNIEXPORT void JNICALL JNI_FN(nativeRequestAction)(JNIEnv *env, jclass cls, jint
 	if (action >= 0 && action < NB_ACT_COUNT) nb_request_action((enum nb_action)action);
 }
 
+JNIEXPORT void JNICALL JNI_FN(nativeRequestActionAt)(JNIEnv *env, jclass cls, jint action, jint x, jint y)
+{
+	(void)env; (void)cls;
+	if (action >= 0 && action < NB_ACT_COUNT) nb_request_action_at((enum nb_action)action, x, y);
+}
+
 /* ---- Inspect / look list ---- */
 
 JNIEXPORT void JNICALL JNI_FN(nativeRequestInspect)(JNIEnv *env, jclass cls, jint x, jint y)

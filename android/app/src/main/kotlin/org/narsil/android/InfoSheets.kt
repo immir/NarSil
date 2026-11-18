@@ -71,6 +71,10 @@ fun InspectSheet(info: GameState.Info.Inspect, state: GameState, onDismiss: () -
                 Text("You know nothing about that place.", color = Color(0xFF9A9AA0))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.End)) {
                 if (state.atPrompt) {
+                    if (info.monster != null && info.targetable) {
+                        if (state.status.has(N.CTX_CAN_FIRE)) FilledTonalButton(onClick = { onDismiss(); N.nativeRequestActionAt(N.ACT_FIRE_NEAREST, info.x, info.y) }) { Text("Fire") }
+                        if (state.status.has(N.CTX_CAN_THROW)) FilledTonalButton(onClick = { onDismiss(); N.nativeRequestActionAt(N.ACT_THROW_NEAREST, info.x, info.y) }) { Text("Throw") }
+                    }
                     FilledTonalButton(onClick = { onDismiss(); N.nativeRequestPreview(info.x, info.y) }) { Text("Show path") }
                     FilledTonalButton(onClick = { onDismiss(); N.nativeRequestTravel(info.x, info.y) }) { Text("Go there") }
                 }

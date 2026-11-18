@@ -33,6 +33,10 @@ struct InspectSheet: View {
                     HStack(spacing: 8) {
                         Spacer()
                         if game.atPrompt {
+                            if monster != nil && targetable {
+                                if game.status.has(NB.CTX_CAN_FIRE) { Button("Fire") { dismiss(); Native.requestAction(NB.ACT_FIRE_NEAREST, x: x, y: y) }.buttonStyle(.bordered) }
+                                if game.status.has(NB.CTX_CAN_THROW) { Button("Throw") { dismiss(); Native.requestAction(NB.ACT_THROW_NEAREST, x: x, y: y) }.buttonStyle(.bordered) }
+                            }
                             Button("Show path") { dismiss(); Native.requestPreview(x: x, y: y) }.buttonStyle(.bordered)
                             Button("Go there") { dismiss(); Native.requestTravel(x: x, y: y) }.buttonStyle(.bordered)
                         }

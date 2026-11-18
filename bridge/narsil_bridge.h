@@ -173,6 +173,8 @@ enum nb_action {
 
 /* Only at the command prompt, like travel. */
 void nb_request_action(enum nb_action a);
+/* NB_ACT_FIRE_NEAREST or NB_ACT_THROW_NEAREST at the visible monster on (x, y): it becomes the target first. */
+void nb_request_action_at(enum nb_action a, int x, int y);
 
 /*
  * Read-only descriptions, answered whenever the map is showing (even at

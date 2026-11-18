@@ -113,6 +113,7 @@ object NarSilNative {
 
     /** Only honoured at the command prompt. */
     @JvmStatic external fun nativeRequestAction(action: Int)
+    @JvmStatic external fun nativeRequestActionAt(action: Int, x: Int, y: Int)
 
     /** Read-only descriptions; see nb_request_inspect() in narsil_bridge.h for the format. */
     @JvmStatic external fun nativeRequestInspect(x: Int, y: Int)

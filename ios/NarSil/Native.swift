@@ -33,6 +33,10 @@ enum Native {
         guard (0..<NB.ACT_COUNT).contains(action) else { return }
         nb_request_action(nb_action(rawValue: UInt32(action)))
     }
+    static func requestAction(_ action: Int, x: Int, y: Int) {
+        guard (0..<NB.ACT_COUNT).contains(action) else { return }
+        nb_request_action_at(nb_action(rawValue: UInt32(action)), Int32(x), Int32(y))
+    }
     static func requestMove(_ dir: Int, run: Bool) { nb_request_move(Int32(dir), run) }
     static func requestTravel(x: Int, y: Int) { nb_request_travel(Int32(x), Int32(y)) }
     static func requestInspect(x: Int, y: Int) { nb_request_inspect(Int32(x), Int32(y)) }

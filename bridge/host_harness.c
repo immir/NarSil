@@ -175,7 +175,8 @@ static int fuzz(const char *args)
 		} else if (kind < 70) {
 			nb_push_mouse((int)(v % 80), (int)((v / 80) % 24), 1 + (int)((v / 2000) % 2), 0);
 		} else if (kind < 82) {
-			nb_request_action((enum nb_action)(v % NB_ACT_COUNT));
+			if (v % 3 == 0) nb_request_action_at(v % 2 ? NB_ACT_FIRE_NEAREST : NB_ACT_THROW_NEAREST, (int)((v / 7) % 80), (int)((v / 700) % 24));
+			else nb_request_action((enum nb_action)(v % NB_ACT_COUNT));
 		} else if (kind < 92) {
 			nb_answer((int32_t)(v % 40) - 3);
 		} else if (kind < 96) {
