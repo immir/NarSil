@@ -549,6 +549,15 @@ static void melee_effect_handler_CONFUSE(melee_effect_handler_context_t *context
 }
 
 /**
+ * Melee effect handler: Frighten the player.
+ */
+static void melee_effect_handler_TERRIFY(melee_effect_handler_context_t *context)
+{
+	melee_effect_timed(context, TMD_AFRAID, damroll(2, 4),
+					   "You stand your ground!");
+}
+
+/**
  * Melee effect handler: Paralyze the player.
  */
 static void melee_effect_handler_ENTRANCE(melee_effect_handler_context_t *context)
@@ -695,6 +704,7 @@ melee_effect_handler_f melee_handler_for_blow_effect(const char *name)
 		{ "COLD", melee_effect_handler_COLD },
 		{ "BLIND", melee_effect_handler_BLIND },
 		{ "CONFUSE", melee_effect_handler_CONFUSE },
+		{ "TERRIFY", melee_effect_handler_TERRIFY },
 		{ "ENTRANCE", melee_effect_handler_ENTRANCE },
 		{ "HALLU", melee_effect_handler_HALLU },
 		{ "LOSE_STR", melee_effect_handler_LOSE_STR },
