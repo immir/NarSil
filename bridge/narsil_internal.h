@@ -149,4 +149,7 @@ bool native_service(bool at_prompt);
 void native_run_stashed(void);
 void native_travel_report(void);
 
+/* Signal handler that records a crash in <data_dir>/NB_CRASH_FILE (narsil_crash.c). */
+void bridge_install_crash_handler(const char *data_dir);
+
 #endif /* NARSIL_INTERNAL_H */

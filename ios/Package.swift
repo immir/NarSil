@@ -31,7 +31,7 @@ let package = Package(
             sources: [
                 "bridge/narsil_bridge.c", "bridge/narsil_native.c", "bridge/narsil_prompt.c", "bridge/narsil_smith.c",
                 "bridge/narsil_birth.c", "bridge/narsil_options.c", "bridge/narsil_knowledge.c", "bridge/narsil_tiles.c",
-                "bridge/narsil_combat.c",
+                "bridge/narsil_combat.c", "bridge/narsil_crash.c",
             ],
             publicHeadersPath: "include",
             cSettings: [.define("NB_SYS_NAME", to: "\"ios\""), .headerSearchPath("bridge"), .headerSearchPath("../NarSilGame/src")]

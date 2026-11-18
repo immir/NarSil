@@ -38,10 +38,20 @@ object Share {
             fun put(name: String, bytes: ByteArray) { out.putNextEntry(ZipEntry(name)); out.write(bytes); out.closeEntry() }
             put("logcat.txt", log)
             File(context.filesDir, "data/save/${GameLauncher.PLAYER}").takeIf { it.isFile }?.let { put("save/${it.name}", it.readBytes()) }
+            crashKept(context).takeIf { it.isFile }?.let { put("crash.txt", it.readBytes()) }
             characterDump(context).takeIf { it.isFile }?.let { put("character-dump.txt", it.readBytes()) }
         }
         zip
     }
+
+    private fun crashFile(context: Context) = File(context.filesDir, "data/crash.txt")
+    private fun crashKept(context: Context) = File(context.filesDir, "data/crash.previous.txt")
+
+    /** The note the bridge's signal handler left if the last run died natively (narsil_crash.c); null if none. */
+    fun pendingCrash(context: Context): String? = crashFile(context).takeIf { it.isFile }?.readText()
+
+    /** Keeps the note for the next bug report and stops asking about it. */
+    fun acknowledgeCrash(context: Context) { crashFile(context).takeIf { it.isFile }?.let { it.copyTo(crashKept(context), overwrite = true); it.delete() } }
 
     /** The character dump the game writes on request (narsil_prompt.c, NB_CHARACTER_DUMP). */
     fun characterDump(context: Context) = File(context.filesDir, "data/user/character-dump.txt")

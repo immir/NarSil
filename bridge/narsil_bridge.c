@@ -29,6 +29,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -438,6 +439,20 @@ bool nb_start(const nb_config *c)
 	cfg.cols = c->cols;
 	cfg.rows = c->rows;
 	cfg.log = c->log;
+
+	/* Under a sanitizer the sanitizer's own report is the useful one (the host test sets NARSIL_CRASH_TEST to try ours). */
+	bool crash_note = true;
+#if defined(__SANITIZE_ADDRESS__) || defined(__SANITIZE_THREAD__)
+	crash_note = false;
+#elif defined(__has_feature)
+#if __has_feature(address_sanitizer) || __has_feature(thread_sanitizer) || __has_feature(memory_sanitizer)
+	crash_note = false;
+#endif
+#endif
+#ifdef NB_TEST_HOOKS
+	if (getenv("NARSIL_CRASH_TEST")) crash_note = true;
+#endif
+	if (crash_note) bridge_install_crash_handler(cfg.data_dir);
 
 	game.work = calloc(n_cells(), sizeof(cell));
 	shared.front = calloc(n_cells(), sizeof(cell));

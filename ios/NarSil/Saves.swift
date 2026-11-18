@@ -134,9 +134,21 @@ enum Saves {
         }
     }
 
-    /// For a bug report: the app's log, the savefile and the character dump, whichever exist.
+    private static var crashNote: URL { GameLauncher.dataDir.appendingPathComponent("crash.txt") }
+    private static var crashKept: URL { GameLauncher.dataDir.appendingPathComponent("crash.previous.txt") }
+
+    /// The bridge's signal handler leaves crash.txt when the game dies natively (narsil_crash.c).
+    static var pendingCrash: Bool { fm.fileExists(atPath: crashNote.path) }
+
+    /// Keeps the note for the next report and stops asking about it.
+    static func acknowledgeCrash() {
+        try? fm.removeItem(at: crashKept)
+        try? fm.moveItem(at: crashNote, to: crashKept)
+    }
+
+    /// For a bug report: the app's log, the crash note, the savefile and the character dump, whichever exist.
     static var reportFiles: [URL] {
-        [AppLog.url, AppLog.previous, saveFile, characterDump].filter { fm.fileExists(atPath: $0.path) }
+        [AppLog.url, AppLog.previous, crashKept, saveFile, characterDump].filter { fm.fileExists(atPath: $0.path) }
     }
 }
 

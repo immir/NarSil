@@ -28,6 +28,17 @@ echo "== empty message log at startup is published cleanly (MSan catches the old
 rm -rf "$work/data"
 run @messages | grep -q '^messages:'
 
+echo "== a native crash leaves crash.txt, which the next start reports once"
+rm -rf "$work/data"
+NARSIL_CRASH_TEST=1 run @crash >/dev/null 2>&1 && { echo "crash did not kill the host"; exit 1; }
+grep -q '^NarSil native crash: signal 11' "$work/data/crash.txt"
+grep -q '^  #0 ' "$work/data/crash.txt"
+out=$(run @crashreport)
+echo "$out" | grep -q '^crashreport: yes'
+echo "$out" | grep -q 'signal 11 (SEGV)'
+run @crashreport | grep -q '^crashreport: none'
+rm -rf "$work/data"
+
 echo "== bridge constants: narsil_bridge.h and NarSilNative.kt agree"
 python3 "$here/check-bridge-constants.py"
 

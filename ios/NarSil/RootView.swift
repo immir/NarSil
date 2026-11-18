@@ -16,6 +16,7 @@ struct RootView: View {
     @State private var importing = false
     @State private var pendingImport: Saves.Copy?
     @State private var toast: String?
+    @State private var crashed = Saves.pendingCrash
     @AppStorage("scumming") private var scumming = false
     @AppStorage("buttonScale") private var buttonScale = 1.0
     @AppStorage("messageScale") private var messageScale = 1.0
@@ -65,6 +66,12 @@ struct RootView: View {
             Button("Cancel", role: .cancel) { try? FileManager.default.removeItem(at: c.url) }
         } message: { _ in
             Text("NarSil closes; open it again to play from the imported save. Anything not exported or scummed from the current game is lost.")
+        }
+        .alert("NarSil closed unexpectedly", isPresented: $crashed) {
+            Button("Send report") { Saves.acknowledgeCrash(); ShareSheet.present(Saves.reportFiles) }
+            Button("Dismiss", role: .cancel) { Saves.acknowledgeCrash() }
+        } message: {
+            Text("The game stopped last time with a native error. Your game was saved at its last autosave. Sending the report helps fix it.")
         }
         .textScale(buttonScale)
         .onChange(of: theme) { game.themeIndex = $0 }

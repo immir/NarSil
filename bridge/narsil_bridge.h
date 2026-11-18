@@ -34,6 +34,17 @@ enum nb_state { NB_IDLE = 0, NB_RUNNING = 1, NB_EXITED = 2 };
 
 bool nb_start(const nb_config *cfg);
 
+/*
+ * A native crash (SIGSEGV, SIGABRT, ...) leaves <data_dir>/crash.txt: the signal and call stack.  At the next
+ * start, nb_crash_report copies its text into `out` (NUL-terminated, truncated to `cap`) and deletes the file;
+ * false if there was none.  Call before nb_start.
+ */
+#define NB_CRASH_FILE "crash.txt"
+bool nb_crash_report(const char *data_dir, char *out, size_t cap);
+#ifdef NB_TEST_HOOKS
+void nb_crash_for_test(void); /* raises SIGSEGV on the calling thread */
+#endif
+
 /* `code` is an Angband keycode (ui-event.h): Unicode, or ESCAPE/KC_ and ARROW_ codes. */
 void nb_push_key(uint32_t code, uint8_t mods);
 

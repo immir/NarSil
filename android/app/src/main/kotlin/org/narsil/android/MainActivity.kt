@@ -87,11 +87,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         settings = Settings(applicationContext)
+        crash = Share.pendingCrash(applicationContext)
         onBackPressedDispatcher.addCallback(this) { router.special(Keys.ESCAPE) }
         setContent {
             MaterialTheme(colorScheme = darkColorScheme(), typography = compactTypography()) { App() }
         }
     }
+
+    private var crash by mutableStateOf<String?>(null)
 
     /** Runs at the game's next safe point (top-level command prompt). */
     override fun onDestroy() {
@@ -222,6 +225,18 @@ class MainActivity : ComponentActivity() {
                     text = { Text("The game restarts from the imported save. Anything not exported or scummed from the current game is lost.") },
                     confirmButton = { TextButton(onClick = { Scum.restore(this@MainActivity, copy) }) { Text("Load") } },
                     dismissButton = { TextButton(onClick = { copy.file.delete(); pendingImport = null }) { Text("Cancel") } },
+                )
+            }
+            if (crash != null) {
+                AlertDialog(
+                    onDismissRequest = { Share.acknowledgeCrash(applicationContext); crash = null },
+                    title = { Text("NarSil closed unexpectedly") },
+                    text = { Text("The game stopped last time with a native error. Your game was saved at its last autosave. Sending the report helps fix it.") },
+                    confirmButton = { TextButton(onClick = {
+                        Share.acknowledgeCrash(applicationContext); crash = null
+                        scope.launch { Share.file(this@MainActivity, Share.bugReport(applicationContext), "application/zip", "Send report") }
+                    }) { Text("Send report") } },
+                    dismissButton = { TextButton(onClick = { Share.acknowledgeCrash(applicationContext); crash = null }) { Text("Dismiss") } },
                 )
             }
             if (!settings.seenTips && state.mapMode && state.atPrompt && state.prompt == null && state.panelTab < 0 && state.info == null)

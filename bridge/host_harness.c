@@ -29,6 +29,7 @@
  *   @walk=D @run=D                                native step / run in keypad direction D
  *   @preview@DX,DY @travel@DX,DY                  native path preview / travel, relative to player grid
  *   @dump                                         print the current frame
+ *   @crash @crashreport                           raise SIGSEGV (set NARSIL_CRASH_TEST=1 so the bridge's handler is installed) / print and delete crash.txt
  *   @save                                         request a save and wait for it
  *   @save-async                                   request a save; it runs at the next safe point
  *   @promptfile=PATH @infofile=PATH               write the open prompt / info exactly as the app receives it
@@ -123,6 +124,8 @@ static bool settle(void)
 	return false;
 }
 
+static const char *data_dir;
+
 static int run_token(const char *tok)
 {
 	for (size_t i = 0; i < sizeof(specials) / sizeof(specials[0]); i++)
@@ -131,6 +134,12 @@ static int run_token(const char *tok)
 			return settle() ? 0 : 1;
 		}
 	if (strcmp(tok, "@dump") == 0) { dump(); return 0; }
+	if (strcmp(tok, "@crash") == 0) { nb_crash_for_test(); return 0; }
+	if (strcmp(tok, "@crashreport") == 0) {
+		char text[4096];
+		printf("crashreport: %s\n%s", nb_crash_report(data_dir, text, sizeof(text)) ? "yes" : "none", text);
+		return 0;
+	}
 	if (strcmp(tok, "@save") == 0) {
 		const uint64_t before = nb_save_count();
 		nb_request_save();
@@ -374,6 +383,7 @@ int main(int argc, char **argv)
 		.player_name = getenv("NARSIL_PLAYER") ? getenv("NARSIL_PLAYER") : "Harness",
 		.cols = 80, .rows = 24, .log = log_stderr,
 	};
+	data_dir = argv[2];
 	if (!nb_start(&cfg)) { fprintf(stderr, "nb_start failed\n"); return 1; }
 	if (!settle()) { dump(); return 1; }
 
