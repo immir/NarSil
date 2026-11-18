@@ -851,6 +851,7 @@ attack:-3:4d4
 defence:0:0d0
 values:WILL[3]
 slay:TROLL_1
+ability:Will:Vengeance
 desc:Both the blade and haft of this huge axe are made of a single
 desc: piece of blackened steel. Engraved on the axehead are many tiny
 desc: Dwarven runes recording the names of valiant fallen warriors of
@@ -906,6 +907,7 @@ attack:0:2d4
 defence:3:0d0
 flags:SUST_STR | SUST_CON
 values:RES_POIS[1]
+ability:Song:Song of Delvings
 desc:Halmir, who once bore this staff, was a chieftain among men,
 desc: and resolute always against the power of Morgoth.
 
@@ -987,6 +989,7 @@ cost:45000
 attack:0:0d0
 defence:0:1d3
 flags:TRAITOR
+ability:Will:Vengeance
 desc:A helm wrought of grey metal and the dull bones of some forgotten
 desc: orc who once raised his blade against his master.
 
@@ -1124,6 +1127,7 @@ cost:9000
 attack:1:1d9
 defence:0:0d0
 values:GRA[-1]
+ability:Archery:Puncture
 desc:The bow of Celegorm the great huntsman, third son of Feanor,
 desc: who in days of old hunted with Orome himself.
 
@@ -1264,6 +1268,7 @@ cost:36000
 attack:0:0d0
 defence:0:1d1
 values:ARCHERY[2]
+ability:Archery:Fletchery
 desc:This pair of gloves bears the insignia of the House of the Swallow,
 desc: who defend Gondolin from harm with their mighty bows.
 
@@ -1276,6 +1281,7 @@ cost:36000
 attack:0:0d0
 defence:0:1d1
 flags:FREE_ACT
+ability:Smithing:Expertise
 desc:A pair of gloves worn by the great Celebrimbor, jewelsmith of Nargothrond,
 desc: who would one day forge the rings of power.
 
