@@ -31,7 +31,15 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ScrollableTabRow
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.vector.PathParser
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -85,8 +93,6 @@ fun rememberScrollPlace(key: String): ScrollState {
 val LocalInPanel = staticCompositionLocalOf { false }
 
 private val TAB_TITLES = listOf("Pack", "Character", "Skills", "Abilities", "Knowledge", "Smithing", "Options")
-private val TAB_ICONS = listOf(Icons.Default.ShoppingCart, Icons.Default.Person, Icons.Default.Menu, Icons.Default.Star,
-                               Icons.Default.Search, Icons.Default.Build, Icons.Default.Settings)
 private val PANEL_BG = Color(0xFF1C1C1E)
 
 /** The prompts that are a tab's own screen (anything else, e.g. a yes/no, is asked over it). */
@@ -156,7 +162,7 @@ fun PanelHost(gameTab: Int, tabStyle: Int, onAnswer: (Int) -> Unit, content: @Co
                             /* Icons fit the panel's width, so there is nothing to scroll. */
                             Row(Modifier.weight(1f)) {
                                 TAB_TITLES.forEachIndexed { i, t ->
-                                    IconTab(TAB_ICONS[i], t, showName = tabStyle == Settings.TABS_ICONS_AND_NAMES, selected = i == tab,
+                                    IconTab(PANEL_ICON_PATHS[i], t, showName = tabStyle == Settings.TABS_ICONS_AND_NAMES, selected = i == tab,
                                             modifier = Modifier.weight(1f)) { if (i != tab) answer(N.PANEL_TAB + i) }
                                 }
                             }
@@ -193,10 +199,14 @@ private fun Modifier.swipeBetweenTabs(tab: Int, onAnswer: (Int) -> Unit) = point
 
 /** One panel tab as an icon with its name under it; no padding, so seven fit across the panel. */
 @Composable
-private fun IconTab(icon: ImageVector, name: String, showName: Boolean, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+private fun IconTab(icon: String, name: String, showName: Boolean, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val tint = if (selected) Color(0xFFF3D27A) else Color(0xFF9A9AA0)
     Column(modifier.clickable(onClick = onClick).padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(icon, contentDescription = name, tint = tint, modifier = Modifier.size(22.dp))
+        val path = remember(icon) { PathParser().parsePathString(icon).toPath() }
+        Canvas(Modifier.size(24.dp).semantics { contentDescription = name }) {
+            val s = size.minDimension / 24f
+            scale(s, s, pivot = Offset.Zero) { drawPath(path, tint, style = Stroke(1.8f, cap = StrokeCap.Round, join = StrokeJoin.Round)) }
+        }
         if (showName) Text(name, color = tint, fontSize = with(LocalDensity.current) { 9.dp.toSp() }, maxLines = 1, softWrap = false, modifier = Modifier.padding(top = 2.dp))
         Box(Modifier.padding(top = 6.dp).fillMaxWidth().height(2.dp).background(if (selected) tint else Color.Transparent))
     }

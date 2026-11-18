@@ -4,7 +4,6 @@ import SwiftUI
    in from the right (Panel.kt).  The game owns the tabs; a tab tap answers PANEL_TAB + tab. */
 
 private let tabTitles = ["Pack", "Character", "Skills", "Abilities", "Knowledge", "Smithing", "Options"]
-private let tabIcons = ["bag.fill", "person.fill", "chart.bar.fill", "star.fill", "book.fill", "hammer.fill", "gearshape.fill"]
 
 /// How the panel's tabs are drawn (Settings → Display and controls).
 enum TabStyle: Int { case iconsAndNames = 0, iconsOnly = 1, names = 2 }
@@ -93,7 +92,7 @@ private struct PanelHost<Content: View>: View {
                 ForEach(Array(tabTitles.enumerated()), id: \.offset) { i, t in
                     Button { if i != tab { answer(NB.PANEL_TAB + i) } } label: {
                         VStack(spacing: 2) {
-                            Image(systemName: tabIcons[i]).font(.system(size: 18))
+                            PanelIcon(index: i).stroke(style: StrokeStyle(lineWidth: 1.8 * 20 / 24, lineCap: .round, lineJoin: .round)).frame(width: 20, height: 20)
                             if style == .iconsAndNames { Text(t).font(.system(size: 9)).lineLimit(1).minimumScaleFactor(0.7) }
                         }
                         .foregroundColor(i == tab ? Palette.gold : Palette.sub)
