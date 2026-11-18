@@ -110,6 +110,9 @@ struct angband_constants
 	uint16_t stealth_bonus;	/* Bonus to stealth in stealth mode */
 	uint16_t player_regen_period;	/* Player turns for complete regeneration */
 
+	/* Which game the data is for ("game:" in constants.txt): 0 NarSil, 1 NarSil-Q */
+	uint8_t game_silq;
+
 	/* Rule switches ("rules:" in constants.txt); the defaults are NarSil's own rules */
 	uint8_t rule_floor_light;	/**< Objects on the floor shed their light (default 1) */
 	uint8_t rule_staff_will_check;	/**< Using a staff needs a Will check (default 1) */
@@ -130,6 +133,9 @@ extern const char *list_element_names[];
 extern const char *list_obj_flag_names[];
 
 extern struct angband_constants *z_info;
+
+/* "NarSil" or "NarSil-Q", from the data's game: line */
+const char *game_title(void);
 
 extern const char *ANGBAND_SYS;
 

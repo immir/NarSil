@@ -158,6 +158,13 @@ player:stealth-bonus:5
 player:regen-period:150
 
 #---------------------------------------------------------------------
+# Which game this data is for: narsil, or silq (NarSil-Q, lib-silq).
+# It names the savefiles, so neither game loads the other's.
+#---------------------------------------------------------------------
+
+game:narsil
+
+#---------------------------------------------------------------------
 # Rule switches (0 or 1).  These are NarSil's own rules; NarSil-Q's data
 # (lib-silq) changes some of them.  A rule left out keeps NarSil's value.
 #---------------------------------------------------------------------

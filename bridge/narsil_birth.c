@@ -446,7 +446,7 @@ static bool strip_markup(char *s)
 bool native_welcome(void)
 {
 	char path[1024], line[1024], prose[2048] = "";
-	begin("welcome", "NarSil");
+	begin("welcome", game_title());
 	path_build(path, sizeof(path), ANGBAND_DIR_SCREENS, "news.txt");
 	ang_file *const fp = file_open(path, MODE_READ, FTYPE_TEXT);
 	while (fp && file_getl(fp, line, sizeof(line))) {

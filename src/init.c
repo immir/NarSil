@@ -585,6 +585,25 @@ static enum parser_error parse_constants_rules(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_constants_game(struct parser *p) {
+	struct angband_constants *z = parser_priv(p);
+	const char *name = parser_getsym(p, "name");
+
+	if (streq(name, "narsil"))
+		z->game_silq = 0;
+	else if (streq(name, "silq"))
+		z->game_silq = 1;
+	else
+		return PARSE_ERROR_INVALID_VALUE;
+
+	return PARSE_ERROR_NONE;
+}
+
+const char *game_title(void)
+{
+	return z_info && z_info->game_silq ? "NarSil-Q" : "NarSil";
+}
+
 static struct parser *init_parse_constants(void) {
 	struct angband_constants *z = mem_zalloc(sizeof *z);
 	struct parser *p = parser_new();
@@ -603,6 +622,7 @@ static struct parser *init_parse_constants(void) {
 	parser_reg(p, "obj-make sym label int value", parse_constants_obj_make);
 	parser_reg(p, "player sym label int value", parse_constants_player);
 	parser_reg(p, "rules sym label int value", parse_constants_rules);
+	parser_reg(p, "game sym name", parse_constants_game);
 	return p;
 }
 
