@@ -35,6 +35,7 @@
 #include "mon-timed.h"
 #include "mon-util.h"
 #include "obj-knowledge.h"
+#include "player-abilities.h"
 #include "player-attack.h"
 #include "player-timed.h"
 #include "player-util.h"
@@ -526,6 +527,11 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 			/* Apply the stun */
 			(void)player_inc_timed(p, TMD_STUN, dam,
 				true, true, true);
+		}
+
+		/* 'Vengeance': being hurt in melee adds a die to the next successful strike */
+		if ((net_dam > 0) && player_active_ability(p, "Vengeance")) {
+			p->vengeance = true;
 		}
 
 		/* Deal with Cruel Blow */

@@ -551,6 +551,7 @@ struct player {
 	uint16_t noscore;			/* Cheating flags */
 
 	bool is_dead;				/* Player is dead */
+	bool vengeance;				/* Vengeance: the next successful melee blow gets a die (not saved) */
 
 	bool wizard;				/* Player is in wizard mode */
 	bool automaton;         /* Player is AI controlled? */
