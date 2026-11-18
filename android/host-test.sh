@@ -194,12 +194,25 @@ echo "$out" | grep -qP '^Skills\t4900$'
 echo "$out" | grep -qP '^Melee\t1\t'
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
-echo "== abilities: learn one (confirmed by the native check), then switch it off"
-rm -rf "$work/data"
-out=$(run "${birth[@]}" @act=23 @answer=101 @answer=2 @answer=-1 @act=21 @answer=14 @answer=1 @prompt @answer=14 @prompt @answer=-1 "${quit[@]}")
-echo "$out" | grep -qP '^1\t2\t1\t\d+\t\tCareful Shot\t'
-echo "$out" | grep -qP '^1\t3\t1\t\d+\t\tCareful Shot\t'
-echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
+if [ "$game" = narsil ]; then
+    echo "== abilities: learn one (confirmed by the native check), then switch it off"
+    rm -rf "$work/data"
+    # the first Archery ability is the row after the last Melee one, whichever game's tree this is
+    first_archery=$(run "${birth[@]}" @act=23 @answer=101 @answer=2 @answer=-1 @act=21 @prompt @answer=-1 "${quit[@]}" 2>/dev/null |
+        awk -F'\t' '$1 ~ /^[0-9]+$/ && $2 == "0" && NF > 5 { if ($1 == 1 && !done) { print n; done = 1 } n++ }')
+    rm -rf "$work/data"
+    out=$(run "${birth[@]}" @act=23 @answer=101 @answer=2 @answer=-1 @act=21 @answer="$first_archery" @answer=1 @prompt @answer="$first_archery" @prompt @answer=-1 "${quit[@]}")
+    echo "$out" | grep -qP '^1\t2\t1\t\d+\t\t[A-Z][^\t]*\t'
+    echo "$out" | grep -qP '^1\t3\t1\t\d+\t\t[A-Z][^\t]*\t'
+    echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
+else
+    echo "== abilities: NarSil-Q lists Sil-Q's tree"
+    rm -rf "$work/data"
+    out=$(run "${birth[@]}" @act=23 @answer=101 @answer=2 @answer=-1 @act=21 @prompt @answer=-1 "${quit[@]}")
+    for ability in "Quick Study" "Rout" "Indomitable" "Song of Thresholds" "Oath" "Smite"; do
+        echo "$out" | grep -qP "\t$ability\t"
+    done
+fi
 
 echo "== character sheet: the panel's Character tab, as sections"
 rm -rf "$work/data"

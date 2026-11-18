@@ -1,0 +1,734 @@
+# File: ability.txt
+#
+# This file is used to initialize the "ability" information for Sil.
+#
+# Do not modify this file unless you know exactly what you are doing,
+# unless you wish to risk possible system crashes and broken savefiles.
+#
+#
+# === Understanding ability.txt ===
+#
+# skill: skill name
+# name: ability name
+# level: level requirement
+# prerequisite: prerequisite skill name : prerequisite ability name
+# type: tval
+# item: tval: sval
+# desc: description
+#
+# 'skill' is for the skill name.  All abilities will be for that skill until
+# the next 'skill' line.
+#
+# 'name' is for the ability name, and indicates the beginning of an ability
+# entry.  Note that it is allowable two abilites with the same name to appear
+# under different skills, but they should have exactly the same effect.
+#
+# 'level' is the level requirement for the ability.
+#
+# 'prerequisite' is skill name and ability name (both needed because some
+# ability names are duplicated across skills) of any prerequisite abilities.
+#
+# 'type' is for possible tvals (object bases).  A 'type' line indicates
+# that any object kind of that type can be used for this ability.
+#
+# 'item' is for possible tval-sval pairs, which correspond to object kinds.
+# One or more 'item' lines are used when we don't want all object kinds of
+# this tval to be possible for this ability.
+#
+# 'desc' is a textual description of the ability
+
+# Melee ---------------------------------------------
+
+skill:Melee
+
+name:Power
+level:1
+desc:Gives a bonus of +1 damage sides to your melee attacks, but makes it
+desc: harder to score critical hits (increasing the base required by 1).
+type:hafted
+type:polearm
+type:sword
+type:gloves
+
+name:Finesse
+level:2
+desc:Lowers the base number needed to get critical hits with melee
+desc: from 7 to 5.
+type:hafted
+type:polearm
+type:sword
+type:gloves
+
+name:Knock Back
+level:3
+desc:You have a chance to knock enemies back a square in melee depending
+desc: upon your effective strength and your opponent's constitution.
+type:hafted
+type:polearm
+type:sword
+type:gloves
+type:shield
+
+name:Polearm Mastery
+level:4
+desc:Gives you +2 to attack with polearms (spears & glaives)
+desc: and lets you set them to receive free attacks on advancing enemies
+desc: when you wait (z or 5).
+type:gloves
+
+name:Charge
+level:5
+desc:When you attack an opponent immediately after moving towards it,
+desc: your attack is calculated as if you had 3 points more
+desc: strength and dexterity.
+type:hafted
+type:polearm
+type:sword
+type:boots
+type:shield
+
+name:Follow-Through
+level:6
+prerequisite:Melee:Power
+prerequisite:Melee:Finesse
+desc:Allows you to continue your attack if you kill an opponent,
+desc: moving onto the next adjacent enemy.
+type:hafted
+type:polearm
+type:sword
+
+name:Impale
+level:7
+prerequisite:Melee:Power
+prerequisite:Melee:Polearm Mastery
+desc:When using a polearm or greatsword you can strike through or past
+desc: opponents to attack an opponent behind.
+item:sword:Greatsword
+item:sword:Mithril Greatsword
+item:polearm:Spear
+item:polearm:Great Spear
+item:polearm:Glaive
+type:gloves
+
+name:Subtlety
+level:8
+prerequisite:Melee:Finesse
+desc:Lowers the base number needed to get critical hits with melee
+desc: by 2 points, when you are using a one handed weapon with the
+desc: other hand free.
+type:hafted
+type:polearm
+type:sword
+type:gloves
+
+name:Whirlwind Attack
+level:9
+prerequisite:Melee:Polearm Mastery
+prerequisite:Melee:Follow-Through
+desc:Whenever you attack an enemy, you get a free attack on all other
+desc: enemies adjacent to you. The original attack must be a regular,
+desc: flanking or controlled retreat attack.
+type:hafted
+type:polearm
+type:sword
+type:gloves
+
+name:Zone of Control
+level:10
+prerequisite:Melee:Finesse
+prerequisite:Melee:Polearm Mastery
+desc:You get a free attack whenever an opponent moves between two
+desc: squares which are adjacent to you.
+type:hafted
+type:polearm
+type:sword
+type:gloves
+
+name:Smite
+level:11
+prerequisite:Melee:Knock Back
+prerequisite:Melee:Charge
+desc:When using a two-handed weapon, the first main attack you make on your
+desc: turn rolls the maximum possible damage to all opponents it hits. If you
+desc: make such an attack, you lose a turn to recover.
+type:hafted
+type:polearm
+type:sword
+
+name:Two Weapon Fighting
+level:12
+prerequisite:Melee:Finesse
+prerequisite:Evasion:Parry
+desc:Allows you to wield a one-handed weapon in your off-hand for an extra attack
+desc: (calculated as if you had 3 points less strength and dexterity).
+type:hafted
+type:polearm
+type:sword
+type:gloves
+
+name:Rapid Attack
+level:13
+prerequisite:Melee:Subtlety
+prerequisite:Stealth:Opportunist
+desc:Grants you an extra melee attack, but your attacks
+desc: are calculated as if you had 3 points less strength and dexterity.
+type:hafted
+type:polearm
+type:sword
+type:gloves
+
+name:Strength
+level:20
+desc:You gain a point of strength.
+
+# Archery ---------------------------------------------
+
+skill:Archery
+
+name:Rout
+level:2
+desc:Firing at fleeing monsters is calculated as if you had 5 points
+desc: more dexterity.
+type:bow
+
+name:Fletchery
+level:3
+desc:Allows you to use the '-' command to give ordinary arrows
+desc: a +3 bonus. Takes one turn for each arrow.
+item:gloves:Set of Gloves
+type:ring
+
+name:Point Blank Archery
+level:4
+desc:The monster you are firing at cannot get an attack of opportunity.
+type:bow
+item:gloves:Set of Gloves
+
+name:Puncture
+level:5
+desc:Whenever an enemy's armour roll would fully block your archery damage roll,
+desc: you deal the enemy a flat five damage instead.
+type:bow
+item:gloves:Set of Gloves
+type:ring
+
+name:Ambush
+level:6
+desc:Grants an additional critical damage die whenever you hit an
+desc: unwary or sleeping monster with an arrow.
+type:bow
+item:gloves:Set of Gloves
+type:cloak
+
+name:Versatility
+level:7
+desc:If you have more skill points in archery than in melee, you gain a bonus
+desc: to melee of half the difference between them.
+type:bow
+item:gloves:Set of Gloves
+
+name:Crippling Shot
+level:8
+prerequisite:Archery:Puncture
+prerequisite:Archery:Ambush
+desc:Your critical hits sometimes temporarily slow monsters
+desc: (depending on the level of critical and the monster's Will).
+type:bow
+
+name:Deadly Hail
+level:9
+prerequisite:Archery:Rout
+prerequisite:Archery:Puncture
+desc:Arrows fired the turn after killing an enemy with an arrow do twice their
+desc: normal damage.
+type:bow
+item:gloves:Set of Gloves
+
+# Evasion ---------------------------------------------
+
+skill:Evasion
+
+name:Dodging
+level:2
+desc:Gives you a +3 bonus to evasion if you moved on your last
+desc: turn.
+type:boots
+type:soft armor
+type:cloak
+type:ring
+
+name:Blocking
+level:3
+desc:Doubles the protection roll for your shield against all attacks
+desc: if you did not move on your last turn.
+type:shield
+
+name:Parry
+level:4
+desc:Doubles the evasion bonus granted by your primary melee weapon.
+type:hafted
+type:polearm
+type:sword
+type:gloves
+
+name:Crowd Fighting
+level:5
+desc:Halves the bonus opponents get for surrounding you.
+type:gloves
+type:mail
+type:boots
+type:helm
+
+name:Leaping
+level:6
+desc:You can leap over a chasm or trap if you moved
+desc: towards it the previous turn. (Roosts and webs are not leapable).
+type:boots
+item:hafted:Quarterstaff
+
+name:Sprinting
+level:7
+prerequisite:Evasion:Dodging
+prerequisite:Evasion:Leaping
+desc:You start moving more quickly if you run four or more squares
+desc: in roughly the same direction.
+type:boots
+
+name:Flanking
+level:8
+desc:Gives you a free attack on an opponent if you step from a square
+desc: which is adjacent to it, to another square which is adjacent
+desc: to it.
+type:boots
+type:soft armor
+
+name:Heavy Armour Use
+level:9
+prerequisite:Evasion:Blocking
+prerequisite:Evasion:Crowd Fighting
+desc:Gives you [1dX] protection, where X is your total armour weight
+desc: divided by 15 lbs.
+type:mail
+type:shield
+
+name:Riposte
+level:10
+prerequisite:Evasion:Parry
+desc:It gives you a free attack on an opponent who misses you by
+desc: at least 10 + the weight of your weapon (only once
+desc: per round).
+type:hafted
+type:polearm
+type:sword
+type:gloves
+
+name:Controlled Retreat
+level:11
+prerequisite:Evasion:Dodging
+prerequisite:Evasion:Blocking
+desc:Gives you a free attack on an opponent when you step away
+desc: from it, but only if you did not move the previous round.
+type:hafted
+type:polearm
+type:sword
+type:shield
+type:boots
+
+# Stealth ---------------------------------------------
+
+skill:Stealth
+
+name:Disguise
+level:3
+desc:Halves any bonuses that awake but unwary enemies have
+desc: to notice you due to you being in their line of sight.
+item:boots:Pair of Boots
+type:cloak
+type:soft armor
+type:ring
+
+name:Assassination
+level:4
+desc:Gives you a melee bonus against non-alert creatures
+desc: equal to your stealth score.
+type:hafted
+type:polearm
+type:sword
+type:gloves
+
+name:Cruel Blow
+level:5
+prerequisite:Stealth:Assassination
+desc:Your critical hits sometimes confuse monsters with the pain
+desc: (depending on the level of critical and the monster's Will).
+type:hafted
+type:polearm
+type:sword
+type:gloves
+
+name:Exchange Places
+level:6
+prerequisite:Stealth:Disguise
+prerequisite:Evasion:Crowd Fighting
+desc:Allows you to use the 'X' command to exchange places with
+desc: an adjacent enemy (who gets a free attack on you as you pass).
+type:boots
+type:soft armor
+type:amulet
+
+name:Opportunist
+level:7
+prerequisite:Stealth:Assassination
+prerequisite:Melee:Follow-Through
+desc:You get a free attack whenever an adjacent opponent
+desc: moves away from you.
+type:hafted
+type:polearm
+type:sword
+type:gloves
+
+name:Vanish
+level:8
+prerequisite:Stealth:Disguise
+desc:Gives a +10 stealth bonus towards making enemies become unwary
+desc: when you are out of their line of sight.
+item:boots:Pair of Boots
+type:cloak
+type:soft armor
+type:ring
+
+name:Dexterity
+level:11
+prerequisite:Stealth:Disguise
+prerequisite:Stealth:Assassination
+desc:You gain a point of dexterity.
+
+# Perception ---------------------------------------------
+
+skill:Perception
+
+name:Quick Study
+level:1
+desc:Allows you to take advanced abilities when you don't have the
+desc: prerequisite abilities.
+type:amulet
+
+name:Focused attack
+level:2
+desc:Gives you a bonus of half your Perception score to your
+desc: attacks if you passed the previous turn.
+type:hafted
+type:polearm
+type:sword
+type:helm
+type:bow
+
+name:Keen Senses
+level:3
+desc:Allows you to see enemies who are just beyond the edge of a
+desc: pool of light, and gives a +5 bonus to spot 'invisible' creatures.
+type:helm
+type:light
+type:amulet
+
+name:Concentration
+level:4
+desc:Gives you a +1 bonus to attack for every consecutive round
+desc: spent attacking the same enemy (to a maximum of Perception/2).
+type:helm
+type:soft armor
+type:amulet
+
+name:Alchemy
+level:5
+desc:Lets you determine the purpose of all herbs and potions you encounter,
+desc: as well as staves and horns.
+type:helm
+type:ring
+
+name:Bane
+level:6
+desc:You receive a bonus to all skill rolls against
+desc: a selected category of enemy. The bonus increases as
+desc: you kill more.
+
+name:Outwit
+level:7
+desc:Whenever you receive a critical hit, make a Perception roll against
+desc: the attacker's Perception. If you succeed, negate all critical damage.
+type:helm
+type:light
+type:amulet
+
+name:Listen
+level:8
+prerequisite:Perception:Keen Senses
+desc:Gives you a chance each turn to detect enemies that you
+desc: cannot see (including around corners and through doors).
+type:helm
+
+name:Master Hunter
+level:9
+prerequisite:Perception:Concentration
+prerequisite:Perception:Bane
+desc:Gives you an attack bonus of +1 for each time you have killed
+desc: an opponent of the same type (up to a maximum of Perception/2).
+type:helm
+type:boots
+type:bow
+
+# Will ---------------------------------------------
+
+skill:Will
+
+name:Curse Breaking
+level:1
+desc:Allows you to break the curses on items when you
+desc: attempt to take them off.
+type:amulet
+type:helm
+type:ring
+type:shield
+
+name:Channeling
+level:2
+desc:You automatically recognise all staves and horns and can use them twice as
+desc: efficiently.
+type:helm
+type:ring
+
+name:Strength in Adversity
+level:3
+desc:Gives you bonuses to Strength, Dexterity and Grace when seriously injured:
+desc: +1 when less than or equal to 50% health, +3 when 25%.
+type:helm
+type:soft armor
+type:mail
+type:amulet
+type:light
+
+name:Formidable
+level:4
+desc:Slaying enemies in melee scares all other enemies who see it.
+desc: Enemies do not gain morale based on your injuries.
+type:hafted
+type:polearm
+type:sword
+type:helm
+type:shield
+
+name:Inner Light
+level:5
+desc:Increases the intensity of light within your light radius by 2 points
+desc: (without increasing the radius).
+type:helm
+type:light
+type:soft armor
+
+name:Indomitable
+level:5
+desc:Gives you resistance to fear, confusion, stunning, and hallucination.
+desc: Slows hunger to one third the normal rate.
+type:amulet
+type:helm
+type:mail
+
+name:Oath
+level:6
+desc:Swear a great oath, and be rewarded for keeping it.
+
+name:Poison Resistance
+level:7
+desc:Gives you resistance to poison.
+
+name:Vengeance
+level:8
+prerequisite:Will:Strength in Adversity
+desc:When you are damaged in melee by an enemy, an additional damage
+desc: die is added to your next successful strike. This effect does not stack.
+type:amulet
+type:helm
+
+name:Majesty
+level:9
+prerequisite:Will:Curse Breaking
+prerequisite:Will:Inner Light
+desc:Lowers monster morale by half the difference between your Will and theirs.
+type:helm
+item:soft armor:Robe
+type:amulet
+
+name:Constitution
+level:12
+desc:You gain a point of constitution.
+
+# Smithing ---------------------------------------------
+
+skill:Smithing
+
+name:Weaponsmith
+level:2
+desc:Allows you to create weapons.
+item:hafted:War Hammer
+type:gloves
+
+name:Armoursmith
+level:3
+desc:Allows you to create armour.
+item:hafted:War Hammer
+type:gloves
+
+name:Jeweller
+level:4
+desc:Allows you to create rings, amulets, horns and light
+desc: sources and identify rings, amulets, horns and light
+desc: sources you encounter.
+type:gloves
+
+name:Enchantment
+level:5
+desc:Allows you to create {special} items and determine
+desc: what enchantments exist on items you encounter.
+item:hafted:War Hammer
+type:gloves
+
+name:Expertise
+level:6
+prerequisite:Smithing:Enchantment
+desc:Reduces the time taken to forge an item by half and
+desc: negates all experience and stat costs.
+item:hafted:War Hammer
+type:gloves
+
+name:Artifice
+level:7
+prerequisite:Smithing:Jeweller
+prerequisite:Smithing:Enchantment
+desc:Allows you to create highly customised artifacts.
+item:hafted:War Hammer
+type:gloves
+
+name:Masterpiece
+level:8
+prerequisite:Smithing:Enchantment
+desc:Allows you to create items that are more difficult than usual.
+desc: Doing so drains your smithing skill for each excess point.
+item:hafted:War Hammer
+type:gloves
+
+# Song ---------------------------------------------
+
+skill:Song
+
+name:Song of Elbereth
+level:1
+desc:Causes fear in nearby servants of Morgoth.
+type:amulet
+type:cloak
+type:light
+
+name:Song of Challenge
+level:1
+desc:Causes weak-willed foes to attack aggressively without regard to
+desc: strategy. Enemies with ranged weapons will close to melee range.
+type:helm
+type:hafted
+type:polearm
+type:sword
+
+name:Song of Delvings
+level:2
+desc:Slowly reveals the terrain around you, working out from
+desc: already known areas.
+type:cloak
+type:digger
+
+name:Song of Freedom
+level:2
+desc:Discovers and overcomes nearby doors, traps, and rubble.
+desc: Grants you freedom of movement.
+type:amulet
+type:cloak
+item:hafted:Quarterstaff
+
+name:Song of Silence
+level:3
+desc:Dampens all nearby sounds, making it harder for
+desc: opponents to hear you and each other.
+type:amulet
+type:cloak
+type:boots
+
+name:Song of Staunching
+level:3
+desc:Stops all bleeding and speeds healing of your wounds.
+type:amulet
+type:cloak
+type:ring
+
+name:Song of Thresholds
+level:4
+prerequisite:Song:Song of Elbereth
+prerequisite:Song:Song of Delvings
+desc:Doors you close while singing this song are warded against
+desc: your enemies.
+type:amulet
+type:cloak
+
+name:Song of the Trees
+level:5
+prerequisite:Song:Song of Elbereth
+prerequisite:Song:Song of Staunching
+desc:Increases your light level by 1 point per 5 points
+desc: of Song.
+type:amulet
+type:cloak
+type:light
+
+name:Song of Slaying
+level:6
+prerequisite:Song:Song of Challenge
+prerequisite:Song:Song of Freedom
+desc:Critical hits in melee kill enemies outright instead of doing damage
+desc: if the enemy has health less than or equal to twice your Song score.
+type:polearm
+type:sword
+
+name:Song of Staying
+level:7
+prerequisite:Song:Song of Challenge
+prerequisite:Song:Song of Staunching
+desc:Gives you a bonus to Will equal to half your Song score and
+desc: [2d2] protection.
+type:helm
+type:shield
+type:cloak
+type:ring
+
+name:Song of Lorien
+level:8
+prerequisite:Song:Song of Silence
+prerequisite:Song:Song of Delvings
+desc:Gradually puts nearby opponents to sleep.
+type:amulet
+type:cloak
+
+name:Song of Mastery
+level:10
+prerequisite:Song:Song of Freedom
+prerequisite:Song:Song of Silence
+desc:Occasionally prevents nearby opponents from moving or acting.
+type:amulet
+type:cloak
+
+name:Woven Themes
+level:11
+desc:Allows you to add a 'minor theme' to your song. This means you
+desc: can have the effect of a second song, but at half your normal Song score.
+type:amulet
+type:cloak
+
+name:Grace
+level:12
+desc:You gain a point of grace.
+

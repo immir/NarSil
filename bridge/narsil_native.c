@@ -131,6 +131,7 @@ static void mark_special(char *text, const size_t cap)
 {
 	const struct object *candidates[64];
 	size_t n = 0;
+	if (!cave || !player) return;       /* a message from before the first level exists */
 	for (const struct object *o = player->gear; o && n < N_ELEMENTS(candidates); o = o->next) candidates[n++] = o;
 	struct object *floor[16];
 	const int k = scan_floor(floor, (int)N_ELEMENTS(floor), player, OFLOOR_SENSE | OFLOOR_VISIBLE, NULL);

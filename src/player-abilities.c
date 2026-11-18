@@ -289,6 +289,16 @@ static bool ability_is_active(const struct ability *ability)
 	return ability->active;
 }
 
+/**
+ * The engine asks for abilities by NarSil's name; NarSil-Q's tree spells two of them differently.
+ */
+static const char *ability_alias(const char *name)
+{
+	if (streq(name, "Heavy Armour")) return "Heavy Armour Use";
+	if (streq(name, "Focused Attack")) return "Focused attack";
+	return NULL;
+}
+
 static int test_ability(const char *name, struct ability *test,
 						ability_predicate pred)
 {
@@ -319,7 +329,9 @@ static int test_ability(const char *name, struct ability *test,
 		}
 	}
 	if (!found) {
-		assert(0);
+		/* A game whose tree lacks this ability (NarSil-Q lacks some of NarSil's) simply never has it */
+		const char *alias = ability_alias(name);
+		return alias ? test_ability(alias, test, pred) : 0;
 	}
 	return count;
 }
