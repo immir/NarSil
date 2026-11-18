@@ -178,7 +178,7 @@ echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
 echo "== death screen (by retiring): character, then a new character goes straight to birth"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" Q @answer=1 @ @enter @prompt @answer=0 @answer=-1 @answer=5 @answer=1 @prompt)
+out=$(run "${birth[@]}" Q @answer=1 @answer=1 @enter @prompt @answer=0 @answer=-1 @answer=5 @answer=1 @prompt)
 echo "$out" | grep -qP '^Screen\tdeath\tYou have retired$'
 echo "$out" | grep -qP '^Screen\trace\tRace$'
 

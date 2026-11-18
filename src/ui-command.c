@@ -168,6 +168,13 @@ void textui_cmd_retire(void)
 	/* Verify */
 	if (!get_check("Do you really want to retire?")) return;
 
+	/* The touch ports have no keyboard to type '@' on: a second yes/no is the verification there */
+	if (streq(ANGBAND_SYS, "android") || streq(ANGBAND_SYS, "ios")) {
+		if (!get_check("This ends this character for good. Really retire?")) return;
+		cmdq_push(CMD_RETIRE);
+		return;
+	}
+
 	/* Special Verification for retirement */
 	prt("Please verify RETIRING THIS CHARACTER by typing the '@' sign: ", 0, 0);
 	event_signal(EVENT_INPUT_FLUSH);
