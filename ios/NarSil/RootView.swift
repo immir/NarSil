@@ -30,13 +30,17 @@ struct RootView: View {
     @StateObject private var abilities = AbilitiesNav()
     private let map = MapHandle()
 
-    private var padSize: CGFloat { 140 }
+    @AppStorage("dpadSize") private var dpadSize = 140.0
+    @AppStorage("dpadX") private var padX = 1.0
+    @AppStorage("dpadY") private var padY = 1.0
+    private var padSize: CGFloat { CGFloat(dpadSize) }
 
     var body: some View {
         GeometryReader { g in
             let rail = g.size.width > g.size.height
             ZStack(alignment: .bottom) {
                 Color.black.ignoresSafeArea()
+                HardwareKeys(active: keysActive, onKey: hardwareKey).frame(width: 0, height: 0)
                 if rail { landscape } else { portrait }
                 if !game.mapMode { TerminalScreen(game: game) }
                 promptLayer
@@ -70,10 +74,10 @@ struct RootView: View {
     private var portrait: some View {
         VStack(spacing: 0) {
             MessageStrip(game: game, lines: messageLines, onPanel: { Native.requestAction(NB.ACT_PANEL) }, onMessages: { showMessages = true }).textScale(messageScale)
-            MapView(game: game, handle: map, swipeRuns: swipeRuns, tiles: tiles)
+            MapView(game: game, handle: map, swipeRuns: swipeRuns, tiles: tiles).overlay(floatingPad)
             HStack(alignment: .center, spacing: 0) {
                 StatusStrip(game: game, stacked: true).textScale(statusScale)
-                if pad != PadMode.off.rawValue { Dpad(size: padSize, onAction: padAction).padding(4) }
+                if pad == PadMode.docked.rawValue { Dpad(size: padSize, onAction: padAction).padding(4) }
             }.background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
             promptBar
             ActionBar(actions: bar) { showMore = true }
@@ -84,16 +88,31 @@ struct RootView: View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
                 MessageStrip(game: game, lines: messageLines, onPanel: { Native.requestAction(NB.ACT_PANEL) }, onMessages: { showMessages = true }).textScale(messageScale)
-                MapView(game: game, handle: map, swipeRuns: swipeRuns, tiles: tiles)
+                MapView(game: game, handle: map, swipeRuns: swipeRuns, tiles: tiles).overlay(floatingPad)
                 promptBar
                 ActionBar(actions: bar) { showMore = true }
             }
             VStack(spacing: 0) {
                 StatusStrip(game: game, stacked: true).textScale(statusScale)
                 Spacer(minLength: 0)
-                if pad != PadMode.off.rawValue { Dpad(size: min(padSize, 150), onAction: padAction).padding(4) }
+                if pad == PadMode.docked.rawValue { Dpad(size: min(padSize, 150), onAction: padAction).padding(4) }
             }
             .frame(width: 260).background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
+        }
+    }
+
+    /// Settings → D-pad → Floating: over the map, moved by holding its centre and dragging; the position is kept
+    /// as a fraction of the free space.
+    @ViewBuilder private var floatingPad: some View {
+        if pad == PadMode.floating.rawValue && game.mapMode {
+            GeometryReader { g in
+                let freeW = max(g.size.width - padSize, 1), freeH = max(g.size.height - padSize, 1)
+                Dpad(size: padSize, onAction: padAction) { d in
+                    padX = min(max(padX + Double(d.width / freeW), 0), 1)
+                    padY = min(max(padY + Double(d.height / freeH), 0), 1)
+                }
+                .offset(x: CGFloat(padX) * freeW, y: CGFloat(padY) * freeH)
+            }
         }
     }
 
@@ -144,7 +163,7 @@ struct RootView: View {
             }
         }
         if showSettings { SettingsSheet(buttonScale: $buttonScale, messageScale: $messageScale, itemScale: $itemScale, statusScale: $statusScale,
-                          theme: $theme, gamePalette: game.gamePalette, messageLines: $messageLines, panelTabs: $panelTabs, tiles: $tiles, pad: $pad, swipeRuns: $swipeRuns,
+                          theme: $theme, gamePalette: game.gamePalette, messageLines: $messageLines, panelTabs: $panelTabs, tiles: $tiles, pad: $pad, padSize: $dpadSize, swipeRuns: $swipeRuns,
                           autoMore: game.status.autoMore, autoMoreEnabled: game.atPrompt && game.prompt == nil, onAutoMore: Native.setAutoMore,
                           itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, scumming: $scumming,
                           onExportSave: { Task { if let url = await Saves.export() { ShareSheet.present([url]) } else { say(Saves.cantSave) } } },
@@ -178,6 +197,25 @@ struct RootView: View {
         ZStack(alignment: .bottom) {
             Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { showMore = false; showRest = false }
             content.clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    /// The hardware keyboard listens at the map, but never while a text field might want it (text and number
+    /// prompts, the panel's search boxes) or an app sheet is open.
+    private var keysActive: Bool {
+        guard game.mapMode, game.panelTab < 0, game.info == nil, !showSettings, !showHelp, !showMessages, !showScum else { return false }
+        switch game.prompt {
+        case .text?, .quantity?: return false
+        default: return true
+        }
+    }
+
+    /// A key from a hardware keyboard: answers an open native prompt (or is swallowed), else goes to the game.
+    private func hardwareKey(_ code: Int, _ mods: Int) {
+        if let p = game.prompt {
+            if let a = answerByKey(p, code) { Native.answer(a) }
+        } else {
+            Native.pushKey(code, mods: mods)
         }
     }
 

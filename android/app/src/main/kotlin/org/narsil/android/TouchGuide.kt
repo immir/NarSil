@@ -19,7 +19,7 @@ internal val TOUCH_GUIDE: List<Pair<String, List<String>>> = listOf(
         "Tap an arrow to step; hold it to run.",
         "From the centre key, drag towards a direction to run that way.",
         "Centre key: tap to wait a turn, hold to rest.",
-        "A floating pad moves if you hold the centre key and then drag. Its size and position are in Options. Docked, it sits under the status in portrait and in the side column in landscape.",
+        "A floating pad moves if you hold the centre key and then drag. Its size is in Options. Docked, it sits under the status in portrait and in the side column in landscape.",
     ),
     "Buttons" to listOf(
         "The action bar shows what fits where you stand first (stairs, items, doors, a forge, a target), then Rest, Wait, Stealth, Song, Pack, Look and Again. In landscape the status moves to a column beside the map.",

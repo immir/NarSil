@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// How the d-pad is shown (Settings → Display and controls); the same choices as Android where the layout allows.
-enum PadMode: Int { case off = 0, docked = 1 }
+enum PadMode: Int { case off = 0, docked = 1, floating = 2 }
 
 /// The app's own settings (not the game's options), in the same order and words as Android's Options sheet.
 /// Kept in UserDefaults; the game is told about the ones it needs.
@@ -16,6 +16,7 @@ struct SettingsSheet: View {
     @Binding var panelTabs: Int
     @Binding var tiles: Bool
     @Binding var pad: Int
+    @Binding var padSize: Double
     @Binding var swipeRuns: Bool
     let autoMore: Bool
     let autoMoreEnabled: Bool
@@ -66,8 +67,14 @@ struct SettingsSheet: View {
                         choice("Panel tabs", "Icons fit the panel without scrolling; names are the scrolling strip.", $panelTabs,
                                [(TabStyle.iconsAndNames.rawValue, "Icons and names"), (TabStyle.iconsOnly.rawValue, "Icons"), (TabStyle.names.rawValue, "Names")])
                         toggle("Tiles on the map", "MicroChasm's pictures instead of letters. Lists and menus keep the letters.", $tiles)
-                        choice("D-pad", "Tap a key to step; hold it, or drag from the centre key towards it, to run.  Centre: tap to wait, hold to rest.  Beside status sits under the status in portrait and in the side column in landscape.",
-                               $pad, [(PadMode.off.rawValue, "Off"), (PadMode.docked.rawValue, "Beside status")])
+                        choice("D-pad", "Tap a key to step; hold it, or drag from the centre key towards it, to run.  Centre: tap to wait, hold to rest; on a floating pad hold the centre then drag to move it.  Beside status sits under the status in portrait and in the side column in landscape.",
+                               $pad, [(PadMode.off.rawValue, "Off"), (PadMode.docked.rawValue, "Beside status"), (PadMode.floating.rawValue, "Floating")])
+                        if pad != PadMode.off.rawValue {
+                            card(VStack(alignment: .leading, spacing: 2) {
+                                Text("D-pad size  \(Int(padSize)) pt").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                                Slider(value: $padSize, in: 100...220, step: 5)
+                            })
+                        }
                         toggle("Swipe on the map runs", "Otherwise a swipe takes one step.", $swipeRuns)
                         toggle("Skip -more- prompts", "Messages are not held for a tap to continue; the message log keeps all of them. This is the game's own \"Automatically clear -more- prompts\" option, saved with the character."
                                + (autoMoreEnabled ? "" : "  Change it from the map, or in Game options → User interface."),

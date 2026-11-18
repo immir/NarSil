@@ -9,9 +9,11 @@ enum PadAction: Equatable {
 /// Flat 3x3 keypad (Dpad.kt).
 ///  - tap a direction: step; hold it: run
 ///  - centre: tap waits; drag out towards a direction runs that way; hold rests
+///  - with `onMove`: hold the centre, then drag, to move the pad
 struct Dpad: View {
     let size: CGFloat
     let onAction: (PadAction) -> Void
+    var onMove: ((CGSize) -> Void)?
 
     @State private var lit = 0
     @State private var session: Session?
@@ -24,6 +26,9 @@ struct Dpad: View {
     private final class Session {
         let startKey: Int
         var fired = false
+        var held = false
+        var moved = false
+        var last = CGPoint.zero
         var timer: Task<Void, Never>?
         init(startKey: Int) { self.startKey = startKey }
     }
@@ -47,6 +52,12 @@ struct Dpad: View {
         DragGesture(minimumDistance: 0)
             .onChanged { v in
                 if let s = session {
+                    if s.held {
+                        /* The pad moves under the finger, so the local position comes back to `last` after each move. */
+                        let d = CGSize(width: v.location.x - s.last.x, height: v.location.y - s.last.y)
+                        if abs(d.width) + abs(d.height) > 0.5 { s.moved = true; onMove?(d) }
+                        return
+                    }
                     guard s.startKey == 5, !s.fired else { return }
                     let c = CGPoint(x: size / 2, y: size / 2)
                     let dx = v.location.x - c.x, dy = v.location.y - c.y
@@ -60,14 +71,21 @@ struct Dpad: View {
                 let s = Session(startKey: dirAt(v.startLocation))
                 session = s
                 lit = s.startKey
+                s.last = v.location
                 s.timer = Task { @MainActor in
                     try? await Task.sleep(nanoseconds: UInt64(Self.holdSeconds * 1_000_000_000))
                     guard !Task.isCancelled, !s.fired else { return }
-                    fire(s, s.startKey == 5 ? .rest : .run(s.startKey))
+                    if s.startKey == 5 && onMove != nil {
+                        s.held = true
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    } else {
+                        fire(s, s.startKey == 5 ? .rest : .run(s.startKey))
+                    }
                 }
             }
             .onEnded { _ in
-                if let s = session, !s.fired { fire(s, s.startKey == 5 ? .wait : .step(s.startKey)) }
+                if let s = session, s.held { if !s.moved { fire(s, .rest) } }
+                else if let s = session, !s.fired { fire(s, s.startKey == 5 ? .wait : .step(s.startKey)) }
                 session?.timer?.cancel()
                 session = nil
                 lit = 0

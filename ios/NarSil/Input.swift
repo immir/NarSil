@@ -6,6 +6,9 @@ enum Keys {
     static let enter = 0x9C
     static let escape = 0xE000
     static let backspace = 0x9F
+    static let arrowDown = 0x80, arrowLeft = 0x81, arrowRight = 0x82, arrowUp = 0x83
+    static let tab = 0x9D
+    static func ctrl(_ c: Int) -> Int { c & 0x1F }
 }
 
 enum Direction {
