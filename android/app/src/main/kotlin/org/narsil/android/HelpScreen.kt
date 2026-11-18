@@ -40,61 +40,6 @@ private val SUB = Color(0xFF9A9AA0)
 private val GOLD = Color(0xFFF3D27A)
 private const val MANUAL = "https://narsil.readthedocs.io/en/latest/"
 
-/** A heading and its points. */
-private data class Section(val title: String, val points: List<String>)
-
-private val TOUCH_GUIDE = listOf(
-    Section("The map", listOf(
-        "Tap a square next to you to step there, or to attack what is there.",
-        "Tap a distant square to see a path to it; tap it again to walk there.",
-        "Tap your own square to pick up what is there, use a forge, or wait a turn.",
-        "Long-press any square to describe it: creature recall, objects, terrain. For a creature, Target makes it your target; a gold outline then marks the target on the map until it dies or you clear it (◎ Clear target in the same description).",
-        "Swipe to step in that direction (or run, if \"Swipe on the map runs\" is on in Options).",
-        "Pinch to zoom; drag with two fingers to look around. The view follows you again once you move.",
-        "☰ → Map zooms out to fit the whole level; tap it again, or just move, to zoom back.",
-        "Options → Colours picks a colour theme (Bright is the default; Original is the game's own palette; Solarized, Dracula, Gruvbox and High contrast are the others). Dark blues and reds are lifted so they read on black.",
-        "Options → Tiles on the map swaps the letters for MicroChasm's pictures. Only the map changes; lists and menus keep the letters.",
-    )),
-    Section("The d-pad", listOf(
-        "Tap an arrow to step; hold it to run.",
-        "From the centre key, drag towards a direction to run that way.",
-        "Centre key: tap to wait a turn, hold to rest.",
-        "A floating pad moves if you hold the centre key and then drag. Its size and position are in Options. Docked, it sits under the status in portrait and in the side column in landscape.",
-    )),
-    Section("Buttons", listOf(
-        "The action bar shows what fits where you stand first (stairs, items, doors, a forge, a target), then Rest, Wait, Stealth, Song, Pack, Look and Again. In landscape the status moves to a column beside the map and the buttons run along the whole bottom edge.",
-        "Walk to ▼ and Walk to ▲ are in ☰ once you know where a staircase is; they walk you to the nearest one. Again repeats your previous command.",
-        "Long-press Rest to choose how long to rest: as needed, until health and voice are full, until either is full, or a number of turns.",
-        "Fire shoots your first quiver at your target while it is in view, otherwise at the nearest creature. Throw works the same way.",
-        "To pick what to shoot at each time, use Pack → your arrows → Fire: tap a ringed creature, a chip, or swipe a direction.",
-        "Skills appears there once you have experience to spend.",
-        "☰ holds the rest: the panel, the whole-level map, messages, bash, tunnel, disarm, exchange, app options and help.",
-        "Tap the message strip to scroll back through old messages; Options sets how many recent messages it shows. When it says \"tap to continue\", a tap dismisses -more-. Known ego items and artefacts are highlighted (cyan and gold) in the pack and wherever a message names them; items with properties still to discover (marked ??) are lilac in the pack.",
-        "Options → Item details in the pack (off by default) adds, to an expanded pack item, what a granted ability does and, for a weapon, about how often it hits and crits and its damage per blow and per round, and for armour how often the monster hits you and the damage you take, with the change in evasion and stealth against the last monster you looked at or fought (or any you choose with Compare against: those in view, then ones you have seen), beside your own weapon (slays, brands and special attacks are not counted).",
-        "When health falls below the game's hitpoint warning the phone buzzes and the HP bar turns red (Options turns the buzz off).",
-    )),
-    Section("Menus and prompts", listOf(
-        "The @ button at the right of the message strip opens the character panel: Pack, Character, Skills, Abilities, Knowledge, Smithing and Options as tabs. Pack, Skills and the ☰ entries open it at their tab, and so do the keyboard's i and e. Swipe sideways across a tab to move to the next or previous one. Close it with ✕, Back, a tap on the map, a swipe right on the tabs, or a swipe right on Pack. (Options → Display and controls can also let a swipe in from the right edge open it.)",
-        "Pack lists everything you carry, wear and stand on. Tap an item to open it in place with its description and actions; tap another to switch. After an action the panel comes back, except after Fire and Throw. Dropping part of a stack asks how many; inscribing asks for the text.",
-        "Skill points you buy are kept when you switch tabs; Cancel on the Skills tab undoes this visit's purchases. A smithing design is kept while you look at other tabs.",
-        "Knowledge lists creatures, objects, artefacts, special items, runes, terrain, traps, your history and the hall of fame. Long lists have a search box. Runes can be inscribed, so items with that rune get the inscription.",
-        "Item lists, aiming, directions and yes/no questions appear as native sheets; Back or the system back gesture cancels.",
-        "When aiming, tap a ringed creature or use the buttons; when asked for a direction, tap a neighbouring square or swipe.",
-        "A few screens are still the game's text menus. Use the buttons at the bottom (Back, OK, Continue) or ⌨ for the keyboard; ⋯ has Esc, Enter and Ctrl.",
-    )),
-    Section("Tutorial", listOf(
-        "Begin or Tutorial on the welcome screen. The tutorial is a short guided dungeon with its own character: your own save is never touched, and the game won't save while you are in it.",
-        "The tutorial's notes appear as cards over the map; tap Continue to carry on.",
-    )),
-    Section("Saving and problems", listOf(
-        "The game saves when you switch away from the app, even with the panel or a menu open, and every so often while you play. It cannot save in the middle of a command's own question (a how-many, an aim); it waits until that is answered.",
-        "Options (☰, or the panel's Options tab → Display and controls) can export your save to another app, or import one back.",
-        "Options → Send logs shares a zip of the app's log, your save and your character dump, for a bug report.",
-        "The Character tab can rename your character and share a character dump.",
-        "For testing, Options → Save scumming adds Scum (keep a copy) and Restore to ☰; Restore also offers the last three autosaves, kept at least five minutes apart.",
-    )),
-)
-
 /** The help files shipped with the game data, read from the installed copy. */
 private fun helpFile(context: Context, name: String): String =
     runCatching { File(context.filesDir, "lib/help/$name").readText() }.getOrDefault("($name is missing)")
@@ -127,9 +72,9 @@ fun HelpScreen(context: Context, onDismiss: () -> Unit) {
 @Composable
 private fun Guide() {
     LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        items(TOUCH_GUIDE) { s ->
-            Text(s.title, color = GOLD, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 16.dp, bottom = 6.dp))
-            s.points.forEach { p ->
+        items(TOUCH_GUIDE) { (title, points) ->
+            Text(title, color = GOLD, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 16.dp, bottom = 6.dp))
+            points.forEach { p ->
                 Row(Modifier.padding(bottom = 6.dp)) {
                     Text("•  ", color = SUB, fontSize = 15.sp)
                     Text(p, color = TEXT, fontSize = 15.sp, lineHeight = 20.sp)

@@ -11,6 +11,7 @@ struct RootView: View {
     @State private var showRest = false
     @State private var showMessages = false
     @State private var showSettings = false
+    @State private var showHelp = false
     @AppStorage("itemDetails") private var itemDetails = false
     @AppStorage("messageLines") private var messageLines = 3
     @AppStorage("dpad") private var pad = PadMode.docked.rawValue
@@ -73,7 +74,7 @@ struct RootView: View {
 
     private var bar: [BarAction] { contextActions(game.status) + coreActions(game.status) { showRest = true } }
     private var more: [BarAction] {
-        moreActions(game.status, messages: { showMore = false; showMessages = true }, toggleMap: { map.toggleOverview() }, toggleTiles: { tiles.toggle(); Native.setTiles(tiles) }, tilesOn: tiles)
+        moreActions(game.status, messages: { showMore = false; showMessages = true }, toggleMap: { map.toggleOverview() }, toggleTiles: { tiles.toggle(); Native.setTiles(tiles) }, tilesOn: tiles, help: { showHelp = true })
     }
 
     /// The prompt's own screen, over the map; aim and direction prompts live in `promptBar` so the map stays usable.
@@ -114,6 +115,7 @@ struct RootView: View {
                           autoMore: game.status.autoMore, autoMoreEnabled: game.atPrompt && game.prompt == nil, onAutoMore: Native.setAutoMore,
                           itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz) { showSettings = false } }
         if showMessages { MessagesSheet(game: game) { showMessages = false } }
+        if showHelp { HelpView { showHelp = false } }
     }
 
     private var promptName: String {
