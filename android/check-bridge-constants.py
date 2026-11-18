@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Drift guard: every NB_* enum value in narsil_bridge.h must equal the Kotlin constant of the same name
 (NB_PROMPT_SMITH -> PROMPT_SMITH) in NarSilNative.kt.  The two are written by hand; a mismatch once left a
-prompt kind unreadable by the app.  Exit status 1 and a list on any disagreement."""
+prompt kind unreadable by the app.  Also checks that the generated files (iOS constants, shared icons and UI
+text) are up to date.  Exit status 1 and a list on any disagreement."""
 import re
 import sys
 from pathlib import Path
@@ -36,4 +37,12 @@ if checked < 80:
     bad.append(f"only {checked} constants matched by name; the checker's name mapping has probably broken")
 for line in bad:
     print("DRIFT:", line)
+
+# The generated files both apps build from: iOS's constants, the shared icons and the shared UI text.
+import subprocess  # noqa: E402
+top = Path(__file__).resolve().parent.parent
+for cmd in (["bridge/gen-swift-constants.py", "--check", "ios/NarSil/NBConstants.swift"],
+            ["tools/gen-panel-icons.py", "--check"], ["tools/gen-shared-ui.py", "--check"]):
+    if subprocess.run([sys.executable, *cmd], cwd=top).returncode != 0:
+        bad.append(" ".join(cmd) + " failed")
 sys.exit(1 if bad else 0)
