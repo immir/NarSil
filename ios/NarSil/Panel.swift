@@ -79,7 +79,7 @@ private struct PanelHost<Content: View>: View {
                 HStack(spacing: 0) {
                     ForEach(Array(tabTitles.enumerated()), id: \.offset) { i, t in
                         Button { if i != tab { answer(NB.PANEL_TAB + i) } } label: {
-                            Text(t).font(.system(size: 14, weight: i == tab ? .semibold : .regular))
+                            Text(t).scaledFont(14, weight: i == tab ? .semibold : .regular)
                                 .foregroundColor(i == tab ? Palette.gold : Palette.sub)
                                 .padding(.horizontal, 12).padding(.vertical, 12)
                                 .overlay(alignment: .bottom) { if i == tab { Palette.gold.frame(height: 2) } }
@@ -93,7 +93,7 @@ private struct PanelHost<Content: View>: View {
                     Button { if i != tab { answer(NB.PANEL_TAB + i) } } label: {
                         VStack(spacing: 2) {
                             PanelIcon(index: i).stroke(style: StrokeStyle(lineWidth: 1.8 * 20 / 24, lineCap: .round, lineJoin: .round)).frame(width: 20, height: 20)
-                            if style == .iconsAndNames { Text(t).font(.system(size: 9)).lineLimit(1).minimumScaleFactor(0.7) }
+                            if style == .iconsAndNames { Text(t).scaledFont(9).lineLimit(1).minimumScaleFactor(0.7) }
                         }
                         .foregroundColor(i == tab ? Palette.gold : Palette.sub)
                         .frame(maxWidth: .infinity, minHeight: 44).padding(.top, 4)
@@ -114,7 +114,7 @@ private struct PanelHost<Content: View>: View {
                 VStack(spacing: 0) {
                     HStack(spacing: 0) {
                         tabStrip
-                        Button("✕") { answer(NB.PANEL_CLOSE) }.font(.system(size: 18)).padding(.horizontal, 12)
+                        Button("✕") { answer(NB.PANEL_CLOSE) }.scaledFont(18).padding(.horizontal, 12)
                     }
                     content.frame(maxWidth: .infinity, maxHeight: .infinity)
                         .simultaneousGesture(DragGesture(minimumDistance: 40).onEnded { v in
@@ -137,13 +137,14 @@ private struct PanelContent: View {
     @ObservedObject var game: GameState
     @ObservedObject var abilities: AbilitiesNav
     let onAppSettings: () -> Void
+    @AppStorage("itemScale") private var itemScale = 1.0
     let answer: (Int) -> Void
 
     var body: some View {
         switch prompt {
         case .skills(let p): SkillsView(prompt: p, answer: answer)
         case .abilities(let p): AbilitiesView(prompt: p, nav: abilities, answer: answer)
-        case .pack(let p): PackView(prompt: p, colour: { game.colour($0) }, answer: answer)
+        case .pack(let p): PackView(prompt: p, colour: { game.colour($0) }, answer: answer).textScale(itemScale)
         case .character(let sections):
             CharacterView(game: game, sections: sections, actions: [("Rename", { answer(NB.CHARACTER_RENAME) }), ("Share dump", { Saves.shareDump(answer) })])
         case .knowledge(let p): KnowledgeView(prompt: p, colour: { game.colour($0) }, answer: answer)
@@ -167,16 +168,16 @@ struct SkillsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Skills").font(.system(size: 18, weight: .semibold)).foregroundColor(.white)
-                Text("Experience to spend: \(prompt.expLeft)").font(.system(size: 14)).foregroundColor(Color(rgb: 0xFFD54F))
+                Text("Skills").scaledFont(18, weight: .semibold).foregroundColor(.white)
+                Text("Experience to spend: \(prompt.expLeft)").scaledFont(14).foregroundColor(Color(rgb: 0xFFD54F))
                 ForEach(prompt.skills, id: \.index) { sk in
                     HStack(spacing: 8) {
                         VStack(alignment: .leading) {
-                            Text(sk.name).font(.system(size: 16)).foregroundColor(.white)
-                            Text("base \(sk.base)" + (sk.spent > 0 ? "  (+\(sk.spent) exp)" : "")).font(.system(size: 12)).foregroundColor(Palette.sub)
+                            Text(sk.name).scaledFont(16).foregroundColor(.white)
+                            Text("base \(sk.base)" + (sk.spent > 0 ? "  (+\(sk.spent) exp)" : "")).scaledFont(12).foregroundColor(Palette.sub)
                         }
                         Spacer()
-                        Text("\(sk.total)").font(.system(size: 20, weight: .semibold)).foregroundColor(.white).padding(.trailing, 4)
+                        Text("\(sk.total)").scaledFont(20, weight: .semibold).foregroundColor(.white).padding(.trailing, 4)
                         Button("−") { answer(NB.SKILL_SELL + sk.index) }.buttonStyle(.bordered).disabled(sk.spent <= 0)
                         Button("+ \(sk.nextCost)") { answer(NB.SKILL_BUY + sk.index) }.buttonStyle(.borderedProminent)
                             .disabled(sk.nextCost > prompt.expLeft)
@@ -229,15 +230,15 @@ struct AbilitiesView: View {
         let tab = min(max(nav.tab, 0), max(prompt.skills.count - 1, 0))
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading) {
-                Text("Abilities").font(.system(size: 18, weight: .semibold)).foregroundColor(.white)
-                Text("Experience to spend: \(prompt.expLeft)").font(.system(size: 13)).foregroundColor(Color(rgb: 0xFFD54F))
+                Text("Abilities").scaledFont(18, weight: .semibold).foregroundColor(.white)
+                Text("Experience to spend: \(prompt.expLeft)").scaledFont(13).foregroundColor(Color(rgb: 0xFFD54F))
             }.padding(.horizontal, 16).padding(.top, 12)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 0) {
                     ForEach(Array(prompt.skills.enumerated()), id: \.offset) { i, sk in
                         let learnt = prompt.abilities.filter { $0.skill == i && ($0.state == NB.ABILITY_ON || $0.state == NB.ABILITY_OFF) }.count
                         Button { nav.tab = i; nav.open = nil } label: {
-                            Text(learnt > 0 ? "\(sk.name) \(learnt)" : sk.name).font(.system(size: 14, weight: i == tab ? .semibold : .regular))
+                            Text(learnt > 0 ? "\(sk.name) \(learnt)" : sk.name).scaledFont(14, weight: i == tab ? .semibold : .regular)
                                 .foregroundColor(i == tab ? Palette.gold : Palette.sub).padding(.horizontal, 12).padding(.vertical, 10)
                                 .overlay(alignment: .bottom) { if i == tab { Palette.gold.frame(height: 2) } }
                         }.buttonStyle(.plain)
@@ -247,7 +248,7 @@ struct AbilitiesView: View {
             if prompt.skills.indices.contains(tab) {
                 let sk = prompt.skills[tab]
                 Text("\(sk.name): base \(sk.base)" + (sk.total != sk.base ? " (\(sk.total) with bonuses)" : "") + ". Abilities depend on base points.")
-                    .font(.system(size: 12)).foregroundColor(Palette.sub).padding(.horizontal, 16).padding(.vertical, 6)
+                    .scaledFont(12).foregroundColor(Palette.sub).padding(.horizontal, 16).padding(.vertical, 6)
             }
             ScrollView {
                 LazyVStack(spacing: 0) {
@@ -264,14 +265,14 @@ struct AbilitiesView: View {
         return VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
-                    Text(a.name).font(.system(size: 16, weight: abilityOwned(a) ? .semibold : .regular)).foregroundColor(abilityColour(a))
+                    Text(a.name).scaledFont(16, weight: abilityOwned(a) ? .semibold : .regular).foregroundColor(abilityColour(a))
                     Spacer()
-                    Text("\(a.points)").font(.system(size: 13)).foregroundColor(Color(rgb: 0x77777D))
+                    Text("\(a.points)").scaledFont(13).foregroundColor(Color(rgb: 0x77777D))
                 }
-                Text(abilitySummary(a, skill, prompt.expLeft)).font(.system(size: 12)).foregroundColor(Palette.sub)
+                Text(abilitySummary(a, skill, prompt.expLeft)).scaledFont(12).foregroundColor(Palette.sub)
                 if open {
-                    Text(a.description).font(.system(size: 14)).foregroundColor(Palette.body).padding(.top, 6)
-                    if !a.prereqs.isEmpty && !abilityOwned(a) { Text("Requires \(a.prereqs)").font(.system(size: 13)).foregroundColor(Palette.sub).padding(.top, 4) }
+                    Text(a.description).scaledFont(14).foregroundColor(Palette.body).padding(.top, 6)
+                    if !a.prereqs.isEmpty && !abilityOwned(a) { Text("Requires \(a.prereqs)").scaledFont(13).foregroundColor(Palette.sub).padding(.top, 4) }
                     HStack {
                         switch a.state {
                         case NB.ABILITY_AVAILABLE:

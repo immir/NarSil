@@ -6,6 +6,12 @@ enum PadMode: Int { case off = 0, docked = 1 }
 /// The app's own settings (not the game's options), in the same order and words as Android's Options sheet.
 /// Kept in UserDefaults; the game is told about the ones it needs.
 struct SettingsSheet: View {
+    @Binding var buttonScale: Double
+    @Binding var messageScale: Double
+    @Binding var itemScale: Double
+    @Binding var statusScale: Double
+    @Binding var theme: Int
+    let gamePalette: [UInt32]
     @Binding var messageLines: Int
     @Binding var panelTabs: Int
     @Binding var tiles: Bool
@@ -26,12 +32,36 @@ struct SettingsSheet: View {
         BottomSheet(maxHeight: 640, cancel: dismiss) {
             VStack(spacing: 0) {
                 HStack {
-                    Text("Options").font(.system(size: 17, weight: .semibold)).foregroundColor(.white)
+                    Text("Options").scaledFont(17, weight: .semibold).foregroundColor(.white)
                     Spacer()
                     Button("Done", action: dismiss)
                 }.padding(.horizontal, 16).padding(.vertical, 12)
                 ScrollView {
                     VStack(spacing: 6) {
+                        scale("Buttons and menus", $buttonScale)
+                        scale("Messages", $messageScale)
+                        card(VStack(alignment: .leading, spacing: 6) {
+                            Text("Colours").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    ForEach(Array(Theme.all.enumerated()), id: \.offset) { i, t in
+                                        Button { theme = i } label: {
+                                            Text(t.name).scaledFont(14).padding(.horizontal, 12).frame(minHeight: 32)
+                                        }
+                                        .buttonStyle(.plain).foregroundColor(theme == i ? .black : .white)
+                                        .background(theme == i ? Palette.gold : Color.white.opacity(0.14), in: Capsule())
+                                    }
+                                }
+                            }
+                            HStack(spacing: 4) {
+                                ForEach(Array(Theme.byIndex(theme).swatch(gamePalette).enumerated()), id: \.offset) { _, c in
+                                    RoundedRectangle(cornerRadius: 6).fill(Color(rgb: c)).frame(width: 28, height: 28)
+                                }
+                            }
+                            Text("Bright lifts the game's dark blues and reds so they read on black; Original is the game's own palette.").scaledFont(12).foregroundColor(Palette.sub)
+                        })
+                        scale("Inventory and items", $itemScale)
+                        scale("Status", $statusScale)
                         choice("Messages shown", nil, $messageLines, [(2, "2"), (3, "3"), (4, "4"), (5, "5")])
                         choice("Panel tabs", "Icons fit the panel without scrolling; names are the scrolling strip.", $panelTabs,
                                [(TabStyle.iconsAndNames.rawValue, "Icons and names"), (TabStyle.iconsOnly.rawValue, "Icons"), (TabStyle.names.rawValue, "Names")])
@@ -46,16 +76,16 @@ struct SettingsSheet: View {
                         toggle("Buzz when health is low", "Below the game's hitpoint warning (Game options → Hitpoint warning).", $lowHealthBuzz)
                         toggle("Save scumming (for testing)", "Adds Scum (keep a copy of your save) and Restore scum save to the ☰ menu, and Restore to the death screen. Restore also lists the last three autosaves, at least five minutes apart.", $scumming)
                         card(VStack(alignment: .leading, spacing: 6) {
-                            Text("Saves").font(.system(size: 15)).foregroundColor(Color(rgb: 0xE6E6EA))
-                            Text("Export sends a copy of your save to another app (Files, mail…). Import loads one back, replacing the current game.").font(.system(size: 12)).foregroundColor(Palette.sub)
+                            Text("Saves").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                            Text("Export sends a copy of your save to another app (Files, mail…). Import loads one back, replacing the current game.").scaledFont(12).foregroundColor(Palette.sub)
                             HStack(spacing: 8) {
                                 button("Export save") { dismiss(); onExportSave() }
                                 button("Import save…") { dismiss(); onImportSave() }
                             }
                         })
                         card(VStack(alignment: .leading, spacing: 6) {
-                            Text("Problems").font(.system(size: 15)).foregroundColor(Color(rgb: 0xE6E6EA))
-                            Text("Send logs shares the app's log, your save and character dump, for a bug report.").font(.system(size: 12)).foregroundColor(Palette.sub)
+                            Text("Problems").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                            Text("Send logs shares the app's log, your save and character dump, for a bug report.").scaledFont(12).foregroundColor(Palette.sub)
                             button("Send logs") { dismiss(); onSendLogs() }
                         })
                     }.padding(.bottom, 16)
@@ -64,8 +94,15 @@ struct SettingsSheet: View {
         }
     }
 
+    private func scale(_ title: String, _ value: Binding<Double>) -> some View {
+        card(VStack(alignment: .leading, spacing: 2) {
+            Text("\(title)  \(Int((value.wrappedValue * 100).rounded()))%").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+            Slider(value: value, in: 0.8...1.8, step: 0.05)
+        })
+    }
+
     private func button(_ title: String, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) { Text(title).font(.system(size: 15)).padding(.horizontal, 14).frame(minHeight: 36) }
+        Button(action: action) { Text(title).scaledFont(15).padding(.horizontal, 14).frame(minHeight: 36) }
             .buttonStyle(.plain).foregroundColor(.white).background(Color.white.opacity(0.14), in: Capsule())
     }
 
@@ -77,8 +114,8 @@ struct SettingsSheet: View {
     private func toggle(_ title: String, _ detail: String, _ value: Binding<Bool>, enabled: Bool = true) -> some View {
         card(HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 15)).foregroundColor(Color(rgb: 0xE6E6EA))
-                Text(detail).font(.system(size: 12)).foregroundColor(Palette.sub)
+                Text(title).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                Text(detail).scaledFont(12).foregroundColor(Palette.sub)
             }
             Spacer()
             Toggle("", isOn: value).labelsHidden().disabled(!enabled)
@@ -87,9 +124,9 @@ struct SettingsSheet: View {
 
     private func choice(_ title: String, _ detail: String?, _ value: Binding<Int>, _ options: [(Int, String)]) -> some View {
         card(VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.system(size: 15)).foregroundColor(Color(rgb: 0xE6E6EA))
+            Text(title).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
             Picker(title, selection: value) { ForEach(options, id: \.0) { Text($0.1).tag($0.0) } }.pickerStyle(.segmented)
-            if let detail { Text(detail).font(.system(size: 12)).foregroundColor(Palette.sub) }
+            if let detail { Text(detail).scaledFont(12).foregroundColor(Palette.sub) }
         })
     }
 }

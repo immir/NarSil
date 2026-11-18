@@ -30,12 +30,12 @@ struct MessageStrip: View {
                 ForEach(Array(recent.enumerated()), id: \.offset) { i, m in
                     let alpha = 0.45 + 0.55 * Double(i + 1) / Double(recent.count)
                     Text(m.count > 1 ? "\(m.text) (x\(m.count))" : m.text)
-                        .font(.system(size: 14)).lineLimit(2)
+                        .scaledFont(14).lineLimit(2)
                         .foregroundColor(color(game.colour(m.attr % 256 % 32)).opacity(alpha))
                 }
-                if let banner { Text(banner).font(.system(size: 14)).lineLimit(2).foregroundColor(Color(red: 1, green: 0xD5 / 255, blue: 0x4F / 255)) }
-                if more { Text("▸ tap to continue").font(.system(size: 13)).foregroundColor(Color(red: 1, green: 0xD5 / 255, blue: 0x4F / 255)) }
-                if recent.isEmpty && banner == nil && !more { Text(" ").font(.system(size: 14)) }
+                if let banner { Text(banner).scaledFont(14).lineLimit(2).foregroundColor(Color(red: 1, green: 0xD5 / 255, blue: 0x4F / 255)) }
+                if more { Text("▸ tap to continue").scaledFont(13).foregroundColor(Color(red: 1, green: 0xD5 / 255, blue: 0x4F / 255)) }
+                if recent.isEmpty && banner == nil && !more { Text(" ").scaledFont(14) }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 10).padding(.vertical, 4)
@@ -65,12 +65,12 @@ struct StatusStrip: View {
             if stacked {
                 Meter(label: "HP", value: s.hp, max: s.maxHp, colour: hp, alarm: s.lowHp)
                 Meter(label: "Voice", value: s.voice, max: s.maxVoice, colour: voice, alarm: false)
-                Text("\(s.depth * 50) ft").font(.system(size: 13))
+                Text("\(s.depth * 50) ft").scaledFont(13)
             } else {
                 HStack(spacing: 12) {
                     Meter(label: "HP", value: s.hp, max: s.maxHp, colour: hp, alarm: s.lowHp)
                     Meter(label: "Voice", value: s.voice, max: s.maxVoice, colour: voice, alarm: false)
-                    Text("\(s.depth * 50) ft").font(.system(size: 13))
+                    Text("\(s.depth * 50) ft").scaledFont(13)
                 }
             }
             Chips(status: s)
@@ -94,7 +94,7 @@ private struct Meter: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text("\(label) \(value)/\(max)" + (alarm ? "  ⚠" : ""))
-                .font(.system(size: 12, weight: alarm ? .bold : .regular)).foregroundColor(alarm ? colour : .white)
+                .scaledFont(12, weight: alarm ? .bold : .regular).foregroundColor(alarm ? colour : .white)
             GeometryReader { g in
                 ZStack(alignment: .leading) {
                     Rectangle().fill(colour.opacity(0.25))
@@ -118,13 +118,13 @@ private struct FoeLine: View {
         let stance = Self.stanceNames.indices.contains(foe.stance) ? Self.stanceNames[foe.stance] : ""
         HStack(spacing: 8) {
             Text(cell.flatMap { Unicode.Scalar(UInt32($0.glyph)) }.map { String($0) } ?? "?")
-                .font(.system(size: 16, design: .monospaced)).foregroundColor(color(game.colour((cell?.attr ?? 15) % 256 % 32)))
-            Text(foe.name).font(.system(size: 13)).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                .scaledFont(16, design: .monospaced).foregroundColor(color(game.colour((cell?.attr ?? 15) % 256 % 32)))
+            Text(foe.name).scaledFont(13).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
             ZStack(alignment: .leading) {
                 Rectangle().fill(health.opacity(0.25))
                 Rectangle().fill(health).frame(width: 80 * CGFloat(min(max(foe.healthPct, 0), 100)) / 100)
             }.frame(width: 80, height: 6)
-            Text(stance + (foe.stance >= 4 ? " \(foe.morale)" : "")).font(.system(size: 12))
+            Text(stance + (foe.stance >= 4 ? " \(foe.morale)" : "")).scaledFont(12)
                 .foregroundColor(Color(red: 0x90 / 255, green: 0xCA / 255, blue: 0xF9 / 255))
         }
         .padding(.top, 4)
@@ -153,7 +153,7 @@ private struct Chip: View {
     var onTap: (() -> Void)?
 
     var body: some View {
-        Text(text).font(.system(size: 12)).lineLimit(1).foregroundColor(colour)
+        Text(text).scaledFont(12).lineLimit(1).foregroundColor(colour)
             .padding(.horizontal, 8).padding(.vertical, 3)
             .background(colour.opacity(0.16), in: RoundedRectangle(cornerRadius: 8))
             .onTapGesture { onTap?() }

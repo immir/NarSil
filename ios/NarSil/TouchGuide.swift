@@ -10,6 +10,7 @@ let touchGuide: [(String, [String])] = [
         "Swipe to step in that direction (or run, if \"Swipe on the map runs\" is on in Options).",
         "Pinch to zoom; drag with two fingers to look around. The view follows you again once you move.",
         "☰ → Map zooms out to fit the whole level; tap it again, or just move, to zoom back.",
+        "Options → Colours picks a colour theme (Bright is the default; Original is the game's own palette; Solarized, Dracula, Gruvbox and High contrast are the others). Dark blues and reds are lifted so they read on black.",
         "Options → Tiles on the map swaps the letters for MicroChasm's pictures. Only the map changes; lists and menus keep the letters.",
     ]),
     ("The d-pad", [

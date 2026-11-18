@@ -20,18 +20,18 @@ struct OptionsView: View {
                         Button(action: onAppSettings) {
                             card(HStack {
                                 VStack(alignment: .leading) {
-                                    Text("Display and controls").font(.system(size: 15)).foregroundColor(Color(rgb: 0xE6E6EA))
-                                    Text("Messages, panel tabs, tiles, d-pad, swipes").font(.system(size: 12)).foregroundColor(Palette.sub)
+                                    Text("Display and controls").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                                    Text("Messages, panel tabs, tiles, d-pad, swipes").scaledFont(12).foregroundColor(Palette.sub)
                                 }
                                 Spacer()
-                                Text("›").font(.system(size: 20)).foregroundColor(Palette.sub)
+                                Text("›").scaledFont(20).foregroundColor(Palette.sub)
                             }.frame(minHeight: 56).padding(.horizontal, 14).padding(.vertical, 8).contentShape(Rectangle()))
                         }.buttonStyle(.plain)
                     }
                     ForEach(Array(prompt.rows.enumerated()), id: \.offset) { _, row in
                         switch row {
                         case .heading(let t):
-                            Text(t).font(.system(size: 14, weight: .semibold)).foregroundColor(Palette.gold).padding(.leading, 16).padding(.top, 16).padding(.bottom, 6)
+                            Text(t).scaledFont(14, weight: .semibold).foregroundColor(Palette.gold).padding(.leading, 16).padding(.top, 16).padding(.bottom, 6)
                         case .toggle(let a, let on, let locked, let description, let name): toggle(a, on, locked, description, name)
                         case .number(let base, let label, let value, let lo, let hi, let detail): NumberRow(base: base, label: label, value: value, lo: lo, hi: hi, detail: detail, answer: answer)
                         case .link(let a, let label, let detail): link(a, label, detail)
@@ -44,7 +44,7 @@ struct OptionsView: View {
     }
 
     private func note(_ t: String) -> some View {
-        Text(t).font(.system(size: 13)).foregroundColor(Color(rgb: 0xFFB74D)).padding(.horizontal, 16).padding(.vertical, 4)
+        Text(t).scaledFont(13).foregroundColor(Color(rgb: 0xFFB74D)).padding(.horizontal, 16).padding(.vertical, 4)
     }
 
     private func card<C: View>(_ c: C) -> some View {
@@ -55,8 +55,8 @@ struct OptionsView: View {
     private func toggle(_ a: Int, _ on: Bool, _ locked: Bool, _ description: String, _ name: String) -> some View {
         card(HStack {
             VStack(alignment: .leading) {
-                Text(description).font(.system(size: 15)).foregroundColor(locked ? Palette.sub : Color(rgb: 0xE6E6EA))
-                Text(name).font(.system(size: 11)).foregroundColor(Color(rgb: 0x5A5A60))
+                Text(description).scaledFont(15).foregroundColor(locked ? Palette.sub : Color(rgb: 0xE6E6EA))
+                Text(name).scaledFont(11).foregroundColor(Color(rgb: 0x5A5A60))
             }
             Spacer()
             Toggle("", isOn: Binding(get: { on }, set: { _ in answer(a) })).labelsHidden().disabled(locked)
@@ -67,11 +67,11 @@ struct OptionsView: View {
         Button { answer(a) } label: {
             card(HStack {
                 VStack(alignment: .leading) {
-                    Text(label).font(.system(size: 15)).foregroundColor(Color(rgb: 0xE6E6EA))
-                    if !detail.isEmpty { Text(detail).font(.system(size: 12)).foregroundColor(Palette.sub) }
+                    Text(label).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                    if !detail.isEmpty { Text(detail).scaledFont(12).foregroundColor(Palette.sub) }
                 }
                 Spacer()
-                Text("›").font(.system(size: 20)).foregroundColor(Palette.sub)
+                Text("›").scaledFont(20).foregroundColor(Palette.sub)
             }.frame(minHeight: 56).padding(.horizontal, 14).padding(.vertical, 8).contentShape(Rectangle()))
         }.buttonStyle(.plain)
     }
@@ -88,12 +88,12 @@ private struct NumberRow: View {
         VStack(spacing: 4) {
             HStack(spacing: 8) {
                 VStack(alignment: .leading) {
-                    Text(label).font(.system(size: 15)).foregroundColor(Color(rgb: 0xE6E6EA))
-                    Text(detail).font(.system(size: 12)).foregroundColor(Palette.sub)
+                    Text(label).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                    Text(detail).scaledFont(12).foregroundColor(Palette.sub)
                 }
                 Spacer()
                 Button("−") { set(value - 1) }.buttonStyle(.bordered).disabled(value <= lo)
-                Text("\(Int(drag.rounded()))").font(.system(size: 17, weight: .semibold)).foregroundColor(Color(rgb: 0xE6E6EA)).frame(minWidth: 36)
+                Text("\(Int(drag.rounded()))").scaledFont(17, weight: .semibold).foregroundColor(Color(rgb: 0xE6E6EA)).frame(minWidth: 36)
                 Button("+") { set(value + 1) }.buttonStyle(.bordered).disabled(value >= hi)
             }
             if hi - lo > 20 {

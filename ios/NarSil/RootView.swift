@@ -17,6 +17,11 @@ struct RootView: View {
     @State private var pendingImport: Saves.Copy?
     @State private var toast: String?
     @AppStorage("scumming") private var scumming = false
+    @AppStorage("buttonScale") private var buttonScale = 1.0
+    @AppStorage("messageScale") private var messageScale = 1.0
+    @AppStorage("itemScale") private var itemScale = 1.0
+    @AppStorage("statusScale") private var statusScale = 1.0
+    @AppStorage("theme") private var theme = 0
     @AppStorage("itemDetails") private var itemDetails = false
     @AppStorage("messageLines") private var messageLines = 3
     @AppStorage("dpad") private var pad = PadMode.docked.rawValue
@@ -38,7 +43,7 @@ struct RootView: View {
                 PanelLayer(game: game, abilities: abilities, onAppSettings: { showSettings = true })
                 infoLayer
                 if let toast {
-                    Text(toast).font(.system(size: 14)).foregroundColor(.white).padding(.horizontal, 16).padding(.vertical, 10)
+                    Text(toast).scaledFont(14).foregroundColor(.white).padding(.horizontal, 16).padding(.vertical, 10)
                         .background(Color(rgb: 0x333338), in: Capsule()).padding(.bottom, 120).allowsHitTesting(false)
                 }
                 if showMore { sheet(MoreSheet(actions: more, dismiss: { showMore = false })) }
@@ -54,7 +59,9 @@ struct RootView: View {
         } message: { _ in
             Text("NarSil closes; open it again to play from the imported save. Anything not exported or scummed from the current game is lost.")
         }
-        .onAppear { Native.setTiles(tiles); Native.setItemDetails(itemDetails); game.start() }
+        .textScale(buttonScale)
+        .onChange(of: theme) { game.themeIndex = $0 }
+        .onAppear { game.themeIndex = theme; Native.setTiles(tiles); Native.setItemDetails(itemDetails); game.start() }
         .onChange(of: tiles) { Native.setTiles($0) }
         .onChange(of: itemDetails) { Native.setItemDetails($0) }
         .onChange(of: game.status.lowHp) { low in if low && lowHealthBuzz { UINotificationFeedbackGenerator().notificationOccurred(.warning) } }
@@ -62,10 +69,10 @@ struct RootView: View {
 
     private var portrait: some View {
         VStack(spacing: 0) {
-            MessageStrip(game: game, lines: messageLines, onPanel: { Native.requestAction(NB.ACT_PANEL) }, onMessages: { showMessages = true })
+            MessageStrip(game: game, lines: messageLines, onPanel: { Native.requestAction(NB.ACT_PANEL) }, onMessages: { showMessages = true }).textScale(messageScale)
             MapView(game: game, handle: map, swipeRuns: swipeRuns, tiles: tiles)
             HStack(alignment: .center, spacing: 0) {
-                StatusStrip(game: game, stacked: true)
+                StatusStrip(game: game, stacked: true).textScale(statusScale)
                 if pad != PadMode.off.rawValue { Dpad(size: padSize, onAction: padAction).padding(4) }
             }.background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
             promptBar
@@ -76,13 +83,13 @@ struct RootView: View {
     private var landscape: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
-                MessageStrip(game: game, lines: messageLines, onPanel: { Native.requestAction(NB.ACT_PANEL) }, onMessages: { showMessages = true })
+                MessageStrip(game: game, lines: messageLines, onPanel: { Native.requestAction(NB.ACT_PANEL) }, onMessages: { showMessages = true }).textScale(messageScale)
                 MapView(game: game, handle: map, swipeRuns: swipeRuns, tiles: tiles)
                 promptBar
                 ActionBar(actions: bar) { showMore = true }
             }
             VStack(spacing: 0) {
-                StatusStrip(game: game, stacked: true)
+                StatusStrip(game: game, stacked: true).textScale(statusScale)
                 Spacer(minLength: 0)
                 if pad != PadMode.off.rawValue { Dpad(size: min(padSize, 150), onAction: padAction).padding(4) }
             }
@@ -106,7 +113,7 @@ struct RootView: View {
     @ViewBuilder private var promptLayer: some View {
         switch game.prompt {
         case .screen(let p)?: ScreenSheet(p: p, answer: Native.answer, onScum: scumming ? { showScum = true } : nil)
-        case .items(let p)?: ItemSheet(prompt: p, colour: { game.colour($0) }, answer: Native.answer)
+        case .items(let p)?: ItemSheet(prompt: p, colour: { game.colour($0) }, answer: Native.answer).textScale(itemScale)
         case .check(let q)?: CheckDialog(question: q, answer: Native.answer)
         case .choice(let p)?: ChoiceSheet(prompt: p, answer: Native.answer)
         case .quantity(let p)?: QuantityDialog(prompt: p, answer: Native.answer)
@@ -136,14 +143,15 @@ struct RootView: View {
                 }
             }
         }
-        if showSettings { SettingsSheet(messageLines: $messageLines, panelTabs: $panelTabs, tiles: $tiles, pad: $pad, swipeRuns: $swipeRuns,
+        if showSettings { SettingsSheet(buttonScale: $buttonScale, messageScale: $messageScale, itemScale: $itemScale, statusScale: $statusScale,
+                          theme: $theme, gamePalette: game.gamePalette, messageLines: $messageLines, panelTabs: $panelTabs, tiles: $tiles, pad: $pad, swipeRuns: $swipeRuns,
                           autoMore: game.status.autoMore, autoMoreEnabled: game.atPrompt && game.prompt == nil, onAutoMore: Native.setAutoMore,
                           itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, scumming: $scumming,
                           onExportSave: { Task { if let url = await Saves.export() { ShareSheet.present([url]) } else { say(Saves.cantSave) } } },
                           onImportSave: { importing = true },
                           onSendLogs: { ShareSheet.present(Saves.reportFiles) }) { showSettings = false } }
         if showScum { ScumSheet { showScum = false } }
-        if showMessages { MessagesSheet(game: game) { showMessages = false } }
+        if showMessages { MessagesSheet(game: game) { showMessages = false }.textScale(messageScale) }
         if showHelp { HelpView { showHelp = false } }
     }
 

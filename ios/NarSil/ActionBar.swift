@@ -74,7 +74,7 @@ struct ActionBar: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
                 ForEach(actions) { BarButton(action: $0) }
-                Button(action: onMore) { Text("☰").font(.system(size: 18)).padding(.horizontal, 14).frame(minHeight: 40) }
+                Button(action: onMore) { Text("☰").scaledFont(18).padding(.horizontal, 14).frame(minHeight: 40) }
                     .buttonStyle(.plain).background(Color.white.opacity(0.14), in: Capsule())
             }
             .padding(.horizontal, 6).padding(.vertical, 6)
@@ -89,7 +89,7 @@ private struct BarButton: View {
     var body: some View {
         let fill: Color = action.emphasised ? .accentColor : action.active ? Color(red: 0x3A / 255, green: 0x5F / 255, blue: 0x8A / 255) : Color.white.opacity(0.14)
         Text(action.label)
-            .font(.system(size: 15, weight: action.emphasised ? .semibold : .regular))
+            .scaledFont(15, weight: action.emphasised ? .semibold : .regular)
             .foregroundColor(.white)
             .lineLimit(1)
             .padding(.horizontal, 14).frame(minHeight: 40)

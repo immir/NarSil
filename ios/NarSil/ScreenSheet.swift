@@ -30,7 +30,7 @@ private struct Birth: View {
             VStack(spacing: 0) {
                 HStack {
                     if canGoBack { Button("‹ Back") { answer(-1) } }
-                    Text(p.title).font(.system(size: 22, weight: .semibold)).foregroundColor(Palette.gold)
+                    Text(p.title).scaledFont(22, weight: .semibold).foregroundColor(Palette.gold)
                         .padding(.leading, canGoBack ? 0 : 12)
                     Spacer()
                     if choiceStages.contains(p.stage) { Button("Random") { answer(NB.SCREEN_RANDOM) } }
@@ -39,11 +39,11 @@ private struct Birth: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         ForEach(Array(p.paragraphs.enumerated()), id: \.offset) { _, t in
-                            Text(t).font(.system(size: 15)).foregroundColor(Palette.body)
+                            Text(t).scaledFont(15).foregroundColor(Palette.body)
                                 .padding(.horizontal, 16).padding(.vertical, 4).frame(maxWidth: .infinity, alignment: .leading)
                         }
                         if p.stage == "stats" {
-                            Text("Points left: \(p.pointsLeft) of \(p.pointsTotal)").font(.system(size: 15)).foregroundColor(Palette.gold)
+                            Text("Points left: \(p.pointsLeft) of \(p.pointsTotal)").scaledFont(15).foregroundColor(Palette.gold)
                                 .padding(.horizontal, 16).padding(.vertical, 8)
                             ForEach(p.stats, id: \.index) { s in StatRow(s: s, answer: answer) }
                             if !p.skills.isEmpty { Figures(p: p) }
@@ -80,9 +80,9 @@ private struct OptionCard: View {
         let enabled = o.state != 0
         Button { answer(o.index) } label: {
             VStack(alignment: .leading, spacing: 4) {
-                Text(o.label).font(.system(size: 17, weight: .semibold)).foregroundColor(enabled ? .white : Color(rgb: 0x55555A))
-                if !o.summary.isEmpty { Text(o.summary).font(.system(size: 13)).foregroundColor(Palette.summary) }
-                if !o.description.isEmpty { Text(o.description).font(.system(size: 13)).foregroundColor(Palette.sub) }
+                Text(o.label).scaledFont(17, weight: .semibold).foregroundColor(enabled ? .white : Color(rgb: 0x55555A))
+                if !o.summary.isEmpty { Text(o.summary).scaledFont(13).foregroundColor(Palette.summary) }
+                if !o.description.isEmpty { Text(o.description).scaledFont(13).foregroundColor(Palette.sub) }
             }
             .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).padding(14)
             .background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 12))
@@ -99,11 +99,11 @@ private struct StatRow: View {
     var body: some View {
         HStack(spacing: 8) {
             VStack(alignment: .leading) {
-                Text(s.name).font(.system(size: 16)).foregroundColor(.white)
-                Text(s.spent > 0 ? "\(s.spent) point\(s.spent == 1 ? "" : "s") spent" : "").font(.system(size: 12)).foregroundColor(Palette.sub)
+                Text(s.name).scaledFont(16).foregroundColor(.white)
+                Text(s.spent > 0 ? "\(s.spent) point\(s.spent == 1 ? "" : "s") spent" : "").scaledFont(12).foregroundColor(Palette.sub)
             }
             Spacer()
-            Text("\(s.value)").font(.system(size: 20, weight: .semibold)).foregroundColor(.white).padding(.trailing, 4)
+            Text("\(s.value)").scaledFont(20, weight: .semibold).foregroundColor(.white).padding(.trailing, 4)
             Button("−") { answer(NB.SKILL_SELL + s.index) }.buttonStyle(.bordered).disabled(!s.canSell)
             Button("+ \(s.nextCost)") { answer(NB.SKILL_BUY + s.index) }.buttonStyle(.borderedProminent).disabled(!s.canBuy)
         }
@@ -127,9 +127,9 @@ private struct Figures: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Skills").font(.system(size: 14)).foregroundColor(Palette.gold)
+            Text("Skills").scaledFont(14).foregroundColor(Palette.gold)
             flow(p.skills)
-            Text("Combat").font(.system(size: 14)).foregroundColor(Palette.gold)
+            Text("Combat").scaledFont(14).foregroundColor(Palette.gold)
             flow(p.combat)
         }
         .padding(12).frame(maxWidth: .infinity, alignment: .leading)
@@ -150,9 +150,9 @@ private struct Figures: View {
         let d = delta(f)
         let tint: Color = d > 0 ? Palette.good : d < 0 ? Palette.bad : .white
         return HStack(spacing: 4) {
-            Text(f.name).font(.system(size: 13)).foregroundColor(Palette.sub)
-            Text(f.value).font(.system(size: 14, weight: .semibold)).foregroundColor(tint)
-            if d != 0 { Text(d > 0 ? "▲" : "▼").font(.system(size: 11)).foregroundColor(tint) }
+            Text(f.name).scaledFont(13).foregroundColor(Palette.sub)
+            Text(f.value).scaledFont(14, weight: .semibold).foregroundColor(tint)
+            if d != 0 { Text(d > 0 ? "▲" : "▼").scaledFont(11).foregroundColor(tint) }
         }
     }
 }
@@ -167,24 +167,24 @@ private struct Welcome: View {
             Palette.splash.ignoresSafeArea()
             ScrollView {
                 VStack(spacing: 4) {
-                    Text(p.title).font(.system(size: 34, weight: .semibold)).tracking(2).foregroundColor(Palette.gold).padding(.top, 28)
+                    Text(p.title).scaledFont(34, weight: .semibold).tracking(2).foregroundColor(Palette.gold).padding(.top, 28)
                     ForEach(Array(p.verse.enumerated()), id: \.offset) { _, v in
                         Text(v).font(.system(size: 16).italic()).foregroundColor(Palette.verse).multilineTextAlignment(.center)
                     }
                     Color.clear.frame(height: 20)
                     ForEach(Array(p.paragraphs.dropLast().enumerated()), id: \.offset) { _, t in
-                        Text(t).font(.system(size: 16)).foregroundColor(Palette.body).multilineTextAlignment(.center).padding(.vertical, 4)
+                        Text(t).scaledFont(16).foregroundColor(Palette.body).multilineTextAlignment(.center).padding(.vertical, 4)
                     }
                     Color.clear.frame(height: 28)
                     if let first = p.options.first {
-                        Button { answer(first.index) } label: { Text(first.label).font(.system(size: 17)).frame(maxWidth: .infinity, minHeight: 44) }
+                        Button { answer(first.index) } label: { Text(first.label).scaledFont(17).frame(maxWidth: .infinity, minHeight: 44) }
                             .buttonStyle(.borderedProminent).padding(.horizontal, 48)
                     }
                     ForEach(Array(p.options.dropFirst()), id: \.index) { o in
                         Button(o.label) { answer(o.index) }.padding(.top, 8)
-                        if !o.summary.isEmpty { Text(o.summary).font(.system(size: 12)).foregroundColor(Palette.sub).multilineTextAlignment(.center) }
+                        if !o.summary.isEmpty { Text(o.summary).scaledFont(12).foregroundColor(Palette.sub).multilineTextAlignment(.center) }
                     }
-                    if let last = p.paragraphs.last { Text(last).font(.system(size: 12)).foregroundColor(Palette.sub).padding(.top, 16) }
+                    if let last = p.paragraphs.last { Text(last).scaledFont(12).foregroundColor(Palette.sub).padding(.top, 16) }
                 }
                 .padding(.horizontal, 28).padding(.bottom, 32).frame(maxWidth: .infinity)
             }
@@ -202,7 +202,7 @@ private struct NoteCard: View {
         VStack {
             Spacer()
             VStack(alignment: .leading, spacing: 8) {
-                Text(p.title).font(.system(size: 18, weight: .semibold)).foregroundColor(Palette.gold)
+                Text(p.title).scaledFont(18, weight: .semibold).foregroundColor(Palette.gold)
                 ScrollView {
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(Array(p.paragraphs.enumerated()), id: \.offset) { _, t in

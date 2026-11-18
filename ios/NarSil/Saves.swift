@@ -186,20 +186,20 @@ struct ScumSheet: View {
         BottomSheet(maxHeight: 560, cancel: dismiss) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Text("Restore a scum save").font(.system(size: 17, weight: .semibold)).foregroundColor(.white)
+                    Text("Restore a scum save").scaledFont(17, weight: .semibold).foregroundColor(.white)
                     Spacer()
                     Button("Close", action: dismiss)
                 }.padding(.horizontal, 16).padding(.vertical, 12)
-                Text("Your saves in white, the game's autosaves in blue.").font(.system(size: 13)).foregroundColor(Palette.sub).padding(.horizontal, 16)
+                Text("Your saves in white, the game's autosaves in blue.").scaledFont(13).foregroundColor(Palette.sub).padding(.horizontal, 16)
                 ScrollView {
                     VStack(spacing: 0) {
                         if all.isEmpty {
                             Text("None yet. Use Scum in ☰ while playing; autosaves appear every few minutes.")
-                                .font(.system(size: 14)).foregroundColor(Palette.sub).padding(16)
+                                .scaledFont(14).foregroundColor(Palette.sub).padding(16)
                         }
                         ForEach(all) { c in
                             HStack {
-                                Text(c.auto ? "\(c.label)  (auto)" : c.label).font(.system(size: 15))
+                                Text(c.auto ? "\(c.label)  (auto)" : c.label).scaledFont(15)
                                     .foregroundColor(c.auto ? Color(rgb: 0x6EB1FF) : .white)
                                 Spacer()
                                 if !c.auto { Button("Delete") { try? FileManager.default.removeItem(at: c.url); all = Saves.all } }

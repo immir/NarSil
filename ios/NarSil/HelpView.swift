@@ -11,7 +11,7 @@ struct HelpView: View {
         VStack(spacing: 0) {
             HStack {
                 Button("Close", action: dismiss)
-                Text("Help").font(.system(size: 20, weight: .semibold)).foregroundColor(Palette.gold).frame(maxWidth: .infinity, alignment: .leading)
+                Text("Help").scaledFont(20, weight: .semibold).foregroundColor(Palette.gold).frame(maxWidth: .infinity, alignment: .leading)
                 Link("Online manual ↗", destination: Self.manual)
             }.padding(.horizontal, 12).padding(.vertical, 10)
             Picker("", selection: $tab) {
@@ -36,29 +36,29 @@ struct HelpView: View {
             ForEach(points, id: \.self) { p in
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text("•").foregroundColor(Palette.sub)
-                    Text(p).font(.system(size: 15)).foregroundColor(Palette.body).fixedSize(horizontal: false, vertical: true)
+                    Text(p).scaledFont(15).foregroundColor(Palette.body).fixedSize(horizontal: false, vertical: true)
                 }.padding(.bottom, 6)
             }
         }
     }
 
     private func heading(_ t: String) -> some View {
-        Text(t).font(.system(size: 16, weight: .semibold)).foregroundColor(Palette.gold).padding(.top, 16).padding(.bottom, 6)
+        Text(t).scaledFont(16, weight: .semibold).foregroundColor(Palette.gold).padding(.top, 16).padding(.bottom, 6)
     }
 
     @ViewBuilder private func file(_ name: String) -> some View {
         ForEach(Array(HelpFile.blocks(name).enumerated()), id: \.offset) { _, b in
             switch b {
             case .heading(let t): heading(t)
-            case .prose(let t): Text(t).font(.system(size: 14)).foregroundColor(Palette.body).fixedSize(horizontal: false, vertical: true).padding(.vertical, 4)
+            case .prose(let t): Text(t).scaledFont(14).foregroundColor(Palette.body).fixedSize(horizontal: false, vertical: true).padding(.vertical, 4)
             case .pre(let t):
                 ScrollView(.horizontal, showsIndicators: false) {
-                    Text(t).font(.system(size: 12, design: .monospaced)).foregroundColor(Palette.body).fixedSize()
+                    Text(t).scaledFont(12, design: .monospaced).foregroundColor(Palette.body).fixedSize()
                 }.padding(.vertical, 4)
             case .entry(let k, let t):
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    Text(k).font(.system(size: 15, design: .monospaced)).foregroundColor(Palette.gold).frame(width: 44, alignment: .leading)
-                    Text(t).font(.system(size: 14)).foregroundColor(Palette.body).fixedSize(horizontal: false, vertical: true)
+                    Text(k).scaledFont(15, design: .monospaced).foregroundColor(Palette.gold).frame(width: 44, alignment: .leading)
+                    Text(t).scaledFont(14).foregroundColor(Palette.body).fixedSize(horizontal: false, vertical: true)
                 }.padding(.vertical, 3)
             }
         }

@@ -21,13 +21,13 @@ struct PackView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     VStack(alignment: .leading) {
-                        Text("Pack").font(.system(size: 17, weight: .semibold)).foregroundColor(.white)
-                        Text("Carrying \(pounds(prompt.weight)) of \(pounds(prompt.limit))").font(.system(size: 12))
+                        Text("Pack").scaledFont(17, weight: .semibold).foregroundColor(.white)
+                        Text("Carrying \(pounds(prompt.weight)) of \(pounds(prompt.limit))").scaledFont(12)
                             .foregroundColor(prompt.weight > prompt.limit ? Color(rgb: 0xFFB74D) : Palette.sub)
                     }.padding(.horizontal, 16).padding(.top, 10)
                     LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(sections, id: \.0) { section, items in
-                            Text(sectionTitles[section] ?? "").font(.system(size: 13)).foregroundColor(Palette.sub)
+                            Text(sectionTitles[section] ?? "").scaledFont(13).foregroundColor(Palette.sub)
                                 .padding(.leading, 16).padding(.top, 12).padding(.bottom, 4).id("h\(section)")
                             ForEach(items, id: \.index) { item in row(item).id(rowID(item)) }
                         }
@@ -48,19 +48,19 @@ struct PackView: View {
         return VStack(alignment: .leading, spacing: 0) {
             Button { answer(open ? NB.PACK_COLLAPSE : NB.PACK_EXPAND + item.index) } label: {
                 HStack(spacing: 12) {
-                    Text(glyphString(item.glyph)).font(.system(size: 22, design: .monospaced))
+                    Text(glyphString(item.glyph)).scaledFont(22, design: .monospaced)
                         .foregroundColor(Color(rgb: colour(item.attr % 256 % 32))).frame(width: 24)
-                    Text(item.label == "-" ? "" : "\(item.label))").font(.system(size: 14, design: .monospaced)).foregroundColor(Palette.sub).frame(width: 24)
-                    Text(item.name).font(.system(size: 16, weight: open ? .semibold : .regular)).foregroundColor(specialColour(item.special) ?? .white)
+                    Text(item.label == "-" ? "" : "\(item.label))").scaledFont(14, design: .monospaced).foregroundColor(Palette.sub).frame(width: 24)
+                    Text(item.name).scaledFont(16, weight: open ? .semibold : .regular).foregroundColor(specialColour(item.special) ?? .white)
                         .lineLimit(open ? 3 : 2).multilineTextAlignment(.leading)
                     Spacer()
-                    if item.weightTenthsLb > 0 { Text(pounds(item.weightTenthsLb)).font(.system(size: 13)).foregroundColor(Palette.sub) }
+                    if item.weightTenthsLb > 0 { Text(pounds(item.weightTenthsLb)).scaledFont(13).foregroundColor(Palette.sub) }
                 }
                 .frame(minHeight: 52).padding(.horizontal, 16).contentShape(Rectangle())
             }.buttonStyle(.plain)
             if open {
                 VStack(alignment: .leading, spacing: 10) {
-                    if !prompt.description.isEmpty { Text(prompt.description).font(.system(size: 14)).foregroundColor(Color(rgb: 0xC8C8CC)) }
+                    if !prompt.description.isEmpty { Text(prompt.description).scaledFont(14).foregroundColor(Color(rgb: 0xC8C8CC)) }
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 90), alignment: .leading)], alignment: .leading, spacing: 6) {
                         ForEach(prompt.actions, id: \.index) { a in
                             Button(a.label) { answer(NB.PACK_ACT + item.index * NB.PACK_ACT_STRIDE + a.index) }

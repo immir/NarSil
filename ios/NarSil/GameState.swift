@@ -34,6 +34,17 @@ final class GameState: ObservableObject {
     private var saveCount: UInt64?
     /// The game's colours, 0xRRGGBB by Angband colour index; refreshed with every map frame.
     private(set) var palette = [UInt32]()
+    /// The game's own colours; `palette` is them through the chosen theme.
+    private(set) var gamePalette = [UInt32]()
+    var themeIndex = 0 { didSet { if themeIndex != oldValue { recolour(gamePalette, force: true) } } }
+
+    private func recolour(_ game: [UInt32], force: Bool = false) {
+        guard force || game != gamePalette else { return }
+        gamePalette = game
+        palette = Theme.byIndex(themeIndex).apply(game)
+        mapVersion += 1
+        termVersion += 1
+    }
     /// The textui's top line: a prompt the native UI does not cover, or -more-.
     @Published private(set) var topLine = ""
     /// What a textui screen is waiting for, judged from its text; picks the key bar's buttons.
@@ -71,7 +82,7 @@ final class GameState: ObservableObject {
         let snap = Native.termSnapshot(into: &term)
         guard snap.generation != 0 else { return }
         termGen = snap.generation; termCols = snap.cols; termRows = snap.rows; termCursor = snap.cursor
-        palette = Native.palette()
+        recolour(Native.palette())
         let text = (0..<termRows).map { y in
             String(String.UnicodeScalarView((0..<termCols).compactMap { x in Unicode.Scalar(UInt32(max(0, term[2 * (y * termCols + x)]))) }))
         }
@@ -127,7 +138,7 @@ final class GameState: ObservableObject {
                         newExp: m(NB.META_NEW_EXP), hpWarn: m(NB.META_HP_WARN), autoMore: m(NB.META_AUTO_MORE) != 0,
                         threats: m(NB.META_THREATS), threatsAlert: m(NB.META_THREATS_ALERT),
                         threatNearest: m(NB.META_THREAT_NEAREST), lightTurns: m(NB.META_LIGHT_TURNS))
-        palette = Native.palette()
+        recolour(Native.palette())
         let line = Native.topLine()
         if line != topLine { topLine = line }
         return true

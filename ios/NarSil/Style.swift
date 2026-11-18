@@ -40,12 +40,12 @@ struct ScreenHeader: View {
         HStack(spacing: 4) {
             if let back { Button(backLabel, action: back) }
             VStack(alignment: .leading, spacing: 0) {
-                if let subtitle { Text(subtitle).font(.system(size: 12)).foregroundColor(Palette.sub) }
-                Text(title).font(.system(size: 20, weight: .semibold)).foregroundColor(Palette.gold).lineLimit(1)
+                if let subtitle { Text(subtitle).scaledFont(12).foregroundColor(Palette.sub) }
+                Text(title).scaledFont(20, weight: .semibold).foregroundColor(Palette.gold).lineLimit(1)
             }
             .padding(.leading, back == nil ? 12 : 4)
             Spacer()
-            if let trailing { Text(trailing).font(.system(size: 13)).foregroundColor(Palette.sub) }
+            if let trailing { Text(trailing).scaledFont(13).foregroundColor(Palette.sub) }
         }
         .padding(.horizontal, 8).padding(.top, 8).padding(.bottom, 4)
     }

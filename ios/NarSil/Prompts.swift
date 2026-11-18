@@ -30,7 +30,7 @@ struct CheckDialog: View {
             Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { answer(0) }
             VStack(spacing: 16) {
                 Text(question.replacingOccurrences(of: "[y/n]", with: "").trimmingCharacters(in: .whitespaces))
-                    .font(.system(size: 17)).foregroundColor(.white).multilineTextAlignment(.leading)
+                    .scaledFont(17).foregroundColor(.white).multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 HStack {
                     Spacer()
@@ -53,7 +53,7 @@ struct ChoiceSheet: View {
         BottomSheet(maxHeight: 600, cancel: { answer(-1) }) {
             VStack(spacing: 0) {
                 HStack {
-                    Text(prompt.title).font(.system(size: 17, weight: .semibold)).foregroundColor(.white)
+                    Text(prompt.title).scaledFont(17, weight: .semibold).foregroundColor(.white)
                     Spacer()
                     Button("Cancel") { answer(-1) }
                 }.padding(.horizontal, 16).padding(.vertical, 12)
@@ -62,8 +62,8 @@ struct ChoiceSheet: View {
                         ForEach(prompt.options, id: \.index) { o in
                             Button { answer(o.index) } label: {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(o.label).font(.system(size: 16, weight: .medium)).foregroundColor(.white)
-                                    if !o.description.isEmpty { Text(o.description).font(.system(size: 13)).foregroundColor(Palette.sub) }
+                                    Text(o.label).scaledFont(16, weight: .medium).foregroundColor(.white)
+                                    if !o.description.isEmpty { Text(o.description).scaledFont(13).foregroundColor(Palette.sub) }
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.vertical, 10)
                             }.buttonStyle(.plain)
@@ -85,14 +85,14 @@ struct QuantityDialog: View {
         ZStack {
             Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { answer(-1) }
             VStack(spacing: 12) {
-                Text(prompt.title).font(.system(size: 17, weight: .semibold)).foregroundColor(.white)
+                Text(prompt.title).scaledFont(17, weight: .semibold).foregroundColor(.white)
                 HStack(spacing: 12) {
                     Button("−") { n = max(1, n - 1) }.buttonStyle(.bordered).disabled(n <= 1)
-                    Text("\(n)").font(.system(size: 24, weight: .semibold)).foregroundColor(.white).frame(maxWidth: .infinity)
+                    Text("\(n)").scaledFont(24, weight: .semibold).foregroundColor(.white).frame(maxWidth: .infinity)
                     Button("+") { n = min(prompt.max, n + 1) }.buttonStyle(.bordered).disabled(n >= prompt.max)
                 }
                 if prompt.max > 5 { Slider(value: Binding(get: { Double(n) }, set: { n = max(1, min(prompt.max, Int($0.rounded()))) }), in: 1...Double(prompt.max)) }
-                Text("of \(prompt.max)").font(.system(size: 13)).foregroundColor(Palette.sub)
+                Text("of \(prompt.max)").scaledFont(13).foregroundColor(Palette.sub)
                 HStack {
                     Button("All \(prompt.max)") { answer(prompt.max) }
                     Button("Cancel") { answer(-1) }
@@ -117,7 +117,7 @@ struct TextPromptView: View {
         ZStack {
             Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { answer(-1) }
             VStack(spacing: 12) {
-                Text(prompt.title).font(.system(size: 17, weight: .semibold)).foregroundColor(.white)
+                Text(prompt.title).scaledFont(17, weight: .semibold).foregroundColor(.white)
                 TextField("", text: $text, axis: prompt.maxBytes > 40 ? .vertical : .horizontal)
                     .lineLimit(prompt.maxBytes > 40 ? 4...6 : 1...1)
                     .textFieldStyle(.roundedBorder)
@@ -158,14 +158,14 @@ struct ItemSheet: View {
         BottomSheet(maxHeight: 560, cancel: { answer(-1) }) {
             VStack(spacing: 0) {
                 HStack {
-                    Text(prompt.title).font(.system(size: 17, weight: .semibold)).foregroundColor(.white)
+                    Text(prompt.title).scaledFont(17, weight: .semibold).foregroundColor(.white)
                     Spacer()
                     Button("Cancel") { answer(-1) }
                 }.padding(.horizontal, 16).padding(.vertical, 12)
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(sections, id: \.0) { section, items in
-                            Text(sectionTitles[section] ?? "").font(.system(size: 13)).foregroundColor(Palette.sub)
+                            Text(sectionTitles[section] ?? "").scaledFont(13).foregroundColor(Palette.sub)
                                 .padding(.leading, 16).padding(.top, 10).padding(.bottom, 4)
                             ForEach(items, id: \.index) { item in row(item) }
                         }
@@ -180,12 +180,12 @@ struct ItemSheet: View {
         Button { answer(item.index) } label: {
             HStack(spacing: 12) {
                 Text(String(Unicode.Scalar(UInt32(item.glyph)).map(Character.init) ?? " "))
-                    .font(.system(size: 22, design: .monospaced)).foregroundColor(Color(rgb: colour(item.attr % 256 % 32))).frame(width: 24)
-                Text(item.label == "-" ? "" : "\(item.label))").font(.system(size: 14, design: .monospaced)).foregroundColor(Palette.sub).frame(width: 24)
-                Text(item.name).font(.system(size: 16)).foregroundColor(specialColour(item.special) ?? .white).lineLimit(2)
+                    .scaledFont(22, design: .monospaced).foregroundColor(Color(rgb: colour(item.attr % 256 % 32))).frame(width: 24)
+                Text(item.label == "-" ? "" : "\(item.label))").scaledFont(14, design: .monospaced).foregroundColor(Palette.sub).frame(width: 24)
+                Text(item.name).scaledFont(16).foregroundColor(specialColour(item.special) ?? .white).lineLimit(2)
                 Spacer()
                 if item.weightTenthsLb > 0 {
-                    Text("\(item.weightTenthsLb / 10).\(item.weightTenthsLb % 10) lb").font(.system(size: 13)).foregroundColor(Palette.sub)
+                    Text("\(item.weightTenthsLb / 10).\(item.weightTenthsLb % 10) lb").scaledFont(13).foregroundColor(Palette.sub)
                 }
             }
             .frame(minHeight: 52).padding(.horizontal, 16)
@@ -211,7 +211,7 @@ struct AimBar: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(prompt.targets.isEmpty ? "Aim: swipe a direction or tap a grid" : "Aim: tap a target, or swipe a direction")
-                .font(.system(size: 14)).foregroundColor(.white)
+                .scaledFont(14).foregroundColor(.white)
             if !prompt.targets.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
@@ -242,7 +242,7 @@ struct DirectionBar: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Which way? Tap a neighbouring square or swipe").font(.system(size: 14)).foregroundColor(.white)
+            Text("Which way? Tap a neighbouring square or swipe").scaledFont(14).foregroundColor(.white)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(prompt.neighbours, id: \.dir) { n in
