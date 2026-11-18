@@ -588,6 +588,12 @@ static bool do_cmd_close_aux(struct loc grid)
 		square_close_door(cave, grid);
 		player->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
 		sound(MSG_SHUTDOOR);
+
+		/* A door closed during the song of Thresholds is warded (jammed) against enemies */
+		if (lookup_song("Thresholds") && player_is_singing(player, lookup_song("Thresholds"))) {
+			struct trap_kind *jam = lookup_trap("door jam");
+			if (jam) place_trap(cave, grid, jam->tidx, 0);
+		}
 	}
 
 	/* Result */

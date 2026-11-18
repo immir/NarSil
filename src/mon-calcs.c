@@ -301,6 +301,17 @@ void calc_stance(struct monster *mon)
 		stance = stances[1];
 	}
 
+	/* The song of Challenge draws weak-willed foes into melee, whatever their strategy */
+	{
+		struct song *challenge = lookup_song("Challenge");
+		if (challenge && player_is_singing(player, challenge) && (mon->alertness >= ALERTNESS_ALERT) &&
+			(stance != STANCE_FLEEING || mon->morale > -100) &&
+			(monster_skill(mon, SKILL_WILL) <= song_bonus(player, player->state.skill_use[SKILL_SONG], challenge) + 5)) {
+			stance = STANCE_AGGRESSIVE;
+			mon->min_range = 1;
+		}
+	}
+
 	/* React to changes in stance */
 	if (stance != mon->stance) {
 		enum mon_messages stance_msg = MON_MSG_NONE;

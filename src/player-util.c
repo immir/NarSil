@@ -256,6 +256,36 @@ bool player_cheat_death(struct player *p)
 }
 
 /**
+ * The song of Delvings slowly reveals terrain next to what the player already knows.
+ */
+void player_delve(struct player *p)
+{
+	struct song *delvings = lookup_song("Delvings");
+	if (!delvings || !player_is_singing(p, delvings) || !one_in_(3)) return;
+
+	const int reach = 4 + song_bonus(p, p->state.skill_use[SKILL_SONG], delvings);
+	struct loc picks[256];
+	int n = 0;
+	for (int y = p->grid.y - reach; y <= p->grid.y + reach; y++) {
+		for (int x = p->grid.x - reach; x <= p->grid.x + reach; x++) {
+			struct loc grid = loc(x, y);
+			if (!square_in_bounds_fully(cave, grid) || square_isknown(cave, grid)) continue;
+			for (int d = 0; d < 8 && n < (int) N_ELEMENTS(picks); d++) {
+				if (square_isknown(cave, loc_sum(grid, ddgrid_ddd[d]))) {
+					picks[n++] = grid;
+					break;
+				}
+			}
+		}
+	}
+	if (n > 0) {
+		const struct loc grid = picks[randint0(n)];
+		square_memorize(cave, grid);
+		square_light_spot(cave, grid);
+	}
+}
+
+/**
  * Items of betrayal: a ring or amulet slips off when many foes are in view, and a helm or crown
  * twists over the eyes of the badly wounded. Called once per player turn.
  */
@@ -323,6 +353,13 @@ void player_regen_hp(struct player *p)
 	int regen_multiplier = p->state.flags[OF_REGEN] + 1;
 	int regen_period = z_info->player_regen_period;
 	struct song *este = lookup_song("Este");
+	struct song *staunching = lookup_song("Staunching");
+
+	/* The song of Staunching stops bleeding and heals like the song of Este */
+	if (staunching && player_is_singing(p, staunching)) {
+		este = staunching;
+		player_clear_timed(p, TMD_CUT, true, false);
+	}
 
 	/* Various things interfere with physical healing */
 	if (p->timed[TMD_FOOD] < PY_FOOD_STARVE) return;

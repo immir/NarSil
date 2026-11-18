@@ -23,7 +23,7 @@ case "$game" in
     silq) lib="$work/lib-silq"; "$root/tools/merge-lib.sh" "$root/lib" "$root/lib-silq" "$lib" ;;
     *) echo "GAME is narsil or silq" >&2; exit 2 ;;
 esac
-run() { timeout 120 "$build/narsil_host" "$lib" "$work/data" "$@"; }
+run() { NARSIL_SEED=${NARSIL_SEED:-7} timeout 120 "$build/narsil_host" "$lib" "$work/data" "$@"; }
 # The native birth screens: race, house, sex (first of each), accept stats and
 # skills, keep the name, accept history, begin; dismiss the opening text.
 birth=(@answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc)
@@ -407,7 +407,7 @@ echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=1'
 
 echo "== native walk and run: some direction is open; runs end at the prompt"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" @walk=1 @walk=2 @walk=3 @walk=4 @walk=6 @walk=7 @walk=8 @walk=9 @run=2 @run=4 @run=6 @run=8 @walk=5 "${quit[@]}")
+out=$(NARSIL_SEED=7 run "${birth[@]}" @walk=1 @walk=2 @walk=3 @walk=4 @walk=6 @walk=7 @walk=8 @walk=9 @run=2 @run=4 @run=6 @run=8 @walk=5 "${quit[@]}")
 echo "$out" | grep -q '^walk [0-9]: moved 1$'
 [ "$(echo "$out" | grep -c '^run [0-9]: moved')" = 4 ]
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
