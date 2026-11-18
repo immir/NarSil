@@ -42,7 +42,7 @@ struct MessageStrip: View {
             .contentShape(Rectangle())
             .onTapGesture { if more { Native.pushKey(Keys.enter) } else { onMessages() } }
             Button(action: onPanel) {
-                PanelIcon(index: 7).stroke(style: StrokeStyle(lineWidth: 1.8 * 26 / 24, lineCap: .round, lineJoin: .round))
+                PanelIcon(index: IconIndex.panel).stroke(style: StrokeStyle(lineWidth: 1.8 * 26 / 24, lineCap: .round, lineJoin: .round))
                     .frame(width: 26, height: 26)
                     .foregroundColor(Color(red: 0xF3 / 255, green: 0xD2 / 255, blue: 0x7A / 255))
                     .frame(width: 40, height: 40)
@@ -73,7 +73,7 @@ struct StatusStrip: View {
                     Text("\(s.depth * 50) ft").scaledFont(13)
                 }
             }
-            Chips(status: s)
+            Chips(game: game)
             if let foe = s.foe { FoeLine(foe: foe, game: game) }
         }
         .foregroundColor(.white)
@@ -133,27 +133,68 @@ private struct FoeLine: View {
     }
 }
 
+/// Experience to spend, the light, the game's own status-line pieces (hunger, fear, …) and monsters in view (StatusViews.kt).
 private struct Chips: View {
-    let status: Status
+    @ObservedObject var game: GameState
 
     var body: some View {
-        let s = status
+        let s = game.status
         let turns = s.lightTurns
-        HStack(spacing: 6) {
-            if s.newExp > 0 { Chip(text: "Exp \(s.newExp)", colour: s.newExp >= 100 ? Color(red: 0x90 / 255, green: 0xCA / 255, blue: 0xF9 / 255) : grey) { Native.requestAction(NB.ACT_SKILLS) } }
-            if turns >= 0 { Chip(text: "Light · \(turns)t", colour: turns < 100 ? red : turns < 300 ? amber : grey) }
-            if s.threats > 0 { Chip(text: "\(s.threats) in view · \(s.threatNearest) away", colour: s.threatsAlert > 0 ? red : grey) { Native.requestLookMonsters() } }
+        let segments = game.statusSegments().filter { $0.0.range(of: #"^\d+'?\s*(ft)?$"#, options: .regularExpression) == nil }
+        let light = segments.first { $0.0.hasPrefix("Light") }
+        let others = segments.filter { !$0.0.hasPrefix("Light") }
+        FlowLayout(spacing: 6) {
+            if s.newExp > 0 { Chip(icon: IconIndex.exp, text: "\(s.newExp)", colour: s.newExp >= 100 ? Color(red: 0x90 / 255, green: 0xCA / 255, blue: 0xF9 / 255) : grey) { Native.requestAction(NB.ACT_SKILLS) } }
+            if light != nil || turns >= 0 {
+                let colour = turns >= 0 && turns < 100 ? red : turns >= 0 && turns < 300 ? amber : light.map { Color(rgb: $0.1) } ?? grey
+                Chip(icon: IconIndex.light, text: [light?.0, turns >= 0 ? "\(turns)t" : nil].compactMap { $0 }.joined(separator: " · "), colour: colour)
+            }
+            ForEach(Array(others.enumerated()), id: \.offset) { _, seg in Chip(text: seg.0, colour: Color(rgb: seg.1)) }
+            if s.threats > 0 { Chip(icon: IconIndex.threats, text: "\(s.threats) · \(s.threatNearest) away", colour: s.threatsAlert > 0 ? red : grey) { Native.requestLookMonsters() } }
         }
     }
 }
 
+/// Lays its children out in rows, wrapping when a row is full.
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 6
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        rows(subviews, width: proposal.width ?? .infinity).size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for (i, p) in rows(subviews, width: bounds.width).origins.enumerated() {
+            subviews[i].place(at: CGPoint(x: bounds.minX + p.x, y: bounds.minY + p.y), proposal: .unspecified)
+        }
+    }
+
+    private func rows(_ subviews: Subviews, width: CGFloat) -> (origins: [CGPoint], size: CGSize) {
+        var origins = [CGPoint](), x: CGFloat = 0, y: CGFloat = 0, rowH: CGFloat = 0, maxX: CGFloat = 0
+        for v in subviews {
+            let s = v.sizeThatFits(.unspecified)
+            if x > 0 && x + s.width > width { x = 0; y += rowH + spacing; rowH = 0 }
+            origins.append(CGPoint(x: x, y: y))
+            x += s.width + spacing
+            rowH = max(rowH, s.height)
+            maxX = max(maxX, x - spacing)
+        }
+        return (origins, CGSize(width: maxX, height: y + rowH))
+    }
+}
+
 private struct Chip: View {
+    var icon: Int?
     let text: String
     let colour: Color
     var onTap: (() -> Void)?
 
     var body: some View {
-        Text(text).scaledFont(12).lineLimit(1).foregroundColor(colour)
+        HStack(spacing: 4) {
+            if let icon { PanelIcon(index: icon).stroke(style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round)).frame(width: 12, height: 12) }
+            Text(text).scaledFont(12).lineLimit(1)
+        }
+        .foregroundColor(colour)
             .padding(.horizontal, 8).padding(.vertical, 3)
             .background(colour.opacity(0.16), in: RoundedRectangle(cornerRadius: 8))
             .onTapGesture { onTap?() }

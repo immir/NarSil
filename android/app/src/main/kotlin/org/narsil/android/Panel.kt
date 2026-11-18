@@ -237,10 +237,10 @@ fun EdgeSwipeHandle(modifier: Modifier = Modifier) {
 
 /** One of the generated icons (see PanelIcons.kt), stroked in [tint]. */
 @Composable
-internal fun PanelGlyph(icon: String, tint: Color, modifier: Modifier) {
+internal fun PanelGlyph(icon: String, tint: Color, modifier: Modifier, stroke: Float = 1.8f) {
     val path = remember(icon) { PathParser().parsePathString(icon).toPath() }
     Canvas(modifier) {
         val s = size.minDimension / 24f
-        scale(s, s, pivot = Offset.Zero) { drawPath(path, tint, style = Stroke(1.8f, cap = StrokeCap.Round, join = StrokeJoin.Round)) }
+        scale(s, s, pivot = Offset.Zero) { drawPath(path, tint, style = Stroke(stroke, cap = StrokeCap.Round, join = StrokeJoin.Round)) }
     }
 }

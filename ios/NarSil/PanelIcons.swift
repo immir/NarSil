@@ -132,7 +132,54 @@ let panelIconBuilders: [(inout Path) -> Void] = [
         $0.move(to: CGPoint(x: 16.5, y: 15))
         $0.addLine(to: CGPoint(x: 17.5, y: 15))
     },
+    { // light
+        $0.move(to: CGPoint(x: 12, y: 3))
+        $0.addCurve(to: CGPoint(x: 18, y: 14), control1: CGPoint(x: 14, y: 7), control2: CGPoint(x: 18, y: 9))
+        $0.addCurve(to: CGPoint(x: 12, y: 21), control1: CGPoint(x: 18, y: 18), control2: CGPoint(x: 15.3, y: 21))
+        $0.addCurve(to: CGPoint(x: 6, y: 14), control1: CGPoint(x: 8.7, y: 21), control2: CGPoint(x: 6, y: 18))
+        $0.addCurve(to: CGPoint(x: 9, y: 7.5), control1: CGPoint(x: 6, y: 11), control2: CGPoint(x: 8, y: 9.5))
+        $0.addCurve(to: CGPoint(x: 11.5, y: 11.5), control1: CGPoint(x: 9.5, y: 10), control2: CGPoint(x: 10.5, y: 11))
+        $0.addCurve(to: CGPoint(x: 12, y: 3), control1: CGPoint(x: 11, y: 8.5), control2: CGPoint(x: 11.5, y: 5.5))
+        $0.closeSubpath()
+    },
+    { // threats
+        $0.move(to: CGPoint(x: 2.5, y: 12))
+        $0.addCurve(to: CGPoint(x: 12, y: 5.5), control1: CGPoint(x: 5, y: 7.5), control2: CGPoint(x: 8.5, y: 5.5))
+        $0.addCurve(to: CGPoint(x: 21.5, y: 12), control1: CGPoint(x: 15.5, y: 5.5), control2: CGPoint(x: 19, y: 7.5))
+        $0.addCurve(to: CGPoint(x: 12, y: 18.5), control1: CGPoint(x: 19, y: 16.5), control2: CGPoint(x: 15.5, y: 18.5))
+        $0.addCurve(to: CGPoint(x: 2.5, y: 12), control1: CGPoint(x: 8.5, y: 18.5), control2: CGPoint(x: 5, y: 16.5))
+        $0.closeSubpath()
+        $0.move(to: CGPoint(x: 12, y: 9))
+        $0.addCurve(to: CGPoint(x: 15, y: 12), control1: CGPoint(x: 13.6569, y: 9), control2: CGPoint(x: 15, y: 10.3431))
+        $0.addCurve(to: CGPoint(x: 12, y: 15), control1: CGPoint(x: 15, y: 13.6569), control2: CGPoint(x: 13.6569, y: 15))
+        $0.addCurve(to: CGPoint(x: 9, y: 12), control1: CGPoint(x: 10.3431, y: 15), control2: CGPoint(x: 9, y: 13.6569))
+        $0.addCurve(to: CGPoint(x: 12, y: 9), control1: CGPoint(x: 9, y: 10.3431), control2: CGPoint(x: 10.3431, y: 9))
+        $0.closeSubpath()
+    },
+    { // exp
+        $0.move(to: CGPoint(x: 6, y: 13))
+        $0.addLine(to: CGPoint(x: 12, y: 7))
+        $0.addLine(to: CGPoint(x: 18, y: 13))
+        $0.move(to: CGPoint(x: 6, y: 18.5))
+        $0.addLine(to: CGPoint(x: 12, y: 12.5))
+        $0.addLine(to: CGPoint(x: 18, y: 18.5))
+    },
 ]
+
+/// Indices into panelIconBuilders by name.
+enum IconIndex {
+    static let pack = 0
+    static let character = 1
+    static let skills = 2
+    static let abilities = 3
+    static let knowledge = 4
+    static let smithing = 5
+    static let options = 6
+    static let panel = 7
+    static let light = 8
+    static let threats = 9
+    static let exp = 10
+}
 
 struct PanelIcon: Shape {
     let index: Int

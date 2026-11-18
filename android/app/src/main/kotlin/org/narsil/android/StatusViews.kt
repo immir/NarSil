@@ -72,7 +72,7 @@ internal fun PanelButton() {
     Box(Modifier.padding(4.dp).size(40.dp).background(Color(0xFF26262B), RoundedCornerShape(10.dp))
             .clickable { NarSilNative.nativeRequestAction(NarSilNative.ACT_PANEL) },
         contentAlignment = Alignment.Center) {
-        PanelGlyph(PANEL_ICON_PATHS.last(), Color(0xFFF3D27A), Modifier.size(26.dp))
+        PanelGlyph(PANEL_ICON_PATHS[ICON_PANEL], Color(0xFFF3D27A), Modifier.size(26.dp))
     }
 }
 
@@ -182,20 +182,23 @@ private fun StatusChips(state: GameState) {
     val light = segments.firstOrNull { it.first.startsWith("Light") }
     val others = segments.filter { it !== light }
     FlowRow(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        if (s.newExp > 0) Chip("Exp ${s.newExp}", if (s.newExp >= 100) Color(0xFF90CAF9) else Color(0xFFB0B0B0)) { NarSilNative.nativeRequestAction(NarSilNative.ACT_SKILLS) }
+        if (s.newExp > 0) Chip("${s.newExp}", icon = ICON_EXP, colour = if (s.newExp >= 100) Color(0xFF90CAF9) else Color(0xFFB0B0B0)) { NarSilNative.nativeRequestAction(NarSilNative.ACT_SKILLS) }
         if (light != null || s.lightTurns >= 0) {
             val turns = s.lightTurns
             val colour = when { turns in 0..99 -> red; turns in 0..299 -> amber; else -> light?.second?.let { Color(it) } ?: Color(0xFFB0B0B0) }
-            Chip(listOfNotNull(light?.first, if (turns >= 0) "${turns}t" else null).joinToString(" · "), colour)
+            Chip(listOfNotNull(light?.first, if (turns >= 0) "${turns}t" else null).joinToString(" · "), colour, icon = ICON_LIGHT)
         }
         others.forEach { (text, colour) -> Chip(text, Color(colour)) }
-        if (s.threats > 0) Chip("${s.threats} in view · ${s.threatNearest} away", if (s.threatsAlert > 0) red else Color(0xFFB0B0B0)) { NarSilNative.nativeRequestLookMonsters() }
+        if (s.threats > 0) Chip("${s.threats} · ${s.threatNearest} away", if (s.threatsAlert > 0) red else Color(0xFFB0B0B0), icon = ICON_THREATS) { NarSilNative.nativeRequestLookMonsters() }
     }
 }
 
 @Composable
-private fun Chip(text: String, colour: Color, onClick: (() -> Unit)? = null) {
-    Text(text, color = colour, fontSize = 12.sp, maxLines = 1,
-         modifier = Modifier.background(colour.copy(alpha = 0.16f), RoundedCornerShape(8.dp))
-             .let { if (onClick != null) it.clickable(onClick = onClick) else it }.padding(horizontal = 8.dp, vertical = 3.dp))
+private fun Chip(text: String, colour: Color, icon: Int? = null, onClick: (() -> Unit)? = null) {
+    Row(Modifier.background(colour.copy(alpha = 0.16f), RoundedCornerShape(8.dp))
+            .let { if (onClick != null) it.clickable(onClick = onClick) else it }.padding(horizontal = 8.dp, vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (icon != null) PanelGlyph(PANEL_ICON_PATHS[icon], colour, Modifier.size(12.dp), stroke = 3f)
+        Text(text, color = colour, fontSize = 12.sp, maxLines = 1)
+    }
 }

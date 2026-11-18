@@ -147,6 +147,25 @@ final class GameState: ObservableObject {
         return true
     }
 
+    /// The game's bottom status line as its separate pieces, each with its game colour (runs of 2+ spaces separate them).
+    func statusSegments() -> [(String, UInt32)] {
+        guard termRows > 0, term.count == 2 * termCols * termRows else { return [] }
+        let y = termRows - 1
+        var out = [(String, UInt32)](), text = "", attr = 0, spaces = 0
+        func flush() { if !text.isEmpty { out.append((text, colour(attr % 256 % 32))); text = "" } }
+        for x in 0..<termCols {
+            let i = 2 * (y * termCols + x)
+            let cp = Int(term[i])
+            if cp == 32 || cp == 0 { spaces += 1; if spaces >= 2 { flush() }; continue }
+            if spaces == 1 && !text.isEmpty { text += " " }
+            if text.isEmpty { attr = Int(term[i + 1]) }
+            spaces = 0
+            if let u = Unicode.Scalar(UInt32(cp)) { text.unicodeScalars.append(u) }
+        }
+        flush()
+        return out
+    }
+
     /// One published quick-slot line: "kind \t carried \t name".
     private static func quickSlot(_ line: Substring) -> QuickSlot? {
         let f: [Substring] = line.split(separator: "\t", maxSplits: 2, omittingEmptySubsequences: false)
