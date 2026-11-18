@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The app icon: the Silmaril on a night sky, as Android's ic_launcher (drawable/ic_launcher.xml); rendered to AppIcon.png. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 108 108">
+  <defs>
+    <radialGradient id="sky" cx="54" cy="48" r="76" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22345C"/><stop offset="1" stop-color="#070A14"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="54" cy="54" r="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFF4C8" stop-opacity="0.85"/><stop offset="1" stop-color="#FFD36B" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="108" height="108" fill="url(#sky)"/>
+  <g transform="translate(54 54) scale(1.4) translate(-54 -54)">
+    <circle cx="54" cy="54" r="24" fill="url(#glow)"/>
+    <circle cx="54" cy="54" r="33" fill="none" stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="1"/>
+    <path d="M54.00,27.00 L56.07,49.01 L66.02,41.98 L58.99,51.93 L81.00,54.00 L58.99,56.07 L66.02,66.02 L56.07,58.99 L54.00,81.00 L51.93,58.99 L41.98,66.02 L49.01,56.07 L27.00,54.00 L49.01,51.93 L41.98,41.98 L51.93,49.01 Z" fill="#F3D27A"/>
+    <path d="M54.00,39.00 L55.22,51.04 L60.36,47.64 L56.96,52.78 L69.00,54.00 L56.96,55.22 L60.36,60.36 L55.22,56.96 L54.00,69.00 L52.78,56.96 L47.64,60.36 L51.04,55.22 L39.00,54.00 L51.04,52.78 L47.64,47.64 L52.78,51.04 Z" fill="#FFFFFF"/>
+    <circle cx="54" cy="54" r="3.6" fill="#FFFFFF"/>
+  </g>
+</svg>

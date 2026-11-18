@@ -3,3 +3,4 @@ bundleID: org.narsil.NarSil
 resources:
   - lib
 infoPath: xtool-Info.plist
+iconPath: AppIcon.png
