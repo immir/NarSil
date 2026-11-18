@@ -561,9 +561,37 @@ static enum parser_error parse_constants_player(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_constants_rules(struct parser *p) {
+	struct angband_constants *z = parser_priv(p);
+	const char *label = parser_getsym(p, "label");
+	const int value = parser_getint(p, "value");
+
+	if (value < 0 || value > 1)
+		return PARSE_ERROR_INVALID_VALUE;
+
+	if (streq(label, "floor-light"))
+		z->rule_floor_light = value;
+	else if (streq(label, "staff-will-check"))
+		z->rule_staff_will_check = value;
+	else if (streq(label, "heal-id-unhurt"))
+		z->rule_heal_id_unhurt = value;
+	else if (streq(label, "forge-depths"))
+		z->rule_forge_depths = value;
+	else if (streq(label, "score-bonus"))
+		z->rule_score_bonus = value;
+	else
+		return PARSE_ERROR_UNDEFINED_DIRECTIVE;
+
+	return PARSE_ERROR_NONE;
+}
+
 static struct parser *init_parse_constants(void) {
 	struct angband_constants *z = mem_zalloc(sizeof *z);
 	struct parser *p = parser_new();
+
+	/* Rules a constants file leaves out are NarSil's own */
+	z->rule_floor_light = 1;
+	z->rule_staff_will_check = 1;
 
 	parser_setpriv(p, z);
 	parser_reg(p, "level-max sym label int value", parse_constants_level_max);
@@ -574,6 +602,7 @@ static struct parser *init_parse_constants(void) {
 	parser_reg(p, "carry-cap sym label int value", parse_constants_carry_cap);
 	parser_reg(p, "obj-make sym label int value", parse_constants_obj_make);
 	parser_reg(p, "player sym label int value", parse_constants_player);
+	parser_reg(p, "rules sym label int value", parse_constants_rules);
 	return p;
 }
 
