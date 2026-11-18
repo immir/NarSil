@@ -78,7 +78,14 @@ bool character_saved;
  * Magic bits at beginning of savefile
  */
 static const uint8_t savefile_magic[4] = { 83, 97, 118, 101 };
-static const uint8_t savefile_name[4] = { 'U', 'S', 'I', 'L' };
+static const uint8_t savefile_name_narsil[4] = { 'U', 'S', 'I', 'L' };
+static const uint8_t savefile_name_silq[4] = { 'U', 'S', 'L', 'Q' };
+
+/* The variant name in the header tells the two games' savefiles apart, so neither loads the other's */
+static const uint8_t *savefile_variant(void)
+{
+	return z_info && z_info->game_silq ? savefile_name_silq : savefile_name_narsil;
+}
 
 /* Some useful types */
 typedef int (*loader_t)(void);
@@ -404,7 +411,7 @@ bool savefile_save(const char *path)
 
 	if (file) {
 		if (file_write(file, (char *) &savefile_magic, 4)
-			&& file_write(file, (char *) &savefile_name, 4)) {
+			&& file_write(file, (const char *) savefile_variant(), 4)) {
 			character_saved = try_save(file);
 		} else {
 			character_saved = false;
@@ -463,7 +470,7 @@ static bool check_header(ang_file *f) {
 
 	if (file_read(f, (char *) &head, 8) == 8 &&
 			memcmp(&head[0], savefile_magic, 4) == 0 &&
-			memcmp(&head[4], savefile_name, 4) == 0)
+			memcmp(&head[4], savefile_variant(), 4) == 0)
 		return true;
 
 	return false;
@@ -558,7 +565,9 @@ static bool try_load(ang_file *f, const struct blockinfo *local_loaders)
 	errr err;
 
 	if (!check_header(f)) {
-		note("Savefile is corrupted -- incorrect file header.");
+		note(memcmp(savefile_name_narsil, savefile_variant(), 4) == 0
+			? "This is not a NarSil savefile (a NarSil-Q one, or not a savefile at all)."
+			: "This is not a NarSil-Q savefile (a NarSil one, or not a savefile at all).");
 		return false;
 	}
 
