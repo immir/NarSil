@@ -443,7 +443,7 @@ static bool strip_markup(char *s)
 	return marked;
 }
 
-bool native_welcome(void)
+enum welcome_choice native_welcome(void)
 {
 	char path[1024], line[1024], prose[2048] = "";
 	begin("welcome", game_title());
@@ -463,7 +463,16 @@ bool native_welcome(void)
 	para("Version %s", buildver);
 	option(1, "Begin", NULL, NULL);
 	option(1, "Tutorial", "A short guided dungeon; your own character is untouched.", NULL);
-	return ask_screen() == 1;
+	if (z_info->game_silq)
+		option(1, "Play NarSil instead", "NarSil itself; each game keeps its own characters and saves.", NULL);
+	else
+		option(1, "Play NarSil-Q instead", "NarSil with Sil-Q's content and rules, arriving in stages; "
+			"each game keeps its own characters and saves.", NULL);
+	switch (ask_screen()) {
+		case 1: return WELCOME_TUTORIAL;
+		case 2: return WELCOME_SWITCH_GAME;
+		default: return WELCOME_BEGIN;
+	}
 }
 
 /* ------------------------------------------------------------------------

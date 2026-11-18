@@ -413,7 +413,9 @@ static void *game_main(void *unused)
 #endif
 	textui_init();
 	native_init();
-	tutorial_chosen = native_welcome();
+	const enum welcome_choice welcome = native_welcome();
+	if (welcome == WELCOME_SWITCH_GAME) quit(NB_EXIT_SWITCH_GAME);
+	tutorial_chosen = welcome == WELCOME_TUTORIAL;
 	play_game(tutorial_chosen ? GAME_TUTORIAL : GAME_LOAD);
 
 	textui_cleanup();

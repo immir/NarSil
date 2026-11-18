@@ -383,6 +383,7 @@ void native_publish(bool at_prompt)
 		meta[NB_META_NEW_EXP] = player->new_exp;
 		threat_counts(&meta[NB_META_THREATS], &meta[NB_META_THREATS_ALERT], &meta[NB_META_THREAT_NEAREST]);
 		meta[NB_META_LIGHT_TURNS] = light_turns_left();
+		meta[NB_META_MIN_DEPTH] = player_min_depth(player);
 	}
 	struct loc target = loc(-1, -1);
 	if (visible && target_okay(0)) target_get(&target);

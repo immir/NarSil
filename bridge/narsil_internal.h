@@ -48,7 +48,9 @@ void native_birth_init(void);
 void native_do_birth(void);
 void native_death_screen(void);
 /* The splash screen (news.txt) and its pause, natively; true if the player chose the tutorial. */
-bool native_welcome(void);
+/* The native welcome screen: what the player chose. */
+enum welcome_choice { WELCOME_BEGIN, WELCOME_TUTORIAL, WELCOME_SWITCH_GAME };
+enum welcome_choice native_welcome(void);
 void native_abilities(void);
 
 /* Implemented by narsil_native.c: the "extra item details" option (nb_set_item_details()). */

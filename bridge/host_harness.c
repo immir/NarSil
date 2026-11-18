@@ -291,6 +291,12 @@ static int run_token(const char *tok)
 		nb_test_depth(atoi(tok + 7));
 		return settle() ? 0 : 1;
 	}
+	if (strcmp(tok, "@mindepth") == 0) {
+		int32_t meta[NB_META_COUNT];
+		nb_map_snapshot(meta, NULL, 0);
+		printf("depth %d min %d\n", meta[NB_META_DEPTH], meta[NB_META_MIN_DEPTH]);
+		return 0;
+	}
 	if (strcmp(tok, "@forges") == 0) {
 		int fixed, depth;
 		const int n = nb_test_forges(&fixed, &depth);

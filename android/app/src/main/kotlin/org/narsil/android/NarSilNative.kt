@@ -53,7 +53,8 @@ object NarSilNative {
     const val META_THREATS_ALERT = 26
     const val META_THREAT_NEAREST = 27
     const val META_LIGHT_TURNS = 28
-    const val META_COUNT = 29
+    const val META_MIN_DEPTH = 29
+    const val META_COUNT = 30
 
     /** enum nb_stance, as sidebar text. */
     val STANCE_NAMES = arrayOf("", "Sleeping", "Unwary", "Mindless", "Fleeing", "Confident", "Aggressive")

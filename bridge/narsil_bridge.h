@@ -35,6 +35,12 @@ enum nb_state { NB_IDLE = 0, NB_RUNNING = 1, NB_EXITED = 2 };
 bool nb_start(const nb_config *cfg);
 
 /*
+ * The welcome screen offers the other game (NarSil / NarSil-Q).  Choosing it ends the game thread with this
+ * exit message (nb_exit_message()); the app then starts again with the other game's lib and data dirs.
+ */
+#define NB_EXIT_SWITCH_GAME "switch-game"
+
+/*
  * A native crash (SIGSEGV, SIGABRT, ...) leaves <data_dir>/crash.txt: the signal and call stack.  At the next
  * start, nb_crash_report copies its text into `out` (NUL-terminated, truncated to `cap`) and deletes the file;
  * false if there was none.  Call before nb_start.
@@ -107,6 +113,7 @@ enum nb_meta {
 	NB_META_THREATS_ALERT,  /* of those, how many are awake to you (alert or more) */
 	NB_META_THREAT_NEAREST, /* distance to the nearest of them, or -1 */
 	NB_META_LIGHT_TURNS,    /* turns left on the wielded torch or lantern, or -1 if the light does not burn out (or none) */
+	NB_META_MIN_DEPTH,      /* the shallowest level the player may now go up to (the depth clock); 50 ft each */
 	NB_META_COUNT
 };
 

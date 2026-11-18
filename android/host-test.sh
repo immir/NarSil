@@ -278,6 +278,17 @@ title=$([ "$game" = silq ] && echo NarSil-Q || echo NarSil)
 echo "$out" | grep -qP "^Screen\twelcome\t$title\$"
 echo "$out" | grep -qP '^#V\tThe world was young'
 echo "$out" | grep -qP '^#O\t1\tBegin\t'
+other=$([ "$game" = silq ] && echo NarSil || echo NarSil-Q)
+echo "$out" | grep -qP "^#O\t1\tPlay $other instead\t"
+
+echo "== the status data has the minimum depth (the depth clock): 1 at the start"
+rm -rf "$work/data"
+run "${birth[@]}" @mindepth "${quit[@]}" | grep -qx 'depth 1 min 1'
+
+echo "== welcome: choosing the other game ends the game thread with switch-game, before any save is touched"
+rm -rf "$work/data"
+run @answer=2 | tail -1 | grep -qx 'state=2 exit="switch-game" saves=0'
+test ! -e "$work/data/save/Harness"
 
 echo "== knowledge: sections, objects with a description, unknown flavours named with their kind"
 rm -rf "$work/data"
