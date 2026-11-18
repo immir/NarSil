@@ -79,7 +79,11 @@ class MainActivity : ComponentActivity() {
     private var shareDumpPending = false
     private var pendingImport by mutableStateOf<Scum.Copy?>(null)
     private val importSave = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri?.let { scope.launch { pendingImport = runCatching { Scum.import(applicationContext, it) }.getOrNull() } }
+        uri?.let { scope.launch {
+            runCatching { Scum.import(applicationContext, it) }
+                .onSuccess { copy -> pendingImport = copy }
+                .onFailure { e -> Toast.makeText(this@MainActivity, e.message ?: "Can't read that file.", Toast.LENGTH_LONG).show() }
+        } }
     }
     private val scope = MainScope()
     private lateinit var settings: Settings

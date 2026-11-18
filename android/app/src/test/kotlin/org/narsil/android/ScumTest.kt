@@ -53,4 +53,13 @@ class ScumTest {
         Scum.keepRecent(save, dir, "P", t0)
         assertEquals(0, kept(dir).size)
     }
+
+    @Test fun onlyFilesStartingWithTheSavefileHeaderAreSavefiles() = withSave { save, _ ->
+        assertTrue(!Scum.isSavefile(save))
+        save.writeBytes("SaveUSILdescription".toByteArray())
+        assertTrue(Scum.isSavefile(save))
+        save.writeBytes("SaveV".toByteArray())
+        assertTrue(!Scum.isSavefile(save))
+        assertTrue(!Scum.isSavefile(File(save.parentFile, "missing")))
+    }
 }

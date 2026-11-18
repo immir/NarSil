@@ -59,7 +59,10 @@ struct RootView: View {
             }
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.data, .item]) { result in
-            if case .success(let url) = result { pendingImport = Saves.importSave(from: url) }
+            if case .success(let url) = result {
+                pendingImport = Saves.importSave(from: url)
+                if pendingImport == nil { say("That file is not a NarSil savefile.") }
+            }
         }
         .alert("Load this save?", isPresented: Binding(get: { pendingImport != nil }, set: { if !$0 { pendingImport = nil } }), presenting: pendingImport) { c in
             Button("Load and close the app", role: .destructive) { Saves.restore(c) }

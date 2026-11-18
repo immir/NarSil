@@ -101,7 +101,16 @@ enum Saves {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         let dest = dir.appendingPathComponent("\(GameLauncher.player)-\(stamp("yyyyMMdd-HHmmss"))")
-        return (try? fm.copyItem(at: url, to: dest)) != nil ? Copy(url: dest, auto: false) : nil
+        guard (try? fm.copyItem(at: url, to: dest)) != nil else { return nil }
+        guard isSavefile(dest) else { try? fm.removeItem(at: dest); return nil }
+        return Copy(url: dest, auto: false)
+    }
+
+    /// Every savefile starts "Save" + "USIL" (the game's savefile_magic and variant name, src/savefile.c).
+    static func isSavefile(_ url: URL) -> Bool {
+        guard let h = try? FileHandle(forReadingFrom: url) else { return false }
+        defer { try? h.close() }
+        return (try? h.read(upToCount: 8)) == Data("SaveUSIL".utf8)
     }
 
     /// Marks `copy` to be restored and closes the app; the copy is loaded when it is opened again.
@@ -115,7 +124,12 @@ enum Saves {
         let m = dir.appendingPathComponent(marker)
         guard let name = try? String(contentsOf: m, encoding: .utf8) else { return }
         let copy = dir.appendingPathComponent(name.trimmingCharacters(in: .whitespacesAndNewlines))
-        if fm.fileExists(atPath: copy.path) {
+        if isSavefile(copy) {
+            // The save being replaced is kept as the newest autosave, so a restore can be undone.
+            if isSavefile(saveFile), !sameBytes(saveFile, copy) {
+                try? fm.copyItem(at: saveFile, to: dir.appendingPathComponent("auto-\(GameLauncher.player)-\(stamp("yyyyMMdd-HHmmss"))"))
+                autosaves.dropFirst(autoKeep).forEach { try? fm.removeItem(at: $0.url) }
+            }
             try? fm.createDirectory(at: saveFile.deletingLastPathComponent(), withIntermediateDirectories: true)
             try? fm.removeItem(at: saveFile)
             try? fm.copyItem(at: copy, to: saveFile)

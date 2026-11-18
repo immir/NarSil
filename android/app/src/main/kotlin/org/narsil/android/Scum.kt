@@ -145,8 +145,13 @@ object Scum {
         checkNotNull(context.contentResolver.openInputStream(uri)) { "can't read $uri" }.use { input ->
             dest.outputStream().use { input.copyTo(it) }
         }
+        if (!isSavefile(dest)) { dest.delete(); throw IllegalArgumentException("That file is not a NarSil savefile.") }
         Copy(dest, "imported ${label(dest)}")
     }
+
+    /** Every savefile starts "Save" + "USIL" (the game's savefile_magic and variant name, src/savefile.c). */
+    fun isSavefile(file: File): Boolean =
+        file.isFile && runCatching { file.inputStream().use { it.readNBytes(8) }.contentEquals("SaveUSIL".toByteArray()) }.getOrDefault(false)
 
     /** Marks [copy] to be restored, and restarts the app to load it. */
     fun restore(context: Context, copy: Copy) {
@@ -161,7 +166,16 @@ object Scum {
         val marker = File(dir(context), MARKER)
         if (!marker.isFile) return
         val copy = File(dir(context), marker.readText().trim())
-        if (copy.isFile) copy.copyTo(saveFile(context).apply { parentFile?.mkdirs() }, overwrite = true)
+        if (isSavefile(copy)) {
+            /* The save being replaced is kept as the newest autosave, so a restore can be undone. */
+            val current = saveFile(context)
+            if (isSavefile(current) && !sameBytes(current, copy)) {
+                val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
+                runCatching { current.copyTo(File(dir(context), "auto-${GameLauncher.PLAYER}-$stamp"), overwrite = true) }
+                autosaves(context).drop(AUTO_KEEP).forEach { it.file.delete() }
+            }
+            copy.copyTo(current.apply { parentFile?.mkdirs() }, overwrite = true)
+        }
         marker.delete()
     }
 }
