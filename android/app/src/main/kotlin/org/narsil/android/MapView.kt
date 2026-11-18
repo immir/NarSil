@@ -105,7 +105,22 @@ class MapView(context: Context, private val state: GameState, private val router
         invalidate()
     }
 
+    /** The tracked foe as last drawn, and a brief red fill on its square when its health drops (no animation: on, then off). */
+    private var lastFoe: GameState.Foe? = null
+    private var flash: Pair<Int, Int>? = null
+    private val flashPaint = Paint().apply { color = Color.argb(115, 255, 60, 50) }
+
+    private fun noteFoe() {
+        val f = state.status.foe
+        val was = lastFoe
+        lastFoe = f
+        if (f == null || was == null || f.name != was.name || f.healthPct >= was.healthPct) return
+        flash = f.x to f.y
+        postDelayed({ flash = null; invalidate() }, FLASH_MS)
+    }
+
     private fun onMapChanged() {
+        noteFoe()
         overviewFrom?.let { from -> if (player != lastPlayer && lastPlayer.first >= 0) endOverview(from) }
         if (player != lastPlayer) {
             val first = lastPlayer.first < 0
@@ -189,6 +204,7 @@ class MapView(context: Context, private val state: GameState, private val router
         val tx = state.meta[N.META_TARGET_X]
         val ty = state.meta[N.META_TARGET_Y]
         if (tx >= 0 && aim == null) canvas.drawRect(ox + tx * cw, oy + ty * ch, ox + (tx + 1) * cw, oy + (ty + 1) * ch, targetPaint)
+        flash?.let { (fx, fy) -> canvas.drawRect(ox + fx * cw, oy + fy * ch, ox + (fx + 1) * cw, oy + (fy + 1) * ch, flashPaint) }
         val (px, py) = player
         canvas.drawRect(ox + px * cw, oy + py * ch, ox + (px + 1) * cw, oy + (py + 1) * ch, playerPaint)
     }
@@ -340,6 +356,7 @@ class MapView(context: Context, private val state: GameState, private val router
     }
 
     private companion object {
+        const val FLASH_MS = 180L
         const val DEFAULT_CELL_DP = 22f
         const val TILE_PX = 16
         const val MIN_CELL_DP = 8f

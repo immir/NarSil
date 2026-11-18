@@ -109,8 +109,25 @@ final class MapUIView: UIView {
         setNeedsDisplay()
     }
 
+    /// The tracked foe as last drawn, and a brief red fill on its square when its health drops (no animation: on, then off).
+    private var lastFoe: Foe?
+    private var flash: Point?
+    private static let flashFill = UIColor(red: 1, green: 60 / 255, blue: 50 / 255, alpha: 0.45)
+
+    private func noteFoe() {
+        let f = game.status.foe, was = lastFoe
+        lastFoe = f
+        guard let f, let was, f.name == was.name, f.healthPct < was.healthPct else { return }
+        let cell = Point(x: f.x, y: f.y)
+        flash = cell
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { [weak self] in
+            if self?.flash == cell { self?.flash = nil; self?.setNeedsDisplay() }
+        }
+    }
+
     /// Called whenever the game published a new map, path or prompt.
     func mapChanged() {
+        noteFoe()
         painter.setPalette(game.palette)
         if let from = overviewFrom, let last = lastPlayer, player != last { endOverview(from) }
         if player != lastPlayer {
@@ -232,6 +249,7 @@ final class MapUIView: UIView {
             let tx = Int(meta[NB.META_TARGET_X]), ty = Int(meta[NB.META_TARGET_Y])
             if tx >= 0 { outline(Self.gold, tx, ty) }
         }
+        if let f = flash { fill(Self.flashFill, f.x, f.y) }
         outline(Self.you, player.x, player.y, width: 1.5)
     }
 
