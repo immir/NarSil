@@ -2,7 +2,8 @@ name: Android port
 
 # The Android app (android/): the bridge under the host harness (ASan/UBSan), the unit tests (parsers on the
 # recorded fixtures, themes, scum policy), and a release APK.  The APK is signed with the debug key unless a
-# keystore.properties is provided, so it installs for testing but is not a store build.
+# keystore.properties is provided, so it installs for testing but is not a store build; the same build also
+# makes the app bundle (AAB) that Google Play takes.
 on:
   push:
     branches: [ android ]
@@ -21,25 +22,31 @@ jobs:
       run:
         working-directory: android
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
+          cache: gradle
 
       - name: NDK and CMake (the runner's own Android SDK)
         run: |
           echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
-          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "ndk;26.1.10909125" "cmake;3.22.1" > /dev/null
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "ndk;26.1.10909125" "cmake;3.22.1" "platforms;android-35" > /dev/null
 
       - name: Host harness (ASan/UBSan)
         run: ./host-test.sh
 
-      - name: Unit tests and release APK
-        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleRelease
+      - name: Unit tests, release APK and app bundle
+        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleRelease :app:bundleRelease
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: NarSil-android.apk
           path: android/app/build/outputs/apk/release/app-release.apk
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: NarSil-android.aab
+          path: android/app/build/outputs/bundle/release/app-release.aab

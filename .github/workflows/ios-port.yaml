@@ -20,7 +20,7 @@ jobs:
       run:
         working-directory: ios
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Tools
         run: |
@@ -54,13 +54,13 @@ jobs:
           (cd build/ipa && zip -qry ../NarSil.ipa Payload)
           ls -l build/NarSil.ipa
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: NarSil-ios.ipa
           path: ios/build/NarSil.ipa
           retention-days: 14
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: build-logs

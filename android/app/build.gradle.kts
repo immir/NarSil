@@ -18,13 +18,13 @@ val syncGameData by tasks.registering(Sync::class) {
 
 android {
     namespace = "org.narsil.android"
-    compileSdk = 34
+    compileSdk = 35
     ndkVersion = "26.1.10909125"
 
     defaultConfig {
         applicationId = "org.narsil.android"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 2
         versionName = "0.2"
         ndk {
