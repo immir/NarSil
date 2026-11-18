@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -23,16 +25,32 @@ android {
         applicationId = "org.narsil.android"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1-spike"
+        versionCode = 2
+        versionName = "0.2"
         ndk {
             abiFilters += listOf("arm64-v8a", "x86_64")
         }
     }
 
+    /* Release signing from keystore.properties (not in git: storeFile, storePassword, keyAlias, keyPassword);
+       without it a release build is signed with the debug key, so it still installs for testing. */
+    val keystore = rootProject.file("keystore.properties").takeIf { it.isFile }
+        ?.let { f -> Properties().apply { f.inputStream().use { load(it) } } }
+    signingConfigs {
+        if (keystore != null) create("release") {
+            storeFile = rootProject.file(keystore.getProperty("storeFile"))
+            storePassword = keystore.getProperty("storePassword")
+            keyAlias = keystore.getProperty("keyAlias")
+            keyPassword = keystore.getProperty("keyPassword")
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
 
