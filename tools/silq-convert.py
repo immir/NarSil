@@ -4,6 +4,7 @@
   silq-convert.py monster SILQ_EDIT_DIR NARSIL_GAMEDATA_DIR            > monster.txt
   silq-convert.py monster SILQ_EDIT_DIR NARSIL_GAMEDATA_DIR --diff     (field differences on shared names)
 
+  silq-convert.py object SILQ_EDIT_DIR NARSIL_GAMEDATA_DIR tools/silq-new-objects.txt > object.txt
   silq-convert.py tiles NARSIL_GRAF_PREF LIB_SILQ_MONSTER_TXT > graf-mcm.prf   (monster tile lines for NarSil-Q's monsters)
 
 Lines NarSil has and Sil-Q's format cannot express (drop:, drop-artifact:, song:, message-*:) are kept from
@@ -148,7 +149,56 @@ def tiles(prf, names):
     return "\n".join(kept[:at] + extra + kept[at:])
 
 
+def silq_object_numbers(lines):
+    """Sil-Q object lines -> the NarSil lines for depth, weight, cost, attack, defence and alloc."""
+    w = next((l[2:].split(":") for l in lines if l.startswith("W:")), None)
+    p = next((l[2:].split(":") for l in lines if l.startswith("P:")), None)
+    a = [x for l in lines if l.startswith("A:") for x in l[2:].split(":")]
+    out = []
+    if w and len(w) >= 4:
+        out += [("depth", w[0]), ("weight", w[2]), ("cost", w[3])]
+    if p and len(p) >= 4:
+        out += [("attack", f"{int(p[0])}:{p[1]}"), ("defence", f"{int(p[2])}:{p[3]}")]
+    out += [("alloc", x.strip().replace("/", ":")) for x in a]
+    return out
+
+
+def patch_objects(silq_path, narsil_path, extra_path):
+    """NarSil's object.txt with Sil-Q's numbers (depth, weight, cost, attack, defence, allocation) on shared
+    objects; NarSil-only objects stop being generated; tools/silq-new-objects.txt is appended.
+    Effects, flags and values stay NarSil's: Sil-Q hard-codes them in C, NarSil keeps them in data."""
+    sq = read_entries(silq_path, r"^N:\d+:(.*)")
+    out, entry, name = [], [], None
+
+    def flush():
+        body = list(entry)
+        tail = []
+        while body and (not body[-1].strip() or body[-1].startswith("#")):
+            tail.insert(0, body.pop())
+        if name in sq:
+            nums = [(k, v) for k, v in silq_object_numbers(sq[name])
+                    if k == "alloc" or any(l.startswith(k + ":") for l in body)]
+            have = {k for k, _ in nums}
+            body = [l for l in body if l.partition(":")[0] not in have]
+            at = next((i for i, l in enumerate(body) if l.partition(":")[0] in ("effect", "charges", "flags", "values", "brand", "slay", "special", "msg", "desc", "pval", "time", "dice", "expr", "thrown-effect")), len(body))
+            body[at:at] = [f"{k}:{v}" for k, v in nums]
+        elif name is not None:
+            body = [l for l in body if not l.startswith("alloc:")]
+        out.extend(body + tail)
+
+    for line in open(narsil_path).read().split("\n"):
+        if line.startswith("name:"):
+            flush()
+            entry, name = [], line[5:].strip()
+        entry.append(line)
+    flush()
+    return "\n".join(out).rstrip() + "\n\n" + open(extra_path).read()
+
+
 def main():
+    if len(sys.argv) == 5 and sys.argv[1] == "object":
+        print(patch_objects(sys.argv[2] + "/object.txt", sys.argv[3] + "/object.txt", sys.argv[4]), end="")
+        return
     if len(sys.argv) == 4 and sys.argv[1] == "tiles":
         print(tiles(sys.argv[2], {l.split(":", 1)[1].strip() for l in open(sys.argv[3]) if l.startswith("name:")}), end="")
         return
