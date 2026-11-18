@@ -912,6 +912,12 @@ int object_difficulty(struct object *obj, struct smithing_cost *smithing_cost)
 		smithing_cost->drain += diff - drain;
 	}
 
+	/* 'Expertise' negates every experience and stat cost of forging */
+	if (player_active_ability(player, "Expertise")) {
+		smithing_cost->exp = 0;
+		for (i = 0; i < STAT_MAX; i++) smithing_cost->stat[i] = 0;
+	}
+
     /* Determine which additional smithing abilities would be required */
     for (i = 0; i < MAX_SMITHING_TVALS; i++) {
         if (smithing_tvals[i].tval == obj->tval) {
@@ -1600,6 +1606,9 @@ void do_cmd_smith_aux(bool flush)
 		} else {
 			/* Get the number of turns required */
 			turns = MAX(10, object_difficulty(obj, &cost) * 10);
+
+			/* 'Expertise' halves the time taken */
+			if (player_active_ability(player, "Expertise")) turns = MAX(5, turns / 2);
 
 			/* Also set the smithing leftover counter
 			 * (to allow you to resume if interrupted) */

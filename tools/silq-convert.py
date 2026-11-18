@@ -238,7 +238,7 @@ class Tables:
             i = next((l[2:].split(":") for l in lines if l.startswith("I:")), None)
             if i:
                 self.abilities[(int(i[0]), int(i[1]))] = name
-        self.narsil_abilities = {l.split(":", 1)[1].strip() for l in open(f"{gamedata}/ability.txt") if l.startswith("name:")}
+        self.narsil_abilities = {n for n in read_entries(f"{silq}/ability.txt", r"^N:\d+:(.*)")}   # NarSil-Q has Sil-Q's whole tree
         self.of_flags = {m.group(1) for l in open("src/list-object-flags.h") for m in [re.match(r"OF\((\w+)", l)] if m}
         self.of_flags |= {"ENCHANTABLE", "THROWING", "AXE", "POLEARM", "TWO_HANDED", "MITHRIL", "DANGER", "SHARPNESS", "SHARPNESS2",
                           "AGGRAVATE", "FREE_ACT", "SEE_INVIS", "REGEN", "SLOW_DIGEST", "SPEED", "RADIANCE", "VAMPIRIC", "HAUNTED",
