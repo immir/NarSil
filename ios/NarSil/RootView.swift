@@ -23,6 +23,7 @@ struct RootView: View {
     @AppStorage("statusScale") private var statusScale = 1.0
     @AppStorage("theme") private var theme = 0
     @AppStorage("seenTips") private var seenTips = false
+    @State private var lastHp = 0
     @AppStorage("itemDetails") private var itemDetails = false
     @AppStorage("messageLines") private var messageLines = 3
     @AppStorage("dpad") private var pad = PadMode.docked.rawValue
@@ -70,6 +71,11 @@ struct RootView: View {
         .onChange(of: tiles) { Native.setTiles($0) }
         .onChange(of: itemDetails) { Native.setItemDetails($0) }
         .onChange(of: game.status.lowHp) { low in if low && lowHealthBuzz { UINotificationFeedbackGenerator().notificationOccurred(.warning) } }
+        .onChange(of: game.status.hp) { hp in
+            /* A short pulse when one turn costs a fifth or more of maximum health. */
+            if lowHealthBuzz, game.status.maxHp > 0, lastHp - hp >= max(1, game.status.maxHp / 5) { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
+            lastHp = hp
+        }
     }
 
     private var portrait: some View {

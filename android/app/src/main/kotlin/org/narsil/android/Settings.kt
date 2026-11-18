@@ -206,7 +206,7 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Label("Buzz when health is low")
-                        Hint("Below the game's hitpoint warning (Game options → Hitpoint warning).")
+                        Hint("Below the game's hitpoint warning (Game options → Hitpoint warning), and a short pulse when one turn costs a fifth of your health.")
                     }
                     Switch(settings.lowHealthBuzz, { settings.lowHealthBuzz = it })
                 }

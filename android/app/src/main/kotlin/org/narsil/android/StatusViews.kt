@@ -80,6 +80,7 @@ internal fun PanelButton() {
 internal fun StatusStrip(state: GameState, stacked: Boolean, buzzOnLowHealth: Boolean) {
     val s = state.status
     LowHealthBuzz(s.lowHp && buzzOnLowHealth)
+    if (buzzOnLowHealth) BigHitBuzz(s.hp, s.maxHp)
     val hpColour = if (s.lowHp) Color(0xFFFF3B30) else Color(0xFFD04040)
     Column(Modifier.fillMaxWidth().background(Color(0xFF141414)).clickable { NarSilNative.nativeRequestAction(NarSilNative.ACT_CHARACTER) }
                .padding(horizontal = 8.dp, vertical = 4.dp)) {
@@ -108,11 +109,21 @@ internal fun LowHealthBuzz(low: Boolean) {
     }
 }
 
-private fun buzz(context: Context) {
+/** One short pulse when a single turn costs a fifth or more of maximum health. */
+@Composable
+internal fun BigHitBuzz(hp: Int, maxHp: Int) {
+    val context = LocalContext.current
+    var was by remember { mutableStateOf(hp) }
+    LaunchedEffect(hp) {
+        if (maxHp > 0 && was - hp >= maxOf(1, maxHp / 5)) buzz(context, longArrayOf(0, 120))
+        was = hp
+    }
+}
+
+private fun buzz(context: Context, pattern: LongArray = longArrayOf(0, 70, 90, 70)) {
     val vibrator = if (Build.VERSION.SDK_INT >= 31) context.getSystemService(VibratorManager::class.java)?.defaultVibrator
                    else @Suppress("DEPRECATION") context.getSystemService(Vibrator::class.java)
     if (vibrator?.hasVibrator() != true) return
-    val pattern = longArrayOf(0, 70, 90, 70)
     if (Build.VERSION.SDK_INT >= 26) vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
     else @Suppress("DEPRECATION") vibrator.vibrate(pattern, -1)
 }

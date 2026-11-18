@@ -80,7 +80,7 @@ struct SettingsSheet: View {
                                + (autoMoreEnabled ? "" : "  Change it from the map, or in Game options → User interface."),
                                Binding(get: { autoMore }, set: onAutoMore), enabled: autoMoreEnabled)
                         toggle("Item details in the pack", "Says what an ego item gives in general, and what each ability an item grants does, when you open it in the pack.", $itemDetails)
-                        toggle("Buzz when health is low", "Below the game's hitpoint warning (Game options → Hitpoint warning).", $lowHealthBuzz)
+                        toggle("Buzz when health is low", "Below the game's hitpoint warning (Game options → Hitpoint warning), and a short pulse when one turn costs a fifth of your health.", $lowHealthBuzz)
                         toggle("Save scumming (for testing)", "Adds Scum (keep a copy of your save) and Restore scum save to the ☰ menu, and Restore to the death screen. Restore also lists the last three autosaves, at least five minutes apart.", $scumming)
                         card(VStack(alignment: .leading, spacing: 6) {
                             Text("Saves").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
