@@ -5,9 +5,6 @@ name: Android port
 # keystore.properties is provided, so it installs for testing but is not a store build; the same build also
 # makes the app bundle (AAB) that Google Play takes.
 on:
-  push:
-    branches: [ android ]
-    paths: [ 'android/**', 'bridge/**', 'src/**', 'lib/**', 'lib-silq/**', 'ui/**', 'tools/**', '.github/workflows/android-port.yaml' ]
   workflow_dispatch:
 
 concurrency:

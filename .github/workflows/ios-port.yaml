@@ -3,9 +3,6 @@ name: iOS port
 # The native SwiftUI app (ios/), built without owning a Mac: core + bridge xcframework, the app and its tests on the
 # simulator, and an unsigned .ipa for sideloading.  Not the same as upstream's SDL2 build.
 on:
-  push:
-    branches: [ android ]
-    paths: [ 'ios/**', 'bridge/**', 'src/**', 'lib/**', '.github/workflows/ios-port.yaml' ]
   workflow_dispatch:
 
 concurrency:
