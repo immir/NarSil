@@ -112,6 +112,26 @@ let panelIconBuilders: [(inout Path) -> Void] = [
         $0.addCurve(to: CGPoint(x: 8, y: 15), control1: CGPoint(x: 6, y: 15.8954), control2: CGPoint(x: 6.8954, y: 15))
         $0.closeSubpath()
     },
+    { // panel
+        $0.move(to: CGPoint(x: 7, y: 4.5))
+        $0.addLine(to: CGPoint(x: 17, y: 4.5))
+        $0.addCurve(to: CGPoint(x: 20, y: 7.5), control1: CGPoint(x: 18.7, y: 4.5), control2: CGPoint(x: 20, y: 5.8))
+        $0.addLine(to: CGPoint(x: 20, y: 16.5))
+        $0.addCurve(to: CGPoint(x: 17, y: 19.5), control1: CGPoint(x: 20, y: 18.2), control2: CGPoint(x: 18.7, y: 19.5))
+        $0.addLine(to: CGPoint(x: 7, y: 19.5))
+        $0.addCurve(to: CGPoint(x: 4, y: 16.5), control1: CGPoint(x: 5.3, y: 19.5), control2: CGPoint(x: 4, y: 18.2))
+        $0.addLine(to: CGPoint(x: 4, y: 7.5))
+        $0.addCurve(to: CGPoint(x: 7, y: 4.5), control1: CGPoint(x: 4, y: 5.8), control2: CGPoint(x: 5.3, y: 4.5))
+        $0.closeSubpath()
+        $0.move(to: CGPoint(x: 14, y: 4.5))
+        $0.addLine(to: CGPoint(x: 14, y: 19.5))
+        $0.move(to: CGPoint(x: 16.5, y: 9))
+        $0.addLine(to: CGPoint(x: 17.5, y: 9))
+        $0.move(to: CGPoint(x: 16.5, y: 12))
+        $0.addLine(to: CGPoint(x: 17.5, y: 12))
+        $0.move(to: CGPoint(x: 16.5, y: 15))
+        $0.addLine(to: CGPoint(x: 17.5, y: 15))
+    },
 ]
 
 struct PanelIcon: Shape {

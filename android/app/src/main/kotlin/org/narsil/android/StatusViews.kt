@@ -72,7 +72,7 @@ internal fun PanelButton() {
     Box(Modifier.padding(4.dp).size(40.dp).background(Color(0xFF26262B), RoundedCornerShape(10.dp))
             .clickable { NarSilNative.nativeRequestAction(NarSilNative.ACT_PANEL) },
         contentAlignment = Alignment.Center) {
-        Text("@", color = Color(0xFFF3D27A), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace)
+        PanelGlyph(PANEL_ICON_PATHS.last(), Color(0xFFF3D27A), Modifier.size(26.dp))
     }
 }
 

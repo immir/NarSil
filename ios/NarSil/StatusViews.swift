@@ -42,7 +42,8 @@ struct MessageStrip: View {
             .contentShape(Rectangle())
             .onTapGesture { if more { Native.pushKey(Keys.enter) } else { onMessages() } }
             Button(action: onPanel) {
-                Text("@").font(.system(size: 20, weight: .semibold, design: .monospaced))
+                PanelIcon(index: 7).stroke(style: StrokeStyle(lineWidth: 1.8 * 26 / 24, lineCap: .round, lineJoin: .round))
+                    .frame(width: 26, height: 26)
                     .foregroundColor(Color(red: 0xF3 / 255, green: 0xD2 / 255, blue: 0x7A / 255))
                     .frame(width: 40, height: 40)
                     .background(Color(red: 0x26 / 255, green: 0x26 / 255, blue: 0x2B / 255), in: RoundedRectangle(cornerRadius: 10))

@@ -202,11 +202,7 @@ private fun Modifier.swipeBetweenTabs(tab: Int, onAnswer: (Int) -> Unit) = point
 private fun IconTab(icon: String, name: String, showName: Boolean, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val tint = if (selected) Color(0xFFF3D27A) else Color(0xFF9A9AA0)
     Column(modifier.clickable(onClick = onClick).padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        val path = remember(icon) { PathParser().parsePathString(icon).toPath() }
-        Canvas(Modifier.size(24.dp).semantics { contentDescription = name }) {
-            val s = size.minDimension / 24f
-            scale(s, s, pivot = Offset.Zero) { drawPath(path, tint, style = Stroke(1.8f, cap = StrokeCap.Round, join = StrokeJoin.Round)) }
-        }
+        PanelGlyph(icon, tint, Modifier.size(24.dp).semantics { contentDescription = name })
         if (showName) Text(name, color = tint, fontSize = with(LocalDensity.current) { 8.dp.toSp() }, maxLines = 1, softWrap = false, modifier = Modifier.padding(top = 2.dp))
         Box(Modifier.padding(top = 6.dp).fillMaxWidth().height(2.dp).background(if (selected) tint else Color.Transparent))
     }
@@ -236,5 +232,15 @@ fun EdgeSwipeHandle(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.CenterEnd,
     ) {
         Box(Modifier.size(width = 4.dp, height = 44.dp).background(Color(0x55FFFFFF), RoundedCornerShape(2.dp)))
+    }
+}
+
+/** One of the generated icons (see PanelIcons.kt), stroked in [tint]. */
+@Composable
+internal fun PanelGlyph(icon: String, tint: Color, modifier: Modifier) {
+    val path = remember(icon) { PathParser().parsePathString(icon).toPath() }
+    Canvas(modifier) {
+        val s = size.minDimension / 24f
+        scale(s, s, pivot = Offset.Zero) { drawPath(path, tint, style = Stroke(1.8f, cap = StrokeCap.Round, join = StrokeJoin.Round)) }
     }
 }

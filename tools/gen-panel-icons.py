@@ -22,7 +22,9 @@ ICONS = [
                   "C6 11.5 4.5 10 3.5 8 Z M17 8 L21 8 C21 9.8 19.5 10.8 17.5 10.8"),
     ("options",   "M4 7 L7 7 M11 7 L20 7 " + circle(9, 7, 2) + " M4 12 L13 12 M17 12 L20 12 " + circle(15, 12, 2) +
                   " M4 17 L6 17 M10 17 L20 17 " + circle(8, 17, 2)),
-]
+    ("panel",     "M7 4.5 L17 4.5 C18.7 4.5 20 5.8 20 7.5 L20 16.5 C20 18.2 18.7 19.5 17 19.5 L7 19.5 C5.3 19.5 4 18.2 4 16.5 L4 7.5 C4 5.8 5.3 4.5 7 4.5 Z "
+                  "M14 4.5 L14 19.5 M16.5 9 L17.5 9 M16.5 12 L17.5 12 M16.5 15 L17.5 15"),
+]  # the last one is the button that opens the panel, not a tab
 
 def segments(d):
     return [(m.group(1), [float(x) for x in m.group(2).split()])
