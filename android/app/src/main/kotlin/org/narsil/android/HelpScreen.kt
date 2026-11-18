@@ -3,7 +3,14 @@ package org.narsil.android
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -154,5 +161,29 @@ private fun HelpFile(text: String) {
             }
         }
         item { Text(" ", modifier = Modifier.padding(bottom = 16.dp)) }
+    }
+}
+
+/** Shown once, the first time the map appears: the few gestures that matter most, and a way into Help. */
+@Composable
+fun TipsCard(onHelp: () -> Unit, onDismiss: () -> Unit) {
+    Box(Modifier.fillMaxSize().background(Color(0x99000000))
+            .clickable(remember { MutableInteractionSource() }, indication = null) {},
+        contentAlignment = Alignment.Center) {
+        Surface(shape = RoundedCornerShape(16.dp), color = Color(0xFF1C1C1E), modifier = Modifier.padding(24.dp)) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(FIRST_RUN_TITLE, color = GOLD, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                FIRST_RUN_TIPS.forEach { t ->
+                    Row {
+                        Text("•  ", color = SUB, fontSize = 15.sp)
+                        Text(t, color = TEXT, fontSize = 15.sp, lineHeight = 20.sp)
+                    }
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                    TextButton(onClick = onHelp) { Text("Open Help") }
+                    Button(onClick = onDismiss) { Text("Got it") }
+                }
+            }
+        }
     }
 }

@@ -55,3 +55,13 @@ internal val TOUCH_GUIDE: List<Pair<String, List<String>>> = listOf(
         "For testing, Options → Save scumming adds Scum (keep a copy) and Restore to ☰; Restore also offers the last three autosaves, kept at least five minutes apart.",
     ),
 )
+
+/** The tips card shown once, the first time the map appears (ui/first-run.txt). */
+internal const val FIRST_RUN_TITLE = "Welcome to NarSil"
+internal val FIRST_RUN_TIPS: List<String> = listOf(
+    "Tap a square next to you to step there or attack; tap a distant one to see a path, and tap it again to walk.",
+    "Long-press anything on the map to find out what it is.",
+    "Swipe on the map or use the d-pad to move; hold an arrow to run.",
+    "The panel button at the right of the messages opens your pack, character, skills, abilities and more.",
+    "☰ holds every other command, the app's options, and Help.",
+)

@@ -67,6 +67,7 @@ class Settings(context: Context) {
     private val msgLines = mutableIntStateOf(prefs.getInt("messageLines", 3))
     private val panelTabStyle = mutableIntStateOf(prefs.getInt("panelTabs", TABS_ICONS_AND_NAMES))
     private val themeChoice = mutableIntStateOf(prefs.getInt("theme", 0))
+    private val tipsSeen = mutableStateOf(prefs.getBoolean("seenTips", false))
 
     var buttonScale: Float get() = buttons.floatValue; set(v) { buttons.floatValue = v; save("buttonScale", v) }
     var messageScale: Float get() = messageText.floatValue; set(v) { messageText.floatValue = v; save("messageScale", v) }
@@ -84,6 +85,8 @@ class Settings(context: Context) {
     var lowHealthBuzz: Boolean get() = buzz.value; set(v) { buzz.value = v; prefs.edit().putBoolean("lowHealthBuzz", v).apply() }
     /** How the panel's tabs are drawn: [TABS_ICONS_AND_NAMES], [TABS_ICONS] or [TABS_NAMES] (a scrolling strip). */
     var panelTabs: Int get() = panelTabStyle.intValue; set(v) { panelTabStyle.intValue = v; prefs.edit().putInt("panelTabs", v).apply() }
+    /** The first-run tips card has been dismissed. */
+    var seenTips: Boolean get() = tipsSeen.value; set(v) { tipsSeen.value = v; prefs.edit().putBoolean("seenTips", v).apply() }
     /** Index into [Theme.ALL]. */
     var theme: Int get() = themeChoice.intValue; set(v) { themeChoice.intValue = v; prefs.edit().putInt("theme", v).apply() }
     /** How many recent messages the strip shows (2..5). */

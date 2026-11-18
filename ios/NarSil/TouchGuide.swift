@@ -54,3 +54,13 @@ let touchGuide: [(String, [String])] = [
         "Restoring or importing a save closes NarSil; open it again to play from that save.",
     ]),
 ]
+
+/// The tips card shown once, the first time the map appears (ui/first-run.txt).
+let firstRunTitle = "Welcome to NarSil"
+let firstRunTips: [String] = [
+    "Tap a square next to you to step there or attack; tap a distant one to see a path, and tap it again to walk.",
+    "Long-press anything on the map to find out what it is.",
+    "Swipe on the map or use the d-pad to move; hold an arrow to run.",
+    "The panel button at the right of the messages opens your pack, character, skills, abilities and more.",
+    "☰ holds every other command, the app's options, and Help.",
+]

@@ -22,6 +22,7 @@ struct RootView: View {
     @AppStorage("itemScale") private var itemScale = 1.0
     @AppStorage("statusScale") private var statusScale = 1.0
     @AppStorage("theme") private var theme = 0
+    @AppStorage("seenTips") private var seenTips = false
     @AppStorage("itemDetails") private var itemDetails = false
     @AppStorage("messageLines") private var messageLines = 3
     @AppStorage("dpad") private var pad = PadMode.docked.rawValue
@@ -171,6 +172,9 @@ struct RootView: View {
                           onSendLogs: { ShareSheet.present(Saves.reportFiles) }) { showSettings = false } }
         if showScum { ScumSheet { showScum = false } }
         if showMessages { MessagesSheet(game: game) { showMessages = false }.textScale(messageScale) }
+        if !seenTips && game.mapMode && game.atPrompt && game.prompt == nil && game.panelTab < 0 && game.info == nil {
+            TipsCard(onHelp: { seenTips = true; showHelp = true }) { seenTips = true }
+        }
         if showHelp { HelpView { showHelp = false } }
     }
 

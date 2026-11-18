@@ -224,6 +224,8 @@ class MainActivity : ComponentActivity() {
                     dismissButton = { TextButton(onClick = { copy.file.delete(); pendingImport = null }) { Text("Cancel") } },
                 )
             }
+            if (!settings.seenTips && state.mapMode && state.atPrompt && state.prompt == null && state.panelTab < 0 && state.info == null)
+                TipsCard(onHelp = { settings.seenTips = true; showHelp = true }) { settings.seenTips = true }
             if (showRest) RestSheet({ showRest = false }) { NarSilNative.nativeRequestRest(it) }
             if (showHelp) {
                 DisposableEffect(Unit) {

@@ -123,3 +123,30 @@ enum HelpFile {
         return out.filter { if case .entry(_, "-") = $0 { return false } else { return true } }
     }
 }
+
+/// Shown once, the first time the map appears: the few gestures that matter most, and a way into Help.
+struct TipsCard: View {
+    let onHelp: () -> Void
+    let dismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.6).ignoresSafeArea()
+            VStack(alignment: .leading, spacing: 10) {
+                Text(firstRunTitle).scaledFont(20, weight: .semibold).foregroundColor(Palette.gold)
+                ForEach(firstRunTips, id: \.self) { t in
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("•").foregroundColor(Palette.sub)
+                        Text(t).scaledFont(15).foregroundColor(Palette.body).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                HStack(spacing: 12) {
+                    Spacer()
+                    Button("Open Help", action: onHelp)
+                    Button("Got it", action: dismiss).buttonStyle(.borderedProminent)
+                }.padding(.top, 4)
+            }
+            .padding(20).background(Palette.sheet, in: RoundedRectangle(cornerRadius: 16)).padding(24)
+        }
+    }
+}
