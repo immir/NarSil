@@ -31,6 +31,7 @@ final class GameState: ObservableObject {
     @Published private(set) var panelTab = -1
     @Published private(set) var messages: [Message] = []
     @Published var info: Info?
+    private var saveCount: UInt64?
     /// The game's colours, 0xRRGGBB by Angband colour index; refreshed with every map frame.
     private(set) var palette = [UInt32]()
     /// The textui's top line: a prompt the native UI does not cover, or -more-.
@@ -81,6 +82,11 @@ final class GameState: ObservableObject {
 
     func poll() {
         pollTerm()
+        let saves = Native.saveCount
+        if saves != saveCount {
+            if saveCount != nil { DispatchQueue.global(qos: .utility).async { Saves.noteSave() } }
+            saveCount = saves
+        }
         var changed = pollMap()
         let pg = Native.pathGeneration
         if pg != pathGen { pathGen = pg; pathPairs = Native.path(into: &path); changed = true }

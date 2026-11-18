@@ -12,6 +12,11 @@ struct RootView: View {
     @State private var showMessages = false
     @State private var showSettings = false
     @State private var showHelp = false
+    @State private var showScum = false
+    @State private var importing = false
+    @State private var pendingImport: Saves.Copy?
+    @State private var toast: String?
+    @AppStorage("scumming") private var scumming = false
     @AppStorage("itemDetails") private var itemDetails = false
     @AppStorage("messageLines") private var messageLines = 3
     @AppStorage("dpad") private var pad = PadMode.docked.rawValue
@@ -32,9 +37,22 @@ struct RootView: View {
                 promptLayer
                 PanelLayer(game: game, abilities: abilities, onAppSettings: { showSettings = true })
                 infoLayer
+                if let toast {
+                    Text(toast).font(.system(size: 14)).foregroundColor(.white).padding(.horizontal, 16).padding(.vertical, 10)
+                        .background(Color(rgb: 0x333338), in: Capsule()).padding(.bottom, 120).allowsHitTesting(false)
+                }
                 if showMore { sheet(MoreSheet(actions: more, dismiss: { showMore = false })) }
                 if showRest { sheet(RestSheet(dismiss: { showRest = false })) }
             }
+        }
+        .fileImporter(isPresented: $importing, allowedContentTypes: [.data, .item]) { result in
+            if case .success(let url) = result { pendingImport = Saves.importSave(from: url) }
+        }
+        .alert("Load this save?", isPresented: Binding(get: { pendingImport != nil }, set: { if !$0 { pendingImport = nil } }), presenting: pendingImport) { c in
+            Button("Load and close the app", role: .destructive) { Saves.restore(c) }
+            Button("Cancel", role: .cancel) { try? FileManager.default.removeItem(at: c.url) }
+        } message: { _ in
+            Text("NarSil closes; open it again to play from the imported save. Anything not exported or scummed from the current game is lost.")
         }
         .onAppear { Native.setTiles(tiles); Native.setItemDetails(itemDetails); game.start() }
         .onChange(of: tiles) { Native.setTiles($0) }
@@ -75,12 +93,19 @@ struct RootView: View {
     private var bar: [BarAction] { contextActions(game.status) + coreActions(game.status) { showRest = true } }
     private var more: [BarAction] {
         moreActions(game.status, messages: { showMore = false; showMessages = true }, toggleMap: { map.toggleOverview() }, toggleTiles: { tiles.toggle(); Native.setTiles(tiles) }, tilesOn: tiles, help: { showHelp = true })
+            + (scumming ? [BarAction(label: "Scum", run: { Task { say(await Saves.take()) } }),
+                           BarAction(label: "Restore scum save", run: { showScum = true })] : [])
+    }
+
+    private func say(_ line: String) {
+        toast = line
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { if toast == line { toast = nil } }
     }
 
     /// The prompt's own screen, over the map; aim and direction prompts live in `promptBar` so the map stays usable.
     @ViewBuilder private var promptLayer: some View {
         switch game.prompt {
-        case .screen(let p)?: ScreenSheet(p: p, answer: Native.answer)
+        case .screen(let p)?: ScreenSheet(p: p, answer: Native.answer, onScum: scumming ? { showScum = true } : nil)
         case .items(let p)?: ItemSheet(prompt: p, colour: { game.colour($0) }, answer: Native.answer)
         case .check(let q)?: CheckDialog(question: q, answer: Native.answer)
         case .choice(let p)?: ChoiceSheet(prompt: p, answer: Native.answer)
@@ -113,7 +138,11 @@ struct RootView: View {
         }
         if showSettings { SettingsSheet(messageLines: $messageLines, panelTabs: $panelTabs, tiles: $tiles, pad: $pad, swipeRuns: $swipeRuns,
                           autoMore: game.status.autoMore, autoMoreEnabled: game.atPrompt && game.prompt == nil, onAutoMore: Native.setAutoMore,
-                          itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz) { showSettings = false } }
+                          itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, scumming: $scumming,
+                          onExportSave: { Task { if let url = await Saves.export() { ShareSheet.present([url]) } else { say(Saves.cantSave) } } },
+                          onImportSave: { importing = true },
+                          onSendLogs: { ShareSheet.present(Saves.reportFiles) }) { showSettings = false } }
+        if showScum { ScumSheet { showScum = false } }
         if showMessages { MessagesSheet(game: game) { showMessages = false } }
         if showHelp { HelpView { showHelp = false } }
     }

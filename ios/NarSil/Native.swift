@@ -9,7 +9,7 @@ enum Native {
             dataDir.withCString { data in
                 player.withCString { name in
                     var cfg = nb_config(lib_dir: lib, data_dir: data, player_name: name, cols: Int32(cols), rows: Int32(rows),
-                                        log: { msg in if let msg { NSLog("narsil: %@", String(cString: msg)) } })
+                                        log: { msg in if let msg { AppLog.append(String(cString: msg)) } })
                     return nb_start(&cfg)
                 }
             }

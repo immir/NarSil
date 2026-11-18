@@ -145,7 +145,7 @@ private struct PanelContent: View {
         case .abilities(let p): AbilitiesView(prompt: p, nav: abilities, answer: answer)
         case .pack(let p): PackView(prompt: p, colour: { game.colour($0) }, answer: answer)
         case .character(let sections):
-            CharacterView(game: game, sections: sections, actions: [("Rename", { answer(NB.CHARACTER_RENAME) }), ("Share dump", { answer(NB.CHARACTER_DUMP) })])
+            CharacterView(game: game, sections: sections, actions: [("Rename", { answer(NB.CHARACTER_RENAME) }), ("Share dump", { Saves.shareDump(answer) })])
         case .knowledge(let p): KnowledgeView(prompt: p, colour: { game.colour($0) }, answer: answer)
         case .smith(let p): SmithView(prompt: p, answer: answer)
         case .options(let p): OptionsView(prompt: p, onAppSettings: onAppSettings, answer: answer)

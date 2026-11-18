@@ -16,6 +16,10 @@ struct SettingsSheet: View {
     let onAutoMore: (Bool) -> Void
     @Binding var itemDetails: Bool
     @Binding var lowHealthBuzz: Bool
+    @Binding var scumming: Bool
+    let onExportSave: () -> Void
+    let onImportSave: () -> Void
+    let onSendLogs: () -> Void
     let dismiss: () -> Void
 
     var body: some View {
@@ -40,10 +44,29 @@ struct SettingsSheet: View {
                                Binding(get: { autoMore }, set: onAutoMore), enabled: autoMoreEnabled)
                         toggle("Item details in the pack", "Says what an ego item gives in general, and what each ability an item grants does, when you open it in the pack.", $itemDetails)
                         toggle("Buzz when health is low", "Below the game's hitpoint warning (Game options → Hitpoint warning).", $lowHealthBuzz)
+                        toggle("Save scumming (for testing)", "Adds Scum (keep a copy of your save) and Restore scum save to the ☰ menu, and Restore to the death screen. Restore also lists the last three autosaves, at least five minutes apart.", $scumming)
+                        card(VStack(alignment: .leading, spacing: 6) {
+                            Text("Saves").font(.system(size: 15)).foregroundColor(Color(rgb: 0xE6E6EA))
+                            Text("Export sends a copy of your save to another app (Files, mail…). Import loads one back, replacing the current game.").font(.system(size: 12)).foregroundColor(Palette.sub)
+                            HStack(spacing: 8) {
+                                button("Export save") { dismiss(); onExportSave() }
+                                button("Import save…") { dismiss(); onImportSave() }
+                            }
+                        })
+                        card(VStack(alignment: .leading, spacing: 6) {
+                            Text("Problems").font(.system(size: 15)).foregroundColor(Color(rgb: 0xE6E6EA))
+                            Text("Send logs shares the app's log, your save and character dump, for a bug report.").font(.system(size: 12)).foregroundColor(Palette.sub)
+                            button("Send logs") { dismiss(); onSendLogs() }
+                        })
                     }.padding(.bottom, 16)
                 }
             }
         }
+    }
+
+    private func button(_ title: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) { Text(title).font(.system(size: 15)).padding(.horizontal, 14).frame(minHeight: 36) }
+            .buttonStyle(.plain).foregroundColor(.white).background(Color.white.opacity(0.14), in: Capsule())
     }
 
     private func card<C: View>(_ c: C) -> some View {

@@ -7,12 +7,13 @@ private let choiceStages: Set<String> = ["race", "house", "sex"]
 struct ScreenSheet: View {
     let p: ScreenPrompt
     let answer: (Int) -> Void
+    var onScum: (() -> Void)?
 
     var body: some View {
         switch p.stage {
         case "welcome": Welcome(p: p, answer: answer)
         case "note": NoteCard(p: p, answer: answer)
-        default: Birth(p: p, answer: answer)
+        default: Birth(p: p, answer: answer, onScum: onScum)
         }
     }
 }
@@ -20,6 +21,7 @@ struct ScreenSheet: View {
 private struct Birth: View {
     let p: ScreenPrompt
     let answer: (Int) -> Void
+    let onScum: (() -> Void)?
     private var canGoBack: Bool { !["death", "race", "quickstart"].contains(p.stage) }
 
     var body: some View {
@@ -60,6 +62,7 @@ private struct Birth: View {
                         Button("Reset") { answer(NB.SKILL_RESET) }
                         Button("Accept") { answer(NB.SKILL_ACCEPT) }.buttonStyle(.borderedProminent)
                     }
+                    if p.stage == "death", let onScum { Button("Restore scum save", action: onScum).buttonStyle(.borderedProminent) }
                     if p.stage == "text" { Button("Done") { answer(-1) }.buttonStyle(.borderedProminent) }
                 }
                 .padding(12)

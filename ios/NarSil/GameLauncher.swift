@@ -16,6 +16,8 @@ enum GameLauncher {
     @MainActor static func ensureStarted() {
         guard Native.state == NB.IDLE else { return }
         try? FileManager.default.createDirectory(at: dataDir, withIntermediateDirectories: true)
+        AppLog.open()
+        Saves.applyPendingRestore()
         let ok = Native.start(libDir: libDir.path, dataDir: dataDir.path, player: player, cols: cols, rows: rows)
         assert(ok, "nb_start failed")
     }
