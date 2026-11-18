@@ -83,15 +83,21 @@ extension EnvironmentValues {
     }
 }
 
+/// The size is also scaled by the system's text size setting (Dynamic Type), up to a third larger so layouts hold;
+/// `dynamic: false` leaves it out (the panel's tab names, which must fit one line).
 private struct ScaledFont: ViewModifier {
     @Environment(\.textScale) private var scale
-    let size: CGFloat, weight: Font.Weight, design: Font.Design
-    func body(content: Content) -> some View { content.font(.system(size: size * scale, weight: weight, design: design)) }
+    @Environment(\.dynamicTypeSize) private var typeSize  // read so the view redraws when the setting changes
+    let size: CGFloat, weight: Font.Weight, design: Font.Design, dynamic: Bool
+    func body(content: Content) -> some View {
+        let system = dynamic ? min(UIFontMetrics.default.scaledValue(for: size), size * 4 / 3) : size
+        return content.font(.system(size: system * scale, weight: weight, design: design))
+    }
 }
 
 extension View {
-    func scaledFont(_ size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> some View {
-        modifier(ScaledFont(size: size, weight: weight, design: design))
+    func scaledFont(_ size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default, dynamic: Bool = true) -> some View {
+        modifier(ScaledFont(size: size, weight: weight, design: design, dynamic: dynamic))
     }
     func textScale(_ s: Double) -> some View { environment(\.textScale, CGFloat(s)) }
 }

@@ -26,6 +26,10 @@ import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 /** What a d-pad gesture asks for; dir is a keypad direction, 5 = centre. */
@@ -46,6 +50,8 @@ private const val SWIPE_OUT = 0.6f     // drag this far from the centre, in key 
  *  - centre: tap waits; drag out towards a direction runs that way; hold rests
  *  - with [onMove]: hold the centre, then drag, to move the pad
  */
+private val PAD_NAMES = listOf(8 to "north", 9 to "north-east", 6 to "east", 3 to "south-east", 2 to "south", 1 to "south-west", 4 to "west", 7 to "north-west")
+
 @Composable
 fun Dpad(sizeDp: Float, onAction: (PadAction) -> Unit, onMove: ((Offset) -> Unit)? = null) {
     var lit by remember { mutableIntStateOf(0) }
@@ -54,7 +60,14 @@ fun Dpad(sizeDp: Float, onAction: (PadAction) -> Unit, onMove: ((Offset) -> Unit
     val move by rememberUpdatedState(onMove)
     val movable = onMove != null
     Canvas(
-        Modifier.size(sizeDp.dp).pointerInput(movable) {
+        Modifier.size(sizeDp.dp).semantics {
+            contentDescription = "Movement pad"
+            customActions = PAD_NAMES.flatMap { (dir, name) ->
+                listOf(CustomAccessibilityAction("Step $name") { action(PadAction.Step(dir)); true },
+                       CustomAccessibilityAction("Run $name") { action(PadAction.Run(dir)); true })
+            } + listOf(CustomAccessibilityAction("Wait") { action(PadAction.Wait); true },
+                       CustomAccessibilityAction("Rest") { action(PadAction.Rest); true })
+        }.pointerInput(movable) {
             awaitEachGesture {
                 val down = awaitFirstDown()
                 val key = size.width / 3f

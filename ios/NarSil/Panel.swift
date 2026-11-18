@@ -93,7 +93,7 @@ private struct PanelHost<Content: View>: View {
                     Button { if i != tab { answer(NB.PANEL_TAB + i) } } label: {
                         VStack(spacing: 2) {
                             PanelIcon(index: i).stroke(style: StrokeStyle(lineWidth: 1.8 * 20 / 24, lineCap: .round, lineJoin: .round)).frame(width: 20, height: 20)
-                            if style == .iconsAndNames { Text(t).scaledFont(9).lineLimit(1).minimumScaleFactor(0.7) }
+                            if style == .iconsAndNames { Text(t).scaledFont(9, dynamic: false).lineLimit(1).minimumScaleFactor(0.7) }
                         }
                         .foregroundColor(i == tab ? Palette.gold : Palette.sub)
                         .frame(maxWidth: .infinity, minHeight: 44).padding(.top, 4)

@@ -69,6 +69,8 @@ final class MapUIView: UIView {
         super.init(frame: .zero)
         backgroundColor = .black
         isOpaque = true
+        isAccessibilityElement = true
+        accessibilityLabel = "Dungeon map. Tap a square to preview the path, tap it again to walk there. Long-press to describe what is there."
         clipsToBounds = true
         contentMode = .redraw
         painter.setCellHeight(cellHeight)

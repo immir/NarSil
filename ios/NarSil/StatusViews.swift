@@ -47,7 +47,7 @@ struct MessageStrip: View {
                     .foregroundColor(Color(red: 0xF3 / 255, green: 0xD2 / 255, blue: 0x7A / 255))
                     .frame(width: 40, height: 40)
                     .background(Color(red: 0x26 / 255, green: 0x26 / 255, blue: 0x2B / 255), in: RoundedRectangle(cornerRadius: 10))
-            }.buttonStyle(.plain).padding(4)
+            }.buttonStyle(.plain).padding(4).accessibilityLabel("Character panel")
         }
         .background(stripBackground)
     }

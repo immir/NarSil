@@ -33,6 +33,7 @@ import org.narsil.android.NarSilNative as N
 @SuppressLint("ViewConstructor")
 class MapView(context: Context, private val state: GameState, private val router: KeyRouter,
               private val swipeRuns: () -> Boolean, private val tiles: () -> Boolean) : View(context) {
+    init { contentDescription = "Dungeon map. Tap a square to preview the path, tap it again to walk there. Long-press to describe what is there." }
     private val painter = GlyphPainter(context, state::colour)
     /** MicroChasm's 16x16 tile sheet (lib/tiles/microchasm), drawn unsmoothed. */
     private val tileSheet: Bitmap? = runCatching {

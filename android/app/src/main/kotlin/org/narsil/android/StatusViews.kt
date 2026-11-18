@@ -35,6 +35,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -70,6 +74,7 @@ internal fun MessageStrip(state: GameState, lines: Int, onTap: () -> Unit) {
 @Composable
 internal fun PanelButton() {
     Box(Modifier.padding(4.dp).size(40.dp).background(Color(0xFF26262B), RoundedCornerShape(10.dp))
+            .semantics { contentDescription = "Character panel"; role = Role.Button }
             .clickable { NarSilNative.nativeRequestAction(NarSilNative.ACT_PANEL) },
         contentAlignment = Alignment.Center) {
         PanelGlyph(PANEL_ICON_PATHS[ICON_PANEL], Color(0xFFF3D27A), Modifier.size(26.dp))

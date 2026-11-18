@@ -120,7 +120,19 @@ struct Dpad: View {
         .frame(width: size, height: size)
         .contentShape(Rectangle())
         .gesture(gesture)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Movement pad")
+        .accessibilityActions {
+            ForEach(Self.names, id: \.0) { dir, name in
+                Button("Step \(name)") { onAction(.step(dir)) }
+                Button("Run \(name)") { onAction(.run(dir)) }
+            }
+            Button("Wait") { onAction(.wait) }
+            Button("Rest") { onAction(.rest) }
+        }
     }
+
+    private static let names: [(Int, String)] = [(8, "north"), (9, "north-east"), (6, "east"), (3, "south-east"), (2, "south"), (1, "south-west"), (4, "west"), (7, "north-west")]
 
     /// A small triangle pointing along `dir`.
     private static func arrow(at mid: CGPoint, dir: Int, key: CGFloat) -> Path {
