@@ -207,7 +207,7 @@ private fun IconTab(icon: String, name: String, showName: Boolean, selected: Boo
             val s = size.minDimension / 24f
             scale(s, s, pivot = Offset.Zero) { drawPath(path, tint, style = Stroke(1.8f, cap = StrokeCap.Round, join = StrokeJoin.Round)) }
         }
-        if (showName) Text(name, color = tint, fontSize = with(LocalDensity.current) { 9.dp.toSp() }, maxLines = 1, softWrap = false, modifier = Modifier.padding(top = 2.dp))
+        if (showName) Text(name, color = tint, fontSize = with(LocalDensity.current) { 8.dp.toSp() }, maxLines = 1, softWrap = false, modifier = Modifier.padding(top = 2.dp))
         Box(Modifier.padding(top = 6.dp).fillMaxWidth().height(2.dp).background(if (selected) tint else Color.Transparent))
     }
 }
