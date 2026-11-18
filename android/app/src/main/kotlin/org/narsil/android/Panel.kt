@@ -197,7 +197,7 @@ private fun IconTab(icon: ImageVector, name: String, showName: Boolean, selected
     val tint = if (selected) Color(0xFFF3D27A) else Color(0xFF9A9AA0)
     Column(modifier.clickable(onClick = onClick).padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(icon, contentDescription = name, tint = tint, modifier = Modifier.size(22.dp))
-        if (showName) Text(name, color = tint, fontSize = 10.sp, maxLines = 1, softWrap = false, modifier = Modifier.padding(top = 2.dp))
+        if (showName) Text(name, color = tint, fontSize = with(LocalDensity.current) { 9.dp.toSp() }, maxLines = 1, softWrap = false, modifier = Modifier.padding(top = 2.dp))
         Box(Modifier.padding(top = 6.dp).fillMaxWidth().height(2.dp).background(if (selected) tint else Color.Transparent))
     }
 }
