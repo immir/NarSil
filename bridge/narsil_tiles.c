@@ -118,8 +118,9 @@ static void release(visuals *v)
 /* Loads the tile set once (game thread); false if the tiles are not installed. */
 static bool load_tiles(void)
 {
+	static bool loading;    /* a pref error is reported through the message flush, which publishes the map */
 	if (tile_mode) return true;
-	if (load_failed) return false;
+	if (load_failed || loading) return false;
 	if (!graphics_modes && !init_graphics_modes()) { load_failed = true; return false; }
 	const graphics_mode *mode = graphics_modes;
 	while (mode && !strstr(mode->path, "microchasm")) mode = mode->pNext;
@@ -129,7 +130,9 @@ static bool load_tiles(void)
 	const visuals ascii = live();
 	visuals saved = duplicate(&ascii);
 	use_graphics = mode->grafID;
+	loading = true;
 	reset_visuals(true);
+	loading = false;
 	tile_set = duplicate(&ascii);
 	tile_set.alert_a = alert_x_attr; tile_set.alert_c = alert_x_char;
 	tile_set.glow_a = glow_x_attr; tile_set.glow_c = glow_x_char;

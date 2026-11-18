@@ -1,0 +1,2829 @@
+# File: monster.txt
+#
+# This file is used to create the monster race information for Sil.
+#
+# Do not modify this file unless you know exactly what you are doing,
+# unless you wish to risk possible system crashes and broken savefiles.
+#
+#
+# === Understanding monster.txt ===
+#
+# name: monster name
+# plural: monster name plural (if non-standard)
+# base: template name
+# depth: depth
+# rarity: rarity
+# glyph: symbol
+# color: color
+# speed: speed
+# health: health (dice)
+# light : light radius
+# sleep: sleepiness
+# percept: perception
+# stealth: stealth
+# will: will
+# prot: evasion bonus : protection dice
+# blow: attack method : attack effect : attack bonus : damage dice
+# ranged-freq: ranged attack frequency
+# spell-power: spell power
+# spells: spell type | spell type | etc
+# message-vis:spell type:message
+# message-invis:spell type:message
+# message-miss:spell type:message
+# flags: flag | flag | etc
+# drop: item type : item name : percent drop chance : min : max
+# drop-artifact: name
+# desc: Description
+#
+# 'name' indicates the beginning of an entry. Entry 0 is used for the player.
+#
+# 'plural' is for plurals to monster names that can't be handled by normal
+# pluralisation rules (see mon-desc.c for more detail).
+#
+# 'base' is for the monster base template (see monster_base.txt). This
+# provides the default display symbol, some default flags, and the monster's
+# pain messages.
+
+# 'depth' is for the depth the monster is found at.
+#
+# 'rarity' is their rarity (they have a 1 in rarity chance of being generated).
+#
+# 'glyph' is for the display symbol. If present, this overrides the default
+# display symbol from the base template.
+#
+# 'color' is for color. There are 28 colors, as follows:
+# d - 0  - Black
+# w - 1  - White
+# s - 2  - Slate
+# o - 3  - Orange
+# r - 4  - Red
+# g - 5  - Green
+# b - 6  - Blue
+# u - 7  - Umber
+# D - 8  - Light Dark
+# W - 9  - Light Slate
+# P - 10 - Light Purple
+# y - 11 - yellow
+# R - 12 - Light Red
+# G - 13 - Light Green
+# B - 14 - Light Blue
+# U - 15 - Light Umber
+# p - 16 - Purple
+# v - 17 - Violet
+# t - 18 - Teal
+# m - 19 - Mud
+# Y - 20 - Light Yellow
+# i - 21 - Magenta-Pink
+# T - 22 - Light Teal
+# V - 23 - Light Violet
+# I - 24 - Light Pink
+# M - 25 - Mustard
+# z - 26 - Blue Slate
+# Z - 27 - Deep Light Blue
+
+# (note that "black" is the same color as the screen background, and thus the
+# monster will appear to be an empty black space if its color is "d".)
+
+#
+# 'speed' is monster speed.
+#
+# 'health' is dice for the monster health.
+#
+# 'light' is light radius in squares.
+#
+# 'sleep' is for maximum sleep value.
+#
+# 'percept' is for perception score.
+#
+# 'stealth' is for stealth score.
+#
+# 'will' is for will score.
+#
+# 'prot' is protection - the evasion bonus and protection dice
+#
+# 'blows' is for blows - method of attack, effect of attack, and damage
+#     from attack. There may be up to four of these lines; effect and
+#     damage are optional.
+#
+# 'ranged-freq' is for ranged attack frequency. Every monster with spells must
+#     have a spell-power:X line with X the percentage chance of casting each
+#     turn. X must not be zero. If X is 100, the monster will never move while
+#     the player is in sight, and will thus never attack in melee, as it will
+#     cast spells every turn: if the monster is to use a melee attack, then X
+#     must be 2 or greater.
+#
+# 'spell-power' determines the damage and intensity of the attacks.
+#
+# 'spells' is a '|'-separated list of spells.
+#
+# 'flags' is for flags. These are fairly self-explanatory. As many flags:
+# lines may be used as are needed to specify all the flags and flags are
+# separated by the '|' symbol.
+
+# 'flags-off' is for flags to remove from the template. For example, in
+# monster_base.txt, molds are given HURT_FIRE. We don't want the red mold
+# to have that, so we add a 'flags-off:HURT_FIRE' line to subtract that flag.
+
+# 'message-vis', 'message-invis', and 'message-miss' allow overriding of the
+# default messages (see monster_spell.txt) displayed when a monster casts a
+# particular spell.  'message-vis' is for the message when the monster is
+# visible to the observer.  'message-invis' is for the message when the monster
+# is not seen by the observer.  'message-miss' is for the message if the spell
+# misses.  The first field, the spell type, should be one of the names listed
+# on the spells line.  The last field is the message to use; if that is omitted
+# or is all whitespace, no message will be displayed on casting.  Any brace
+# expressions, as described in monster_spell.txt, will be expanded in the
+# message before it is displayed.
+
+# 'desc' is for description. As many desc: lines may be used as are needed to
+# describe the monster. Note that lines will need spaces at their
+# ends or the beginning of the next line to prevent words from running
+# together.
+
+# 'drop' lines create possible drops for specific monsters.  Each item
+# has its percent chance rolled for individually.  Any specified drops are in
+# addition to those that are possible due to the flags set.  Specific drops
+# can be affected by the DROP_GREAT and DROP_GOOD flags.
+
+# 'drop-artifact' lines force a specific artifact to drop on death. Setting this
+# on a non-UNIQUE monster is dangerous.
+
+# 'friends' lines specify options for what monsters can appear with other
+# monster on creation.  The format is:
+# friends:Chance of friend appearing:number in xdy format:name of friend
+#
+# 'desc' is for description. As many desc: lines may be used as are needed
+#     to describe the monster.
+#
+#
+#
+# === Understanding monster.txt flags ===
+#
+# UNIQUE monsters are just special monster races, with the requirement
+# that only one monster of that race can exist at a time, and when it is
+# killed, it can never again be generated.
+#
+# ATTR_CLEAR monsters appear the same color as the floor, terrain feature or
+# object underneath them.
+#
+# ATTR_MULTI monsters are multi - hued - they change color, every player turn.
+#
+# CHAR_CLEAR monsters are totally invisible: the symbol shown on the screen
+# is the same as the floor (or other terrain feature) below it, or the item
+# that is lying on that floor. These monsters can currently be targeted as
+# normal monsters: perhaps this can be changed so that the player must KNOW
+# the monster is there (by bumping into it, or having the monster wake up
+# and attack the player?)
+#
+# CHAR_MULTI monsters are those which look like objects, and use the symbols
+# of objects. They are in plain sight, but the character should not know that
+# a monster is there. At the moment, such monsters can be targeted normally
+# (which means that this flag currently has no effect), but this may change
+# in the future, as with CHAR_CLEAR monsters.
+#
+# (Note that currently both CHAR_CLEAR and CHAR_MULTI monsters are treated
+# as normal monsters that are just a little hard to see... if you look
+# for them, you will find them unless they are invisible and you cannot
+# see invisible, and if you use the * command for targeting mode you
+# can pick them as a target.)
+#
+#
+# === Useful information ===
+#
+# Evasion/Attack
+#
+# Default value:   dungeon level
+# Unique:          +2
+# Unmoving:        evasion fixed at -5
+# Agile*:          +1 to +5
+# Armoured*:       -1 to -6 evasion
+# Heavy attack*:   -1 to -5 attack
+#
+# Hit points:
+#
+# Typical Bird:     1d4
+# Typical Insect:   2d4
+# Typical Orc:      8d4
+# Typical Man:      8d4
+# Typical Serpent:  9d4
+# Typical Noldo:   11d4 (up to 24d4)
+# Typical Troll:   18d4
+# Typical Giant:   30d4
+# Typical Dragon:  30d4 - 50d4
+# Unrelenting H:  100d4
+#       Morgoth:  200d4
+# 
+# Will:
+#
+# Typical value:  dungeon level * 2/3
+# Normally higher: horrors, people, dragons, raukar, uniques
+# Normally lower: cats, serpents, insects
+#
+# Letters:
+#
+
+# New Creatures:
+#
+# - elves (prisoners who have been driven mad or to evil)
+# - another, more powerful, giant type
+# - a unique wraith?
+# - an animated treasure chest
+#   - too out of theme, but would be great fun in crawl or NetHack...
+
+##### Non-race (contains the player picture) #####
+
+# Index 0
+name:<player>
+glyph:@
+color:w
+
+##### Dungeon monsters #####
+
+# Must not have any level 0 creatures, as this is used to identify player
+
+
+##### 1 #####
+
+# Index 11
+
+name:Wolf
+base:wolf
+depth:1
+rarity:1
+color:u
+speed:3
+health:6d4
+sleep:20
+percept:2
+stealth:3
+will:1
+prot:1:1d4
+blow:BITE:WOUND:3:2d3
+flags:FRIENDS | RAND_25 | WOLF
+desc:This ragged wolf is part of the orcish packs.
+
+name:Tanglethorn
+base:thorn
+depth:1
+rarity:1
+color:s
+speed:2
+health:4d4
+sleep:0
+percept:0
+stealth:0
+will:0
+prot:-5:1d4
+blow:THORN:WOUND:5:3d3
+flags:NEVER_MOVE | MINDLESS | FRIEND | HURT_FIRE | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | NO_CRIT
+desc:'... great writhing, tangled brambles sprawled. Some had long stabbing
+desc: thorns, some hooked barbs that rent like knives.'
+
+name:Dejected human thrall
+base:person
+depth:1
+rarity:0
+color:g
+speed:2
+health:8d4
+sleep:60
+percept:1
+stealth:0
+will:1
+prot:0
+flags:MALE | MAN | NEVER_MOVE | NEVER_BLOW | SMART | PEACEFUL | SPECIAL_GEN
+desc:A scarred and dirty man clad only in a loincloth. A metal collar
+desc: is about his neck, and a long chain leads from it to the wall.
+
+name:Dejected elven thrall
+base:person
+depth:1
+rarity:0
+color:g
+speed:2
+health:10d4
+sleep:60
+percept:1
+stealth:0
+will:2
+prot:0
+flags:MALE | ELF | NEVER_MOVE | NEVER_BLOW | SMART | PEACEFUL | SPECIAL_GEN
+desc:A chained elf slumps here, filthy hair hanging to his shoulders
+desc: and eyes vacant. His back and arms bear the marks of a whip.
+
+name:Orc thrallmaster
+base:orc
+depth:1
+rarity:0
+color:g
+speed:2
+health:6d4
+sleep:0
+percept:5
+stealth:4
+will:2
+prot:8:1d4
+blow:HIT:HURT:12:1d6
+blow:WHIP:DISARM:8:1d4
+flags:MALE | OPEN_DOOR | BASH_DOOR | SPECIAL_GEN | ORC | HURT_LIGHT | SMART | UNLOCK_DOOR | TERRITORIAL
+desc:He is one of Morgoth's grim mockeries of the firstborn.
+desc: Clad in tattered leather, he wields a cudgel and a whip.
+
+name:Alert human thrall
+base:person
+depth:1
+rarity:0
+color:G
+speed:2
+health:8d4
+sleep:0
+percept:10
+stealth:0
+will:1
+prot:0
+flags:MALE | MAN | NEVER_MOVE | NEVER_BLOW | SMART | PEACEFUL | SPECIAL_GEN
+desc:A scarred and dirty man shackled to the wall with a long chain.
+desc: His head is raised and he takes in his surroundings alertly.
+
+name:Alert elven thrall
+base:person
+depth:1
+rarity:0
+color:G
+speed:2
+health:10d4
+sleep:0
+percept:10
+stealth:0
+will:2
+prot:0
+flags:MALE | ELF | NEVER_MOVE | NEVER_BLOW | SMART | PEACEFUL | SPECIAL_GEN
+desc:A chained elf crouches here, filthy hair hanging to his shoulders.
+desc: Dried blood encrusts a noble face. His eyes are fixed on you.
+
+name:Orc skirmisher
+base:orc
+depth:2
+rarity:1
+color:u
+speed:2
+health:7d4
+sleep:15
+percept:1
+stealth:1
+will:1
+prot:3:1d4
+blow:HIT:HURT:2:2d6
+flags:MALE | DROP_33 | OPEN_DOOR | ORC | HURT_LIGHT | SMART | FRIEND
+desc:He is one of Morgoth's grim mockeries of the firstborn.
+desc: He has little armour but carries a cruel blade.
+
+name:Grimhawk
+base:flyer
+depth:2
+rarity:2
+color:u
+speed:4
+health:1d4
+sleep:5
+percept:4
+stealth:4
+will:1
+prot:7
+blow:PECK:HURT:8:1d5
+flags:FLYING | RAND_50 | TERRITORIAL
+desc:A hunting bird, beloved of the orcs, with iron barbs on its talons.
+
+name:Mewlip
+base:horror
+depth:2
+rarity:1
+color:u
+speed:3
+health:5d4
+sleep:5
+percept:1
+stealth:3
+will:1
+prot:1:2d4
+blow:CLAW:WOUND:6:2d4
+flags:DROP_100 | OPEN_DOOR | UNLOCK_DOOR | BASH_DOOR | SMART | NO_FEAR
+message-vis:FORGET:{name} rings its bell.
+message-invis:FORGET:{name} rings its bell.
+desc:An evil swamp dwelling creature that feeds on the bones
+desc: of those who draw near.
+
+name:Orc scout
+base:orc
+depth:3
+rarity:1
+color:D
+speed:2
+health:6d4
+sleep:15
+percept:4
+stealth:5
+will:1
+prot:4:1d4
+blow:HIT:HURT:3:1d10
+flags:MALE | DROP_33 | OPEN_DOOR | UNLOCK_DOOR | ORC | HURT_LIGHT | SMART
+ranged-freq:20
+spells:SHRIEK
+desc:He is one of Morgoth's grim mockeries of the firstborn.
+desc: The miserable creature tries to stay away from you and
+desc: attract attention. It has a crude spear.
+
+name:Spider hatchling
+depth:3
+rarity:2
+color:U
+speed:2
+health:1d4
+sleep:20
+percept:1
+stealth:8
+will:2
+prot:5
+blow:BITE:POISON:5:1d7
+flags:SPIDER | TERRITORIAL | FRIENDS | RES_POIS
+desc:Monstrous newly-hatched spiders; already the height of a dog.
+desc: They would probably present little threat, but for the
+desc: venom in their bite...
+
+name:Blue serpent
+base:serpent
+depth:3
+rarity:2
+color:b
+speed:2
+health:2d4
+sleep:15
+percept:1
+stealth:3
+will:1
+prot:3:4d4
+blow:BITE:HURT:5:2d5
+flags:SERPENT | RAND_50 | RES_COLD | HURT_FIRE
+ranged-freq:20
+spell-power:2
+spells:BR_COLD
+desc:A snake the length of a man, with hard blue scales.
+desc: There is a chill in the air around it.
+
+name:Orc soldier
+base:orc
+depth:4
+rarity:1
+color:s
+speed:2
+health:8d4
+sleep:15
+percept:1
+stealth:1
+will:2
+prot:3:2d4
+blow:HIT:HURT:3:2d7
+flags:MALE | FRIENDS | DROP_33 | OPEN_DOOR | BASH_DOOR | ORC | HURT_LIGHT | SMART
+desc:He is one of Morgoth's grim mockeries of the firstborn.
+desc: He is arrayed in black leathers with a crude sword and
+desc: shield: a soldier in the dark hosts of Bauglir.
+
+name:Madthorn
+base:thorn
+depth:4
+rarity:1
+color:y
+speed:2
+health:8d4
+sleep:0
+percept:0
+stealth:0
+will:4
+prot:-5:2d4
+blow:THORN:CONFUSE:5:4d3
+flags:NEVER_MOVE | MINDLESS | FRIEND | HURT_FIRE | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | NO_CRIT
+desc:Found most often in the depths of Taur-nu-Fuin,
+desc: it is more feared by travellers than wolves,
+desc: for the poison on its thorns can bring madness.
+
+name:Gorcrow
+base:flyer
+depth:4
+rarity:2
+color:D
+speed:4
+health:1d4
+sleep:15
+percept:2
+stealth:3
+will:1
+prot:9
+blow:PECK:BLIND:10:1d5
+flags:FRIEND | FLYING | RAND_25
+desc:A dark creature, related to the crow. It pecks at any exposed flesh,
+desc: especially the face and eyes.
+
+name:Brood spider
+base:spider
+depth:4
+rarity:3
+color:U
+speed:1
+health:14d4
+sleep:10
+percept:5
+stealth:2
+will:2
+prot:6
+blow:BITE:POISON:12:2d8
+flags:SPIDER | TERRITORIAL | RES_POIS
+desc:A huge ponderous spider with clusters of eggs on its back.
+desc: Its hairy mandibles are wet with a dark fluid.
+
+name:Orc archer
+base:orc
+depth:5
+rarity:3
+color:U
+speed:2
+health:7d4
+sleep:15
+percept:1
+stealth:3
+will:3
+prot:4:1d4
+blow:HIT:HURT:5:2d5
+flags:MALE | FRIENDS | DROP_33 | OPEN_DOOR | BASH_DOOR | ORC | HURT_LIGHT | SMART
+ranged-freq:75
+spell-power:6
+spells:ARROW1
+drop:arrow:Arrow:37:2d8
+desc:He is one of Morgoth's grim mockeries of the firstborn.
+desc: He carries a crude sword and bow.
+
+name:White wolf
+base:wolf
+depth:5
+rarity:1
+color:w
+speed:3
+health:8d4
+sleep:20
+percept:3
+stealth:3
+will:1
+prot:6:1d4
+blow:BITE:WOUND:8:2d4
+flags:FRIENDS | RAND_25 | WOLF | RES_COLD
+desc:A large and fierce wolf from the northern wastes.
+
+name:Red serpent
+base:serpent
+depth:5
+rarity:2
+color:r
+speed:2
+health:2d4
+sleep:15
+percept:1
+stealth:3
+will:2
+prot:5:4d4
+blow:BITE:HURT:7:2d6
+flags:SERPENT | RAND_50 | RES_FIRE | HURT_COLD
+ranged-freq:20
+spell-power:2
+spells:BR_FIRE
+desc:A snake the length of a man, with hard red scales.
+desc: The air around it shimmers with heat.
+
+name:Gorgol, the Butcher
+base:orc
+depth:5
+rarity:10
+color:G
+speed:2
+health:12d4
+sleep:15
+percept:2
+stealth:1
+will:5
+prot:4:3d4
+blow:HIT:HURT:6:3d7
+flags:UNIQUE | MALE | ESCORT | SMART | DROP_100 | DROP_GOOD | OPEN_DOOR | BASH_DOOR | ORC | HURT_LIGHT | UNLOCK_DOOR | NAME_COMMA
+desc:A captain of an orcish band, Gorgol keeps his troop in
+desc: order with displays of violence.
+
+name:Orc warrior
+base:orc
+depth:6
+rarity:1
+color:W
+speed:2
+health:9d4
+sleep:15
+percept:2
+stealth:1
+will:4
+prot:5:2d4
+blow:HIT:HURT:3:3d6
+flags:MALE | DROP_33 | OPEN_DOOR | BASH_DOOR | ORC | HURT_LIGHT | FRIEND | SMART | CHARGE
+desc:He is one of Morgoth's grim mockeries of the firstborn.
+desc: He wears hardened leathers and runs towards you with axe in hand.
+
+name:Sword spider
+base:spider
+depth:6
+rarity:2
+color:s
+speed:3
+health:12d4
+sleep:15
+percept:1
+stealth:2
+will:3
+prot:7:1d4
+blow:BITE:HURT:8:2d9
+flags:SPIDER | TERRITORIAL
+desc:A giant black spider with sword-sharp mandibles.
+desc: It skitters back and forth.
+
+name:Crebain
+base:flyer
+depth:6
+rarity:2
+color:s
+speed:4
+health:1d4
+sleep:15
+percept:6
+stealth:4
+will:2
+prot:11
+blow:PECK:WOUND:12:1d5
+flags:FRIENDS | FLYING | RAND_25
+ranged-freq:15
+spells:SHRIEK
+desc:A type of crow, specially bred by the forces of evil as spies.
+
+name:Phantom
+depth:6
+rarity:3
+color:s
+speed:1
+health:2d4
+sleep:0
+percept:8
+stealth:3
+will:8
+prot:5
+blow:TOUCH:TERRIFY:15
+flags:INVISIBLE | RAND_50 | UNDEAD | HURT_LIGHT | RES_COLD | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | FRIEND
+desc:A faded presence that perhaps once was man or elf,
+desc: but is now an insubstantial thing of necromancy and shadow.
+
+name:Attercop
+depth:7
+rarity:1
+color:D
+speed:3
+health:3d4
+sleep:10
+percept:2
+stealth:10
+will:3
+prot:10:1d4
+blow:BITE:ENTRANCE:6:1d8
+flags:SPIDER | RES_POIS | TERRITORIAL | FRIENDS | SMART
+desc:A spider as big as a dog, covered in thick bristles, with the light
+desc: reflecting off its pale bulbous eyes.
+
+name:Nightthorn
+base:thorn
+depth:7
+rarity:1
+color:D
+speed:2
+health:8d4
+light:-2
+sleep:0
+percept:0
+stealth:0
+will:5
+prot:-5:2d4
+blow:THORN:HURT:5:5d3
+flags:NEVER_MOVE | MINDLESS | HURT_FIRE | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | NO_CRIT
+desc:This twisted plant drinks in the light from the air around.
+
+name:Green serpent
+base:serpent
+depth:7
+rarity:2
+color:g
+speed:2
+health:2d4
+sleep:10
+percept:2
+stealth:3
+will:2
+prot:7:4d4
+blow:BITE:HURT:8:2d7
+flags:SERPENT | RES_POIS | RAND_50
+ranged-freq:20
+spell-power:2
+spells:BR_POIS
+desc:A snake the length of a man, with hard green scales.
+desc: It smells of decay.
+
+name:Mountain troll
+base:troll
+depth:7
+rarity:1
+color:W
+speed:2
+health:14d4
+sleep:15
+percept:1
+stealth:0
+will:2
+prot:3:2d4
+blow:HIT:BATTER:6:4d5
+flags:MALE | FRIEND | DROP_33 | REGENERATE | OPEN_DOOR | BASH_DOOR | TROLL | HURT_LIGHT | SMART | NO_FEAR | KNOCK_BACK
+desc:A tall troll from the mountains of the north.
+
+name:Tattered wight
+base:wraith
+depth:7
+rarity:2
+color:s
+speed:1
+health:4d4
+sleep:10
+percept:6
+stealth:5
+will:5
+prot:5:3d4
+blow:HIT:HURT:9:2d9
+blow:TOUCH:LOSE_DEX:9
+flags:OPEN_DOOR | UNDEAD | HURT_LIGHT | RES_COLD | SMART | TERRITORIAL | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | RES_CRIT
+ranged-freq:20
+spells:DARKNESS | SLOW
+desc:It is a ghostly form, wrapped in a torn and faded shroud,
+desc: its treasure long since been plundered.
+
+name:Boldog, the Merciless
+base:orc
+depth:7
+rarity:20
+color:y
+speed:2
+health:13d4
+sleep:15
+percept:4
+stealth:1
+will:6
+prot:6:3d4
+blow:HIT:HURT:11:1d16
+flags:UNIQUE | MALE | ESCORTS | NO_FEAR | OPEN_DOOR | BASH_DOOR | UNLOCK_DOOR | ORC | SMART | DROP_1D2 | DROP_GOOD | DROP_CHOSEN | HURT_LIGHT | NAME_COMMA
+ranged-freq:15
+spell-power:9
+spells:ARROW2
+drop:arrow:Arrow:7:2d8
+drop-artifact:of Boldog
+desc:A great captain of the orcs, who led many raids into the
+desc: lands of the elves.
+
+name:Orc champion
+base:orc
+depth:8
+rarity:2
+color:b
+speed:2
+health:11d4
+sleep:15
+percept:3
+stealth:1
+will:5
+prot:5:3d4
+blow:HIT:HURT:6:3d8
+flags:MALE | DROP_100 | OPEN_DOOR | BASH_DOOR | ORC | HURT_LIGHT | SMART
+desc:A champion of the orc hordes. He wears well-fitting armour and
+desc: wields a battle axe.
+
+name:Easterling warrior
+base:person
+depth:8
+rarity:2
+color:W
+speed:2
+health:10d4
+light:1
+sleep:15
+percept:3
+stealth:1
+will:7
+prot:5:3d4
+blow:HIT:HURT:7:2d8
+flags:MAN | MALE | DROP_33 | OPEN_DOOR | BASH_DOOR | FRIENDS | SMART | FLANKING
+drop:light:Wooden Torch:33:1d1
+desc:Yet neither by wolf, nor by Balrog, nor by Dragon, would
+desc: Morgoth have achieved his end, but for the treachery of Men.
+desc: He is of a people who have come recently to
+desc: Beleriand out of the far east, and have fallen under
+desc: Morgoth's sway.
+
+name:Hummerhorn
+base:insect
+depth:8
+rarity:3
+color:y
+speed:4
+health:2d4
+sleep:5
+percept:3
+stealth:1
+will:5
+prot:14
+blow:STING:CONFUSE:13:1d7
+flags:FLYING | RAND_25 | RAND_50 | FRIENDS | TERRITORIAL
+desc:A giant buzzing wasp, its stinger drips venom.
+
+name:Balcmeg, the Relentless
+base:orc
+depth:8
+rarity:20
+color:o
+speed:2
+health:15d4
+sleep:15
+percept:3
+stealth:1
+will:9
+prot:4:4d4
+blow:HIT:HURT:8:3d8
+flags:UNIQUE | MALE | OPEN_DOOR | BASH_DOOR | SMART | ORC | DROP_100 | UNIQUE_FRIEND | DROP_GOOD | HURT_LIGHT | NAME_COMMA
+desc:A huge champion of the orcs, clad in thick black armor
+desc: and carrying a shield and much-notched axe. He is
+desc: scarred of face and his eyes are small and baleful.
+
+name:Lug, the Grotesque
+base:orc
+depth:8
+rarity:20
+color:v
+speed:2
+health:10d4
+sleep:15
+percept:5
+stealth:1
+will:5
+prot:16:2d4
+blow:HIT:HURT:16:1d7
+flags:UNIQUE | MALE | OPEN_DOOR | UNLOCK_DOOR | SMART | ORC | DROP_100 | UNIQUE_FRIEND | DROP_GREAT | HURT_LIGHT | CRUEL_BLOW | NAME_COMMA
+desc:A small and exceptionally ugly orc, wearing dark leather
+desc: and carrying a short broad blade which he tosses from
+desc: one hand to the other with unsettling dexterity.
+
+name:Orc captain
+base:orc
+depth:9
+rarity:3
+color:r
+speed:2
+health:10d4
+sleep:15
+percept:4
+stealth:1
+will:6
+prot:7:3d4
+blow:HIT:HURT:10:2d8
+flags:MALE | ESCORT | DROP_1D2 | OPEN_DOOR | BASH_DOOR | ORC | HURT_LIGHT | SMART | UNLOCK_DOOR
+desc:An armoured orc that walks with confidence. His curved blade
+desc: has many notches along its edge.
+
+name:Warg
+base:wolf
+depth:9
+rarity:1
+color:s
+speed:3
+health:10d4
+sleep:20
+percept:6
+stealth:4
+will:6
+prot:10:1d4
+blow:BITE:WOUND:12:2d5
+flags:FRIENDS | RAND_25 | BASH_DOOR | WOLF | SMART
+desc:It is a great wolf with eyes full of cunning.
+
+name:Grave wight
+base:wraith
+depth:9
+rarity:2
+color:U
+speed:2
+health:4d4
+sleep:10
+percept:6
+stealth:5
+will:6
+prot:7:3d4
+blow:HIT:HURT:11:2d9
+blow:TOUCH:LOSE_STR:11
+flags:DROP_100 | OPEN_DOOR | UNDEAD | HURT_LIGHT | RES_COLD | SMART | TERRITORIAL | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | RES_CRIT
+ranged-freq:20
+spells:DARKNESS | SLOW
+desc:It is a ghostly form, wrapped in a stained shroud.
+desc: It protects that with which is was buried.
+
+name:Dark serpent
+base:serpent
+depth:9
+rarity:2
+color:V
+speed:2
+health:2d4
+sleep:10
+percept:4
+stealth:3
+will:3
+prot:9:4d4
+blow:BITE:HURT:10:2d8
+flags:SERPENT | RAND_50
+ranged-freq:20
+spell-power:2
+spells:BR_DARK
+desc:A snake the length of a man, with hard scales that
+desc: reflect no light.
+
+name:Orcobal, Champion of the Orcs
+base:orc
+depth:9
+rarity:15
+color:B
+speed:2
+health:15d4
+sleep:15
+percept:5
+stealth:1
+will:8
+prot:8:3d4
+blow:HIT:HURT:10:3d10
+flags:UNIQUE | MALE | ESCORT | DROP_1D2 | DROP_GOOD | OPEN_DOOR | BASH_DOOR | ORC | HURT_LIGHT | SMART | NAME_COMMA
+desc:The chief champion of the orcs of Morgoth.
+
+name:Whispering shadow
+depth:10
+rarity:1
+color:D
+speed:1
+health:6d4
+light:-1
+sleep:10
+percept:3
+stealth:5
+will:5
+prot:5
+blow:TOUCH:DARK:6:2d6
+flags:RAND_25 | RAND_50 | FRIEND | MULTIPLY | UNDEAD | HURT_LIGHT | RES_COLD | TERRITORIAL | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | RES_CRIT
+desc:A flickering darkness, spreading through the halls.
+desc: From its midst, you hear faint voices
+desc: yearning, beckoning.
+
+name:Distended spider
+base:spider
+depth:10
+rarity:1
+color:u
+speed:2
+health:20d4
+sleep:15
+percept:4
+stealth:3
+will:5
+prot:7
+blow:BITE:POISON:9:2d11
+flags:SPIDER | RES_POIS | TERRITORIAL
+desc:It is a vast spider whose bulbous body is bloated with poison.
+
+name:Easterling archer
+base:person
+depth:10
+rarity:3
+color:u
+speed:2
+health:9d4
+light:1
+sleep:15
+percept:4
+stealth:3
+will:7
+prot:9:2d4
+blow:HIT:HURT:9:1d7
+flags:MAN | MALE | DROP_33 | OPEN_DOOR | BASH_DOOR | FRIEND | SMART
+ranged-freq:75
+spell-power:11
+spells:ARROW2
+drop:arrow:Arrow:37:2d8
+drop:light:Wooden Torch:33:1d1
+desc:Yet neither by wolf, nor by Balrog, nor by Dragon, would
+desc: Morgoth have achieved his end, but for the treachery of Men.
+desc: He is of a people who have come recently to
+desc: Beleriand out of the far east, and have fallen under
+desc: Morgoth's sway.
+
+name:Twisted bat
+base:flyer
+depth:10
+rarity:4
+color:r
+speed:4
+health:2d4
+sleep:15
+percept:7
+stealth:4
+will:4
+prot:17:1d4
+blow:BITE:LOSE_CON:15:2d5
+flags:FLYING | RAND_50 | TERRITORIAL
+desc:A fluttering bat the size of a large dog. Its head is
+desc: misshapen out of any natural proportion, with long curving
+desc: fangs hanging from its mouth.
+
+name:Othrod, the Orc Lord
+base:orc
+depth:10
+rarity:10
+color:R
+speed:2
+health:15d4
+sleep:15
+percept:6
+stealth:1
+will:9
+prot:9:4d4
+blow:HIT:HURT:15:2d9
+blow:WHIP:DISARM:12:2d4
+flags:UNIQUE | MALE | ESCORTS | SMART | DROP_1D2 | DROP_GREAT | OPEN_DOOR | BASH_DOOR | ORC | HURT_LIGHT | UNLOCK_DOOR | NAME_COMMA
+desc:The cruelty in the eyes of this massive orc belies
+desc: the intelligence that has kept him a favourite
+desc: of the black enemy for many years.
+
+name:Snow troll
+base:troll
+depth:11
+rarity:1
+color:w
+speed:2
+health:16d4
+sleep:15
+percept:2
+stealth:0
+will:3
+prot:7:2d4
+blow:HIT:BATTER:9:4d6
+blow:BITE:COLD:8:2d9
+flags:MALE | FRIEND | DROP_33 | REGENERATE | OPEN_DOOR | BASH_DOOR | TROLL | HURT_LIGHT | RES_COLD | HURT_FIRE | SMART | NO_FEAR | KNOCK_BACK
+desc:He is a white troll with powerfully clawed hands.
+
+name:Barrow wight
+base:wraith
+depth:11
+rarity:100
+color:W
+speed:2
+health:4d4
+sleep:10
+percept:7
+stealth:5
+will:8
+prot:8:3d4
+blow:HIT:HURT:13:2d9
+blow:TOUCH:LOSE_GRA:13
+flags:DROP_100 | OPEN_DOOR | SPECIAL_GEN | UNDEAD | HURT_LIGHT | RES_COLD | SMART | TERRITORIAL | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | RES_CRIT
+ranged-freq:20
+spells:DARKNESS | SLOW
+desc:This ghostly, shrouded form dwells within its burial
+desc: chamber, unable to find release.
+
+name:Lurking horror
+base:horror
+depth:11
+rarity:5
+color:D
+speed:2
+health:10d4
+light:-2
+sleep:1
+percept:7
+stealth:3
+will:9
+prot:11:1d4
+blow:BITE:ENTRANCE:10:2d9
+flags:BASH_DOOR | SHORT_SIGHTED | NO_FEAR | HURT_LIGHT
+ranged-freq:15
+spells:SCARE
+desc:It waits for you in the ink-black of the dungeon.
+desc: It seems to be made entirely of claws and of teeth.
+
+name:Giant
+base:giant
+depth:11
+rarity:1
+color:U
+speed:2
+health:30d4
+light:2
+sleep:15
+percept:1
+stealth:0
+will:7
+prot:5:1d4
+blow:HIT:HURT:6:4d9
+flags:DROP_100 | OPEN_DOOR | BASH_DOOR | SMART
+ranged-freq:15
+spell-power:6
+spells:BOULDER
+desc:As tall as three men, this hulking opponent is crudely
+desc: armed with a great club.
+
+name:Uldor, the Accursed
+base:person
+depth:11
+rarity:10
+color:M
+speed:2
+health:14d4
+light:1
+sleep:15
+percept:6
+stealth:1
+will:11
+prot:13:3d4
+blow:HIT:HURT:16:2d7
+flags:UNIQUE | MAN | MALE | DROP_100 | ESCORT | SMART | DROP_GOOD | OPEN_DOOR | BASH_DOOR | TAKE_ITEM | UNLOCK_DOOR | CRIPPLING | NAME_COMMA
+ranged-freq:75
+spell-power:21
+spells:ARROW1
+drop:arrow:Arrow:37:2d8
+drop:light:Wooden Torch:33:1d1
+desc:Son of Ulfang, the Black, and the leader in the treason against
+desc: the elves in the Battle of Unnumbered Tears.
+
+name:Aldor, the Risen King
+base:wraith
+depth:11
+rarity:100
+color:R
+speed:2
+health:8d4
+sleep:10
+percept:12
+stealth:5
+will:12
+prot:8:3d4
+blow:TOUCH:LOSE_CON:15
+blow:HIT:HURT:15:2d9
+flags:UNIQUE | MALE | SMART | DROP_100 | DROP_GREAT | OPEN_DOOR | SPECIAL_GEN | UNDEAD | HURT_LIGHT | RES_COLD | TERRITORIAL | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | RES_CRIT | NAME_COMMA
+ranged-freq:20
+spells:SLOW | HOLD
+desc:A king of men before the Noldor returned to Middle-earth,
+desc: the black power of Morgoth has kept his spirit bound to
+desc: this place, far from Mandos' halls. He is arrayed in
+desc: finery and holds a long blade in ghostly fingers.
+
+name:Easterling spy
+base:person
+depth:12
+rarity:3
+color:D
+speed:2
+health:8d4
+light:1
+sleep:5
+percept:12
+stealth:15
+will:8
+prot:13:1d4
+blow:HIT:HURT:12:1d8
+flags:MAN | MALE | DROP_33 | OPEN_DOOR | UNLOCK_DOOR | SMART
+ranged-freq:20
+spell-power:15
+spells:ARROW1 | SHRIEK
+drop:arrow:Arrow:10:2d8
+drop:light:Wooden Torch:33:1d1
+desc:Yet neither by wolf, nor by Balrog, nor by Dragon, would
+desc: Morgoth have achieved his end, but for the treachery of Men.
+desc: He is of a people who have come recently to
+desc: Beleriand out of the far east, and have fallen under
+desc: Morgoth's sway.
+
+name:Shadow bat
+base:flyer
+depth:12
+rarity:4
+color:s
+speed:4
+health:2d4
+light:-2
+sleep:15
+percept:10
+stealth:4
+will:7
+prot:19:1d4
+blow:BITE:HURT:17:2d5
+flags:FLYING | RAND_50 | TERRITORIAL | HURT_LIGHT
+desc:A screeching flutter of darkness.
+
+name:Sulrauko
+base:rauko
+depth:12
+rarity:2
+color:W
+speed:2
+health:5d4
+sleep:10
+percept:7
+stealth:5
+will:10
+prot:14:2d4
+blow:HIT:BATTER:14:3d5
+flags:BASH_DOOR | INVISIBLE | RES_CRIT | RES_POIS | FLYING | RAND_50 | RAUKO | SMART
+desc:A wind spirit, bent to Morgoth's will.
+
+name:Fire-drake hatchling
+base:dragon
+depth:12
+rarity:6
+color:R
+speed:2
+health:10d4
+sleep:30
+percept:5
+stealth:2
+will:9
+prot:11:1d4
+blow:BITE:FIRE:13:2d5
+flags:BASH_DOOR | DRAGON | RAND_25 | FRIEND | TERRITORIAL | RES_FIRE | HURT_COLD
+ranged-freq:20
+spell-power:6
+spells:BR_FIRE
+desc:Not more than a few months old, this young dragon
+desc: is already as big as a man, and has begun to use
+desc: its fearsome breath.
+
+name:Ulfang the Black
+base:person
+depth:12
+rarity:10
+color:s
+speed:2
+health:15d4
+light:1
+sleep:15
+percept:6
+stealth:1
+will:11
+prot:13:4d4
+blow:HIT:HURT:19:2d8
+flags:UNIQUE | MAN | MALE | DROP_2D2 | ESCORT | SMART | DROP_GOOD | OPEN_DOOR | BASH_DOOR | TAKE_ITEM | OPPORTUNIST
+drop:light:Wooden Torch:33:1d1
+desc:Ulfang was a great leader of the Easterlings and led them in
+desc: their treachery. He and his sons once openly swore allegiance
+desc: to the High Elves, but were secretly in the pay of Morgoth.
+
+name:Duruin, Least of the Balrogs
+base:rauko
+depth:12
+rarity:30
+color:o
+speed:2
+health:28d4
+light:-3
+sleep:5
+percept:7
+stealth:1
+will:12
+prot:13:4d4
+blow:HIT:FIRE:18:2d12
+blow:WHIP:DISARM:14:3d6
+flags:UNIQUE | MALE | SMART | GLOW | DROP_1D2 | DROP_100 | DROP_GREAT | NO_FEAR | BASH_DOOR | RAUKO | RES_FIRE | HURT_COLD | NAME_COMMA
+desc:The Valaraukar, demons of power, are among the mightiest
+desc: of Morgoth's servants and widely feared. Before you stands
+desc: Duruin, Flame of the Night, a great figure wrapped in fire
+desc: and shadow. He wields fiery sword and whip.
+
+name:Werewolf
+base:wolf
+depth:13
+rarity:1
+color:U
+speed:3
+health:12d4
+sleep:15
+percept:9
+stealth:7
+will:9
+prot:14:2d4
+blow:CLAW:WOUND:16:3d5
+blow:BITE:POISON:13:2d9
+flags:RAND_25 | OPEN_DOOR | BASH_DOOR | WOLF | FRIEND | SMART
+desc:No mere wolf, some malevolent spirit lurks behind
+desc: those glowing eyes.
+
+name:Shadow spider
+base:spider
+depth:13
+rarity:1
+color:D
+speed:3
+health:14d4
+light:-2
+sleep:15
+percept:6
+stealth:3
+will:8
+prot:10:1d4
+blow:BITE:BLIND:11:2d9
+flags:SPIDER | RES_POIS | HURT_LIGHT | TERRITORIAL
+desc:It is a great black spider wreathed in shadow.
+
+name:Shadow
+base:wraith
+depth:13
+rarity:3
+color:d
+speed:2
+health:3d4
+sleep:0
+percept:6
+stealth:10
+will:8
+prot:13:3d4
+blow:TOUCH:DARK:16:2d5
+flags:INVISIBLE | RAND_25 | PASS_DOOR | UNDEAD | RES_COLD | HURT_LIGHT | SMART | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | RES_CRIT
+desc:It seems nothing more than a patch of darkness in
+desc: the room, and yet it stalks you.
+
+name:Sapphire serpent
+base:serpent
+depth:13
+rarity:3
+color:B
+speed:2
+health:8d4
+sleep:15
+percept:6
+stealth:3
+will:6
+prot:9:5d4
+blow:BITE:COLD:13:2d6
+flags:SERPENT | ATTR_MULTI | RAND_25 | RES_COLD | HURT_FIRE
+ranged-freq:20
+spell-power:6
+spells:BR_COLD
+desc:A great serpent with scales of gleaming sapphire.
+desc: An icy chill surrounds it.
+
+name:Gilim, the Giant of Eruman
+base:giant
+depth:13
+rarity:10
+color:w
+speed:2
+health:35d4
+light:2
+sleep:15
+percept:5
+stealth:0
+will:10
+prot:9:1d4
+blow:HIT:COLD:10:4d9
+flags:DROP_1D2 | DROP_GOOD | OPEN_DOOR | BASH_DOOR | RES_COLD | UNIQUE | MALE | SMART | NAME_COMMA
+ranged-freq:20
+spell-power:10
+spells:BOULDER
+desc:Known as the giant of winter and the northern reaches,
+desc: he is tall even among giants, and his name is cursed in many lands.
+
+name:Ruby serpent
+base:serpent
+depth:14
+rarity:3
+color:R
+speed:2
+health:8d4
+sleep:15
+percept:6
+stealth:3
+will:7
+prot:10:5d4
+blow:BITE:FIRE:14:2d6
+flags:SERPENT | ATTR_MULTI | RAND_25 | RES_FIRE | HURT_COLD
+ranged-freq:20
+spell-power:6
+spells:BR_FIRE
+desc:A great serpent with scales of gleaming ruby.
+desc: An intense heat radiates from it.
+
+name:Creeping horror
+base:horror
+depth:14
+rarity:4
+color:g
+speed:1
+health:14d4
+light:-2
+sleep:10
+percept:8
+stealth:5
+will:11
+prot:13:2d4
+blow:CLAW:ACID:18:3d10
+flags:BASH_DOOR | NO_FEAR | HURT_LIGHT
+ranged-freq:15
+spells:SCARE
+desc:It slithers and crawls across the floor towards you.
+desc: The thought of it catching you tears at your mind.
+
+name:Ringrauko
+base:rauko
+depth:14
+rarity:1
+color:B
+speed:2
+health:10d4
+sleep:10
+percept:6
+stealth:3
+will:12
+prot:14:2d4
+blow:HIT:COLD:15:2d8
+flags:BASH_DOOR | SMART | RES_COLD | HURT_FIRE | RAUKO
+desc:A chill hangs in the air around this figure which is
+desc: almost that of a person. A cold gleaming blade is in its hand.
+
+name:Delthaur, Balrog of Terror
+base:rauko
+depth:14
+rarity:20
+color:g
+speed:2
+health:32d4
+light:-3
+sleep:5
+percept:7
+stealth:1
+will:14
+prot:15:4d4
+blow:HIT:FIRE:20:3d10
+blow:WHIP:DISARM:16:3d8
+flags:UNIQUE | MALE | SMART | GLOW | DROP_1D2 | DROP_100 | DROP_GREAT | NO_FEAR | BASH_DOOR | RAUKO | RES_FIRE | HURT_COLD | NAME_COMMA
+ranged-freq:15
+spells:SCARE
+desc:Some have called the Balrogs 'Demons of Terror', but none
+desc: inspires such fear as Delthaur. The very air around him
+desc: is filled with menace.
+
+name:Nan, the Giant
+base:giant
+depth:14
+rarity:30
+color:G
+speed:2
+health:40d4
+light:2
+sleep:15
+percept:5
+stealth:0
+will:11
+prot:11:1d4
+blow:HIT:HURT:15:3d13
+flags:DROP_1D2 | DROP_GOOD | DROP_CHOSEN | OPEN_DOOR | BASH_DOOR | UNIQUE | MALE | SMART | NAME_COMMA
+ranged-freq:10
+spell-power:12
+spells:BOULDER
+drop-artifact:'Glend'
+desc:Known as the giant of summer and the south, he towers above you
+desc: like a great tree. In his right hand, he holds the longest
+desc: sword you have ever beheld.
+
+name:Cave troll
+base:troll
+depth:15
+rarity:1
+color:u
+speed:2
+health:18d4
+sleep:15
+percept:4
+stealth:0
+will:4
+prot:11:2d4
+blow:HIT:BATTER:13:4d7
+blow:BITE:WOUND:12:2d11
+flags:MALE | FRIEND | DROP_33 | REGENERATE | OPEN_DOOR | BASH_DOOR | TROLL | HURT_LIGHT | SMART | NO_FEAR | KNOCK_BACK
+desc:A great brute of a troll, it seems to have come
+desc: from the depths of the very earth.
+
+name:Emerald serpent
+base:serpent
+depth:15
+rarity:3
+color:G
+speed:2
+health:8d4
+sleep:15
+percept:7
+stealth:3
+will:9
+prot:11:5d4
+blow:BITE:POISON:15:2d6
+flags:SERPENT | ATTR_MULTI | RAND_25 | RES_POIS
+ranged-freq:20
+spell-power:6
+spells:BR_POIS
+desc:A great serpent with scales of gleaming emerald.
+desc: Noxious vapours surround it.
+
+name:Oathwraith
+base:wraith
+depth:15
+rarity:6
+color:D
+speed:2
+health:12d4
+sleep:10
+percept:11
+stealth:10
+will:10
+prot:14:3d4
+blow:TOUCH:HUNGER:25
+flags:UNDEAD | RES_COLD | SMART | HURT_LIGHT | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | RES_CRIT | OPEN_DOOR
+ranged-freq:20
+spells:HOLD
+desc:A figure that seems made of void, its strangely human shape is cloaked
+desc: in shadow.  It reaches out at you.
+
+name:Cat warrior
+base:cat
+depth:15
+rarity:1
+color:U
+speed:3
+health:8d4
+sleep:20
+percept:10
+stealth:10
+will:5
+prot:15:1d4
+blow:CLAW:WOUND:18:1d9
+flags:FRIENDS | OPEN_DOOR | UNLOCK_DOOR | BASH_DOOR | SMART | DROP_33 | EXCHANGE
+desc:It is as though a great cat stood like a man.
+desc: You cannot tell whether its long scything claws
+desc: could be natural. It moves with astonishing
+desc: speed and agility.
+
+name:Amethyst serpent
+base:serpent
+depth:16
+rarity:3
+color:v
+speed:2
+health:8d4
+light:-2
+sleep:15
+percept:7
+stealth:3
+will:9
+prot:12:5d4
+blow:BITE:DARK:16:2d6
+flags:SERPENT | RAND_25 | HURT_LIGHT | ATTR_MULTI
+ranged-freq:20
+spell-power:6
+spells:BR_DARK
+desc:A great serpent with scales of darkly glinting amethyst.
+desc: Shadows darken as it approaches.
+
+name:Kemenrauko
+base:rauko
+depth:16
+rarity:2
+color:s
+speed:2
+health:10d4
+sleep:10
+percept:6
+stealth:0
+will:14
+prot:12:4d4
+blow:HIT:SHATTER:11:4d6
+flags:BASH_DOOR | TUNNEL_WALL | STONE | RAUKO | SMART | RES_COLD | RES_FIRE | RES_POIS | RES_CRIT
+desc:It seems the very stone from which Angband is hewn
+desc: now opposes you.
+
+name:Grotesque
+base:horror
+depth:16
+rarity:5
+color:W
+speed:4
+health:10d4
+sleep:0
+percept:10
+stealth:10
+will:10
+prot:-5:8d4
+blow:CLAW:WOUND:16:3d9
+flags:HIDDEN_MOVE | RES_COLD | RES_FIRE | STONE | OPEN_DOOR | BASH_DOOR | MINDLESS | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | NO_CRIT
+desc:'Huge shapes there stood like carven trolls
+desc: enormous hewn of blasted rock
+desc: to forms that mortal likeness mock;
+desc: monstrous and menacing, entombed,
+desc: at every turn they silent loomed
+desc: in fitful glares that leaped and died.'
+
+name:Young cold-drake
+base:dragon
+depth:16
+rarity:6
+color:w
+speed:2
+health:30d4
+sleep:30
+percept:8
+stealth:2
+will:13
+prot:11:2d4
+blow:CLAW:HURT:16:3d11
+blow:BITE:WOUND:12:2d21
+flags:DROP_1D2 | DROP_GOOD | SMART | TERRITORIAL | BASH_DOOR | DRAGON
+ranged-freq:20
+spells:CONF | SCARE | HOLD
+desc:Not all dragons have the gift of fire, but it is hardly
+desc: needed -- the lashing tail, the great claws, the sharp
+desc: teeth, and the mesmerising eyes...
+
+name:Umuiyan, the Doorkeeper
+base:cat
+depth:16
+rarity:15
+color:y
+speed:3
+health:12d4
+sleep:20
+percept:13
+stealth:10
+will:8
+prot:20:1d4
+blow:CLAW:WOUND:25:1d11
+flags:ESCORT | UNIQUE | MALE | OPEN_DOOR | BASH_DOOR | SMART | DROP_100 | UNLOCK_DOOR | DROP_GOOD | NAME_COMMA
+ranged-freq:50
+spell-power:21
+spells:ARROW2
+drop:arrow:Arrow:25:2d8
+desc:This cat seems older than most, and more sly.
+desc: He has long guarded the entrance to the fortress of Tevildo.
+
+name:Belegwath, Balrog of Shadow
+base:rauko
+depth:16
+rarity:20
+color:v
+speed:2
+health:36d4
+light:-5
+sleep:5
+percept:9
+stealth:1
+will:15
+prot:17:4d4
+blow:HIT:FIRE:22:2d14
+blow:WHIP:DISARM:18:3d8
+flags:UNIQUE | MALE | SMART | GLOW | DROP_1D2 | DROP_100 | DROP_GREAT | NO_FEAR | BASH_DOOR | RAUKO | RES_FIRE | HURT_COLD | NAME_COMMA
+desc:A fell fiery figure, great wings of shadow unfolding around
+desc: him. For many of the Children of Iluvatar, this has been their
+desc: final vision.
+
+name:Spectre
+depth:16
+rarity:6
+color:w
+speed:2
+health:8d4
+sleep:10
+percept:12
+stealth:8
+will:12
+prot:10
+blow:TOUCH:COLD:20:2d10
+blow:TOUCH:LOSE_GRA:30
+flags:RAND_25 | UNDEAD | FRIENDS | RES_COLD | SMART | HURT_LIGHT | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | RES_CRIT | PASS_WALL
+desc:An insubstantial and ragged figure, scarcely to be seen.
+desc: Its eyes form two dark pits in a ruined face.
+
+name:Spider of Gorgoroth
+base:spider
+depth:17
+rarity:1
+color:r
+speed:2
+health:18d4
+light:-1
+sleep:15
+percept:8
+stealth:3
+will:11
+prot:14:1d4
+blow:BITE:ENTRANCE:16:2d13
+flags:BASH_DOOR | SPIDER | HURT_LIGHT | RES_POIS | SMART | TERRITORIAL
+desc:This great spider was one of the brood laid by the
+desc: Unlight, Ungoliant, in the mountains of Ered Gorgoroth.
+desc: Some have made their way North to Angband, and crept down
+desc: to the very darkest parts of the stronghold.
+
+name:Greater werewolf
+base:wolf
+depth:17
+rarity:1
+color:s
+speed:3
+health:14d4
+sleep:15
+percept:11
+stealth:5
+will:10
+prot:18:2d4
+blow:CLAW:WOUND:20:3d7
+blow:BITE:POISON:17:2d11
+flags:RAND_25 | OPEN_DOOR | BASH_DOOR | WOLF | FRIEND | SMART
+desc:It is a huge wolf with eyes that glow with manly intelligence.
+
+name:Adamant serpent
+base:serpent
+depth:17
+rarity:3
+color:w
+speed:2
+health:8d4
+sleep:15
+percept:8
+stealth:3
+will:9
+prot:13:5d4
+blow:BITE:WOUND:17:3d6
+flags:SERPENT | ATTR_MULTI | RAND_25 | RES_FIRE | RES_COLD | RES_POIS
+ranged-freq:30
+spell-power:6
+spells:BR_FIRE | BR_COLD | BR_POIS | BR_DARK
+desc:A great serpent with scales of gleaming diamond.
+desc: It sparkles with prismatic hues.
+
+name:Lesser vampire
+base:vampire
+depth:17
+rarity:1
+color:s
+speed:3
+health:8d4
+sleep:20
+percept:9
+stealth:7
+will:11
+prot:21:1d4
+blow:CLAW:WOUND:22:3d5
+blow:BITE:LOSE_CON:17:2d7
+flags:FLYING | RAND_25 | OPEN_DOOR | UNLOCK_DOOR | HURT_LIGHT | SMART
+desc:It flits quickly back and forth, like a great bat,
+desc: although surely no bat could harbour so much malice
+desc: behind its eyes.
+
+name:Cat assassin
+base:cat
+depth:17
+rarity:3
+color:D
+speed:3
+health:8d4
+sleep:5
+percept:12
+stealth:15
+will:5
+prot:19:1d4
+blow:CLAW:WOUND:20:1d11
+flags:INVISIBLE | OPEN_DOOR | UNLOCK_DOOR | BASH_DOOR | SMART | DROP_100 | FRIEND
+ranged-freq:50
+spell-power:23
+spells:ARROW1
+drop:arrow:Arrow:25:2d8
+desc:Slinking in the shadows, this jet-black cat is hard
+desc: to discern even as it fires its cruel bow.
+
+name:Scatha the Worm
+base:dragon
+depth:17
+rarity:30
+color:B
+speed:2
+health:35d4
+sleep:30
+percept:9
+stealth:2
+will:18
+prot:14:2d4
+blow:CLAW:HURT:20:3d11
+blow:BITE:WOUND:17:2d21
+flags:UNIQUE | MALE | TERRITORIAL | DROP_2D2 | DROP_GOOD | SMART | BASH_DOOR | DRAGON
+ranged-freq:15
+spells:CONF | SCARE | HOLD
+desc:A long and sinuous worm, coiling on the floor.
+desc: His claws are sharp, and by some force, cunning, or
+desc: treachery, his hoard is large for a young worm.
+
+name:Oikeroi, Guard of Tevildo
+base:cat
+depth:17
+rarity:15
+color:o
+speed:3
+health:18d4
+sleep:15
+percept:13
+stealth:10
+will:9
+prot:21:1d4
+blow:CLAW:WOUND:28:1d11
+flags:UNIQUE | MALE | OPEN_DOOR | BASH_DOOR | SMART | UNLOCK_DOOR | UNIQUE_FRIEND | DROP_1D2 | DROP_GOOD | NAME_COMMA
+desc:A fierce and warlike cat, thane of Tevildo
+desc: and ever at his side.
+
+name:Young fire-drake
+base:dragon
+depth:18
+rarity:6
+color:r
+speed:2
+health:30d4
+sleep:30
+percept:9
+stealth:2
+will:16
+prot:13:2d4
+blow:CLAW:HURT:18:3d11
+blow:BITE:FIRE:14:2d21
+flags:DROP_1D2 | DROP_GOOD | SMART | TERRITORIAL | BASH_DOOR | DRAGON | RES_FIRE | HURT_COLD
+ranged-freq:30
+spell-power:16
+spells:BR_FIRE | SCARE
+desc:...no feet he heard, though the earth quaked.
+desc: when the young dragon his thirst slaked.
+desc: and the stream smoked at his dark door.
+desc: The flames hissed on the dank floor,
+desc: and he died alone in the red fire;
+desc: his bones were ashes in the hot mire.
+
+name:Darting horror
+base:horror
+depth:18
+rarity:5
+color:r
+speed:4
+health:6d4
+sleep:10
+percept:14
+stealth:3
+will:14
+prot:20:2d4
+blow:BITE:HALLU:22:2d9
+flags:BASH_DOOR | RAND_25 | NO_FEAR
+ranged-freq:15
+spells:SCARE
+desc:No larger than a wolf, but much swifter,
+desc: it is hard to comprehend what evil thought
+desc: first brought this into the world.
+desc: You would prefer not to see it any closer.
+
+name:Wraith
+base:wraith
+depth:18
+rarity:4
+color:s
+speed:2
+health:14d4
+sleep:10
+percept:15
+stealth:15
+will:15
+prot:13:4d4
+blow:TOUCH:DARK:26:2d8
+flags:UNDEAD | RES_COLD | SMART | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | RES_CRIT | HURT_LIGHT | OPEN_DOOR
+ranged-freq:10
+spells:HOLD | SLOW
+desc:A mantled shape of void that was once perhaps man or elf,
+desc: but through Morgoth's black arts walks as his servant. Noseless
+desc: it scents the air, turning this way and that.
+
+name:Ururauko
+base:rauko
+depth:18
+rarity:1
+color:R
+speed:2
+health:4d4
+light:3
+sleep:10
+percept:8
+stealth:2
+will:14
+prot:15:2d4
+blow:HIT:FIRE:26:4d8
+flags:BASH_DOOR | SMART | RAUKO | RES_FIRE | HURT_COLD
+desc:A form of pure flame, it is bright to look at and
+desc: hard to tell the shape. A lesser relative, perhaps,
+desc: of Arien, who guides the Sun, it was one of those who
+desc: flocked to the banner of Melkor when the World was
+desc: yet young.
+
+name:Tevildo, Prince of Cats
+base:cat
+depth:18
+rarity:10
+color:u
+speed:3
+health:14d4
+sleep:15
+percept:14
+stealth:10
+will:10
+prot:22:1d4
+blow:CLAW:WOUND:26:1d13
+flags:UNIQUE | MALE | OPEN_DOOR | BASH_DOOR | SMART | UNLOCK_DOOR | UNIQUE_FRIEND | DROP_1D2 | DROP_GREAT | CRUEL_BLOW | NAME_COMMA
+desc:Renowned for his cruelty even among the cruel
+desc: cat-people, is it a wonder that this fierce
+desc: warrior is royalty?
+
+name:Turkano, Balrog of the Hosts
+base:rauko
+depth:18
+rarity:20
+color:b
+speed:2
+health:40d4
+light:-3
+sleep:5
+percept:9
+stealth:1
+will:19
+prot:19:5d4
+blow:HIT:FIRE:24:2d16
+blow:WHIP:DISARM:20:3d8
+flags:UNIQUE | MALE | SMART | GLOW | DROP_1D2 | DROP_100 | DROP_GREAT | ESCORTS | NO_FEAR | BASH_DOOR | RAUKO | RES_FIRE | HURT_COLD | NAME_COMMA
+desc:All of the Balrogs are held among the mighty of Angband and
+desc: obeyed swiftly. But Turkano is a true battle-commander,
+desc: leading a host of Raukar to bring
+desc: glory after glory for his fell master.
+
+name:Ancient sapphire serpent
+base:ancient serpent
+depth:19
+rarity:6
+color:B
+speed:2
+health:10d4
+sleep:15
+percept:8
+stealth:2
+will:10
+prot:15:6d4
+blow:BITE:COLD:19:2d9
+flags:SERPENT | ATTR_MULTI | RAND_25 | RES_COLD | HURT_FIRE
+ranged-freq:20
+spell-power:10
+spells:BR_COLD
+desc:A vast serpentine form encrusted with scales of sapphire.
+desc: Frost covers it from head to tail.
+
+name:Troll guard
+base:troll
+depth:19
+rarity:1
+color:s
+speed:2
+health:20d4
+sleep:15
+percept:5
+stealth:0
+will:5
+prot:14:3d4
+blow:HIT:BATTER:18:4d8
+flags:FRIENDS | DROP_33 | REGENERATE | NO_FEAR | OPEN_DOOR | BASH_DOOR | TROLL | HURT_LIGHT | SMART | KNOCK_BACK
+desc:The very largest and toughest of the trolls are
+desc: taken into the train of Gothmog. They are trained
+desc: for war and given dark armour and great vicious weapons.
+
+name:Vampire
+base:vampire
+depth:19
+rarity:1
+color:W
+speed:3
+health:10d4
+sleep:20
+percept:11
+stealth:7
+will:13
+prot:24:1d4
+blow:CLAW:WOUND:25:3d5
+blow:BITE:LOSE_STR_CON:20:2d9
+flags:FLYING | RAND_25 | OPEN_DOOR | UNLOCK_DOOR | HURT_LIGHT | SMART
+desc:A nightmarish bat-like form, the size of a man.
+
+name:Nameless thing
+base:nameless thing
+depth:19
+rarity:1
+color:s
+speed:1
+health:70d4
+sleep:5
+percept:5
+stealth:0
+will:14
+prot:7:6d4
+blow:CRUSH:ACID:17:5d10
+flags:BASH_DOOR | TUNNEL_WALL | REGENERATE | MINDLESS | TERRITORIAL | RAND_25 | RAND_50 | FORCE_DEPTH
+desc:'Far, far below the deepest delvings of the Dwarves, the world is
+desc: gnawed by nameless things...' It is as a vast grub,
+desc: eating its way through the roots of the earth.
+
+name:Smaug the Golden
+base:dragon
+depth:19
+rarity:30
+color:Y
+speed:3
+health:35d4
+sleep:30
+percept:9
+stealth:2
+will:19
+prot:14:2d4
+blow:CLAW:HURT:23:3d11
+blow:BITE:FIRE:19:2d21
+flags:UNIQUE | MALE | DROP_2D2 | DROP_GOOD | SMART | FLYING | TERRITORIAL | BASH_DOOR | DRAGON | RES_FIRE | HURT_COLD
+ranged-freq:20
+spell-power:20
+spells:BR_FIRE | CONF | HOLD
+desc:A dragon with the inquisitiveness of youth --
+desc: but a young dragon is a deadly foe still, and
+desc: this one flies through the dark halls on great wings.
+
+name:Maeglin, Betrayer of Gondolin
+base:person
+depth:19
+rarity:100
+color:s
+speed:2
+health:15d4
+light:2
+sleep:15
+percept:15
+stealth:5
+will:18
+prot:23:5d4
+blow:HIT:HURT:33:2d8
+flags:UNIQUE | ELF | MALE | DROP_1D2 | UNLOCK_DOOR | DROP_CHOSEN | DROP_GREAT | OPEN_DOOR | BASH_DOOR | TAKE_ITEM | SMART | RIPOSTE | NAME_COMMA
+drop-artifact:of Maeglin
+desc:Named "sharp-glance" by his father Eol, the dark elf. Maeglin
+desc: was close in the counsels of Turgon, King of Gondolin, but
+desc: betrayed him to the black enemy Morgoth Bauglir.
+desc: Who can say what twist of fate has brought him at last
+desc: to that dark king's deep halls?
+
+name:Ancient ruby serpent
+base:ancient serpent
+depth:20
+rarity:3
+color:R
+speed:2
+health:10d4
+sleep:15
+percept:8
+stealth:2
+will:12
+prot:16:6d4
+blow:BITE:FIRE:20:2d9
+flags:SERPENT | ATTR_MULTI | RAND_25 | RES_FIRE | HURT_COLD
+ranged-freq:20
+spell-power:10
+spells:BR_FIRE
+desc:A vast serpentine form encrusted with scales of ruby.
+desc: Wisps of smoke rise from its nostrils and the
+desc: extreme heat surrounding it makes you gasp for breath.
+
+name:Great cold-drake
+base:great dragon
+depth:20
+rarity:6
+color:W
+speed:2
+health:50d4
+sleep:30
+percept:9
+stealth:0
+will:18
+prot:13:2d4
+blow:CLAW:HURT:21:3d13
+blow:BITE:WOUND:16:2d23
+flags:DROP_2D2 | DROP_GOOD | SMART | TERRITORIAL | BASH_DOOR | DRAGON
+ranged-freq:20
+spells:CONF | SCARE | HOLD
+desc:Dragons never stop growing, and may reach a dreadful size.
+desc: The oldest of the dragons are both vast and cunning beyond
+desc: the understanding of mortals.
+
+name:Silent watcher
+base:horror
+depth:20
+rarity:10
+color:s
+speed:2
+health:10d4
+sleep:5
+percept:0
+stealth:20
+will:15
+prot:-5:8d4
+flags:NEVER_MOVE | RES_COLD | RES_FIRE | STONE | SHORT_SIGHTED | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | NO_CRIT
+ranged-freq:100
+spells:SCREECH
+desc:They were like great figures seated upon thrones.
+desc: Each had three joined bodies, and three heads facing outward,
+desc: and inward, and across the gateway. The heads had vulture-faces,
+desc: and on their great knees were laid clawlike hands.
+desc: They seemed to be carved out of huge blocks of stone, immovable,
+desc: and yet they were aware: some dreadful spirit of evil
+desc: vigilance abode in them. They knew an enemy. Visible or
+desc: invisible none could pass unheeded. They would forbid his entry,
+desc: or his escape.
+
+name:Gwathrauko
+base:rauko
+depth:20
+rarity:4
+color:D
+speed:2
+health:8d4
+light:-3
+sleep:10
+percept:8
+stealth:5
+will:16
+prot:18:3d4
+blow:HIT:DARK:18:2d8
+flags:BASH_DOOR | SMART | RAUKO | HURT_LIGHT
+desc:A spirit of Darkness itself, it was easily swayed to Melkor's
+desc: side when his black banner was raised in defiance of Iluvatar.
+
+name:Draugluin, Sire of Werewolves
+base:wolf
+depth:20
+rarity:15
+color:W
+speed:3
+health:22d4
+sleep:20
+percept:17
+stealth:5
+will:15
+prot:24:3d4
+blow:CLAW:WOUND:26:3d9
+blow:BITE:POISON:23:2d13
+flags:UNIQUE | MALE | ESCORT | SMART | RAND_25 | DROP_1D2 | DROP_CHOSEN | OPEN_DOOR | BASH_DOOR | WOLF | NAME_COMMA
+drop-artifact:of Draugluin
+desc:Draugluin provides Sauron with a fearsome personal guard.  He is an
+desc: enormous wolf inhabited with a human spirit.  He is chief of all his
+desc: kind.
+
+name:Vallach, Balrog of Sudden Flame
+base:rauko
+depth:20
+rarity:20
+color:y
+speed:3
+health:44d4
+light:-3
+sleep:5
+percept:12
+stealth:1
+will:19
+prot:21:5d4
+blow:HIT:FIRE:26:3d12
+blow:WHIP:DISARM:22:3d8
+flags:UNIQUE | MALE | SMART | GLOW | DROP_1D2 | DROP_100 | DROP_GREAT | NO_FEAR | BASH_DOOR | RAUKO | RES_FIRE | HURT_COLD | NAME_COMMA
+desc:A huge man-like shape, cloaked in flame and darkness both. He swings
+desc: a cruel fiery axe, and moves more swiftly than should be possible in
+desc: such a being.
+
+name:Ancient spider
+base:spider
+depth:21
+rarity:3
+color:g
+speed:2
+health:20d4
+sleep:15
+percept:8
+stealth:3
+will:16
+prot:19:1d4
+blow:BITE:POISON:22:2d19
+flags:SMART | BASH_DOOR | SPIDER | RES_POIS | TERRITORIAL
+desc:One of the oldest of brood of Ungoliant, its huge bloated body
+desc: drips with venom.
+
+name:Ancient emerald serpent
+base:ancient serpent
+depth:21
+rarity:3
+color:G
+speed:2
+health:10d4
+sleep:15
+percept:9
+stealth:2
+will:13
+prot:17:6d4
+blow:BITE:POISON:21:2d9
+flags:SERPENT | ATTR_MULTI | RAND_25 | RES_POIS
+ranged-freq:20
+spell-power:10
+spells:BR_POIS
+desc:A vast serpentine form encrusted with scales of emerald.
+desc: It is enveloped in clouds of poisonous vapour.
+
+name:Vampire lord
+base:vampire
+depth:21
+rarity:2
+color:V
+speed:3
+health:12d4
+sleep:20
+percept:11
+stealth:7
+will:15
+prot:26:1d4
+blow:CLAW:WOUND:29:3d7
+blow:BITE:LOSE_ALL:24:2d9
+flags:FLYING | OPEN_DOOR | BASH_DOOR | UNLOCK_DOOR | RAND_25 | SMART | HURT_LIGHT
+desc:Like a graceful, humanoid bat. Its black eyes regard
+desc: everything around it as prey.
+
+name:Dagorhir, the Elfbane
+base:troll
+depth:21
+rarity:15
+color:r
+speed:2
+health:24d4
+sleep:15
+percept:6
+stealth:0
+will:10
+prot:17:4d4
+blow:HIT:BATTER:17:4d10
+flags:UNIQUE | ESCORT | DROP_1D2 | DROP_GOOD | REGENERATE | NO_FEAR | OPEN_DOOR | BASH_DOOR | TROLL | MALE | HURT_LIGHT | SMART | ELFBANE | KNOCK_BACK | NAME_COMMA
+desc:A mountain of a troll, clad in rusted iron plates.
+desc: He leads a patrol of the feared Troll Guard.
+
+name:Gostir, the Dread Glance
+base:great dragon
+depth:21
+rarity:30
+color:B
+speed:2
+health:60d4
+sleep:30
+percept:13
+stealth:0
+will:22
+prot:14:2d4
+blow:CLAW:HURT:24:3d13
+blow:BITE:WOUND:19:2d23
+flags:UNIQUE | MALE | TERRITORIAL | DROP_2D2 | DROP_GREAT | SMART | BASH_DOOR | DRAGON | NAME_COMMA
+ranged-freq:20
+spells:CONF | SCARE | HOLD
+desc:When the gaze of a worm is so deadly, what need
+desc: has he fire?
+
+name:Ancient amethyst serpent
+base:ancient serpent
+depth:22
+rarity:3
+color:v
+speed:2
+health:10d4
+light:-3
+sleep:15
+percept:10
+stealth:2
+will:14
+prot:18:6d4
+blow:BITE:DARK:22:2d9
+flags:SERPENT | RAND_25 | HURT_LIGHT | ATTR_MULTI
+ranged-freq:20
+spell-power:10
+spells:BR_DARK
+desc:A vast serpentine form encrusted with scales of amethyst.
+desc: It is wreathed in shadow.
+
+name:Great fire-drake
+base:great dragon
+depth:22
+rarity:6
+color:r
+speed:2
+health:50d4
+sleep:30
+percept:12
+stealth:0
+will:20
+prot:14:2d4
+blow:CLAW:HURT:23:3d13
+blow:BITE:FIRE:18:2d23
+flags:DROP_2D2 | DROP_GOOD | SMART | TERRITORIAL | BASH_DOOR | DRAGON | RES_FIRE | HURT_COLD
+ranged-freq:30
+spell-power:24
+spells:BR_FIRE | HOLD | SCARE
+desc:The oldest and largest drakes are likely to have accrued
+desc: large hoards, for even in the pits of Angband, where
+desc: the nightmarish teeth and claws might do not distinguish
+desc: them, who could ever compare with the flames of a Dragon?
+
+name:Hithrauko
+base:rauko
+depth:22
+rarity:2
+color:Z
+speed:3
+health:4d4
+sleep:10
+percept:9
+stealth:3
+will:18
+prot:17:4d4
+blow:ENGULF:HALLU:27:4d5
+flags:PASS_DOOR | INVISIBLE | RES_CRIT | RES_POIS | FLYING | RAND_50 | RAUKO | SMART
+desc:There are many smokes and strange airs in the depths
+desc: of Angband, and not a few are unwholesome, but rarely
+desc: do they move with such active malice...
+
+name:Shelob, Spider of Darkness
+base:spider
+depth:22
+rarity:30
+color:s
+speed:2
+health:22d4
+light:-3
+sleep:20
+percept:8
+stealth:3
+will:16
+prot:20:2d4
+blow:BITE:ENTRANCE:25:2d15
+flags:UNIQUE | FEMALE | TERRITORIAL | SMART | BASH_DOOR | SPIDER | HURT_LIGHT | RES_POIS | NAME_COMMA
+desc:The line of Ungoliant seems to run true in this great
+desc: spider, for the very dungeon around her is sucked
+desc: of its light, that she takes to weave her deadly webs.
+
+name:Lungorthin, Lord of Balrogs
+base:rauko
+depth:22
+rarity:20
+color:w
+speed:2
+health:48d4
+light:-3
+sleep:5
+percept:14
+stealth:1
+will:21
+prot:23:5d4
+blow:HIT:FIRE:28:2d18
+blow:WHIP:DISARM:24:3d10
+flags:UNIQUE | MALE | SMART | GLOW | DROP_1D2 | DROP_100 | DROP_GREAT | NO_FEAR | BASH_DOOR | RAUKO | RES_FIRE | HURT_COLD | NAME_COMMA
+ranged-freq:10
+spell-power:10
+spells:BR_FIRE
+desc:A massive form cloaked in flame.  Lungorthin stares balefully at you
+desc: with eyes that smoulder.  The dungeon floor where he stands is
+desc: scorched by the heat of his body.
+
+name:Ancient adamant serpent
+base:ancient serpent
+depth:23
+rarity:3
+color:w
+speed:2
+health:10d4
+sleep:15
+percept:10
+stealth:2
+will:14
+prot:19:6d4
+blow:BITE:WOUND:23:3d9
+flags:SERPENT | ATTR_MULTI | RAND_25 | RES_FIRE | RES_COLD | RES_POIS
+ranged-freq:30
+spell-power:10
+spells:BR_FIRE | BR_COLD | BR_POIS | BR_DARK
+desc:A vast serpentine form encrusted with scales of adamant.
+desc: Prismatic colours gleam in its scales. Few live to see another.
+
+name:Unrelenting horror
+base:horror
+depth:23
+rarity:2
+color:T
+speed:1
+health:100d4
+sleep:5
+percept:10
+stealth:2
+will:20
+prot:11:3d4
+blow:BITE:POISON:24:6d5
+flags:BASH_DOOR | REGENERATE | NO_FEAR
+ranged-freq:25
+spells:SCARE
+desc:You have no idea what could have created the creature
+desc: that shambles towards you -- if creature is the right
+desc: word. You have the sense that it is constantly devouring
+desc: itself, and yet never growing any less. It is not
+desc: clear how one could ever slay such a thing.
+
+name:Ancalagon the Black
+base:dragon
+depth:23
+rarity:6
+color:D
+speed:3
+health:35d4
+sleep:30
+percept:11
+stealth:2
+will:22
+prot:17:2d4
+blow:CLAW:HURT:29:3d11
+blow:BITE:FIRE:25:2d21
+flags:UNIQUE | MALE | DROP_2D2 | DROP_GREAT | SMART | BASH_DOOR | FLYING | TERRITORIAL | DRAGON | RES_FIRE | HURT_COLD
+ranged-freq:30
+spell-power:20
+spells:BR_FIRE
+desc:Out of the pits of Angband there issued the winged dragons,
+desc: that had not before been seen; and so sudden and ruinous
+desc: was the onset of that dreadful fleet that the host of the
+desc: Valar was driven back, for the coming of the dragons was
+desc: with great thunder, and lightning, and a tempest of fire.
+
+name:Thuringwethil, the Vampire Messenger
+base:vampire
+depth:23
+rarity:3
+color:r
+speed:4
+health:16d4
+sleep:10
+percept:15
+stealth:7
+will:20
+prot:30:1d4
+blow:CLAW:WOUND:35:3d7
+blow:BITE:LOSE_ALL:29:2d9
+flags:UNIQUE | FEMALE | DROP_2D2 | DROP_GOOD | DROP_CHOSEN | SMART | FLYING | RAND_25 | OPEN_DOOR | UNLOCK_DOOR | BASH_DOOR | HURT_LIGHT | NAME_COMMA
+drop-artifact:of Thuringwethil
+desc:Chief messenger between Sauron and Morgoth, she is surely the most
+desc: deadly of her vampire race.  At first she is charming to meet, but
+desc: her wings and eyes give away her true form.
+
+name:Gothmog, High Captain of Balrogs
+base:rauko
+depth:24
+rarity:3
+color:r
+speed:2
+health:52d4
+light:-3
+sleep:5
+percept:15
+stealth:1
+will:22
+prot:25:6d4
+blow:HIT:FIRE:30:3d14
+blow:WHIP:DISARM:26:3d10
+flags:UNIQUE | MALE | SMART | GLOW | DROP_1D2 | DROP_100 | DROP_GREAT | NO_FEAR | BASH_DOOR | RAUKO | RES_FIRE | HURT_COLD | NAME_COMMA
+desc:Gothmog is the High Captain of Angband and Morgoth's personal guard.  He is
+desc: renowned for slaying Feanor and Fingon, two of the High Kings of the
+desc: Noldor Elves, and has never been defeated in combat.  With his whip
+desc: of flame and awesome fiery breath he saved his master from
+desc: Ungoliant's rage.
+
+name:Ungoliant, the Gloomweaver
+base:spider
+depth:24
+rarity:3
+color:D
+speed:2
+health:36d4
+light:-6
+sleep:20
+percept:8
+stealth:3
+will:24
+prot:20:3d4
+blow:BITE:POISON:24:2d21
+flags:UNIQUE | FEMALE | SMART | BASH_DOOR | TERRITORIAL | SPIDER | HURT_LIGHT | RES_POIS | NAME_COMMA
+ranged-freq:15
+spell-power:8
+spells:BR_DARK
+desc:This enormous, hideous spirit of void is in the form of a spider of
+desc: immense proportions.  She is surrounded by a cloud of Unlight as she
+desc: sucks in all living light into her bloated body, and breathes out the
+desc: blackest of darkness.  She is always ravenously hungry and would even
+desc: eat herself to avoid starvation.
+
+name:Glaurung, the Deceiver
+base:great dragon
+depth:24
+rarity:3
+color:Y
+speed:2
+health:60d4
+sleep:20
+percept:10
+stealth:0
+will:24
+prot:16:2d4
+blow:CLAW:HURT:29:3d15
+blow:BITE:FIRE:24:2d25
+flags:UNIQUE | MALE | DROP_3D2 | DROP_GREAT | SMART | BASH_DOOR | TERRITORIAL | DRAGON | RES_FIRE | HURT_COLD | NAME_COMMA
+ranged-freq:40
+spell-power:28
+spells:BR_FIRE | SCARE | HOLD | CONF
+desc:Lo! the golden dragon of the God of Hell...
+desc: Father and forefather to the other dragons, he is grown
+desc: now to an enormous size, matched only by the size of the
+desc: hoard he has gathered around him.
+
+name:Gorthaur, Servant of Morgoth
+base:wolf
+depth:24
+rarity:3
+color:u
+speed:3
+health:30d4
+sleep:10
+percept:20
+stealth:5
+will:24
+prot:29:3d4
+blow:CLAW:WOUND:31:3d11
+blow:BITE:POISON:28:2d15
+flags:UNIQUE | MALE | DROP_2D2 | DROP_GREAT | SMART | OPEN_DOOR | UNLOCK_DOOR | BASH_DOOR | WOLF | ESCORT | NAME_COMMA
+ranged-freq:25
+spells:HOLD | SNG_OATHS
+song:21
+desc:He is Morgoth's most powerful servant, and marshals great
+desc: forces of his own. Also known as Thu or Sauron, he is a
+desc: powerful maia, able to take on many forms. He appears
+desc: now before you as a great wolf with matted fur and glowing
+desc: eyes.
+
+name:Morgoth, Lord of Darkness
+base:Morgoth
+depth:25
+rarity:1
+color:D
+speed:2
+health:160d4
+light:7
+sleep:10
+percept:10
+stealth:0
+will:25
+prot:20:5d4
+blow:HIT:SHATTER:20:6d10
+flags:UNIQUE | QUESTOR | MALE | OPEN_DOOR | UNLOCK_DOOR | BASH_DOOR | TUNNEL_WALL | DROP_3D2 | DROP_GREAT | DROP_CHOSEN | SMART | NO_FEAR | NAME_COMMA
+ranged-freq:25
+spells:EARTHQUAKE | SNG_BIND | SNG_PIERCE
+song:20
+drop-artifact:'Grond'
+drop-artifact:of Morgoth
+desc:He is the Master of the Pits of Angband. He rages with everlasting
+desc: anger, seeking forever to dominate all that is light
+desc: and good in the world. He is the origin of man's fear of darkness
+desc: and created many foul creatures with his evil powers. Orcs, Dragons,
+desc: and Trolls are his most foul corruptions, causing much pain and
+desc: suffering in the world to please him. In his right hand he bears
+desc: Grond, the mighty Hammer of the Underworld. His disgusting visage,
+desc: twisted with evil, is crowned with iron, the three Silmarils forever
+desc: burning him. You need to get to that crown.
+
+name:Carcharoth, the Jaws of Thirst
+base:wolf
+depth:25
+rarity:1
+color:r
+speed:4
+health:30d4
+sleep:20
+percept:20
+stealth:5
+will:20
+prot:30:2d4
+blow:BITE:POISON:29:2d17
+flags:UNIQUE | MALE | FORCE_DEPTH | SMART | WOLF | NAME_COMMA
+desc:At last before them far away
+desc: they saw the glimmering wraith of day,
+desc: the mighty archway of the gate -
+desc: and there a horror new did wait.
+desc: Upon the threshold, watchful, dire,
+desc: his eyes new-kindled with dull fire,
+desc: towered Carcharoth, a biding doom:
+desc: his jaws were gaping like a tomb,
+desc: his teeth were bare, his tongue aflame;
+desc: aroused he watched that no one came,
+desc: no flitting shade nor hunted shape,
+desc: seeking from Angband to escape.
+
+name:Feanor, High King of the Noldor
+base:person
+depth:30
+rarity:5
+color:Z
+flags:UNIQUE | MALE | NAME_COMMA
+
+name:Luthien Tinuviel
+base:person
+depth:30
+rarity:5
+color:b
+flags:UNIQUE | FEMALE
+
+name:Thingol, the Hidden King
+base:person
+depth:30
+rarity:5
+color:s
+flags:UNIQUE | MALE | NAME_COMMA
+
+name:Beren, Son of Barahir
+base:person
+depth:30
+rarity:5
+color:u
+flags:UNIQUE | MALE | NAME_COMMA
+
+name:Huan, Hound of Valinor
+base:wolf
+depth:30
+rarity:5
+color:Y
+flags:UNIQUE | MALE | NAME_COMMA
+
+name:Eagle of Manwe
+base:flyer
+depth:30
+rarity:5
+color:y
+
+name:Thorondor, King of Eagles
+base:flyer
+depth:30
+rarity:10
+color:w
+flags:UNIQUE | MALE | NAME_COMMA
+
+name:Ent
+base:troll
+depth:30
+rarity:10
+color:g
+flags:MALE
+
+name:Ent-wife
+base:troll
+depth:30
+rarity:10
+color:g
+flags:FEMALE
+
+name:Manwe, Lord of the Breath of Arda
+base:Morgoth
+depth:30
+rarity:10
+color:v
+flags:UNIQUE | MALE | NAME_COMMA
+
+name:Varda, Lady of the Stars
+base:Morgoth
+depth:30
+rarity:10
+color:w
+flags:UNIQUE | FEMALE | NAME_COMMA
+
+name:Ulmo, Lord of Waters
+base:Morgoth
+depth:30
+rarity:20
+color:b
+flags:UNIQUE | MALE | NAME_COMMA
+
+name:Aule, the Smith
+base:Morgoth
+depth:30
+rarity:20
+color:r
+flags:UNIQUE | MALE | NAME_COMMA
+
+name:Yavanna, the Giver of Fruits
+base:Morgoth
+depth:30
+rarity:30
+color:G
+flags:UNIQUE | FEMALE | NAME_COMMA
+
+name:Mandos, Doomsman of the Valar
+base:Morgoth
+depth:30
+rarity:10
+color:D
+flags:UNIQUE | MALE | NAME_COMMA
+
+name:Vaire, the Weaver
+base:Morgoth
+depth:30
+rarity:40
+color:y
+flags:UNIQUE | FEMALE | NAME_COMMA
+
+name:Lorien, Master of Dreams
+base:Morgoth
+depth:30
+rarity:40
+color:r
+flags:UNIQUE | MALE | NAME_COMMA
+
+name:Este, the Healer
+base:Morgoth
+depth:30
+rarity:40
+color:s
+flags:UNIQUE | FEMALE | NAME_COMMA
+
+name:Nienna, Lady of Mourning
+base:Morgoth
+depth:30
+rarity:40
+color:V
+flags:UNIQUE | FEMALE | NAME_COMMA
+
+name:Tulkas, the Valiant
+base:Morgoth
+depth:30
+rarity:10
+color:o
+flags:UNIQUE | MALE | NAME_COMMA
+
+name:Nessa, the Dancer
+base:Morgoth
+depth:30
+rarity:40
+color:B
+flags:UNIQUE | FEMALE | NAME_COMMA
+
+name:Orome, Lord of Forests
+base:Morgoth
+depth:30
+rarity:40
+color:V
+flags:UNIQUE | MALE | NAME_COMMA
+
+name:Vana, the Ever Young
+base:Morgoth
+depth:30
+rarity:40
+color:W
+flags:UNIQUE | FEMALE | NAME_COMMA
+
+name:Melkor, Rightful Lord of Arda
+base:Morgoth
+depth:40
+rarity:0
+color:w
+flags:UNIQUE | MALE | NAME_COMMA
+desc:Clothed in shining white, he appears as a beacon of
+desc: hope and strength in this fallen world.
+

@@ -96,6 +96,13 @@ desc:confuse
 effect-type:flag
 resist:PROT_CONF
 
+name:TERRIFY
+power:10
+eval:10
+desc:terrify
+effect-type:flag
+resist:PROT_FEAR
+
 name:ENTRANCE
 power:0
 eval:40
