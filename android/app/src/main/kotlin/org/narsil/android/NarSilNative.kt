@@ -130,6 +130,10 @@ object NarSilNative {
     /** The game option "Automatically clear -more- prompts"; its value is META_AUTO_MORE. */
     @JvmStatic external fun nativeSetAutoMore(on: Boolean)
     @JvmStatic external fun nativeSetItemDetails(on: Boolean)
+    /** Quick slots (narsil_bridge.h): the pinned kinds, their published lines ("kind \t carried \t name"), and use one. */
+    @JvmStatic external fun nativeSetQuickKinds(kinds: IntArray)
+    @JvmStatic external fun nativeQuickSlots(): String
+    @JvmStatic external fun nativeRequestUseKind(kind: Int)
     @JvmStatic external fun nativeRequestLookList()
     @JvmStatic external fun nativeRequestLookMonsters()
     @JvmStatic external fun nativeInfoGeneration(): Long
@@ -177,6 +181,7 @@ object NarSilNative {
     const val TAB_SMITH = 5
     const val TAB_OPTIONS = 6
     const val TAB_COUNT = 7
+    const val QUICK_MAX = 4
     const val PANEL_TAB = 1 shl 24
     const val PANEL_CLOSE = PANEL_TAB + TAB_COUNT
     const val CHARACTER_SCREEN = 1

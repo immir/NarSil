@@ -335,6 +335,29 @@ JNIEXPORT void JNICALL JNI_FN(nativeSetItemDetails)(JNIEnv *env, jclass cls, jbo
 	nb_set_item_details(on);
 }
 
+JNIEXPORT void JNICALL JNI_FN(nativeSetQuickKinds)(JNIEnv *env, jclass cls, jintArray kinds)
+{
+	(void)cls;
+	const jsize n = (*env)->GetArrayLength(env, kinds);
+	jint *const k = (*env)->GetIntArrayElements(env, kinds, NULL);
+	nb_set_quick_kinds((const int32_t *)k, (int)n);
+	(*env)->ReleaseIntArrayElements(env, kinds, k, JNI_ABORT);
+}
+
+JNIEXPORT jstring JNICALL JNI_FN(nativeQuickSlots)(JNIEnv *env, jclass cls)
+{
+	(void)cls;
+	char text[NB_QUICK_MAX * 96];
+	nb_quick_slots(text, sizeof(text));
+	return new_string(env, text);
+}
+
+JNIEXPORT void JNICALL JNI_FN(nativeRequestUseKind)(JNIEnv *env, jclass cls, jint kind)
+{
+	(void)env; (void)cls;
+	nb_request_use_kind(kind);
+}
+
 JNIEXPORT void JNICALL JNI_FN(nativeSetAutoMore)(JNIEnv *env, jclass cls, jboolean on)
 {
 	(void)env; (void)cls;

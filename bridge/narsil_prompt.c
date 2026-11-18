@@ -361,6 +361,17 @@ static void native_ignore_menu(struct object *obj)
 
 typedef struct { const char *label; cmd_code cmd; bool valid; } action;
 
+/* The command that uses `obj` from the pack, or CMD_NULL. */
+static cmd_code native_use_command(const struct object *obj)
+{
+	if (!obj_is_useable(obj) || obj_can_fire(obj)) return CMD_NULL;
+	if (tval_is_horn(obj)) return CMD_BLOW_HORN;
+	if (tval_is_staff(obj)) return CMD_USE_STAFF;
+	if (tval_is_potion(obj)) return CMD_QUAFF;
+	if (tval_is_edible(obj)) return CMD_EAT;
+	return CMD_USE;
+}
+
 /* Mirrors context_menu_object(); Inspect is shown inline instead. */
 static int item_actions(const struct object *obj, action *a)
 {
@@ -403,7 +414,7 @@ static bool pack_keep_place;  /* reopened after an action, or reached by a tab s
  * Serialised: "Pack" \t expanded item (-1 none) \t section to show first \t
  * weight carried \t limit (tenths of lb) \t 1 to keep the list's place (see pack_keep_place); per item "#I \t section \t label \t
  * glyph \t attr \t weight \t name"; then for the expanded item "#A \t valid
- * \t label" per action and "#D \t line" per description line.
+ * \t label" per action, "#K \t kind" if it can be pinned as a quick slot, and "#D \t line" per description line.
  */
 static void publish_pack(const candidate *c, int n, int expanded, int focus)
 {
@@ -426,6 +437,8 @@ static void publish_pack(const candidate *c, int n, int expanded, int focus)
 			(int)object_char(obj), (int)object_attr(obj), obj->weight * obj->number, native_special_tier(obj), name);
 	}
 	for (int i = 0; i < na; i++) text_add("#A\t%d\t%s\n", a[i].valid ? 1 : 0, a[i].label);
+	if (expanded >= 0 && object_is_carried(player, c[expanded].obj) && native_use_command(c[expanded].obj) != CMD_NULL)
+		text_add("#K\t%d\n", (int)c[expanded].obj->kind->kidx);
 	if (tb) {
 		text_add("#D\t");
 		for (const wchar_t *p = textblock_text(tb); p && *p; p++) {
@@ -439,6 +452,14 @@ static void publish_pack(const candidate *c, int n, int expanded, int focus)
 	}
 	pthread_mutex_unlock(&shared.lock);
 	if (tb) textblock_free(tb);
+}
+
+void native_use_object(struct object *obj)
+{
+	const cmd_code cmd = native_use_command(obj);
+	if (cmd == CMD_NULL || !get_item_allow(obj, cmd_lookup_key(cmd, keymode()), cmd, false)) return;
+	cmdq_push(cmd);
+	cmd_set_arg_item(cmdq_peek(), "item", obj);
 }
 
 /* The chosen action (context_menu_object() as native buttons); true if a command was queued. */

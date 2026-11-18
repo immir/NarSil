@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -62,7 +63,8 @@ private fun lb(tenths: Int) = "%d.%d lb".format(tenths / 10, tenths % 10)
  * closes it and opens that one.  After an action the game reopens the pack.
  */
 @Composable
-fun PackSheet(p: GameState.Prompt.Pack, colour: (Int) -> Int, onAnswer: (Int) -> Unit) {
+fun PackSheet(p: GameState.Prompt.Pack, colour: (Int) -> Int, onAnswer: (Int) -> Unit,
+              pinned: List<Int> = emptyList(), onPin: (Int) -> Unit = {}) {
     val sections = remember(p) { p.items.groupBy { it.section }.toList().sortedBy { (s, _) -> SECTION_ORDER.indexOf(s) } }
     /* A fresh open (Pack, Gear) starts at that section; a reopen after an action keeps its place. */
     val list = remember {
@@ -88,7 +90,7 @@ fun PackSheet(p: GameState.Prompt.Pack, colour: (Int) -> Int, onAnswer: (Int) ->
                                  modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp))
                         }
                         items(items, key = { "${it.section}/${it.label}/${it.name}" }) { item ->
-                            PackRow(item, p, colour, onAnswer)
+                            PackRow(item, p, colour, onAnswer, p.kind in pinned, onPin)
                         }
                     }
                     item { Box(Modifier.padding(bottom = 24.dp)) }
@@ -99,7 +101,8 @@ fun PackSheet(p: GameState.Prompt.Pack, colour: (Int) -> Int, onAnswer: (Int) ->
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun PackRow(item: GameState.Item, p: GameState.Prompt.Pack, colour: (Int) -> Int, onAnswer: (Int) -> Unit) {
+private fun PackRow(item: GameState.Item, p: GameState.Prompt.Pack, colour: (Int) -> Int, onAnswer: (Int) -> Unit,
+                    pinned: Boolean, onPin: (Int) -> Unit) {
     val open = item.index == p.expanded
     Column(Modifier.fillMaxWidth().background(if (open) OPEN else Color.Transparent).animateContentSize()) {
         Row(
@@ -124,6 +127,8 @@ private fun PackRow(item: GameState.Item, p: GameState.Prompt.Pack, colour: (Int
                             Text(a.label, maxLines = 1)
                         }
                     }
+                    /* Quick slots are kept by the app, not the game: this toggles the kind on the action bar. */
+                    if (p.kind >= 0) OutlinedButton(onClick = { onPin(p.kind) }) { Text(if (pinned) "Unpin from bar" else "Pin to bar", maxLines = 1) }
                 }
             }
         }

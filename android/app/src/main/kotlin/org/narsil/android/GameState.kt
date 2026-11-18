@@ -72,7 +72,9 @@ class GameState {
         data class Items(val title: String, val items: List<Item>) : Prompt
         /** The whole pack; [expanded] (an item index, or -1) shows its [actions] and [description]. */
         data class Pack(val expanded: Int, val focus: Int, val weight: Int, val limit: Int, val items: List<Item>,
-                        val actions: List<Action>, val description: String, val resumed: Boolean) : Prompt
+                        val actions: List<Action>, val description: String, val resumed: Boolean,
+                        /** The expanded item's object kind if it can be pinned as a quick slot, else -1. */
+                        val kind: Int = -1) : Prompt
         data class Check(val question: String) : Prompt
         data class Aim(val range: Int, val current: Pair<Int, Int>?, val targets: List<Target>) : Prompt
         data class Direction(val allowHere: Boolean, val neighbours: List<Neighbour>) : Prompt
@@ -146,6 +148,11 @@ class GameState {
 
     /** The monster being fought or targeted, as the textui sidebar tracks it. */
     data class Foe(val x: Int, val y: Int, val name: String, val healthPct: Int, val stance: Int, val morale: Int)
+
+    /** A pinned object kind on the action bar: how many are carried, and its short name. */
+    data class QuickSlot(val kind: Int, val count: Int, val name: String)
+    var quickSlots by mutableStateOf(emptyList<QuickSlot>())
+        private set
 
     data class Status(val hp: Int = 0, val maxHp: Int = 0, val voice: Int = 0, val maxVoice: Int = 0,
                       val depth: Int = 0, val exp: Int = 0, val context: Int = 0, val foe: Foe? = null,
@@ -257,6 +264,8 @@ class GameState {
                             meta[N.META_FOE_HEALTH], meta[N.META_FOE_STANCE], meta[N.META_FOE_MORALE]),
                         meta[N.META_NEW_EXP], meta[N.META_HP_WARN], meta[N.META_AUTO_MORE] != 0,
                         meta[N.META_THREATS], meta[N.META_THREATS_ALERT], meta[N.META_THREAT_NEAREST], meta[N.META_LIGHT_TURNS])
+        quickSlots = N.nativeQuickSlots().lines().filter { it.isNotEmpty() }.map { it.split('\t', limit = 3) }
+            .map { f -> QuickSlot(f[0].toInt(), f[1].toInt(), f[2]) }
         return true
     }
 

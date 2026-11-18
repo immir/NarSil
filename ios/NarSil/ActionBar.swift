@@ -28,6 +28,13 @@ func contextActions(_ s: Status) -> [BarAction] {
     return out
 }
 
+/// Pinned kinds (Pack → an item → Pin to bar): tap uses one, long-press unpins.
+func quickActions(_ slots: [QuickSlot], unpin: @escaping (Int) -> Void) -> [BarAction] {
+    slots.map { q in
+        BarAction(label: "\(q.name) ×\(q.count)", active: q.count > 0, longPress: { unpin(q.kind) }) { if q.count > 0 { Native.requestUseKind(q.kind) } }
+    }
+}
+
 /// Always present: the turn-by-turn Sil toolkit.  `restOptions` opens the rest choices (long press on Rest).
 func coreActions(_ s: Status, restOptions: @escaping () -> Void) -> [BarAction] {
     var out = [

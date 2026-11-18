@@ -45,6 +45,12 @@ enum Native {
     static func setTiles(_ on: Bool) { nb_set_tiles(on) }
     static func setItemDetails(_ on: Bool) { nb_set_item_details(on) }
     static func setAutoMore(_ on: Bool) { nb_set_auto_more(on) }
+    static func setQuickKinds(_ kinds: [Int]) {
+        let k = kinds.map { Int32($0) }
+        k.withUnsafeBufferPointer { nb_set_quick_kinds($0.baseAddress, Int32($0.count)) }
+    }
+    static func quickSlots() -> String { text(Int(NB_QUICK_MAX) * 96) { _ = nb_quick_slots($0, $1) } }
+    static func requestUseKind(_ kind: Int) { nb_request_use_kind(Int32(kind)) }
 
     // Answers to the open prompt.
     static func answer(_ value: Int) { nb_answer(Int32(value)) }

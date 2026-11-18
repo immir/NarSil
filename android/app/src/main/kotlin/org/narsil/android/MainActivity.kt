@@ -118,7 +118,7 @@ class MainActivity : ComponentActivity() {
 
         LaunchedEffect(Unit) {
             phase = runCatching { withContext(Dispatchers.IO) { GameLauncher.ensureStarted(applicationContext) } }
-                .fold({ game = GameState().also { it.start() }; NarSilNative.nativeSetTiles(settings.tiles); NarSilNative.nativeSetItemDetails(settings.itemDetails); Phase.Running }, { Phase.Failed(it.message ?: it.toString()) })
+                .fold({ game = GameState().also { it.start() }; NarSilNative.nativeSetTiles(settings.tiles); NarSilNative.nativeSetItemDetails(settings.itemDetails); NarSilNative.nativeSetQuickKinds(settings.quickKinds.toIntArray()); Phase.Running }, { Phase.Failed(it.message ?: it.toString()) })
         }
         LaunchedEffect(phase) {
             var saves = -1L
@@ -261,7 +261,7 @@ when (prompt) {
             ))
         }
             is GameState.Prompt.Knowledge -> KnowledgeScreen(prompt, state::colour, answer)
-            is GameState.Prompt.Pack -> TextScale(settings.itemScale / settings.buttonScale) { PackSheet(prompt, state::colour, answer) }
+            is GameState.Prompt.Pack -> TextScale(settings.itemScale / settings.buttonScale) { PackSheet(prompt, state::colour, answer, settings.quickKinds, settings::toggleQuick) }
             is GameState.Prompt.Screen -> ScreenSheet(prompt, answer, onScum = { showScum = true }.takeIf { settings.scumming })
             is GameState.Prompt.Aim, is GameState.Prompt.Direction -> Unit  // drawn by GameLayers over the map
         }
@@ -347,7 +347,8 @@ when (prompt) {
         }
     }
 
-    private fun barActions(state: GameState) = contextActions(state.status) + coreActions(state.status) { showRest = true }
+    private fun barActions(state: GameState) = contextActions(state.status) + quickActions(state.quickSlots, settings::toggleQuick) +
+        coreActions(state.status) { showRest = true }
 
     /** The d-pad as set (off, docked or floating); docked is beside the status in portrait, in the side column in landscape. */
     @Composable

@@ -68,6 +68,7 @@ class Settings(context: Context) {
     private val panelTabStyle = mutableIntStateOf(prefs.getInt("panelTabs", TABS_ICONS_AND_NAMES))
     private val themeChoice = mutableIntStateOf(prefs.getInt("theme", 0))
     private val tipsSeen = mutableStateOf(prefs.getBoolean("seenTips", false))
+    private val quick = mutableStateOf(prefs.getString("quickKinds", "").orEmpty().split(',').mapNotNull { it.toIntOrNull() })
 
     var buttonScale: Float get() = buttons.floatValue; set(v) { buttons.floatValue = v; save("buttonScale", v) }
     var messageScale: Float get() = messageText.floatValue; set(v) { messageText.floatValue = v; save("messageScale", v) }
@@ -85,6 +86,12 @@ class Settings(context: Context) {
     var lowHealthBuzz: Boolean get() = buzz.value; set(v) { buzz.value = v; prefs.edit().putBoolean("lowHealthBuzz", v).apply() }
     /** How the panel's tabs are drawn: [TABS_ICONS_AND_NAMES], [TABS_ICONS] or [TABS_NAMES] (a scrolling strip). */
     var panelTabs: Int get() = panelTabStyle.intValue; set(v) { panelTabStyle.intValue = v; prefs.edit().putInt("panelTabs", v).apply() }
+    /** Object kinds pinned to the action bar as quick slots, at most [NarSilNative.QUICK_MAX] (the game is told). */
+    var quickKinds: List<Int> get() = quick.value
+        set(v) { quick.value = v.take(NarSilNative.QUICK_MAX); prefs.edit().putString("quickKinds", quick.value.joinToString(",")).apply()
+                 NarSilNative.nativeSetQuickKinds(quick.value.toIntArray()) }
+    /** Pins [kind] to the action bar, or unpins it; pinning a fifth drops the oldest. */
+    fun toggleQuick(kind: Int) { quickKinds = if (kind in quickKinds) quickKinds - kind else (quickKinds + kind).takeLast(NarSilNative.QUICK_MAX) }
     /** The first-run tips card has been dismissed. */
     var seenTips: Boolean get() = tipsSeen.value; set(v) { tipsSeen.value = v; prefs.edit().putBoolean("seenTips", v).apply() }
     /** Index into [Theme.ALL]. */

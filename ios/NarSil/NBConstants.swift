@@ -41,6 +41,7 @@ enum NB {
     static let STANCE_FLEEING = 4
     static let STANCE_CONFIDENT = 5
     static let STANCE_AGGRESSIVE = 6
+    static let QUICK_MAX = 4
     static let CTX_UP_STAIRS = 1
     static let CTX_DOWN_STAIRS = 2
     static let CTX_FLOOR_ITEMS = 4

@@ -23,6 +23,7 @@ struct RootView: View {
     @AppStorage("statusScale") private var statusScale = 1.0
     @AppStorage("theme") private var theme = 0
     @AppStorage("seenTips") private var seenTips = false
+    @AppStorage(QuickPins.key) private var quickKinds = ""
     @State private var lastHp = 0
     @AppStorage("itemDetails") private var itemDetails = false
     @AppStorage("messageLines") private var messageLines = 3
@@ -67,7 +68,8 @@ struct RootView: View {
         }
         .textScale(buttonScale)
         .onChange(of: theme) { game.themeIndex = $0 }
-        .onAppear { game.themeIndex = theme; Native.setTiles(tiles); Native.setItemDetails(itemDetails); game.start() }
+        .onChange(of: quickKinds) { Native.setQuickKinds(QuickPins.decode($0)) }
+        .onAppear { game.themeIndex = theme; Native.setQuickKinds(QuickPins.decode(quickKinds)); Native.setTiles(tiles); Native.setItemDetails(itemDetails); game.start() }
         .onChange(of: tiles) { Native.setTiles($0) }
         .onChange(of: itemDetails) { Native.setItemDetails($0) }
         .onChange(of: game.status.lowHp) { low in if low && lowHealthBuzz { UINotificationFeedbackGenerator().notificationOccurred(.warning) } }
@@ -123,7 +125,10 @@ struct RootView: View {
         }
     }
 
-    private var bar: [BarAction] { contextActions(game.status) + coreActions(game.status) { showRest = true } }
+    private var bar: [BarAction] {
+        contextActions(game.status) + quickActions(game.quickSlots) { quickKinds = QuickPins.toggled(quickKinds, $0) }
+            + coreActions(game.status) { showRest = true }
+    }
     private var more: [BarAction] {
         moreActions(game.status, messages: { showMore = false; showMessages = true }, toggleMap: { map.toggleOverview() }, toggleTiles: { tiles.toggle(); Native.setTiles(tiles) }, tilesOn: tiles, help: { showHelp = true })
             + (scumming ? [BarAction(label: "Scum", run: { Task { say(await Saves.take()) } }),

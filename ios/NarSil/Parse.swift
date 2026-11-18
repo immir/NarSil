@@ -131,7 +131,8 @@ enum Parse {
             }
             return .pack(PackPrompt(expanded: try int(head, 1), focus: try int(head, 2), weight: try int(head, 3),
                                     limit: try int(head, 4), items: items, actions: actions,
-                                    description: text(ls, tag: "#D"), resumed: flag(head, 5)))
+                                    description: text(ls, tag: "#D"), resumed: flag(head, 5),
+                                    kind: recs.first { $0.first == "#K" }.flatMap { $0.count > 1 ? Int($0[1]) : nil } ?? -1))
         case NB.PROMPT_QUANTITY:
             return .quantity(QuantityPrompt(title: try line(ls, 0), max: ls.count > 1 ? (Int(ls[1]) ?? 1) : 1,
                                             initial: ls.count > 2 ? (Int(ls[2]) ?? 1) : 1))

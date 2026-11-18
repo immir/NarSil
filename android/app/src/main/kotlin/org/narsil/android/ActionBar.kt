@@ -45,6 +45,10 @@ data class BarAction(val label: String, val emphasised: Boolean = false, val act
 
 private fun act(id: Int): () -> Unit = { N.nativeRequestAction(id) }
 
+/** Pinned kinds (Pack → an item → Pin to bar): tap uses one, long-press unpins. */
+fun quickActions(slots: List<GameState.QuickSlot>, unpin: (Int) -> Unit): List<BarAction> =
+    slots.map { q -> BarAction("${q.name} ×${q.count}", active = q.count > 0, longPress = { unpin(q.kind) }) { if (q.count > 0) N.nativeRequestUseKind(q.kind) } }
+
 /**
  * Context actions for where the player stands, in the order a Sil player reaches
  * for them: leave by the stairs, grab what is underfoot, shoot, then doors/traps.

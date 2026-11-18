@@ -306,6 +306,29 @@ static int run_token(const char *tok)
 		free(cells);
 		return 0;
 	}
+	if (strcmp(tok, "@pinexpanded") == 0) {
+		/* Pins the pack's expanded item (its "#K \t kind" line) as the only quick slot. */
+		static char text[NB_PROMPT_CAP];
+		(void)nb_prompt(text, sizeof(text));
+		const char *const k = strstr(text, "\n#K\t");
+		if (!k) { fprintf(stderr, "no #K line in the prompt\n"); return 1; }
+		const int32_t kind = (int32_t)atoi(k + 4);
+		nb_set_quick_kinds(&kind, 1);
+		return settle() ? 0 : 1;
+	}
+	if (strcmp(tok, "@quick") == 0) {
+		char text[NB_QUICK_MAX * 96];
+		nb_quick_slots(text, sizeof(text));
+		printf("quick:\n%s", text);
+		return 0;
+	}
+	if (strcmp(tok, "@usequick") == 0) {
+		char text[NB_QUICK_MAX * 96];
+		nb_quick_slots(text, sizeof(text));
+		if (!text[0]) { fprintf(stderr, "no quick slots\n"); return 1; }
+		nb_request_use_kind(atoi(text));
+		return settle() ? 0 : 1;
+	}
 	if (strcmp(tok, "@tiles") == 0) {
 		nb_set_tiles(true);
 		return settle() ? 0 : 1;

@@ -63,7 +63,7 @@ enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MA
  * overlay bits: NB_TILE_ALERT, NB_TILE_GLOW. */
 typedef struct { int32_t cp, attr_flags, tile, tile_bg, tile_flags; } map_cell;
 
-enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_TEST_CHEST, REQ_REST, REQ_AUTO_MORE };
+enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_TEST_CHEST, REQ_REST, REQ_AUTO_MORE, REQ_USE_KIND };
 typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; int dir; bool run; } request;
 
 /* Game thread only. */
@@ -101,6 +101,9 @@ static struct {
 	char foe_name[80];
 	bool tiles;             /* nb_set_tiles() */
 	bool item_details;      /* nb_set_item_details() */
+	int32_t quick_kinds[NB_QUICK_MAX]; /* nb_set_quick_kinds() */
+	int quick_n;
+	char quick[NB_QUICK_MAX * 96];     /* nb_quick_slots() */
 } shared = { .lock = PTHREAD_MUTEX_INITIALIZER };
 
 /* ------------------------------------------------------------------------
@@ -307,6 +310,46 @@ static enum nb_stance foe_stance(const struct monster *mon)
 
 void native_messages_changed(void) { game.messages_dirty = true; }
 
+/* The first carried, unequipped object of kind `kidx`, and how many of that kind are carried. */
+static struct object *carried_kind(const int kidx, int *const count)
+{
+	struct object *first = NULL; /* mutable: queued commands take the pointer */
+	*count = 0;
+	for (struct object *obj = player->gear; obj; obj = obj->next) {
+		if (!obj->kind || (int)obj->kind->kidx != kidx || object_is_equipped(player->body, obj)) continue;
+		if (!first) first = obj;
+		*count += obj->number;
+	}
+	return first;
+}
+
+/* One line per pinned kind: "kind \t number carried \t short name" (the flavour and base while unaware). */
+static void quick_slots(char *const out, const size_t cap)
+{
+	pthread_mutex_lock(&shared.lock);
+	int32_t kinds[NB_QUICK_MAX];
+	const int n = shared.quick_n;
+	memcpy(kinds, shared.quick_kinds, sizeof(kinds));
+	pthread_mutex_unlock(&shared.lock);
+	out[0] = '\0';
+	size_t len = 0;
+	for (int i = 0; i < n; i++) {
+		const struct object_kind *const kind = objkind_byid(kinds[i]);
+		if (!kind) continue;
+		int count;
+		(void)carried_kind(kinds[i], &count);
+		char name[80];
+		object_kind_name(name, sizeof(name), kind, false);
+		if (!kind->aware && kind->flavor) {
+			char base[40];
+			object_base_name(base, sizeof(base), kind->tval, false);
+			my_strcat(name, format(" %s", base), sizeof(name));
+		}
+		len += strnfmt(out + len, cap - len, "%d\t%d\t%s\n", (int)kinds[i], count, name);
+		assert(len < cap);
+	}
+}
+
 void native_publish(bool at_prompt)
 {
 	if (game.messages_dirty) {
@@ -352,6 +395,8 @@ void native_publish(bool at_prompt)
 		meta[NB_META_TILE_ALERT] = native_tile_overlay(false);
 		meta[NB_META_TILE_GLOW] = native_tile_overlay(true);
 	}
+	char quick[sizeof(shared.quick)] = "";
+	if (visible) quick_slots(quick, sizeof(quick));
 	struct monster *const foe = visible ? tracked_foe() : NULL;
 	char foe_name[80] = "";
 	meta[NB_META_FOE_X] = meta[NB_META_FOE_Y] = -1;
@@ -374,9 +419,10 @@ void native_publish(bool at_prompt)
 		}
 		memcpy(shared.front, game.work, n * sizeof(map_cell));
 	}
-	if (rebuild || meta_changed || strcmp(foe_name, shared.foe_name) != 0) {
+	if (rebuild || meta_changed || strcmp(foe_name, shared.foe_name) != 0 || strcmp(quick, shared.quick) != 0) {
 		memcpy(shared.meta, meta, sizeof(meta));
 		my_strcpy(shared.foe_name, foe_name, sizeof(shared.foe_name));
+		my_strcpy(shared.quick, quick, sizeof(shared.quick));
 		shared.map_gen++;
 	}
 	pthread_mutex_unlock(&shared.lock);
@@ -764,6 +810,7 @@ bool native_service(bool at_prompt)
 		case REQ_ACTION:
 		case REQ_MOVE:
 		case REQ_REST:
+		case REQ_USE_KIND:
 		case REQ_TEST_DIE: game.stashed = r; return true;
 		case REQ_TEST_CHEST:
 		case REQ_INSPECT:
@@ -913,6 +960,10 @@ void native_run_stashed(void)
 		run_action(r.action);
 	} else if (r.kind == REQ_REST) {
 		push_choice(CMD_REST, r.dir);
+	} else if (r.kind == REQ_USE_KIND) {
+		int count;
+		struct object *const obj = carried_kind(r.dir, &count); /* mutable: the command takes the pointer */
+		if (obj) native_use_object(obj);
 	} else if (r.kind == REQ_TEST_DIE) {
 		take_hit(player, player->chp + 100, "the test harness");
 	} else if (r.kind == REQ_MOVE) {
@@ -968,6 +1019,31 @@ void nb_test_chest(int kind)
 	post((request){ .kind = REQ_TEST_CHEST, .dir = kind });
 }
 #endif
+
+void nb_set_quick_kinds(const int32_t *kinds, int n)
+{
+	assert(n >= 0 && (n == 0 || kinds));
+	pthread_mutex_lock(&shared.lock);
+	shared.quick_n = 0;
+	for (int i = 0; i < n && shared.quick_n < NB_QUICK_MAX; i++)
+		if (kinds[i] > 0 && kinds[i] < z_info->k_max) shared.quick_kinds[shared.quick_n++] = kinds[i];
+	pthread_mutex_unlock(&shared.lock);
+	bridge_wake_game();
+}
+
+size_t nb_quick_slots(char *text, size_t cap)
+{
+	assert(cap > 0);
+	pthread_mutex_lock(&shared.lock);
+	my_strcpy(text, shared.quick, cap);
+	pthread_mutex_unlock(&shared.lock);
+	return strlen(text);
+}
+
+void nb_request_use_kind(int kind)
+{
+	post((request){ .kind = REQ_USE_KIND, .dir = kind });
+}
 
 void nb_request_inspect(int x, int y)
 {

@@ -108,6 +108,17 @@ enum nb_stance {
 /* Name of the tracked monster ("" if none); changes with the map generation. */
 size_t nb_foe_name(char *text, size_t cap);
 
+/*
+ * Quick slots: object kinds the player pinned to the action bar (the pack's
+ * expanded item gives its kind as "#K \t kind" when it can be pinned).  The UI
+ * keeps the list; the game publishes, with the map generation, one line per
+ * kind "kind \t number carried \t short name", and uses one on request.
+ */
+enum { NB_QUICK_MAX = 4 };
+void nb_set_quick_kinds(const int32_t *kinds, int n);
+size_t nb_quick_slots(char *text, size_t cap);
+void nb_request_use_kind(int kind);
+
 /* What the player is standing on / next to, for context actions. */
 enum nb_context {
 	NB_CTX_UP_STAIRS       = 1 << 0,

@@ -31,6 +31,7 @@ final class GameState: ObservableObject {
     @Published private(set) var panelTab = -1
     @Published private(set) var messages: [Message] = []
     @Published var info: Info?
+    @Published private(set) var quickSlots: [QuickSlot] = []
     private var saveCount: UInt64?
     /// The game's colours, 0xRRGGBB by Angband colour index; refreshed with every map frame.
     private(set) var palette = [UInt32]()
@@ -139,9 +140,18 @@ final class GameState: ObservableObject {
                         threats: m(NB.META_THREATS), threatsAlert: m(NB.META_THREATS_ALERT),
                         threatNearest: m(NB.META_THREAT_NEAREST), lightTurns: m(NB.META_LIGHT_TURNS))
         recolour(Native.palette())
+        let quick = Native.quickSlots().split(separator: "\n").compactMap(Self.quickSlot)
+        if quick != quickSlots { quickSlots = quick }
         let line = Native.topLine()
         if line != topLine { topLine = line }
         return true
+    }
+
+    /// One published quick-slot line: "kind \t carried \t name".
+    private static func quickSlot(_ line: Substring) -> QuickSlot? {
+        let f: [Substring] = line.split(separator: "\t", maxSplits: 2, omittingEmptySubsequences: false)
+        guard f.count == 3, let kind = Int(f[0]), let count = Int(f[1]) else { return nil }
+        return QuickSlot(kind: kind, count: count, name: String(f[2]))
     }
 
     /// The game's colour `index` (an attr's low byte), white if unknown.

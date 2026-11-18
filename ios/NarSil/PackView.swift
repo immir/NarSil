@@ -10,6 +10,7 @@ struct PackView: View {
     let prompt: PackPrompt
     let colour: (Int) -> UInt32
     let answer: (Int) -> Void
+    @AppStorage(QuickPins.key) private var quickKinds = ""
 
     private var sections: [(Int, [Item])] {
         Dictionary(grouping: prompt.items, by: \.section).sorted { (sectionOrder.firstIndex(of: $0.key) ?? 9) < (sectionOrder.firstIndex(of: $1.key) ?? 9) }
@@ -65,6 +66,12 @@ struct PackView: View {
                         ForEach(prompt.actions, id: \.index) { a in
                             Button(a.label) { answer(NB.PACK_ACT + item.index * NB.PACK_ACT_STRIDE + a.index) }
                                 .buttonStyle(.bordered).disabled(!a.valid).lineLimit(1)
+                        }
+                        /* Quick slots are kept by the app, not the game: this toggles the kind on the action bar. */
+                        if prompt.kind >= 0 {
+                            Button(QuickPins.decode(quickKinds).contains(prompt.kind) ? "Unpin from bar" : "Pin to bar") {
+                                quickKinds = QuickPins.toggled(quickKinds, prompt.kind)
+                            }.buttonStyle(.bordered).tint(Palette.gold).lineLimit(1)
                         }
                     }
                 }.padding(.leading, 68).padding(.trailing, 16).padding(.bottom, 12)

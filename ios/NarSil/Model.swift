@@ -70,6 +70,23 @@ struct PackPrompt: Equatable {
     let actions: [PackAction]
     let description: String
     let resumed: Bool
+    /// The expanded item's object kind if it can be pinned as a quick slot, else -1.
+    var kind = -1
+}
+
+/// A pinned object kind on the action bar: how many are carried, and its short name.
+struct QuickSlot: Equatable { let kind: Int, count: Int; let name: String }
+
+/// The kinds pinned to the action bar (Pack → an item → Pin to bar), kept by the app as "k,k,k" in UserDefaults.
+enum QuickPins {
+    static let key = "quickKinds"
+    static func decode(_ s: String) -> [Int] { s.split(separator: ",").compactMap { Int($0) } }
+    static func encode(_ k: [Int]) -> String { k.map(String.init).joined(separator: ",") }
+    /// Pins `kind`, or unpins it; pinning a fifth drops the oldest.
+    static func toggled(_ s: String, _ kind: Int) -> String {
+        let k = decode(s)
+        return encode(k.contains(kind) ? k.filter { $0 != kind } : Array((k + [kind]).suffix(NB.QUICK_MAX)))
+    }
 }
 struct AimPrompt: Equatable { let range: Int; let current: Point?; let targets: [Target] }
 struct DirectionPrompt: Equatable { let allowHere: Bool; let neighbours: [Neighbour] }

@@ -59,6 +59,8 @@ bool native_item_details_on(void);
  * state; the slot is restored before the function returns.
  */
 size_t native_item_details(struct object *obj, char *buf, size_t cap);
+/* Uses `obj` from the pack (quaff, eat, blow, use…; never Fire), as the pack's action would, inscription checks included. */
+void native_use_object(struct object *obj);
 
 /* Implemented by narsil_combat.c (game thread): choose the race the weapon numbers use (0: the last looked at or fought). */
 /* The pack's foe picker as prompt records: "#F" (the choice, its name), then "#R" per foe (see narsil_combat.c). */

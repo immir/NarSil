@@ -188,6 +188,13 @@ out=$(run "${birth[@]}" @act=15 @prompt @answer=1000 @prompt @answer=100000 @pro
 echo "$out" | grep -qP '^#A\t1\tEat$'
 echo "$out" | grep -qP '^#I\t0\ta\t[0-9]+\t[0-9]+\t[0-9]+\t0\t2 Fragments of Lembas$'
 
+echo "== quick slots: pin the pack's expanded item, see its count, use one from the bar"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=15 @answer=1000 @pinexpanded @answer=-1 @quick @usequick @quick @messages "${quit[@]}")
+echo "$out" | grep -qP '^\d+\t3\tFragment of Lembas$'
+echo "$out" | grep -qP '^\d+\t2\tFragment of Lembas$'
+echo "$out" | grep -q 'It fills you with renewed energy'
+
 echo "== special items: tier on the pack line, and the name marked in the message"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @ego @messages @act=15 @prompt @answer=-1 "${quit[@]}")
