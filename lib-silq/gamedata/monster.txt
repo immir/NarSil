@@ -408,6 +408,8 @@ will:1
 prot:1:2d4
 blow:CLAW:WOUND:6:2d4
 flags:DROP_100 | OPEN_DOOR | UNLOCK_DOOR | BASH_DOOR | SMART | NO_FEAR
+ranged-freq:15
+spells:DIM
 message-vis:FORGET:{name} rings its bell.
 message-invis:FORGET:{name} rings its bell.
 desc:An evil swamp dwelling creature that feeds on the bones
@@ -537,6 +539,8 @@ will:2
 prot:6
 blow:BITE:POISON:12:2d8
 flags:SPIDER | TERRITORIAL | RES_POIS
+ranged-freq:10
+spells:HATCH_SPIDER
 desc:A huge ponderous spider with clusters of eggs on its back.
 desc: Its hairy mandibles are wet with a dark fluid.
 
@@ -611,6 +615,9 @@ will:5
 prot:4:3d4
 blow:HIT:HURT:6:3d7
 flags:UNIQUE | MALE | ESCORT | SMART | DROP_100 | DROP_GOOD | OPEN_DOOR | BASH_DOOR | ORC | HURT_LIGHT | UNLOCK_DOOR | NAME_COMMA
+ranged-freq:5
+spell-power:12
+spells:RALLY
 desc:A captain of an orcish band, Gorgol keeps his troop in
 desc: order with displays of violence.
 
@@ -679,6 +686,8 @@ will:8
 prot:5
 blow:TOUCH:TERRIFY:15
 flags:INVISIBLE | RAND_50 | UNDEAD | HURT_LIGHT | RES_COLD | NO_FEAR | RES_POIS | NO_CONF | NO_SLEEP | FRIEND
+ranged-freq:50
+spells:DIM
 desc:A faded presence that perhaps once was man or elf,
 desc: but is now an insubstantial thing of necromancy and shadow.
 
@@ -695,6 +704,9 @@ will:3
 prot:10:1d4
 blow:BITE:ENTRANCE:6:1d8
 flags:SPIDER | RES_POIS | TERRITORIAL | FRIENDS | SMART
+ranged-freq:5
+spell-power:8
+spells:THROW_WEB
 desc:A spider as big as a dog, covered in thick bristles, with the light
 desc: reflecting off its pale bulbous eyes.
 
@@ -898,6 +910,9 @@ will:6
 prot:7:3d4
 blow:HIT:HURT:10:2d8
 flags:MALE | ESCORT | DROP_1D2 | OPEN_DOOR | BASH_DOOR | ORC | HURT_LIGHT | SMART | UNLOCK_DOOR
+ranged-freq:5
+spell-power:10
+spells:RALLY
 desc:An armoured orc that walks with confidence. His curved blade
 desc: has many notches along its edge.
 
@@ -971,6 +986,9 @@ will:8
 prot:8:3d4
 blow:HIT:HURT:10:3d10
 flags:UNIQUE | MALE | ESCORT | DROP_1D2 | DROP_GOOD | OPEN_DOOR | BASH_DOOR | ORC | HURT_LIGHT | SMART | NAME_COMMA
+ranged-freq:5
+spell-power:14
+spells:RALLY
 desc:The chief champion of the orcs of Morgoth.
 
 name:Whispering shadow
@@ -1066,6 +1084,9 @@ prot:9:4d4
 blow:HIT:HURT:15:2d9
 blow:WHIP:DISARM:12:2d4
 flags:UNIQUE | MALE | ESCORTS | SMART | DROP_1D2 | DROP_GREAT | OPEN_DOOR | BASH_DOOR | ORC | HURT_LIGHT | UNLOCK_DOOR | NAME_COMMA
+ranged-freq:5
+spell-power:16
+spells:RALLY
 desc:The cruelty in the eyes of this massive orc belies
 desc: the intelligence that has kept him a favourite
 desc: of the black enemy for many years.
@@ -1288,6 +1309,9 @@ will:11
 prot:13:4d4
 blow:HIT:HURT:19:2d8
 flags:UNIQUE | MAN | MALE | DROP_2D2 | ESCORT | SMART | DROP_GOOD | OPEN_DOOR | BASH_DOOR | TAKE_ITEM | OPPORTUNIST
+ranged-freq:5
+spell-power:18
+spells:RALLY
 drop:light:Wooden Torch:33:1d1
 desc:Ulfang was a great leader of the Easterlings and led them in
 desc: their treachery. He and his sons once openly swore allegiance
