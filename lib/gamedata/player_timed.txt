@@ -190,6 +190,7 @@ msgt:POISONED
 
 name:CUT
 desc:wounds
+fail:RES_BLEED
 change-grade:R:20:2:Bleeding
 change-grade:r:99:2:Bleeding
 change-grade:r:100:0:Mortal wound

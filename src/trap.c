@@ -997,6 +997,15 @@ void hit_trap(struct loc grid)
 		/* Require that trap be capable of affecting the character */
 		if (!trf_has(trap->kind->flags, TRF_TRAP)) continue;
 
+		/* A light-footed wearer steps round most traps (not webs, pits or roosts) */
+		if (player->state.flags[OF_AVOID_TRAPS] && !streq(trap->kind->name, "web")
+			&& !streq(trap->kind->name, "pit") && !streq(trap->kind->name, "spiked pit")
+			&& !streq(trap->kind->name, "roost")) {
+			msg("You carefully avoid a trap.");
+			equip_learn_flag(player, OF_AVOID_TRAPS);
+			continue;
+		}
+
 		/* Disturb the player */
 		disturb(player, false);
 

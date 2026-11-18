@@ -319,6 +319,92 @@ smith-exclude-base:yes
 msg:Your {name} glows softly.
 desc:Grants you freedom of movement
 
+name:resist bleeding
+type:flag
+subtype:misc ability
+id-type:on effect
+code:RES_BLEED
+smith-cat:misc
+smith-difficulty:8
+smith-exclude-base:yes
+msg:Your {name} stops the bleeding.
+desc:Grants immunity to bleeding
+
+name:stand fast
+type:flag
+subtype:misc ability
+id-type:on effect
+code:STAND_FAST
+smith-cat:misc
+smith-difficulty:8
+smith-exclude-base:yes
+msg:Your {name} holds you in place.
+desc:Stops you being knocked back
+
+name:avoid traps
+type:flag
+subtype:misc ability
+id-type:on effect
+code:AVOID_TRAPS
+smith-cat:misc
+smith-difficulty:8
+smith-exclude-base:yes
+msg:Your {name} guides your feet around a trap.
+desc:Lets you avoid most traps
+
+name:medicine bonus
+type:flag
+subtype:misc ability
+id-type:on wield
+code:MEDIC
+smith-cat:misc
+smith-difficulty:8
+smith-exclude-base:yes
+desc:Improves the effect of healing
+
+name:accurate
+type:flag
+subtype:misc ability
+id-type:on effect
+code:ACCURATE
+smith-cat:misc
+smith-difficulty:8
+smith-exclude-base:yes
+msg:Your {name} finds its mark.
+desc:Gives a second chance to hit when you miss
+
+name:cumbersome
+type:flag
+subtype:misc ability
+id-type:on wield
+code:CUMBERSOME
+smith-cat:misc
+smith-difficulty:8
+smith-exclude-base:yes
+desc:Prevents critical hits
+
+name:cheat death
+type:flag
+subtype:misc ability
+id-type:on effect
+code:CHEAT_DEATH
+smith-cat:misc
+smith-difficulty:8
+smith-exclude-base:yes
+msg:Your {name} breaks into two pieces!
+desc:Breaks to save you from a killing blow
+
+name:betrayal
+type:flag
+subtype:misc ability
+id-type:on effect
+code:TRAITOR
+smith-cat:misc
+smith-difficulty:8
+smith-exclude-base:yes
+msg:Your {name} betrays you.
+desc:May betray you when many foes are near
+
 name:speed
 type:flag
 subtype:misc ability

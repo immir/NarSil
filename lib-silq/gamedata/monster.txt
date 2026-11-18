@@ -436,8 +436,10 @@ desc: The miserable creature tries to stay away from you and
 desc: attract attention. It has a crude spear.
 
 name:Spider hatchling
+base:spider
 depth:3
 rarity:2
+glyph:m
 color:U
 speed:2
 health:1d4
@@ -674,8 +676,10 @@ spells:SHRIEK
 desc:A type of crow, specially bred by the forces of evil as spies.
 
 name:Phantom
+base:wraith
 depth:6
 rarity:3
+glyph:w
 color:s
 speed:1
 health:2d4
@@ -692,8 +696,10 @@ desc:A faded presence that perhaps once was man or elf,
 desc: but is now an insubstantial thing of necromancy and shadow.
 
 name:Attercop
+base:spider
 depth:7
 rarity:1
+glyph:m
 color:D
 speed:3
 health:3d4
@@ -992,8 +998,10 @@ spells:RALLY
 desc:The chief champion of the orcs of Morgoth.
 
 name:Whispering shadow
+base:wraith
 depth:10
 rarity:1
+glyph:w
 color:D
 speed:1
 health:6d4
@@ -1731,8 +1739,10 @@ desc: him. For many of the Children of Iluvatar, this has been their
 desc: final vision.
 
 name:Spectre
+base:wraith
 depth:16
 rarity:6
+glyph:w
 color:w
 speed:2
 health:8d4
@@ -2683,83 +2693,83 @@ desc: no flitting shade nor hunted shape,
 desc: seeking from Angband to escape.
 
 name:Feanor, High King of the Noldor
-base:person
+base:hallucinatory
 depth:30
 rarity:5
 color:Z
 flags:UNIQUE | MALE | NAME_COMMA
 
 name:Luthien Tinuviel
-base:person
+base:hallucinatory
 depth:30
 rarity:5
 color:b
 flags:UNIQUE | FEMALE
 
 name:Thingol, the Hidden King
-base:person
+base:hallucinatory
 depth:30
 rarity:5
 color:s
 flags:UNIQUE | MALE | NAME_COMMA
 
 name:Beren, Son of Barahir
-base:person
+base:hallucinatory
 depth:30
 rarity:5
 color:u
 flags:UNIQUE | MALE | NAME_COMMA
 
 name:Huan, Hound of Valinor
-base:wolf
+base:hallucinatory
 depth:30
 rarity:5
 color:Y
 flags:UNIQUE | MALE | NAME_COMMA
 
 name:Eagle of Manwe
-base:flyer
+base:hallucinatory
 depth:30
 rarity:5
 color:y
 
 name:Thorondor, King of Eagles
-base:flyer
+base:hallucinatory
 depth:30
 rarity:10
 color:w
 flags:UNIQUE | MALE | NAME_COMMA
 
 name:Ent
-base:troll
+base:hallucinatory
 depth:30
 rarity:10
 color:g
 flags:MALE
 
 name:Ent-wife
-base:troll
+base:hallucinatory
 depth:30
 rarity:10
 color:g
 flags:FEMALE
 
 name:Manwe, Lord of the Breath of Arda
-base:Morgoth
+base:hallucinatory
 depth:30
 rarity:10
 color:v
 flags:UNIQUE | MALE | NAME_COMMA
 
 name:Varda, Lady of the Stars
-base:Morgoth
+base:hallucinatory
 depth:30
 rarity:10
 color:w
 flags:UNIQUE | FEMALE | NAME_COMMA
 
 name:Ulmo, Lord of Waters
-base:Morgoth
+base:hallucinatory
 depth:30
 rarity:20
 color:b
@@ -2773,77 +2783,77 @@ color:r
 flags:UNIQUE | MALE | NAME_COMMA
 
 name:Yavanna, the Giver of Fruits
-base:Morgoth
+base:hallucinatory
 depth:30
 rarity:30
 color:G
 flags:UNIQUE | FEMALE | NAME_COMMA
 
 name:Mandos, Doomsman of the Valar
-base:Morgoth
+base:hallucinatory
 depth:30
 rarity:10
 color:D
 flags:UNIQUE | MALE | NAME_COMMA
 
 name:Vaire, the Weaver
-base:Morgoth
+base:hallucinatory
 depth:30
 rarity:40
 color:y
 flags:UNIQUE | FEMALE | NAME_COMMA
 
 name:Lorien, Master of Dreams
-base:Morgoth
+base:hallucinatory
 depth:30
 rarity:40
 color:r
 flags:UNIQUE | MALE | NAME_COMMA
 
 name:Este, the Healer
-base:Morgoth
+base:hallucinatory
 depth:30
 rarity:40
 color:s
 flags:UNIQUE | FEMALE | NAME_COMMA
 
 name:Nienna, Lady of Mourning
-base:Morgoth
+base:hallucinatory
 depth:30
 rarity:40
 color:V
 flags:UNIQUE | FEMALE | NAME_COMMA
 
 name:Tulkas, the Valiant
-base:Morgoth
+base:hallucinatory
 depth:30
 rarity:10
 color:o
 flags:UNIQUE | MALE | NAME_COMMA
 
 name:Nessa, the Dancer
-base:Morgoth
+base:hallucinatory
 depth:30
 rarity:40
 color:B
 flags:UNIQUE | FEMALE | NAME_COMMA
 
 name:Orome, Lord of Forests
-base:Morgoth
+base:hallucinatory
 depth:30
 rarity:40
 color:V
 flags:UNIQUE | MALE | NAME_COMMA
 
 name:Vana, the Ever Young
-base:Morgoth
+base:hallucinatory
 depth:30
 rarity:40
 color:W
 flags:UNIQUE | FEMALE | NAME_COMMA
 
 name:Melkor, Rightful Lord of Arda
-base:Morgoth
+base:hallucinatory
 depth:40
 rarity:0
 color:w

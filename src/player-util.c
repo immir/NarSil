@@ -186,6 +186,8 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 			my_strcpy(p->died_from, kb_str, sizeof(p->died_from));
 		}
 
+		if (player_cheat_death(p)) return;
+
 		if ((p->wizard || OPT(p, cheat_live)) && !get_check("Die? ")) {
 			event_signal(EVENT_CHEAT_DEATH);
 		} else {
@@ -224,6 +226,68 @@ void take_hit(struct player *p, int dam, const char *kb_str)
 
 	/* Cancel entrancement */
 	player_set_timed(p, TMD_ENTRANCED, 0, false, true);
+}
+
+/**
+ * An equipped item with CHEAT_DEATH breaks to save the player from a killing blow.
+ * Returns true if the player was saved.
+ */
+bool player_cheat_death(struct player *p)
+{
+	for (int i = 0; i < p->body.count; i++) {
+		struct object *obj = slot_object(p, i);
+		char name[80];
+
+		if (!obj || !of_has(obj->flags, OF_CHEAT_DEATH)) continue;
+		object_desc(name, sizeof(name), obj, ODESC_PREFIX | ODESC_BASE, p);
+		p->chp = 1;
+		p->energy = z_info->move_energy;
+		for (int t = 0; t < TMD_MAX; t++) {
+			if (t != TMD_FOOD) player_clear_timed(p, t, true, false);
+		}
+		msgt(MSG_LEVEL, "Your %s breaks into two pieces!", name);
+		gear_excise_object(p, obj);
+		object_delete(cave, p->cave, &obj);
+		p->upkeep->update |= (PU_BONUS | PU_INVEN);
+		p->upkeep->redraw |= (PR_HP | PR_EQUIP | PR_INVEN);
+		return true;
+	}
+	return false;
+}
+
+/**
+ * Items of betrayal: a ring or amulet slips off when many foes are in view, and a helm or crown
+ * twists over the eyes of the badly wounded. Called once per player turn.
+ */
+void player_betrayal(struct player *p)
+{
+	static const char *const jewellery[] = { "right hand", "left hand", "neck" };
+	struct object *head = equipped_item_by_slot_name(p, "head");
+	int seen = 0;
+
+	for (int i = cave_monster_max(cave) - 1; i >= 1; i--) {
+		const struct monster *mon = cave_monster(cave, i);
+		if (mon && mon->race && monster_is_visible(mon)) seen++;
+	}
+
+	for (size_t i = 0; i < N_ELEMENTS(jewellery); i++) {
+		struct object *obj = equipped_item_by_slot_name(p, jewellery[i]);
+		if (obj && of_has(obj->flags, OF_TRAITOR) && seen > 4 && one_in_(100 / seen)) {
+			char name[80];
+			object_desc(name, sizeof(name), obj, ODESC_BASE, p);
+			msg("Your %s %s.", name, i == 2 ? "comes loose from its chain and falls!" : "slips from your finger and rolls away!");
+			equip_learn_flag(p, OF_TRAITOR);
+			inven_takeoff(obj);
+			inven_drop(obj, 1);
+			return;
+		}
+	}
+
+	if (head && of_has(head->flags, OF_TRAITOR) && one_in_(20) && p->chp * 3 <= p->mhp) {
+		msg("Your helm twists to cover your eyes!");
+		player_inc_timed(p, TMD_BLIND, damroll(3, 2), true, true, false);
+		equip_learn_flag(p, OF_TRAITOR);
+	}
 }
 
 /**

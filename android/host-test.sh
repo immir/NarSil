@@ -53,6 +53,25 @@ for seed in 1 2; do
     ! grep -qE 'runtime error|AddressSanitizer|hung at' "$work/fuzz.err"
 done
 
+echo "== data: every monster has a base template, every artefact drop and engine-named monster exists"
+python3 - "$lib" <<'PY'
+import re, sys
+lib = sys.argv[1]
+mon = open(f"{lib}/gamedata/monster.txt").read()
+entries = re.split(r"\n(?=name:)", mon)[1:]
+names = {e.split("\n")[0][5:].strip() for e in entries}
+bare = [e.split("\n")[0] for e in entries if "\nbase:" not in e and not e.startswith("name:<player>")]
+assert not bare, f"monsters without a base: {bare}"
+need = ["Morgoth, Lord of Darkness", "Carcharoth", "Oathwraith", "Silent watcher", "Easterling spy", "Orc champion", "Orc captain",
+        "Cat warrior", "Cat assassin", "Troll guard", "Barrow wight", "Young cold-drake", "Young fire-drake", "Aldor", "Glaurung",
+        "Gothmog", "Ungoliant", "Gorthaur", "Spider hatchling"]
+missing = [n for n in need if not any(x == n or x.startswith(n + ",") for x in names)]
+assert not missing, f"monsters the engine looks up are missing: {missing}"
+art = set(re.findall(r"^name:(.*)$", open(f"{lib}/gamedata/artefact.txt").read(), re.M))
+drops = set(re.findall(r"^drop-artifact:(.*)$", mon, re.M))
+assert drops <= art, f"drop-artifact names missing: {drops - art}"
+PY
+
 echo "== fuzz at depth: the deeper monsters (spells, breaths, rallies, webs) never trip a sanitizer"
 for depth in 6 14; do
     rm -rf "$work/data"

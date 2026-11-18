@@ -524,6 +524,8 @@ void process_world(struct chunk *c)
 
 	/*** Check the Time ***/
 
+	player_betrayal(player);
+
 	/* Play an ambient sound at regular intervals. */
 	if (!(turn % ((10L * z_info->day_length) / 4)))
 		play_ambient_sound();

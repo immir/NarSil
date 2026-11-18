@@ -55,7 +55,7 @@ def split_flags(text):
     return [f.strip() for f in text.split("|") if f.strip()]
 
 
-def convert(name, lines, bases):
+def convert(name, lines, bases, narsil_lines=None):
     """One Sil-Q monster to NarSil lines, as a list of 'key:value' strings."""
     f = {"flags": [], "desc": [], "spells": []}
     out = {}
@@ -84,7 +84,9 @@ def convert(name, lines, bases):
             f["desc"].append(v)
     res = []
     glyph = out.get("glyph", "")
-    base = bases.get(glyph)
+    base = next((l[5:] for l in (narsil_lines or []) if l.startswith("base:")), None)
+    if not base:    # a monster NarSil lacks: by its race flag, else by its glyph
+        base = next((b for fl, b in RACE_BASE if fl in f["flags"]), None) or bases.get(glyph) or "person"
     res.append(("name", name))
     if base:
         res.append(("base", base))
@@ -128,6 +130,9 @@ def narsil_fields(lines):
         d.setdefault(k, []).append(v)
     return d
 
+
+RACE_BASE = [("SPIDER", "spider"), ("WOLF", "wolf"), ("ORC", "orc"), ("TROLL", "troll"), ("RAUKO", "rauko"),
+             ("SERPENT", "serpent"), ("DRAGON", "dragon"), ("UNDEAD", "wraith")]
 
 # Tiles for monsters NarSil's tileset lacks: they borrow a look-alike's tile until they get their own.
 TILE_BORROW = {"Orc skirmisher": "Orc scout", "Orc thrallmaster": "Orc captain", "Attercop": "Sword spider",
@@ -383,7 +388,7 @@ def main():
     bases = base_by_glyph(gamedata)
     sq = read_entries(f"{silq}/monster.txt", r"^N:\d+:(.*)")
     ns = read_entries(f"{gamedata}/monster.txt", r"^name:(.*)")
-    converted = OrderedDict((n, convert(n, l, bases)) for n, l in sq.items() if n != "<player>" and any(x.startswith("W:") for x in l))
+    converted = OrderedDict((n, convert(n, l, bases, ns.get(n))) for n, l in sq.items() if n != "<player>" and any(x.startswith("W:") for x in l))
     if diff:
         shared = [n for n in converted if n in ns]
         changed = 0

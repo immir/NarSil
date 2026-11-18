@@ -104,7 +104,7 @@ max-pval:0
 item:boots:Pair of Greaves
 item:mail:Mail Corslet
 item:mail:Hauberk
-flags:PROT_FEAR | IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+flags:STAND_FAST | PROT_FEAR | IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
 
 name:of Ladros
 alloc:10:8 to 0
@@ -173,6 +173,7 @@ prot-dice:0
 prot-sides:0
 max-pval:0
 item:shield:Mithril Shield
+flags:CHEAT_DEATH
 
 name:of Wrath
 alloc:2:0 to 10
@@ -484,6 +485,7 @@ item:sword:Curved Sword
 item:sword:Greatsword
 item:polearm:Battle Axe
 item:polearm:Great Axe
+flags:CUMBERSOME
 brand:FIRE_1
 
 name:of Thangorodrim
@@ -502,6 +504,7 @@ item:sword:Greatsword
 item:polearm:Hand Axe
 item:polearm:Battle Axe
 item:polearm:Great Axe
+flags:CUMBERSOME
 values:CON[1]
 
 name:of Black Iron
@@ -553,6 +556,7 @@ item:sword:Bastard Sword
 item:sword:Greatsword
 item:sword:Mithril Longsword
 item:sword:Mithril Greatsword
+flags:ACCURATE
 
 name:(Defender)
 alloc:4:0 to 0
@@ -749,7 +753,7 @@ prot-dice:0
 prot-sides:0
 max-pval:0
 item:cloak:Cloak
-flags:SUST_CON | IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+flags:RES_BLEED | SUST_CON | IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
 
 name:of the Golden Flower
 alloc:4:0 to 0
@@ -840,6 +844,7 @@ prot-dice:0
 prot-sides:0
 max-pval:0
 type:bow
+flags:ACCURATE
 
 name:of Ithil's Light
 alloc:2:0 to 0
@@ -878,7 +883,7 @@ prot-dice:0
 prot-sides:0
 max-pval:0
 item:boots:Pair of Mithril Greaves
-flags:FREE_ACT
+flags:AVOID_TRAPS | FREE_ACT
 
 name:of Speed
 alloc:4:10 to 0
@@ -944,6 +949,7 @@ prot-dice:0
 prot-sides:0
 max-pval:0
 type:gloves
+flags:MEDIC
 
 name:of Swordplay
 alloc:2:4 to 0
