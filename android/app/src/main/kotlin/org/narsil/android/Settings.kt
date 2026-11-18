@@ -68,6 +68,7 @@ class Settings(context: Context) {
     private val panelTabStyle = mutableIntStateOf(prefs.getInt("panelTabs", TABS_ICONS_AND_NAMES))
     private val themeChoice = mutableIntStateOf(prefs.getInt("theme", 0))
     private val tipsSeen = mutableStateOf(prefs.getBoolean("seenTips", false))
+    private val quickCommands = mutableStateOf(prefs.getString("quickActs", "").orEmpty().split(',').mapNotNull { it.toIntOrNull() })
     private val quick = mutableStateOf(prefs.getString("quickKinds", "").orEmpty().split(',').mapNotNull { it.toIntOrNull() })
 
     var buttonScale: Float get() = buttons.floatValue; set(v) { buttons.floatValue = v; save("buttonScale", v) }
@@ -91,6 +92,10 @@ class Settings(context: Context) {
         set(v) { quick.value = v.take(NarSilNative.QUICK_MAX); prefs.edit().putString("quickKinds", quick.value.joinToString(",")).apply()
                  NarSilNative.nativeSetQuickKinds(quick.value.toIntArray()) }
     /** Pins [kind] to the action bar, or unpins it; pinning a fifth drops the oldest. */
+    var quickActs: List<Int> get() = quickCommands.value
+        set(v) { quickCommands.value = v.take(NarSilNative.QUICK_MAX); prefs.edit().putString("quickActs", quickCommands.value.joinToString(",")).apply() }
+    fun toggleQuickAct(id: Int) { quickActs = if (id in quickActs) quickActs - id else (quickActs + id).takeLast(NarSilNative.QUICK_MAX) }
+
     fun toggleQuick(kind: Int) { quickKinds = if (kind in quickKinds) quickKinds - kind else (quickKinds + kind).takeLast(NarSilNative.QUICK_MAX) }
     /** The first-run tips card has been dismissed. */
     var seenTips: Boolean get() = tipsSeen.value; set(v) { tipsSeen.value = v; prefs.edit().putBoolean("seenTips", v).apply() }

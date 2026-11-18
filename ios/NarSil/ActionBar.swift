@@ -7,10 +7,25 @@ struct BarAction: Identifiable {
     var emphasised = false
     var active = false
     var longPress: (() -> Void)?
+    var pin: Int?
     let run: () -> Void
 }
 
 private func act(_ id: Int) -> () -> Void { { Native.requestAction(id) } }
+
+/// The commands that can be pinned to the bar (long-press one in ☰), by native action id.
+private let pinnable: [Int: String] = [
+    NB.ACT_BASH: "Bash", NB.ACT_TUNNEL: "Tunnel", NB.ACT_DISARM: "Disarm", NB.ACT_EXCHANGE: "Exchange",
+    NB.ACT_TRAVEL_DOWN: "Walk to ▼", NB.ACT_TRAVEL_UP: "Walk to ▲",
+]
+
+/// Pinned commands (☰ → long-press a command): tap runs it, long-press unpins.  Ones the context already offers are left out.
+func pinnedActions(_ ids: [Int], shown: [BarAction], unpin: @escaping (Int) -> Void) -> [BarAction] {
+    ids.compactMap { id in
+        guard let label = pinnable[id], !shown.contains(where: { $0.label == label }) else { return nil }
+        return BarAction(label: label, longPress: { unpin(id) }, run: act(id))
+    }
+}
 
 /// Context actions for where the player stands, in the order a Sil player reaches for them.
 func contextActions(_ s: Status) -> [BarAction] {
@@ -56,14 +71,14 @@ func moreActions(_ s: Status, messages: @escaping () -> Void, toggleMap: @escapi
         BarAction(label: "Panel", run: act(NB.ACT_PANEL)),
         BarAction(label: "Map", run: toggleMap),
     ]
-    if s.has(NB.CTX_DOWN_KNOWN) && !s.has(NB.CTX_DOWN_STAIRS) { out.append(BarAction(label: "Walk to ▼", run: act(NB.ACT_TRAVEL_DOWN))) }
-    if s.has(NB.CTX_UP_KNOWN) && !s.has(NB.CTX_UP_STAIRS) { out.append(BarAction(label: "Walk to ▲", run: act(NB.ACT_TRAVEL_UP))) }
+    if s.has(NB.CTX_DOWN_KNOWN) && !s.has(NB.CTX_DOWN_STAIRS) { out.append(BarAction(label: "Walk to ▼", pin: NB.ACT_TRAVEL_DOWN, run: act(NB.ACT_TRAVEL_DOWN))) }
+    if s.has(NB.CTX_UP_KNOWN) && !s.has(NB.CTX_UP_STAIRS) { out.append(BarAction(label: "Walk to ▲", pin: NB.ACT_TRAVEL_UP, run: act(NB.ACT_TRAVEL_UP))) }
     out += [
         BarAction(label: "Messages", run: messages),
-        BarAction(label: "Bash", run: act(NB.ACT_BASH)),
-        BarAction(label: "Tunnel", run: act(NB.ACT_TUNNEL)),
-        BarAction(label: "Disarm", run: act(NB.ACT_DISARM)),
-        BarAction(label: "Exchange", run: act(NB.ACT_EXCHANGE)),
+        BarAction(label: "Bash", pin: NB.ACT_BASH, run: act(NB.ACT_BASH)),
+        BarAction(label: "Tunnel", pin: NB.ACT_TUNNEL, run: act(NB.ACT_TUNNEL)),
+        BarAction(label: "Disarm", pin: NB.ACT_DISARM, run: act(NB.ACT_DISARM)),
+        BarAction(label: "Exchange", pin: NB.ACT_EXCHANGE, run: act(NB.ACT_EXCHANGE)),
         BarAction(label: "All commands", run: { Native.pushKey(Keys.enter) }),
         BarAction(label: "Help", run: help),
         BarAction(label: "Options", run: act(NB.ACT_OPTIONS)),
@@ -110,6 +125,8 @@ private struct BarButton: View {
 /// Grid of the less frequent actions; tapping one runs it and closes the sheet.
 struct MoreSheet: View {
     let actions: [BarAction]
+    var pinned: [Int] = []
+    var onPin: (Int) -> Void = { _ in }
     let dismiss: () -> Void
 
     var body: some View {
@@ -117,13 +134,17 @@ struct MoreSheet: View {
             ForEach(Array(stride(from: 0, to: actions.count, by: 2)), id: \.self) { i in
                 HStack(spacing: 8) {
                     ForEach(actions[i..<min(i + 2, actions.count)]) { a in
-                        Button { dismiss(); a.run() } label: {
-                            Text(a.label).lineLimit(1).frame(maxWidth: .infinity, minHeight: 44)
-                        }
-                        .buttonStyle(.plain).background(Color.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 10))
+                        Text((a.pin.map { pinned.contains($0) } == true ? "● " : "") + a.label).lineLimit(1).frame(maxWidth: .infinity, minHeight: 44)
+                            .background(Color.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 10))
+                            .contentShape(Rectangle())
+                            .onTapGesture { dismiss(); a.run() }
+                            .onLongPressGesture(minimumDuration: 0.5) { if let id = a.pin { onPin(id) } }
                     }
                     if i + 1 >= actions.count { Spacer().frame(maxWidth: .infinity) }
                 }
+            }
+            if actions.contains(where: { $0.pin != nil }) {
+                Text("Long-press a command to pin it to the bar (●).").scaledFont(12).foregroundColor(Palette.sub)
             }
         }
         .padding(16).foregroundColor(.white)

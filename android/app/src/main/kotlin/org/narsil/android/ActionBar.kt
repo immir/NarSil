@@ -41,13 +41,23 @@ import org.narsil.android.NarSilNative as N
 
 /** One tappable action: a native action id, or an arbitrary handler. */
 data class BarAction(val label: String, val emphasised: Boolean = false, val active: Boolean = false,
-                     val longPress: (() -> Unit)? = null, val run: () -> Unit)
+                     val longPress: (() -> Unit)? = null, val pin: Int? = null, val run: () -> Unit)
 
 private fun act(id: Int): () -> Unit = { N.nativeRequestAction(id) }
 
 /** Pinned kinds (Pack → an item → Pin to bar): tap uses one, long-press unpins. */
 fun quickActions(slots: List<GameState.QuickSlot>, unpin: (Int) -> Unit): List<BarAction> =
     slots.map { q -> BarAction("${q.name} ×${q.count}", active = q.count > 0, longPress = { unpin(q.kind) }) { if (q.count > 0) N.nativeRequestUseKind(q.kind) } }
+
+/** The commands that can be pinned to the bar (long-press one in ☰), by native action id. */
+private val PINNABLE = mapOf(
+    N.ACT_BASH to "Bash", N.ACT_TUNNEL to "Tunnel", N.ACT_DISARM to "Disarm", N.ACT_EXCHANGE to "Exchange",
+    N.ACT_TRAVEL_DOWN to "Walk to ▼", N.ACT_TRAVEL_UP to "Walk to ▲",
+)
+
+/** Pinned commands (☰ → long-press a command): tap runs it, long-press unpins.  Ones the context already offers are left out. */
+fun pinnedActions(ids: List<Int>, shown: List<BarAction>, unpin: (Int) -> Unit): List<BarAction> =
+    ids.mapNotNull { id -> PINNABLE[id]?.takeIf { l -> shown.none { it.label == l } }?.let { BarAction(it, longPress = { unpin(id) }, run = act(id)) } }
 
 /**
  * Context actions for where the player stands, in the order a Sil player reaches
@@ -89,13 +99,13 @@ fun moreActions(s: GameState.Status, router: KeyRouter, showMessages: () -> Unit
     /* Pack, gear, character, skills, abilities, knowledge, smithing and game options live in the panel (@). */
     BarAction("Panel", run = act(N.ACT_PANEL)),
     BarAction("Map", run = toggleMap),
-    BarAction("Walk to ▼", run = act(N.ACT_TRAVEL_DOWN)).takeIf { s.has(N.CTX_DOWN_KNOWN) && !s.has(N.CTX_DOWN_STAIRS) },
-    BarAction("Walk to ▲", run = act(N.ACT_TRAVEL_UP)).takeIf { s.has(N.CTX_UP_KNOWN) && !s.has(N.CTX_UP_STAIRS) },
+    BarAction("Walk to ▼", pin = N.ACT_TRAVEL_DOWN, run = act(N.ACT_TRAVEL_DOWN)).takeIf { s.has(N.CTX_DOWN_KNOWN) && !s.has(N.CTX_DOWN_STAIRS) },
+    BarAction("Walk to ▲", pin = N.ACT_TRAVEL_UP, run = act(N.ACT_TRAVEL_UP)).takeIf { s.has(N.CTX_UP_KNOWN) && !s.has(N.CTX_UP_STAIRS) },
     BarAction("Messages", run = showMessages),
-    BarAction("Bash", run = act(N.ACT_BASH)),
-    BarAction("Tunnel", run = act(N.ACT_TUNNEL)),
-    BarAction("Disarm", run = act(N.ACT_DISARM)),
-    BarAction("Exchange", run = act(N.ACT_EXCHANGE)),
+    BarAction("Bash", pin = N.ACT_BASH, run = act(N.ACT_BASH)),
+    BarAction("Tunnel", pin = N.ACT_TUNNEL, run = act(N.ACT_TUNNEL)),
+    BarAction("Disarm", pin = N.ACT_DISARM, run = act(N.ACT_DISARM)),
+    BarAction("Exchange", pin = N.ACT_EXCHANGE, run = act(N.ACT_EXCHANGE)),
     BarAction("All commands", run = { router.special(Keys.ENTER) }),
     BarAction("Help", run = showHelp),
     BarAction("Options", run = showOptions),
@@ -136,9 +146,10 @@ private fun BarButton(a: BarAction) {
     }
 }
 
-/** Grid of the less frequent actions; tapping one runs it and closes the sheet. */
+/** Grid of the less frequent actions; tapping one runs it and closes the sheet, long-pressing a pinnable one pins it. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MoreSheet(actions: List<BarAction>, onDismiss: () -> Unit) {
+fun MoreSheet(actions: List<BarAction>, pinned: List<Int> = emptyList(), onPin: (Int) -> Unit = {}, onDismiss: () -> Unit) {
     Box(
         Modifier.fillMaxSize().background(Color(0x99000000))
             .clickable(remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
@@ -153,12 +164,20 @@ fun MoreSheet(actions: List<BarAction>, onDismiss: () -> Unit) {
                 actions.chunked(2).forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         row.forEach { a ->
-                            FilledTonalButton(onClick = { onDismiss(); a.run() }, modifier = Modifier.weight(1f),
-                                              contentPadding = PaddingValues(horizontal = 6.dp)) { Text(a.label, maxLines = 1) }
+                            val mark = if (a.pin != null && a.pin in pinned) "● " else ""
+                            Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    modifier = Modifier.weight(1f).heightIn(min = 40.dp).combinedClickable(
+                                        onLongClick = a.pin?.let { id -> { onPin(id) } }, onClick = { onDismiss(); a.run() })) {
+                                Box(Modifier.padding(horizontal = 6.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
+                                    Text(mark + a.label, maxLines = 1, style = MaterialTheme.typography.labelLarge)
+                                }
+                            }
                         }
                         repeat(2 - row.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
+                if (actions.any { it.pin != null }) Text("Long-press a command to pin it to the bar (●).", color = Color(0xFF9A9AA0), fontSize = 12.sp)
             }
         }
     }

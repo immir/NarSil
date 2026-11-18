@@ -80,6 +80,7 @@ struct QuickSlot: Equatable { let kind: Int, count: Int; let name: String }
 /// The kinds pinned to the action bar (Pack → an item → Pin to bar), kept by the app as "k,k,k" in UserDefaults.
 enum QuickPins {
     static let key = "quickKinds"
+    static let actsKey = "quickActs"  // pinned commands, the same encoding
     static func decode(_ s: String) -> [Int] { s.split(separator: ",").compactMap { Int($0) } }
     static func encode(_ k: [Int]) -> String { k.map(String.init).joined(separator: ",") }
     /// Pins `kind`, or unpins it; pinning a fifth drops the oldest.

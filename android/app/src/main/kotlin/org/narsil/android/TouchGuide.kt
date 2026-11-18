@@ -28,7 +28,7 @@ internal val TOUCH_GUIDE: List<Pair<String, List<String>>> = listOf(
         "Fire shoots your first quiver at your target while it is in view, otherwise at the nearest creature. Throw works the same way.",
         "To pick what to shoot at each time, use Pack → your arrows → Fire: tap a ringed creature, a chip, or swipe a direction.",
         "Skills appears there once you have experience to spend.",
-        "Pin a potion, food, a horn or other usable item to the action bar from the Pack (open it, then Pin to bar): the button shows how many you carry and uses one per tap. Long-press it to unpin. Up to four.",
+        "Pin a potion, food, a horn or other usable item to the action bar from the Pack (open it, then Pin to bar): the button shows how many you carry and uses one per tap. Long-press it to unpin. Commands too: in ☰, long-press Bash, Tunnel, Disarm, Exchange or Walk to to pin it. Up to four of each.",
         "☰ holds the rest: the panel, the whole-level map, messages, bash, tunnel, disarm, exchange, app options and help.",
         "Tap the message strip to scroll back through old messages; Options sets how many recent messages it shows. When it says \"tap to continue\", a tap dismisses -more-. Known ego items and artefacts are highlighted (cyan and gold) in the pack and wherever a message names them; items with properties still to discover (marked ??) are lilac in the pack.",
         "Options → Item details in the pack (off by default) adds, to an expanded pack item, what a known ego gives in general and what each ability it grants does.",

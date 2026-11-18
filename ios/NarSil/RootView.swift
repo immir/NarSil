@@ -25,6 +25,7 @@ struct RootView: View {
     @AppStorage("theme") private var theme = 0
     @AppStorage("seenTips") private var seenTips = false
     @AppStorage(QuickPins.key) private var quickKinds = ""
+    @AppStorage(QuickPins.actsKey) private var quickActs = ""
     @State private var lastHp = 0
     @AppStorage("itemDetails") private var itemDetails = false
     @AppStorage("messageLines") private var messageLines = 3
@@ -54,7 +55,7 @@ struct RootView: View {
                     Text(toast).scaledFont(14).foregroundColor(.white).padding(.horizontal, 16).padding(.vertical, 10)
                         .background(Color(rgb: 0x333338), in: Capsule()).padding(.bottom, 120).allowsHitTesting(false)
                 }
-                if showMore { sheet(MoreSheet(actions: more, dismiss: { showMore = false })) }
+                if showMore { sheet(MoreSheet(actions: more, pinned: QuickPins.decode(quickActs), onPin: { quickActs = QuickPins.toggled(quickActs, $0) }, dismiss: { showMore = false })) }
                 if showRest { sheet(RestSheet(dismiss: { showRest = false })) }
             }
         }
@@ -136,7 +137,9 @@ struct RootView: View {
     }
 
     private var bar: [BarAction] {
-        contextActions(game.status) + quickActions(game.quickSlots) { quickKinds = QuickPins.toggled(quickKinds, $0) }
+        let context = contextActions(game.status)
+        return context + quickActions(game.quickSlots) { quickKinds = QuickPins.toggled(quickKinds, $0) }
+            + pinnedActions(QuickPins.decode(quickActs), shown: context) { quickActs = QuickPins.toggled(quickActs, $0) }
             + coreActions(game.status) { showRest = true }
     }
     private var more: [BarAction] {

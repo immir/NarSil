@@ -206,7 +206,8 @@ class MainActivity : ComponentActivity() {
                 TextScale(settings.messageScale / settings.buttonScale) { MessagesSheet(state) { showMessages = false } }
             }
             if (showMore) MoreSheet(moreActions(state.status, router, { showMessages = true }, { showOptions = true }, { showHelp = true }, { mapView?.toggleOverview() }) { terminal?.toggleKeyboard() } +
-                                    listOfNotNull(scumAction(), BarAction("Restore scum save", run = { showScum = true }).takeIf { settings.scumming })) { showMore = false }
+                                    listOfNotNull(scumAction(), BarAction("Restore scum save", run = { showScum = true }).takeIf { settings.scumming }),
+                                    settings.quickActs, settings::toggleQuickAct) { showMore = false }
             if (showKeys) MoreSheet(extraKeys(router)) { showKeys = false }
             if (showOptions) {
                 DisposableEffect(Unit) {
@@ -366,8 +367,11 @@ when (prompt) {
         }
     }
 
-    private fun barActions(state: GameState) = contextActions(state.status) + quickActions(state.quickSlots, settings::toggleQuick) +
-        coreActions(state.status) { showRest = true }
+    private fun barActions(state: GameState): List<BarAction> {
+        val context = contextActions(state.status)
+        return context + quickActions(state.quickSlots, settings::toggleQuick) +
+            pinnedActions(settings.quickActs, context, settings::toggleQuickAct) + coreActions(state.status) { showRest = true }
+    }
 
     /** The d-pad as set (off, docked or floating); docked is beside the status in portrait, in the side column in landscape. */
     @Composable
