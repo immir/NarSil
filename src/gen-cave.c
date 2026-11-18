@@ -1041,8 +1041,8 @@ struct chunk *cave_gen(struct player *p)
 		}
 	}
 
-	/* Guarantee a forge if one hasn't been generated in a while */
-	if (p->forge_drought >= rand_range(2000, 5000)) {
+	/* Guarantee a forge if one hasn't been generated in a while, or (NarSil-Q) at 100', 300' and 500' */
+	if (z_info->rule_forge_depths ? fixed_forge_due(p) : p->forge_drought >= rand_range(2000, 5000)) {
 		struct room_profile profile = lookup_room_profile("Interesting room");
 		if (OPT(p, cheat_room)) msg("Trying to force a forge:");
 		p->upkeep->force_forge = true;

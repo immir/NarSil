@@ -719,27 +719,30 @@ static void calc_lighting(struct chunk *c, struct player *p)
 
 		light = 0;
 
-		/* Objects with the Light flag glow on the ground unless they
-		 * are torches or lanterns */
-		if (of_has(obj->flags, OF_LIGHT) &&
-			!(of_has(obj->flags, OF_TAKES_FUEL) ||
-			  of_has(obj->flags, OF_BURNS_OUT))) {
-			light++;
-		}
+		/* NarSil-Q (rules:floor-light:0): only the Iron Crown lights the floor around it */
+		if (z_info->rule_floor_light) {
+			/* Objects with the Light flag glow on the ground unless they
+			 * are torches or lanterns */
+			if (of_has(obj->flags, OF_LIGHT) &&
+				!(of_has(obj->flags, OF_TAKES_FUEL) ||
+				  of_has(obj->flags, OF_BURNS_OUT))) {
+				light++;
+			}
 
-		/* Is it a glowing weapon? */
-		if (weapon_glows(obj, 1)) {
-			light++;
-		}
+			/* Is it a glowing weapon? */
+			if (weapon_glows(obj, 1)) {
+				light++;
+			}
 
-		/* Does this item create darkness? */
-		if (of_has(obj->flags, OF_DARKNESS) && !tval_is_light(obj)) {
-			light--;
-		}
+			/* Does this item create darkness? */
+			if (of_has(obj->flags, OF_DARKNESS) && !tval_is_light(obj)) {
+				light--;
+			}
 
-		/* Some items provide permanent, bright, light */
-		if (tval_is_light(obj) && of_has(obj->flags, OF_NO_FUEL)) {
-			light += obj->pval;
+			/* Some items provide permanent, bright, light */
+			if (tval_is_light(obj) && of_has(obj->flags, OF_NO_FUEL)) {
+				light += obj->pval;
+			}
 		}
 
 		/* The Iron Crown also glows */

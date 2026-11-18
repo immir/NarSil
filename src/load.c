@@ -1543,3 +1543,13 @@ int rd_monster_groups(void)
 
 	return 0;
 }
+
+
+/**
+ * NarSil-Q's own state (absent from NarSil's savefiles)
+ */
+int rd_silq(void)
+{
+	rd_byte(&player->fixed_forge_count);
+	return 0;
+}

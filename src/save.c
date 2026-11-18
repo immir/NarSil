@@ -979,3 +979,12 @@ void wr_monster_groups(void)
 	}
 	wr_u16b(0);
 }
+
+
+/**
+ * NarSil-Q's own state (only NarSil-Q writes this block)
+ */
+void wr_silq(void)
+{
+	wr_byte(player->fixed_forge_count);
+}

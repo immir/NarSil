@@ -68,8 +68,9 @@ static int check_devices(struct object *obj)
 	/* Confusion hurts skill */
 	if (player->timed[TMD_CONFUSED]) difficulty += 5;
 
-	/* Roll for usage */
-	if (skill_check(source_player(), score, difficulty, source_none()) <= 0) {
+	/* Roll for usage (NarSil-Q, rules:staff-will-check:0: no roll, though many effects still scale with Will) */
+	if (z_info->rule_staff_will_check
+			&& skill_check(source_player(), score, difficulty, source_none()) <= 0) {
 		event_signal(EVENT_INPUT_FLUSH);
 		msg("You failed to use the staff properly.");
 		return false;

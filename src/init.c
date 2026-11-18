@@ -573,12 +573,8 @@ static enum parser_error parse_constants_rules(struct parser *p) {
 		z->rule_floor_light = value;
 	else if (streq(label, "staff-will-check"))
 		z->rule_staff_will_check = value;
-	else if (streq(label, "heal-id-unhurt"))
-		z->rule_heal_id_unhurt = value;
 	else if (streq(label, "forge-depths"))
 		z->rule_forge_depths = value;
-	else if (streq(label, "score-bonus"))
-		z->rule_score_bonus = value;
 	else
 		return PARSE_ERROR_UNDEFINED_DIRECTIVE;
 

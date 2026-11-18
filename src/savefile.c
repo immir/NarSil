@@ -127,6 +127,7 @@ static const struct {
 	{ "traps", wr_traps, 1 },
 	{ "history", wr_history, 1 },
 	{ "monster groups", wr_monster_groups, 1 },
+	{ "narsil-q", wr_silq, 1 },	/* NarSil-Q only (see savefile_save) */
 };
 
 /**
@@ -150,6 +151,7 @@ static const struct blockinfo loaders[] = {
 	{ "traps", rd_traps, 1 },
 	{ "history", rd_history, 1 },
 	{ "monster groups", rd_monster_groups, 1 },
+	{ "narsil-q", rd_silq, 1 },
 };
 
 
@@ -331,6 +333,9 @@ static bool try_save(ang_file *file)
 	buffer_size = BUFFER_INITIAL_SIZE;
 
 	for (i = 0; i < N_ELEMENTS(savers); i++) {
+		/* NarSil's savefiles stay exactly as they were: only NarSil-Q writes its own block */
+		if (savers[i].save == wr_silq && !z_info->game_silq) continue;
+
 		buffer_pos = 0;
 		buffer_check = 0;
 
