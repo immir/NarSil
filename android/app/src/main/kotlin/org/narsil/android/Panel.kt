@@ -143,8 +143,10 @@ fun PanelHost(gameTab: Int, tabStyle: Int, onAnswer: (Int) -> Unit, content: @Co
         onAnswer(a)
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val width = if (maxWidth > maxHeight) maxWidth * 0.58f else maxWidth * 0.94f
-        Box(Modifier.fillMaxSize().background(Color(0x77000000))
+        /* A wide window (tablet, foldable): a side column of a readable width, the map still showing beside it. */
+        val wide = maxWidth >= 840.dp
+        val width = if (wide) minOf(maxWidth * 0.4f, 560.dp) else if (maxWidth > maxHeight) maxWidth * 0.58f else maxWidth * 0.94f
+        Box(Modifier.fillMaxSize().background(Color(if (wide) 0x33000000 else 0x77000000))
                 .clickable(remember { MutableInteractionSource() }, indication = null) { answer(N.PANEL_CLOSE) })
             Surface(color = PANEL_BG, shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp),
                     modifier = Modifier.align(Alignment.CenterEnd).width(width).fillMaxHeight()

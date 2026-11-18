@@ -108,9 +108,11 @@ private struct PanelHost<Content: View>: View {
 
     var body: some View {
         GeometryReader { g in
-            let width = g.size.width > g.size.height ? g.size.width * 0.58 : g.size.width * 0.94
+            // A wide window (iPad): a side column of a readable width, the map still showing beside it.
+            let wide = g.size.width >= 840
+            let width = wide ? min(g.size.width * 0.4, 560) : g.size.width > g.size.height ? g.size.width * 0.58 : g.size.width * 0.94
             ZStack(alignment: .trailing) {
-                Color.black.opacity(0.47).ignoresSafeArea().onTapGesture { answer(NB.PANEL_CLOSE) }
+                Color.black.opacity(wide ? 0.2 : 0.47).ignoresSafeArea().onTapGesture { answer(NB.PANEL_CLOSE) }
                 VStack(spacing: 0) {
                     HStack(spacing: 0) {
                         tabStrip
