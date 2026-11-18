@@ -425,6 +425,14 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 		crit_bonus_dice = crit_bonus(p, hit_result, 20 * dd, NULL, SKILL_MELEE,
 									 false);
 
+		/* 'Outwit': a Perception roll against the attacker's can negate a critical hit */
+		if ((crit_bonus_dice > 0) && player_active_ability(p, "Outwit") &&
+			(skill_check(source_player(), p->state.skill_use[SKILL_PERCEPTION],
+						 monster_skill(mon, SKILL_PERCEPTION), source_monster(mon->midx)) > 0)) {
+			msg("You outwit the blow and avoid the worst of it.");
+			crit_bonus_dice = 0;
+		}
+
 		/* Determine elemental attack bonus dice (if any)  */
 		elem_bonus_dice = elem_bonus(p, effect);
 
