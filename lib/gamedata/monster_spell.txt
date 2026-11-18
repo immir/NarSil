@@ -322,6 +322,51 @@ lore:create darkness
 message-vis:{name} gestures in shadow.
 message-invis:{name} mutters.
 
+name:HATCH_SPIDER
+mana:0
+best-range:0
+desire:1
+use-past-range:100
+effect:HATCH
+lore:hatch a spider
+message-vis:An egg on {name}'s back hatches.
+message-invis:You hear something hatch.
+
+name:DIM
+mana:0
+best-range:0
+desire:1
+disturb:1
+use-past-range:100
+effect:DIM_LIGHT
+lore:dim your light
+message-vis:{name} whispers of an ancient gloom.
+message-invis:You hear a whisper of an ancient gloom.
+
+name:THROW_WEB
+mana:0
+best-range:1
+max-range:5
+desire:1
+disturb:1
+use-past-range:100
+effect:WEB_PLAYER
+lore:throw webs
+message-vis:{name} tosses strands of sticky web at you.
+message-invis:You hear a whispering movement.
+
+name:RALLY
+mana:0
+best-range:0
+desire:1
+use-past-range:100
+effect:RALLY
+dice:$S
+expr:S:SPELL_POWER:+ 0
+lore:rally allies
+message-vis:{name} shouts a rallying cry.
+message-invis:You hear a rallying cry.
+
 name:FORGET
 mana:10
 best-range:0

@@ -20,7 +20,7 @@ FLAG_RENAME = {"HURT_LITE": "HURT_LIGHT", "EXCHANGE_PLACES": "EXCHANGE"}
 # shared monsters are exact (y1 Smaug, b1 Feanor, G1 horror, B1 Hithrauko, D1 Shelob); v1 and U1 are guesses.
 COLOR_MAP = {"D1": "s", "y1": "Y", "b1": "Z", "B1": "Z", "G1": "T", "v1": "V", "U1": "M"}
 # Spells the engine does not have yet; dropped (and reported) until each is implemented.
-UNSUPPORTED_SPELLS = {"DIM", "RALLY", "THROW_WEB", "HATCH_SPIDER"}
+UNSUPPORTED_SPELLS = set()
 KEEP_FROM_NARSIL = ("drop:", "drop-artifact:", "song:", "message-vis:", "message-invis:", "message-miss:")
 
 

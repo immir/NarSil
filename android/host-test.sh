@@ -53,6 +53,13 @@ for seed in 1 2; do
     ! grep -qE 'runtime error|AddressSanitizer|hung at' "$work/fuzz.err"
 done
 
+echo "== fuzz at depth: the deeper monsters (spells, breaths, rallies, webs) never trip a sanitizer"
+for depth in 6 14; do
+    rm -rf "$work/data"
+    run "${birth[@]}" "@depth=$depth" @act=1 @esc "@fuzz=$depth,${FUZZ_STEPS:-1500}" >/dev/null 2>"$work/fuzz.err" || { tail -30 "$work/fuzz.err"; exit 1; }
+    ! grep -qE 'runtime error|AddressSanitizer|hung at' "$work/fuzz.err"
+done
+
 if [ "$game" = narsil ]; then
 echo "== NarSil unchanged: a seeded game matches the recorded baseline (UPDATE_BASELINE=1 re-records it)"
 rm -rf "$work/data"

@@ -1312,6 +1312,75 @@ bool effect_handler_NOISE(effect_handler_context_t *context)
 }
 
 /**
+ * A monster hatches a Spider hatchling next to itself (Sil-Q's brood spider).
+ */
+bool effect_handler_HATCH(effect_handler_context_t *context)
+{
+	assert(context->origin.what == SRC_MONSTER);
+	const struct monster *mon = cave_monster(cave, context->origin.which.monster);
+	struct monster_race *young = lookup_monster("Spider hatchling");
+	struct monster_group_info info = { 0, 0 };
+	struct loc grid;
+
+	if (!young) return false;
+	if (scatter_ext(cave, &grid, 1, mon->grid, 1, true, square_isempty) > 0) {
+		place_new_monster(cave, grid, young, false, false, info, ORIGIN_DROP_BREED);
+	}
+	context->ident = true;
+	return true;
+}
+
+/**
+ * The player's light burns down by 20d20 turns (Sil-Q's dimming whisper); it is never put out by this.
+ */
+bool effect_handler_DIM_LIGHT(effect_handler_context_t *context)
+{
+	struct object *light = equipped_item_by_slot_name(player, "light");
+
+	if (light && tval_is_light(light) && !of_has(light->flags, OF_NO_FUEL) && light->timeout > 0) {
+		msg("Your light sputters.");
+		light->timeout = MAX(1, light->timeout - damroll(20, 20));
+		player->upkeep->redraw |= PR_EQUIP;
+		player->upkeep->update |= PU_BONUS;
+	}
+	context->ident = true;
+	return true;
+}
+
+/**
+ * A web is thrown over the player's grid.
+ */
+bool effect_handler_WEB_PLAYER(effect_handler_context_t *context)
+{
+	if (!square_iswebbed(cave, player->grid)) {
+		square_add_web(cave, player->grid);
+		msg("You are caught in sticky web!");
+	}
+	context->ident = true;
+	return true;
+}
+
+/**
+ * The caster's call restores the nerve of orcs, men and raukar on the level, less so with distance.
+ */
+bool effect_handler_RALLY(effect_handler_context_t *context)
+{
+	assert(context->origin.what == SRC_MONSTER);
+	const struct monster *caster = cave_monster(cave, context->origin.which.monster);
+	const int power = effect_calculate_value(context);
+
+	for (int i = cave_monster_max(cave) - 1; i >= 1; i--) {
+		struct monster *target = cave_monster(cave, i);
+		if (!target->race || target == caster) continue;
+		if (!rf_has(target->race->flags, RF_ORC) && !rf_has(target->race->flags, RF_MAN)
+			&& !rf_has(target->race->flags, RF_RAUKO)) continue;
+		target->tmp_morale += (power * 10 / (distance(caster->grid, target->grid) + 4)) * 10;
+	}
+	context->ident = true;
+	return true;
+}
+
+/**
  * Create traps.
  */
 bool effect_handler_CREATE_TRAPS(effect_handler_context_t *context)
