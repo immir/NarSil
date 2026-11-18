@@ -158,8 +158,8 @@ void calc_morale(struct monster *mon)
 		morale += 20;
 	}
 
-	/* Take player's health into account */
-	switch (health_level(player->chp, player->mhp)) {
+	/* Take player's health into account (not with 'Formidable') */
+	if (!player_active_ability(player, "Formidable")) switch (health_level(player->chp, player->mhp)) {
 		case  HEALTH_WOUNDED:		morale += 20;	break;  /* <= 75% health */
 		case  HEALTH_BADLY_WOUNDED:	morale += 40;	break;  /* <= 50% health */
 		case  HEALTH_ALMOST_DEAD:	morale += 80;	break;  /* <= 25% health */

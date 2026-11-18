@@ -573,7 +573,18 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 			}
 
 			/* Damage, check for death */
+			const struct loc victim_grid = mon->grid;
 			fatal_blow = mon_take_hit(mon, p, net_dam, NULL);
+
+			/* 'Formidable': a kill in melee scares every enemy that could see it */
+			if (fatal_blow && player_active_ability(p, "Formidable")) {
+				for (int m = cave_monster_max(cave) - 1; m >= 1; m--) {
+					struct monster *other = cave_monster(cave, m);
+					if (other && other->race && projectable(cave, victim_grid, other->grid, PROJECT_NONE)) {
+						other->tmp_morale -= 60;
+					}
+				}
+			}
 
 			/* Display depending on whether knock back triggered */
 			if (do_knock_back) {
@@ -1045,6 +1056,12 @@ static struct attack_result make_ranged_shot(struct player *p,
 	prt = (prt * prt_percent) / 100;
 	result.dmg = MAX(0, dam - prt);
 
+	/* 'Deadly Hail': the arrow after a kill does twice the damage */
+	if (p->deadly_hail) {
+		result.dmg *= 2;
+		p->deadly_hail = false;
+	}
+
 	/* 'Puncture': armour that would block the whole shot still lets five damage through */
 	if (result.dmg == 0 && player_active_ability(p, "Puncture")) {
 		result.dmg = 5;
@@ -1455,6 +1472,11 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 
 						/* If this was the killing shot */
 						if (fatal_blow) {
+							/* 'Deadly Hail': the next arrow does double damage */
+							if (archery && player_active_ability(p, "Deadly Hail")) {
+								p->deadly_hail = true;
+							}
+
 							/* Gain wrath if singing song of slaying */
 							if (player_is_singing(p, lookup_song("Slaying"))) {
 								p->wrath += 100;
