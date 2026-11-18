@@ -969,6 +969,10 @@ static struct attack_result make_ranged_shot(struct player *p,
 	/* Did we hit it */
 	result.hit = hit_roll(total_attack_mod, total_evasion_mod,
 						  source_player(), source_monster(mon->midx), true);
+	if (result.hit <= 0 && of_has(bow->flags, OF_ACCURATE)) {
+		result.hit = hit_roll(total_attack_mod, total_evasion_mod,
+							  source_player(), source_monster(mon->midx), true);
+	}
 	if (result.hit <= 0) {
 		return result;
 	}
@@ -982,6 +986,7 @@ static struct attack_result make_ranged_shot(struct player *p,
 	/* Add 'critical hit' dice based on bow weight */
 	result.crit_dice = crit_bonus(p, result.hit, bow->weight, race,
 								  SKILL_ARCHERY, false);
+	if (of_has(bow->flags, OF_CUMBERSOME)) result.crit_dice = 0;
 
 	/* Add slay (or brand) dice based on both arrow and bow */
 	slay_bonus_dice = slay_bonus(p, ammo, mon, &arrow_slay, &arrow_brand);
@@ -1100,6 +1105,10 @@ static struct attack_result make_ranged_throw(struct player *p,
 	/* Did we hit it */
 	result.hit = hit_roll(total_attack_mod, total_evasion_mod,
 						  source_player(), source_monster(mon->midx), true);
+	if (result.hit <= 0 && of_has(obj->flags, OF_ACCURATE)) {
+		result.hit = hit_roll(total_attack_mod, total_evasion_mod,
+							  source_player(), source_monster(mon->midx), true);
+	}
 	if (result.hit <= 0) {
 		return result;
 	}
@@ -1110,6 +1119,7 @@ static struct attack_result make_ranged_throw(struct player *p,
 	/* Add 'critical hit' dice based on bow weight */
 	result.crit_dice = crit_bonus(p, result.hit, obj->weight, mon->race,
 								  SKILL_MELEE, false);
+	if (of_has(obj->flags, OF_CUMBERSOME)) result.crit_dice = 0;
 
 	/* Add slay (or brand) dice based on both arrow and bow */
 	slay_bonus_dice = slay_bonus(p, obj, mon, &slay, &brand);

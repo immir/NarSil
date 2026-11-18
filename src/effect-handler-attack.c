@@ -118,6 +118,9 @@ bool effect_handler_HEAL_HP(effect_handler_context_t *context)
 	minh = context->value.base
 		+ damroll(context->value.dice, context->value.sides);
 	if (num < minh) num = minh;
+
+	/* Each piece of medic equipment adds a third */
+	if (num > 0) num += (num / 3) * player->state.flags[OF_MEDIC];
 	if (num <= 0) {
 		/*
 		 * There's no healing: either because not damaged enough for
