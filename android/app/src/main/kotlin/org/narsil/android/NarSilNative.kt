@@ -15,6 +15,9 @@ object NarSilNative {
     /** button 1 = left, 2 = right; mods are KC_MOD_* flags. */
     @JvmStatic external fun nativePushMouse(x: Int, y: Int, button: Int, mods: Int)
     @JvmStatic external fun nativeRequestSave()
+
+    /** Playing NarSil-Q (set once, before the game starts). */
+    @Volatile var silq = false
     @JvmStatic external fun nativeSaveCount(): Long
     @JvmStatic external fun nativeGeneration(): Long
     /** Fills [cells] with (codepoint, attr) pairs and [cursor] with (x, y, visible); returns the frame generation. */
@@ -54,6 +57,8 @@ object NarSilNative {
     const val META_THREAT_NEAREST = 27
     const val META_LIGHT_TURNS = 28
     const val META_MIN_DEPTH = 29
+    /** nb_exit_message() after the welcome screen's "Play the other game" (NB_EXIT_SWITCH_GAME). */
+    const val EXIT_SWITCH_GAME = "switch-game"
     const val META_COUNT = 30
 
     /** enum nb_stance, as sidebar text. */

@@ -62,4 +62,10 @@ class ScumTest {
         assertTrue(!Scum.isSavefile(save))
         assertTrue(!Scum.isSavefile(File(save.parentFile, "missing")))
     }
+
+    @Test fun eachGameKnowsItsOwnSavefiles() = withSave { save, _ ->
+        save.writeBytes("SaveUSLQdescription".toByteArray())
+        assertTrue(Scum.isSavefile(save, GameLauncher.Game.SILQ.tag))
+        assertTrue(!Scum.isSavefile(save, GameLauncher.Game.NARSIL.tag))
+    }
 }

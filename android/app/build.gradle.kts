@@ -5,8 +5,10 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
-// Read-only game data from the repository's lib/, packaged as assets/lib.
+// Read-only game data from the repository's lib/, packaged as assets/lib; NarSil-Q's overlay (lib-silq/) as
+// assets/lib-silq, copied over lib at install (GameLauncher.kt).
 val narsilLib = rootProject.file("../lib")
+val silqOverlay = rootProject.file("../lib-silq")
 val generatedAssets = layout.buildDirectory.dir("generated/narsilAssets")
 val syncGameData by tasks.registering(Sync::class) {
     from(narsilLib) {
@@ -14,6 +16,10 @@ val syncGameData by tasks.registering(Sync::class) {
         exclude("**/Makefile")
     }
     into(generatedAssets.map { it.dir("lib") })
+}
+val syncSilqData by tasks.registering(Sync::class) {
+    from(silqOverlay) { include("gamedata/**") }
+    into(generatedAssets.map { it.dir("lib-silq") })
 }
 
 android {
@@ -91,7 +97,7 @@ val checkBridgeConstants by tasks.registering(Exec::class) {
     inputs.files(rootProject.file("../bridge/narsil_bridge.h"), file("src/main/kotlin/org/narsil/android/NarSilNative.kt"))
     outputs.upToDateWhen { false }
 }
-tasks.named("preBuild") { dependsOn(syncGameData, checkBridgeConstants) }
+tasks.named("preBuild") { dependsOn(syncGameData, syncSilqData, checkBridgeConstants) }
 
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2023.10.01")

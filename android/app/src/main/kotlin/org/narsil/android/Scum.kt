@@ -56,7 +56,7 @@ object Scum {
 
     data class Copy(val file: File, val label: String, val auto: Boolean = false)
 
-    private fun dataDir(context: Context) = File(context.filesDir, "data")
+    private fun dataDir(context: Context) = GameLauncher.dataDir(context)
     private fun saveFile(context: Context) = File(dataDir(context), "save/${GameLauncher.PLAYER}")
     private fun dir(context: Context) = File(dataDir(context), "scum").apply { mkdirs() }
 
@@ -145,13 +145,19 @@ object Scum {
         checkNotNull(context.contentResolver.openInputStream(uri)) { "can't read $uri" }.use { input ->
             dest.outputStream().use { input.copyTo(it) }
         }
-        if (!isSavefile(dest)) { dest.delete(); throw IllegalArgumentException("That file is not a NarSil savefile.") }
+        val game = GameLauncher.game(context)
+        if (!isSavefile(dest, game.tag)) {
+            val otherGame = isSavefile(dest, game.other.tag)
+            dest.delete()
+            throw IllegalArgumentException(if (otherGame) "That is a ${game.other.title} save: switch games on the welcome screen to load it."
+                                           else "That file is not a ${game.title} savefile.")
+        }
         Copy(dest, "imported ${label(dest)}")
     }
 
-    /** Every savefile starts "Save" + "USIL" (the game's savefile_magic and variant name, src/savefile.c). */
-    fun isSavefile(file: File): Boolean =
-        file.isFile && runCatching { file.inputStream().use { it.readNBytes(8) }.contentEquals("SaveUSIL".toByteArray()) }.getOrDefault(false)
+    /** A savefile of [tag]'s game: "Save" + the variant name (src/savefile.c), "USIL" for NarSil, "USLQ" for NarSil-Q. */
+    fun isSavefile(file: File, tag: String = GameLauncher.Game.NARSIL.tag): Boolean =
+        file.isFile && runCatching { file.inputStream().use { it.readNBytes(8) }.contentEquals(tag.toByteArray()) }.getOrDefault(false)
 
     /** Marks [copy] to be restored, and restarts the app to load it. */
     fun restore(context: Context, copy: Copy) {
@@ -166,10 +172,11 @@ object Scum {
         val marker = File(dir(context), MARKER)
         if (!marker.isFile) return
         val copy = File(dir(context), marker.readText().trim())
-        if (isSavefile(copy)) {
+        val tag = GameLauncher.game(context).tag
+        if (isSavefile(copy, tag)) {
             /* The save being replaced is kept as the newest autosave, so a restore can be undone. */
             val current = saveFile(context)
-            if (isSavefile(current) && !sameBytes(current, copy)) {
+            if (isSavefile(current, tag) && !sameBytes(current, copy)) {
                 val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
                 runCatching { current.copyTo(File(dir(context), "auto-${GameLauncher.PLAYER}-$stamp"), overwrite = true) }
                 autosaves(context).drop(AUTO_KEEP).forEach { it.file.delete() }

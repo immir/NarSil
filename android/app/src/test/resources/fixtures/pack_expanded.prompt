@@ -8,6 +8,7 @@ Pack	0	0	83	1000	0
 #A	1	Throw
 #A	1	Inscribe
 #A	1	Ignore
+#K	139
 #D	An inheritance from your family
 #D	
 #D	It restores a point of grace if it has been drained.  It provides nourishment for about 3,000 turns under normal conditions. 

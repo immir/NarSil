@@ -130,8 +130,12 @@ class MainActivity : ComponentActivity() {
         LaunchedEffect(phase) {
             var saves = -1L
             while (phase == Phase.Running) {
-                if (NarSilNative.nativeState() == NarSilNative.STATE_EXITED)
-                    phase = Phase.Exited(NarSilNative.nativeExitMessage())
+                if (NarSilNative.nativeState() == NarSilNative.STATE_EXITED) {
+                    val message = NarSilNative.nativeExitMessage()
+                    /* The welcome screen's "Play NarSil-Q instead" (or back): start again as the other game. */
+                    if (message == NarSilNative.EXIT_SWITCH_GAME) GameLauncher.switchGame(applicationContext)
+                    phase = Phase.Exited(message)
+                }
                 /* Each save the game makes (autosave, level change, leaving the app) may become a kept recent autosave. */
                 NarSilNative.nativeSaveCount().let { n ->
                     if (n != saves) { if (saves >= 0) withContext(Dispatchers.IO) { Scum.noteSave(applicationContext) }; saves = n }

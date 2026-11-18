@@ -6,3 +6,4 @@ Screen	welcome	NarSil
 #H	Version 1.4.0
 #O	1	Begin		
 #O	1	Tutorial	A short guided dungeon; your own character is untouched.	
+#O	1	Play NarSil-Q instead	NarSil with Sil-Q's content and rules, arriving in stages; each game keeps its own characters and saves.	

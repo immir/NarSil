@@ -70,6 +70,10 @@ internal fun MessageStrip(state: GameState, lines: Int, onTap: () -> Unit) {
     }
 }
 
+/** The depth, and in NarSil-Q (as in Sil-Q) the minimum depth the depth clock now allows going up to. */
+private fun depthText(s: GameState.Status): String =
+    if (NarSilNative.silq && s.minDepth > 0) "${s.depth * 50} ft · min ${s.minDepth * 50} ft" else "${s.depth * 50} ft"
+
 /** Opens the character panel (pack, character, skills, …) at its last tab. */
 @Composable
 internal fun PanelButton() {
@@ -92,11 +96,11 @@ internal fun StatusStrip(state: GameState, stacked: Boolean, buzzOnLowHealth: Bo
         if (stacked) {
             Meter("HP", s.hp, s.maxHp, hpColour, Modifier.fillMaxWidth(), alarm = s.lowHp)
             Meter("Voice", s.voice, s.maxVoice, Color(0xFF4080E0), Modifier.fillMaxWidth().padding(top = 4.dp))
-            Text("${s.depth * 50} ft", color = Color.White, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+            Text(depthText(s), color = Color.White, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
         } else Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Meter("HP", s.hp, s.maxHp, hpColour, Modifier.weight(1f), alarm = s.lowHp)
             Meter("Voice", s.voice, s.maxVoice, Color(0xFF4080E0), Modifier.weight(1f))
-            Text("${s.depth * 50} ft", color = Color.White, fontSize = 13.sp)
+            Text(depthText(s), color = Color.White, fontSize = 13.sp)
         }
         StatusChips(state)
         s.foe?.let { FoeLine(it, state) }
