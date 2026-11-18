@@ -407,6 +407,10 @@ static void *game_main(void *unused)
 
 	init_display();
 	init_angband();
+#ifdef NB_TEST_HOOKS
+	/* A fixed seed for reproducible host runs (the baseline check) */
+	if (getenv("NARSIL_SEED")) Rand_state_init((uint32_t)strtoul(getenv("NARSIL_SEED"), NULL, 10));
+#endif
 	textui_init();
 	native_init();
 	tutorial_chosen = native_welcome();

@@ -1,0 +1,70 @@
+map 99x33 player (68,25) hp 28/28 voice 28/28 depth 1 mode=1 prompt=1
+                 #..........#            
+                 #..........#            
+            +    #....|.....#            
+            #.   #..........#            
+             ... #..........#            
+               .............%            
+                 %..@.......+            
+                 %%#%%#+%#%%%            
+                                         
+                                         
+                                         
+                                         
+                                         
+player tile -1,-1
+player terrain tile -1,-1 overlays -1,-1
+walk 6: moved 1
+walk 2: moved 0
+walk 4: moved 1
+run 8: moved 6
+info (gen moved=0):
+messages:
+1	1	 
+1	1	  
+1	1	====================
+1	1	  
+1	1	 
+1	1	There is a wall in the way!
+map 99x33 player (68,19) hp 28/28 voice 28/28 depth 1 mode=1 prompt=0
+                                         
+                                         
+                                         
+                                         
+                                         
+                 ##+###+#####            
+                 #..@.......#            
+                 #..........#            
+            +    #....|.....#            
+            #.   #..........#            
+            #... #..........#            
+            %...............%            
+            %# %%%..........+            
+player tile -1,-1
+player terrain tile -1,-1 overlays -1,-1
+---- frame 235 ----
+                                                                                
+                                                                                
+Harness                                                                         
+                                                                                
+STR:       0                                                                    
+DEX:       2                                                                    
+CON:       2                                                                    
+GRA:       2                                                                    
+Exp     5000                                 ##+###+#####                       
+Health 28:28                                 #..@.......#                       
+Voice  28:28                                 #..........#                       
+                                        +    #....|.....#                       
+    (+2,1d1)                            #.   #..........#                       
+                                        #... #..........#                       
+    [+2,0-0]                            %...............%                       
+                                        %# %%%..........+                       
+                                             %%#%%#+%#%%%                       
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+             Light 3          Fed           Open floor            50'           
+state=1 exit="" saves=0

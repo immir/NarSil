@@ -46,6 +46,14 @@ for seed in 1 2; do
     ! grep -qE 'runtime error|AddressSanitizer|hung at' "$work/fuzz.err"
 done
 
+echo "== NarSil unchanged: a seeded game matches the recorded baseline (UPDATE_BASELINE=1 re-records it)"
+rm -rf "$work/data"
+baseline_run=("${birth[@]}" @map @walk=6 @walk=2 @walk=4 @run=8 @act=20 @info @look @messages @map @dump)
+NARSIL_SEED=7 run "${baseline_run[@]}" 2>/dev/null > "$work/baseline.txt"
+if [ -n "${UPDATE_BASELINE:-}" ]; then cp "$work/baseline.txt" "$here/baselines/narsil-seed7.txt"
+else diff -u "$here/baselines/narsil-seed7.txt" "$work/baseline.txt" | head -40; cmp -s "$here/baselines/narsil-seed7.txt" "$work/baseline.txt"; fi
+rm -rf "$work/data"
+
 echo "== bridge constants: narsil_bridge.h and NarSilNative.kt agree"
 python3 "$here/check-bridge-constants.py"
 
