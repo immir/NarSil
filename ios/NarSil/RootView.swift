@@ -55,6 +55,7 @@ struct RootView: View {
                     Text(toast).scaledFont(14).foregroundColor(.white).padding(.horizontal, 16).padding(.vertical, 10)
                         .background(Color(rgb: 0x333338), in: Capsule()).padding(.bottom, 120).allowsHitTesting(false)
                 }
+                if let message = game.exited { ExitedCard(message: message) }
                 if showMore { sheet(MoreSheet(actions: more, pinned: QuickPins.decode(quickActs), onPin: { quickActs = QuickPins.toggled(quickActs, $0) }, dismiss: { showMore = false })) }
                 if showRest { sheet(RestSheet(dismiss: { showRest = false })) }
             }
@@ -62,7 +63,12 @@ struct RootView: View {
         .fileImporter(isPresented: $importing, allowedContentTypes: [.data, .item]) { result in
             if case .success(let url) = result {
                 pendingImport = Saves.importSave(from: url)
-                if pendingImport == nil { say("That file is not a NarSil savefile.") }
+                if pendingImport == nil {
+                    let game = GameLauncher.game
+                    let other = (try? Data(contentsOf: url).prefix(8)) == Data(game.other.tag.utf8)
+                    say(other ? "That is a \(game.other.title) save: switch games on the welcome screen to load it."
+                              : "That file is not a \(game.title) savefile.")
+                }
             }
         }
         .alert("Load this save?", isPresented: Binding(get: { pendingImport != nil }, set: { if !$0 { pendingImport = nil } }), presenting: pendingImport) { c in
@@ -265,5 +271,24 @@ struct RootView: View {
             else { Native.requestMove(dir, run: { if case .run = a { return true } else { return false } }()) }
         default: break
         }
+    }
+}
+
+/// The game thread has ended.  After the welcome screen's "Play the other game" the choice is saved, and the player
+/// opens the app again to play it: iOS apps can't relaunch themselves.
+private struct ExitedCard: View {
+    let message: String
+    private var switching: Bool { message == GameLauncher.exitSwitchGame }
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.85).ignoresSafeArea()
+            VStack(spacing: 16) {
+                Text(switching ? "Open NarSil again to play \(GameLauncher.game.other.title)." : (message.isEmpty ? "The game has ended." : message))
+                    .scaledFont(17).foregroundColor(.white).multilineTextAlignment(.center)
+                Button("Close") { exit(0) }.buttonStyle(.borderedProminent)
+            }.padding(24)
+        }
+        .onAppear { if switching { GameLauncher.chooseOtherGame() } }
     }
 }

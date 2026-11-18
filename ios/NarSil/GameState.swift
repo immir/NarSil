@@ -27,6 +27,8 @@ final class GameState: ObservableObject {
     @Published private(set) var atPrompt = false
     @Published private(set) var status = Status()
     @Published private(set) var prompt: Prompt?
+    /// Set once the game thread has ended: its exit message (GameLauncher.exitSwitchGame after the welcome screen's switch).
+    @Published private(set) var exited: String?
     /// The character panel tab the prompt belongs to, or -1.
     @Published private(set) var panelTab = -1
     @Published private(set) var messages: [Message] = []
@@ -93,6 +95,7 @@ final class GameState: ObservableObject {
     }
 
     func poll() {
+        if exited == nil, Native.state == NB.EXITED { exited = Native.exitMessage }
         pollTerm()
         let saves = Native.saveCount
         if saves != saveCount {
@@ -138,7 +141,8 @@ final class GameState: ObservableObject {
                         depth: m(NB.META_DEPTH), exp: m(NB.META_EXP), context: m(NB.META_CONTEXT), foe: foe,
                         newExp: m(NB.META_NEW_EXP), hpWarn: m(NB.META_HP_WARN), autoMore: m(NB.META_AUTO_MORE) != 0,
                         threats: m(NB.META_THREATS), threatsAlert: m(NB.META_THREATS_ALERT),
-                        threatNearest: m(NB.META_THREAT_NEAREST), lightTurns: m(NB.META_LIGHT_TURNS))
+                        threatNearest: m(NB.META_THREAT_NEAREST), lightTurns: m(NB.META_LIGHT_TURNS),
+                        minDepth: m(NB.META_MIN_DEPTH))
         recolour(Native.palette())
         let quick = Native.quickSlots().split(separator: "\n").compactMap(Self.quickSlot)
         if quick != quickSlots { quickSlots = quick }

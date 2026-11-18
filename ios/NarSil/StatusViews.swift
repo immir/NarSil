@@ -65,12 +65,12 @@ struct StatusStrip: View {
             if stacked {
                 Meter(label: "HP", value: s.hp, max: s.maxHp, colour: hp, alarm: s.lowHp)
                 Meter(label: "Voice", value: s.voice, max: s.maxVoice, colour: voice, alarm: false)
-                Text("\(s.depth * 50) ft").scaledFont(13)
+                Text(depthText(s)).scaledFont(13)
             } else {
                 HStack(spacing: 12) {
                     Meter(label: "HP", value: s.hp, max: s.maxHp, colour: hp, alarm: s.lowHp)
                     Meter(label: "Voice", value: s.voice, max: s.maxVoice, colour: voice, alarm: false)
-                    Text("\(s.depth * 50) ft").scaledFont(13)
+                    Text(depthText(s)).scaledFont(13)
                 }
             }
             Chips(game: game)
@@ -199,4 +199,9 @@ private struct Chip: View {
             .background(colour.opacity(0.16), in: RoundedRectangle(cornerRadius: 8))
             .onTapGesture { onTap?() }
     }
+}
+
+/// The depth, and in NarSil-Q (as in Sil-Q) the minimum depth the depth clock now allows going up to.
+func depthText(_ s: Status) -> String {
+    GameLauncher.game == .silq && s.minDepth > 0 ? "\(s.depth * 50) ft · min \(s.minDepth * 50) ft" : "\(s.depth * 50) ft"
 }

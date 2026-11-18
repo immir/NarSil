@@ -157,6 +157,8 @@ struct Status: Equatable {
     var threats = 0, threatsAlert = 0, threatNearest = 0
     /// Turns of light left, or -1 when there is no light source to count.
     var lightTurns = -1
+    /// The shallowest level the depth clock now allows going up to.
+    var minDepth = 0
 
     func has(_ flag: Int) -> Bool { context & flag != 0 }
     /// Below the game's hitpoint warning (tenths of maximum health).

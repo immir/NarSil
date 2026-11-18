@@ -2,5 +2,6 @@ version: 1
 bundleID: org.narsil.NarSil
 resources:
   - lib
+  - lib-silq
 infoPath: xtool-Info.plist
 iconPath: AppIcon.png

@@ -106,11 +106,11 @@ enum Saves {
         return Copy(url: dest, auto: false)
     }
 
-    /// Every savefile starts "Save" + "USIL" (the game's savefile_magic and variant name, src/savefile.c).
-    static func isSavefile(_ url: URL) -> Bool {
+    /// A savefile of `game`: "Save" + the variant name (src/savefile.c), "USIL" for NarSil, "USLQ" for NarSil-Q.
+    static func isSavefile(_ url: URL, of game: GameLauncher.Game = GameLauncher.game) -> Bool {
         guard let h = try? FileHandle(forReadingFrom: url) else { return false }
         defer { try? h.close() }
-        return (try? h.read(upToCount: 8)) == Data("SaveUSIL".utf8)
+        return (try? h.read(upToCount: 8)) == Data(game.tag.utf8)
     }
 
     /// Marks `copy` to be restored and closes the app; the copy is loaded when it is opened again.

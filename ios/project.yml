@@ -31,6 +31,7 @@ targets:
           for d in gamedata customize help screens; do cp -R "$src/$d" "$dest/$d"; done
           cp "$src/tiles/list.txt" "$dest/tiles/"; cp -R "$src/tiles/microchasm" "$dest/tiles/"
           find "$dest" -name Makefile -delete
+          "$SRCROOT/../tools/merge-lib.sh" "$dest" "$SRCROOT/../lib-silq" "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/lib-silq"
         basedOnDependencyAnalysis: false
     info:
       path: NarSil/Info.plist
