@@ -1,0 +1,39 @@
+# Objects NarSil does not have, written by hand in NarSil's format (Sil-Q hard-codes their effects).
+# Appended to the converted object.txt by tools/silq-convert.py.
+
+name:& Hand Axe~
+graphics:/:s
+type:polearm
+depth:2
+weight:10
+cost:150
+attack:-1:4d2
+defence:0:0d0
+alloc:2:4
+flags:AXE
+
+name:& Broken Shield~
+graphics:):s
+type:shield
+depth:1
+weight:50
+cost:50
+attack:-1:0d0
+defence:0:1d2
+alloc:1:1
+flags:NO_SMITHING
+
+name:Antidote
+graphics:!:d
+type:potion
+depth:2
+weight:5
+cost:100
+attack:0:0d0
+defence:0:0d0
+alloc:2:1
+alloc:12:1
+effect:CURE:POISONED
+effect:NOURISH:INC_BY
+dice:100
+desc:It cures any current poisoning.
