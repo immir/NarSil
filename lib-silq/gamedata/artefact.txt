@@ -8,7 +8,7 @@ weight:1
 cost:5000
 attack:0:0d0
 defence:0:1d1
-flags:FREE_ACT
+flags:FREE_ACT | MEDIC
 values:RES_POIS[1]
 ability:Song:Song of Freedom
 desc:A ring shaped into twinned serpents with eyes of emerald meeting
@@ -294,6 +294,7 @@ weight:300
 cost:25000
 attack:-1:0d0
 defence:-3:2d6
+flags:STAND_FAST
 values:WILL[3]
 desc:Hard are the people who live around the hill Amon
 desc: Rudh, and hard is the armour they wear.
@@ -348,6 +349,7 @@ weight:60
 cost:25000
 attack:0:0d0
 defence:1:1d4
+flags:TRAITOR
 values:STR[1] | DAMAGE_SIDES[1]
 desc:An black shield with scalloped edges. It bears the
 desc: emblem of a white hand dripping blood.
@@ -610,7 +612,7 @@ weight:50
 cost:100000
 attack:1:3d4
 defence:1:0d0
-flags:SHARPNESS
+flags:SHARPNESS | TRAITOR
 desc:A bitter blade by brooding Eol forged,
 desc: in secret made of metal from a star.
 
@@ -623,7 +625,7 @@ weight:40
 cost:10000
 attack:-2:3d4
 defence:1:0d0
-flags:FREE_ACT
+flags:ACCURATE | FREE_ACT
 values:RES_COLD[1]
 desc:A sword made by the Sindarin in Vinyamar. Its steel blade is a
 desc: murky blue like an overcast sea and its hilt chalk white.
@@ -984,6 +986,7 @@ weight:15
 cost:45000
 attack:0:0d0
 defence:0:1d3
+flags:TRAITOR
 desc:A helm wrought of grey metal and the dull bones of some forgotten
 desc: orc who once raised his blade against his master.
 
@@ -1158,7 +1161,7 @@ weight:20
 cost:3500
 attack:2:2d5
 defence:0:0d0
-flags:FREE_ACT
+flags:FREE_ACT | ACCURATE
 desc:A long slender bow, well worn at the notches, but supple
 desc: to the touch and easy on the draw.
 

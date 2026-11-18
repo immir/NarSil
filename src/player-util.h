@@ -73,6 +73,8 @@ int player_min_depth(struct player *p);
 int dungeon_get_next_level(struct player *p, int dlev, int added);
 void dungeon_change_level(struct player *p, int dlev);
 int int_exp(int base, int power);
+bool player_cheat_death(struct player *p);
+void player_betrayal(struct player *p);
 void take_hit(struct player *p, int dam, const char *kb_str);
 void death_knowledge(struct player *p);
 int energy_per_move(struct player *p);

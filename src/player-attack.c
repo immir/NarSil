@@ -466,6 +466,15 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 		hit_result = hit_roll(total_attack_mod, total_evasion_mod,
 							  source_player(), source_monster(mon->midx), true);
 
+		/* An accurate weapon gets a second chance */
+		if (hit_result <= 0 && obj && of_has(obj->flags, OF_ACCURATE)) {
+			hit_result = hit_roll(total_attack_mod, total_evasion_mod,
+								  source_player(), source_monster(mon->midx), true);
+			if (hit_result > 0) {
+				equip_learn_flag(p, OF_ACCURATE);
+			}
+		}
+
 		/* If the attack connects... */
 		if (hit_result > 0) {
 			int crit_bonus_dice = 0, slay_bonus_dice = 0, total_dice = 0;
@@ -483,6 +492,7 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 			/* Calculate the damage */
 			crit_bonus_dice = crit_bonus(p, hit_result, weight, race,
 										 SKILL_MELEE, false);
+			if (obj && of_has(obj->flags, OF_CUMBERSOME)) crit_bonus_dice = 0;
 			slay_bonus_dice = slay_bonus(p, obj, mon, &slay, &brand);
 			total_dice = mdd + slay_bonus_dice + crit_bonus_dice;
 

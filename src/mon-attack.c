@@ -539,7 +539,10 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 			/* Only happens on the main attack (so bites don't knock back) */
 			if (blow == 0) {
 				/* Determine if the player is knocked back */
-				if (skill_check(source_monster(mon->midx),
+				if (p->state.flags[OF_STAND_FAST]) {
+					msg("You stand your ground.");
+					equip_learn_flag(p, OF_STAND_FAST);
+				} else if (skill_check(source_monster(mon->midx),
 								monster_stat(mon, STAT_STR) * 2,
 								p->state.stat_use[STAT_CON] * 2,
 								source_player()) > 0) {
