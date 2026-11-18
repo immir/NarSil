@@ -94,6 +94,12 @@ struct LookSheet: View {
 struct MessagesSheet: View {
     @ObservedObject var game: GameState
     let dismiss: () -> Void
+    @State private var find: String?
+
+    private var shown: [Message] {
+        guard let q = find?.trimmingCharacters(in: .whitespaces), !q.isEmpty else { return game.messages }
+        return game.messages.filter { $0.text.localizedCaseInsensitiveContains(q) }
+    }
 
     var body: some View {
         BottomSheet(maxHeight: 700, cancel: dismiss) {
@@ -101,13 +107,19 @@ struct MessagesSheet: View {
                 HStack {
                     Text("Messages").scaledFont(17, weight: .semibold).foregroundColor(.white)
                     Spacer()
-                    Button("Close", action: dismiss)
+                    Button(find == nil ? "Find" : "Done") { find = find == nil ? "" : nil }
+                    Button("Close", action: dismiss).padding(.leading, 12)
                 }.padding(.horizontal, 16).padding(.top, 12).padding(.bottom, 4)
-                if game.messages.isEmpty { Text("No messages yet.").foregroundColor(Palette.sub).padding(16) }
+                if find != nil {
+                    TextField("Search the log, e.g. hits, dies, you feel", text: Binding(get: { find ?? "" }, set: { find = $0 }))
+                        .textFieldStyle(.roundedBorder).autocorrectionDisabled().textInputAutocapitalization(.never)
+                        .padding(.horizontal, 16).padding(.bottom, 4)
+                }
+                if shown.isEmpty { Text(find?.isEmpty ?? true ? "No messages yet." : "No message contains that.").foregroundColor(Palette.sub).padding(16) }
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 2) {
-                            ForEach(Array(game.messages.enumerated()), id: \.offset) { i, m in
+                            ForEach(Array(shown.enumerated()), id: \.offset) { i, m in
                                 Text(m.count > 1 ? "\(m.text) (x\(m.count))" : m.text).scaledFont(15)
                                     .foregroundColor(Color(rgb: game.colour(m.attr % 256 % 32)))
                                     .padding(.horizontal, 16).frame(maxWidth: .infinity, alignment: .leading).id(i)
@@ -115,7 +127,8 @@ struct MessagesSheet: View {
                             Color.clear.frame(height: 12)
                         }
                     }
-                    .onAppear { if !game.messages.isEmpty { proxy.scrollTo(game.messages.count - 1, anchor: .bottom) } }
+                    .onAppear { if !game.messages.isEmpty { proxy.scrollTo(shown.count - 1, anchor: .bottom) } }
+                    .onChange(of: find) { _ in if !shown.isEmpty { proxy.scrollTo(shown.count - 1, anchor: .bottom) } }
                 }
             }
         }

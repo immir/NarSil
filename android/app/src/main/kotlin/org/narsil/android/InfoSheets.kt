@@ -25,6 +25,10 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -115,15 +119,21 @@ fun LookSheet(info: GameState.Info.LookList, state: GameState, onDismiss: () -> 
  */
 @Composable
 fun MessagesSheet(state: GameState, onDismiss: () -> Unit) {
-    val messages = state.messages
+    var find by remember { mutableStateOf<String?>(null) }
+    val messages = find?.trim()?.takeIf { it.isNotEmpty() }?.let { q -> state.messages.filter { it.text.contains(q, ignoreCase = true) } } ?: state.messages
     val list = rememberLazyListState(initialFirstVisibleItemIndex = maxOf(messages.size - 1, 0))
     BottomSheet(onDismiss, tall = true) {
         Column(Modifier.padding(top = 12.dp)) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("Messages", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                TextButton(onClick = { find = if (find == null) "" else null }) { Text(if (find == null) "Find" else "Done") }
                 TextButton(onClick = onDismiss) { Text("Close") }
             }
-            if (messages.isEmpty()) Text("No messages yet.", color = Color(0xFF9A9AA0), modifier = Modifier.padding(16.dp))
+            find?.let { q ->
+                OutlinedTextField(q, { find = it }, singleLine = true, placeholder = { Text("Search the log, e.g. hits, dies, you feel") },
+                                  modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp))
+            }
+            if (messages.isEmpty()) Text(if (find.isNullOrBlank()) "No messages yet." else "No message contains that.", color = Color(0xFF9A9AA0), modifier = Modifier.padding(16.dp))
             LazyColumn(Modifier.fillMaxWidth(), state = list) {
                 items(messages) { m ->
                     Text(Special.styled(m, if (m.count > 1) " (x${m.count})" else ""), color = Color(state.colour(m.attr)), fontSize = 15.sp,
