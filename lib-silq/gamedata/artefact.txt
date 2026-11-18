@@ -1,0 +1,1378 @@
+
+
+name:of Barahir
+base-object:ring:Serpentine Ring
+depth:10
+rarity:20
+weight:1
+cost:5000
+attack:0:0d0
+defence:0:1d1
+flags:FREE_ACT
+values:RES_POIS[1]
+ability:Song:Song of Freedom
+desc:A ring shaped into twinned serpents with eyes of emerald meeting
+desc: beneath a crown of flowers. It was given to Barahir of Beor's House
+desc: by Finrod Felagund the Noldorin Prince. It is a symbol of loyalty and
+desc: faithfulness.
+
+name:of Melian
+base-object:ring:Filigree Ring
+graphics:=:D
+depth:14
+rarity:30
+weight:1
+cost:50000
+attack:0:0d0
+defence:0:0d0
+values:PERCEPTION[7]
+ability:Will:Channeling
+desc:A ring that once graced the hand of Melian, Queen
+desc: of Doriath and one of the Powers of the World.
+desc: Above all else, she is famed for her insight.
+
+name:of Tinfang Gelion
+base-object:amulet:Pendant
+graphics:":D
+depth:12
+rarity:20
+weight:1
+cost:5000
+attack:0:0d0
+defence:0:0d0
+values:SONG[2]
+ability:Song:Woven Themes
+desc:A delicate necklace traced with intricate designs.
+desc: Clasping it around your neck fills you memories of
+desc: great heroes and a desire to sing of their deeds.
+
+name:'Nimphelos'
+base-object:amulet:Pearl
+graphics:":w
+depth:12
+rarity:20
+weight:1
+cost:5000
+attack:0:0d0
+defence:0:0d0
+flags:SUST_GRA
+values:GRA[2]
+desc:The greatest pearl from the Bay of Balar, its sheen was as starlight on the
+desc: foam of the sea.  It was given to the chieftain of the Dwarves of Belegost
+desc: by Thingol Greycloak, King of Doriath.
+
+name:'Elessar'
+base-object:amulet:Jewel
+graphics:":g
+depth:14
+rarity:20
+weight:1
+cost:7000
+attack:0:0d0
+defence:0:0d0
+flags:REGEN
+values:CON[1]
+ability:Will:Strength in Adversity
+desc:A beautiful green jewel made by Enerdhil in the Hidden City.
+desc: In it is trapped the light of the Sun, and any who look through it
+desc: can see the withered and old as if they were young and supple once more.
+
+name:of the Dwarves
+base-object:amulet:Necklace
+graphics:":y
+depth:16
+rarity:30
+weight:1
+cost:10000
+attack:0:0d0
+defence:0:0d0
+values:CON[1] | GRA[1]
+desc:The Nauglamir; a carencet of gold set with a multitude of shining gems
+desc: of Valinor. It was made by the dwarves of Ered Luin for Finrod Felagund. 
+
+name:of Daeron
+color:g
+base-object:crown:Crown
+depth:14
+rarity:30
+weight:5
+cost:600000
+attack:0:0d0
+defence:0:1d0
+values:SONG[4]
+desc: '... Daeron the Dark with ferny crown
+desc: played with bewildering wizard's art
+desc: music for breaking of the heart.'
+
+name:of Feanor
+base-object:crown:Crown
+depth:20
+rarity:20
+weight:35
+cost:300000
+attack:0:0d0
+defence:0:1d1
+flags:SEE_INVIS | LIGHT | AGGRAVATE
+values:WILL[3] | RES_FIRE[1]
+ability:Smithing:Enchantment
+ability:Smithing:Masterpiece
+desc:The crown of Feanor, greatest of the Noldor. It is beautifully wrought
+desc: with many shining jewels of Valinor, whose light is a challenge to those born
+desc: of darkness. Though his flaws ran deep, this crown is a reminder of his
+desc: greatness.
+desc: "Dear-bought those songs shall be accounted, and yet shall be
+desc: well-bought.  For the price could be no other."
+
+name:of Maedhros
+base-object:mail:Hauberk
+depth:13
+rarity:12
+weight:330
+cost:105000
+attack:-2:0d0
+defence:-3:2d6
+values:RES_FIRE[1] | RES_POIS[1]
+desc:A suit of mail once worn by Maedhros, eldest son of Feanor.
+desc: When he was taken into Angband by Morgoth's servants
+desc: and hung by his right hand from Thangorodrim, his armour was
+desc: stripped from him and stored in Morgoth's iron vaults.
+
+name:of Andreth
+base-object:soft armor:Robe
+depth:4
+rarity:10
+weight:30
+cost:25000
+attack:0:0d0
+defence:2:1d0
+flags:SUST_GRA
+values:SONG[2]
+desc:This robe was once worn by Andreth, wise-woman of Beor's House.
+desc: It is a deep rich green and patterned with golden thread.
+
+name:of Aredhel
+color:w
+base-object:soft armor:Robe
+depth:6
+rarity:10
+weight:30
+cost:25000
+attack:0:0d0
+defence:3:1d0
+flags:FREE_ACT | SUST_GRA
+desc:The White Lady of the Noldor once wore this robe, cut of the
+desc: finest white cloth and hemmed with silver thread.
+
+name:of Idril Celebrindal
+base-object:soft armor:Robe
+depth:18
+rarity:30
+weight:30
+cost:25000
+attack:0:0d0
+defence:0:1d0
+flags:SPEED
+desc:A robe of the only child of Turgon, and light of Gondolin.
+desc: The soft folds of smooth cloth invigorate you and fill
+desc: you with thoughts of the swift eagles of Manwe.
+
+name:of Gorlim
+base-object:soft armor:Leather Armour
+depth:3
+rarity:15
+weight:70
+cost:45000
+attack:0:0d0
+defence:0:1d5
+flags:COWARDICE
+ability:Stealth:Exchange Places
+desc:This armour is black with the memory of treachery.
+desc: It was worn by Gorlim, called the Unhappy,
+desc: who betrayed Barahir to Gorthaur for lying
+desc: promises about his dead wife.
+
+name:of Haldad
+base-object:soft armor:Leather Armour
+depth:6
+rarity:10
+weight:40
+cost:45000
+attack:0:0d0
+defence:-1:1d4
+flags:PROT_FEAR | FREE_ACT
+values:STR[1]
+desc:Leather armour worn by Haldad, father of Haleth,
+desc: into his last battle where he fell fighting besieging orcs.
+
+name:'Catskin'
+base-object:soft armor:Leather Armour
+depth:10
+rarity:12
+weight:50
+cost:45000
+attack:0:0d0
+defence:0:1d4
+ability:Evasion:Flanking
+ability:Perception:Keen Senses
+desc:This leather looks strangely proportioned, but when you
+desc: don it it fits perfectly. You feel a desire to hunt.
+
+name:of Beor
+base-object:soft armor:Studded Leather
+depth:8
+rarity:20
+weight:120
+cost:35000
+attack:0:0d0
+defence:-1:1d6
+flags:SUST_GRA
+values:RES_POIS[1]
+ability:Will:Inner Light
+desc:An well-used old set of armour. At first glance, there is
+desc: nothing remarkable about it, but then one realises it has
+desc: been lovingly cared for, and expertly made. It gladdens
+desc: the heart in the dark places of the world.
+
+name:of Aegnor
+base-object:soft armor:Studded Leather
+depth:4
+rarity:10
+weight:100
+cost:35000
+attack:1:0d0
+defence:-2:1d6
+values:WILL[1]
+ability:Perception:Concentration
+desc:Crafted for Aegnor, a Noldorin prince who loved a mortal.
+desc: It lends its wearer determination and sureness of heart.
+
+name:of Maeglin
+base-object:soft armor:Galvorn Armour
+depth:15
+rarity:1
+weight:70
+cost:45000
+attack:0:0d0
+defence:1:1d8
+flags:HUNGER
+values:DEX[1] | RES_POIS[1]
+desc:Supple but harder than serpent-scale, this shining black
+desc: armour was wrought years ago by the master smith Eol,
+desc: and given as a gift to his son, Maeglin.
+
+name:of Fingon
+base-object:mail:Mail Corslet
+depth:8
+rarity:25
+weight:260
+cost:105000
+attack:0:0d0
+defence:-3:2d4
+flags:PROT_FEAR
+values:CON[1] | GRA[1]
+desc:A bright mail corslet worn by Fingon, the eldest son of Fingolfin.
+
+name:of Durin
+base-object:mail:Mail Corslet
+depth:13
+rarity:30
+weight:280
+cost:105000
+attack:-1:0d0
+defence:-3:3d3
+flags:REGEN
+values:RES_FIRE[1] | RES_COLD[1]
+desc:Durin was the father of the longbeards of Khazad-Dum,
+desc: and his wealth almost without equal. This is one of his
+desc: exquisite suits of mail, armour to protect a King.
+
+name:of Amon Rudh
+base-object:mail:Hauberk
+depth:13
+rarity:10
+weight:300
+cost:25000
+attack:-1:0d0
+defence:-3:2d6
+values:WILL[3]
+desc:Hard are the people who live around the hill Amon
+desc: Rudh, and hard is the armour they wear.
+
+name:of Gundor
+base-object:mail:Mail Corslet
+depth:5
+rarity:30
+weight:350
+cost:25000
+attack:-1:0d0
+defence:-1:2d4
+values:STR[1]
+ability:Evasion:Crowd Fighting
+desc:The mail of Gundor, son of Hador. It gives the wearer
+desc: strength to walk among a host of foes.
+
+name:of Nevrast
+base-object:mail:Hauberk
+depth:11
+rarity:18
+weight:500
+cost:25000
+attack:-2:0d0
+defence:-4:2d8
+flags:SUST_GRA | SUST_STR
+desc:When Turgon departed Vinyamar in Nevrast, he left this armour, and
+desc: strange destiny has led it far from those halls. Its is crafted with a
+desc: double layer of mail, which makes it too heavy for many, but turns
+desc: many a blow that might cleave through a lesser suit.
+
+name:'Starlight'
+base-object:mail:Mithril Corslet
+depth:16
+rarity:10
+weight:120
+cost:50000
+attack:0:0d0
+defence:-1:2d4
+flags:PROT_FEAR | PROT_BLIND
+values:PERCEPTION[1] | SONG[1]
+ability:Song:Song of Elbereth
+desc:This exquisite coat is wrought from tiny rings of mithril,
+desc: almost too small to see, that twinkle in torchlight just
+desc: as the stars of Varda twinkle in the night sky.
+
+name:of the Bloody Hand
+base-object:shield:Round Shield
+depth:6
+rarity:8
+weight:60
+cost:25000
+attack:0:0d0
+defence:1:1d4
+values:STR[1] | DAMAGE_SIDES[1]
+desc:An black shield with scalloped edges. It bears the
+desc: emblem of a white hand dripping blood.
+
+name:of Glorfindel
+base-object:shield:Round Shield
+depth:8
+rarity:20
+weight:60
+cost:25000
+attack:0:0d0
+defence:1:1d4
+ability:Melee:Charge
+desc:The shield of Glorfindel, a hero of Gondolin.
+desc: He was ever at the front of battle, leading
+desc: elves to take swift vengeance upon their foes.
+
+name:'Thandrach'
+base-object:shield:Round Shield
+depth:3
+rarity:20
+weight:40
+cost:15000
+attack:1:0d0
+defence:0:1d3
+values:WILL[2]
+ability:Will:Curse Breaking
+desc:A small iron shield covered with many dense runes
+desc: spiralling in from the outer edge into the centre.
+desc: In the very middle of the shield is set a spike
+desc: with a wicked point.
+
+name:of Hador
+color:r
+base-object:shield:Kite Shield
+depth:8
+rarity:12
+weight:90
+cost:25000
+attack:-1:0d0
+defence:0:1d6
+values:RES_FIRE[1] | RES_COLD[1]
+desc:The famed shield of Hador 'Goldenhead', great
+desc: leader of the folk of Marach, and lord of Dor-lomin.
+
+name:of Fingolfin
+color:Z
+base-object:shield:Kite Shield
+depth:13
+rarity:15
+weight:70
+cost:25000
+attack:-2:0d0
+defence:0:1d8
+flags:SUST_CON | PROT_FEAR
+values:CON[1]
+desc:A shining blue shield, set with crystals. It was borne by
+desc: Fingolfin, high-king of the Noldor.
+
+name:of Valinor
+color:w
+base-object:shield:Mithril Shield
+depth:18
+rarity:12
+weight:30
+cost:25000
+attack:0:0d0
+defence:1:1d6
+flags:LIGHT
+values:GRA[1]
+desc:Shining like the full moon, this shield bears the device of
+desc: the Blessed Realm. It gladdens your heart.
+
+name:of the Swan
+color:b
+base-object:shield:Kite Shield
+depth:10
+rarity:15
+weight:70
+cost:25000
+attack:-2:0d0
+defence:0:1d7
+flags:SUST_CON | SUST_DEX
+values:WILL[4]
+desc:A long tapering shield of elven design, wrought of wood overlaid with plates
+desc: of metal and bearing the design of a swan's wing on a blue field.
+desc: Untarnished by long years waiting in Turgon's deserted halls of Vinyamar,
+desc: it conveys the same powers of endurance to its bearer.
+
+name:of Nargil
+base-object:sword:Dagger
+depth:7
+rarity:20
+weight:5
+cost:50000
+attack:5:1d5
+defence:0:0d0
+flags:SHARPNESS | THROWING
+desc:'...the knife of the north, in Nogrod smithied.'
+
+name:'Thorn'
+base-object:sword:Dagger
+depth:0
+rarity:20
+weight:5
+cost:5000
+attack:0:1d6
+defence:0:0d0
+flags:THROWING | VAMPIRIC | HUNGER
+values:STEALTH[2]
+brand:POIS_1
+desc:Twisted wood hilts a blade of sharp and polished stone. Blood
+desc: remains not on that blade; it would seem that the hilt drinks it.
+
+name:'Angrist'
+base-object:sword:Dagger
+depth:14
+rarity:4
+weight:5
+cost:100000
+attack:0:1d5
+defence:0:0d0
+flags:SHARPNESS2 | THROWING
+desc:Forged from meteoric iron by Telchar, greatest of Dwarven smiths,
+desc: this dagger slices through metal as easily as flesh, earning its
+desc: name: 'Iron Cleaver'.
+
+name:'Nakh'
+base-object:sword:Curved Sword
+depth:4
+rarity:10
+weight:60
+cost:30000
+attack:-1:2d5
+defence:1:0d0
+flags:AGGRAVATE
+values:STR[2] | GRA[-2]
+desc:A dread black blade greatly famed among the orcs. Its cruel
+desc: edge was forged in Orodruth long ere the Noldor came
+desc: to Beleriand.
+
+name:'Agarlhang'
+base-object:sword:Curved Sword
+depth:8
+rarity:10
+weight:60
+cost:30000
+attack:-1:2d5
+defence:1:0d0
+flags:VAMPIRIC | HUNGER
+values:WILL[-2] | PERCEPTION[-2] | CON[2]
+desc:A blood-red blade, slick to the touch. Gripping its haft dulls the
+desc: wielder's senses and causes strange hungers to waken in them.
+
+name:of Amrod
+base-object:sword:Shortsword
+depth:8
+rarity:10
+weight:15
+cost:15000
+attack:1:1d7
+defence:1:0d0
+flags:FREE_ACT
+values:STEALTH[2] | PERCEPTION[2]
+desc:The hunting blade of Amrod, son of Feanor.
+desc: When drawn from its sheath, the wielder's movements are
+desc: reduced to a whisper and his senses sharpen.
+
+name:'Dagmor'
+base-object:sword:Shortsword
+depth:12
+rarity:10
+weight:20
+cost:15000
+attack:2:1d8
+defence:1:0d0
+flags:PROT_FEAR | LIGHT
+values:GRA[1]
+desc:The 'dark-slayer'; a short blade borne by Beren, son of Barahir.
+
+name:of Galadriel
+base-object:sword:Shortsword
+depth:9
+rarity:30
+weight:20
+cost:30000
+attack:0:1d8
+defence:3:0d0
+flags:SUST_GRA
+ability:Evasion:Riposte
+desc:This sword was taken up by Galadriel, princess
+desc: of the Noldor, in defence of her kinsfolk the Teleri
+desc: when the Feanorians turned on them for their ships
+desc: at far-off Alqualonde.
+
+name:'Orcrist'
+base-object:sword:Longsword
+depth:10
+rarity:20
+weight:30
+cost:40000
+attack:2:2d5
+defence:2:0d0
+values:PERCEPTION[2]
+slay:ORC_1
+slay:TROLL_1
+desc:This gleaming blade, mate to Glamdring, is called simply
+desc: "Biter" by orcs who came to know its power all too well.
+
+name:'Glamdring'
+base-object:sword:Longsword
+depth:14
+rarity:20
+weight:30
+cost:40000
+attack:2:2d5
+defence:2:0d0
+values:WILL[2]
+slay:ORC_1
+slay:TROLL_1
+slay:DRAGON_1
+slay:RAUKO_1
+desc:This bright blade was forged by Enerdhil of Gondolin
+desc: and borne by Turgon, lord of the hidden city. Its edge
+desc: is the bane of many of Morgoth's servants.
+
+name:'Narsil'
+base-object:sword:Longsword
+depth:12
+rarity:20
+weight:25
+cost:80000
+attack:0:2d6
+defence:2:0d0
+flags:LIGHT
+values:RES_FIRE[1] | RES_COLD[1]
+desc:The sword of the sun and the moon. It was forged by the
+desc: great dwarf-smith Telchar of Nogrod, and will have
+desc: a great part to play in future events.
+
+name:'Aranruth'
+base-object:sword:Longsword
+depth:20
+rarity:20
+weight:40
+cost:50000
+attack:3:2d7
+defence:1:0d0
+flags:PROT_FEAR | DANGER
+values:WILL[3]
+desc:The beautiful sword of Thingol, justly named 'King's Ire'.  You are
+desc: filled with unshakeable confidence when you clasp its jeweled hilt.
+
+name:'Anguirel'
+color:D
+base-object:sword:Bastard Sword
+depth:15
+rarity:15
+weight:50
+cost:100000
+attack:1:3d4
+defence:1:0d0
+flags:SHARPNESS
+desc:A bitter blade by brooding Eol forged,
+desc: in secret made of metal from a star.
+
+name:'Luinmegil'
+color:b
+base-object:sword:Bastard Sword
+depth:11
+rarity:30
+weight:40
+cost:10000
+attack:-2:3d4
+defence:1:0d0
+flags:FREE_ACT
+values:RES_COLD[1]
+desc:A sword made by the Sindarin in Vinyamar. Its steel blade is a
+desc: murky blue like an overcast sea and its hilt chalk white.
+
+name:'Glend'
+base-object:sword:Greatsword
+depth:12
+rarity:1
+weight:120
+cost:100000
+attack:-1:3d6
+defence:1:0d0
+flags:SUST_STR
+values:STR[1]
+desc:The long deadly blade of Nan, the Giant.
+
+name:of Saithnar
+base-object:sword:Greatsword
+depth:17
+rarity:15
+weight:70
+cost:100000
+attack:0:3d5
+defence:1:0d0
+flags:SHARPNESS | HAUNTED | SEE_INVIS
+slay:UNDEAD_1
+desc:A shining greatsword, inlaid with runes of silver.
+
+name:'Calris'
+color:r
+base-object:sword:Greatsword
+depth:15
+rarity:15
+weight:110
+cost:100000
+attack:-5:3d7
+defence:1:0d0
+flags:LIGHT
+values:CON[1]
+brand:FIRE_1
+desc:A cruel and heavy blade, wreathed in undying flames. It was originally
+desc: forged for the great Valarauko, Gothmog, to break any dissension amongst
+desc: the hosts of Morgoth.
+
+name:'Celeg Aithorn'
+base-object:sword:Mithril Longsword
+depth:20
+rarity:20
+weight:20
+cost:50000
+attack:1:2d5
+defence:1:0d0
+flags:SHARPNESS
+brand:ELEC_1
+desc:'...the sweeping sickle of the slashing tempest,
+desc: the lambent lightning's leaping falchion
+desc: even Celeg Aithorn that shall cleave the world.'
+
+name:'Ringil'
+base-object:sword:Mithril Longsword
+depth:20
+rarity:7
+weight:20
+cost:300000
+attack:3:2d5
+defence:3:0d0
+flags:LIGHT
+brand:COLD_1
+desc:The weapon of Fingolfin, High King of the Noldor; it shines like a
+desc: column of ice lit by light unquenchable.  Morgoth came but
+desc: unwillingly to meet it of old; his lame foot will remind him of its
+desc: might should he face it again.
+
+name:'Ungoliant's Lament'
+base-object:sword:Mithril Greatsword
+depth:12
+rarity:20
+weight:40
+cost:30000
+attack:-2:3d7
+defence:2:0d0
+flags:LIGHT | FREE_ACT
+values:RES_POIS[1]
+slay:SPIDER_1
+desc:A long and dimly glowing blade with a handle clad in red leather.
+desc: Many spiders of the Ered Gorgoroth were slain by it in the days following
+desc: the arrival of the Noldor in Beleriand.
+
+name:'Dugrakh'
+base-object:polearm:Spear
+depth:6
+rarity:15
+weight:25
+cost:50000
+attack:1:1d11
+defence:0:0d0
+flags:SEE_INVIS | FREE_ACT | AGGRAVATE | THROWING
+values:GRA[-1]
+slay:RAUKO_1
+desc:A weapon forged after the Dagor Bragollach by Sauron,
+desc: tainted to slay Morgoth's foes whether they be man, elf or Maiar.
+desc: Black-hafted, with a bronze head, it throws no shadow.
+
+name:of Boldog
+color:s
+base-object:polearm:Spear
+depth:8
+rarity:1
+weight:50
+cost:30000
+attack:0:1d12
+defence:0:0d0
+flags:PROT_FEAR | THROWING
+slay:WOLF_1
+desc:The iron spear of Boldog, a fierce captain of the orcs.
+
+name:'Aeglos'
+base-object:polearm:Spear
+depth:14
+rarity:15
+weight:30
+cost:140000
+attack:1:1d9
+defence:0:0d0
+flags:THROWING
+brand:COLD_1
+desc:The mighty spear of Gil-galad, famed as "Snow-point" in the songs of
+desc: Elves.
+
+name:of Ogbar
+base-object:polearm:Great Spear
+depth:12
+rarity:20
+weight:50
+cost:60000
+attack:2:1d14
+defence:2:0d0
+flags:SHARPNESS
+slay:SPIDER_1
+desc:A long spear, with a point like a sharp thorn of steel.
+
+name:of Melkor
+color:D
+base-object:polearm:Great Spear
+depth:15
+rarity:20
+weight:80
+cost:100000
+attack:1:1d15
+defence:1:0d0
+flags:FREE_ACT
+values:GRA[-1]
+brand:POIS_1
+desc:A mighty black spear, once wielded by the Lord of Darkness
+desc: himself as he came to Valinor in wrath. Its envenomed bite pierced
+desc: the Two Trees with wounds that would not heal.
+
+name:'Binahkram'
+base-object:polearm:Hand Axe
+depth:6
+rarity:20
+weight:10
+cost:1000
+attack:0:4d3
+defence:0:0d0
+values:CON[1]
+slay:ORC_1
+slay:SPIDER_1
+desc:A sharp and well-made axe with a sturdy haft. It was gifted to Haldan,
+desc: Lord of the Men of Brethil, by the dwarves of the Blue Mountains.
+
+name:'Dramborleg'
+base-object:polearm:Battle Axe
+depth:12
+rarity:15
+weight:50
+cost:21000
+attack:-2:3d6
+defence:0:0d0
+slay:RAUKO_1
+slay:ORC_1
+slay:TROLL_1
+desc:A heavy axe wrought in the forges of Gondolin. Its name
+desc: is 'Thudder-sharp' for it strikes with the force of a club
+desc: but cuts like a sword.
+
+name:of Mothers' Woe
+base-object:polearm:Battle Axe
+depth:15
+rarity:12
+weight:60
+cost:90000
+attack:-3:3d5
+defence:0:0d0
+flags:HAUNTED | VAMPIRIC
+values:STR[1] | CON[1]
+desc:A dark axe with a wicked edge, forged by Morgoth Bauglir himself.
+desc: Many are the lives that it has severed. It is blood-warm to the touch,
+desc: and foul it feels to the hand.
+
+name:of Dolmed
+base-object:polearm:Great Axe
+depth:18
+rarity:15
+weight:110
+cost:150000
+attack:-4:4d5
+defence:0:0d0
+values:STR[1] | RES_FIRE[1]
+slay:RAUKO_1
+desc:Forged by Gamil Zirak in days long gone, this giant axe
+desc: was for many years an heirloom of the dwarven city of Nogrod.
+desc: It grants its wielder strength to wield it and the power to
+desc: fight some of Morgoth's foulest servants.
+
+name:'Mazarbulbark'
+base-object:polearm:Great Axe
+depth:14
+rarity:20
+weight:90
+cost:10000
+attack:-3:4d4
+defence:0:0d0
+values:WILL[3]
+slay:TROLL_1
+desc:Both the blade and haft of this huge axe are made of a single
+desc: piece of blackened steel. Engraved on the axehead are many tiny
+desc: Dwarven runes recording the names of valiant fallen warriors of
+desc: Belegost.
+
+name:of Gaurin
+base-object:polearm:Glaive
+depth:12
+rarity:30
+weight:80
+cost:50000
+attack:-1:2d9
+defence:1:0d0
+flags:SHARPNESS
+values:TUNNEL[3]
+desc:'...the glaive of Gaurin whose gleaming stroke
+desc: did rive the rocks of Rodrim's hall.'
+
+name:of the Sirion
+base-object:polearm:Glaive
+depth:10
+rarity:20
+weight:70
+cost:50000
+attack:0:2d10
+defence:1:0d0
+ability:Melee:Zone of Control
+ability:Stealth:Opportunist
+desc:Like the waters of its namesake river, this fine blade
+desc: is ever in motion. In combat, it seems to flow into
+desc: every opening, no matter how brief.
+
+name:'Celebrist'
+base-object:polearm:Glaive
+depth:8
+rarity:12
+weight:50
+cost:22000
+attack:0:2d10
+defence:2:0d0
+flags:FREE_ACT
+values:DEX[1] | CON[-1]
+desc:A beautiful blade on a long shaft of dark wood. It feels lively
+desc: in your hands, its point guiding itself to where it is needed.
+
+name:of Halmir
+base-object:hafted:Quarterstaff
+depth:2
+rarity:10
+weight:40
+cost:250000
+attack:0:2d4
+defence:3:0d0
+flags:SUST_STR | SUST_CON
+values:RES_POIS[1]
+desc:Halmir, who once bore this staff, was a chieftain among men,
+desc: and resolute always against the power of Morgoth.
+
+name:of Telchar
+base-object:hafted:War Hammer
+depth:11
+rarity:20
+weight:45
+cost:250000
+attack:0:4d2
+defence:0:0d0
+flags:SUST_STR
+values:RES_FIRE[1]
+ability:Smithing:Artifice
+desc:The great hammer of Telchar, mighty smith of Nogrod.
+desc: Its hard steel rung against both dwarf-forge and orc-shield.
+
+name:of Aule's Wrath
+base-object:hafted:War Hammer
+depth:20
+rarity:20
+weight:70
+cost:250000
+attack:0:4d2
+defence:0:0d0
+flags:DANGER | AGGRAVATE
+values:STR[1] | CON[1] | RES_FIRE[1]
+slay:RAUKO_1
+desc:The hammer carried by mighty Rog from Valinor and lost in the retreat
+desc: that followed the Dagor Bragollach. Made by Aule in the days
+desc: following the destruction of the Two Trees, it has a haft and head of
+desc: black iron banded about with red gold.
+
+name:'Burkfelek'
+base-object:digger:Mattock
+depth:20
+rarity:8
+weight:110
+cost:30000
+attack:-4:6d2
+defence:0:0d0
+values:TUNNEL[3]
+desc:A mighty Dwarven mattock, forged by Gamil Zirak of old,
+desc: and enchanted for both battle and mine.
+
+name:of Angrod
+base-object:helm:Helm
+depth:8
+rarity:12
+weight:45
+cost:4500
+attack:0:0d0
+defence:0:1d3
+flags:PROT_FEAR | REGEN
+values:RES_COLD[1]
+desc:The helm of Angrod, son of Finarfin, who perished in
+desc: the Dagor Bragollach.
+
+name:of Curufin
+base-object:helm:Helm
+depth:15
+rarity:10
+weight:45
+cost:45000
+attack:0:0d0
+defence:-1:1d2
+flags:PROT_CONF | DANGER
+values:PERCEPTION[2] | STEALTH[2]
+ability:Perception:Listen
+desc:A helm worn by Curufin, son of Feanor, whose dark schemes
+desc: snared many in Beleriand.
+
+name:of the Oathbreaker
+base-object:helm:Helm
+depth:8
+rarity:12
+weight:15
+cost:45000
+attack:0:0d0
+defence:0:1d3
+desc:A helm wrought of grey metal and the dull bones of some forgotten
+desc: orc who once raised his blade against his master.
+
+name:of Dor-Lomin
+base-object:helm:Great Helm
+depth:20
+rarity:15
+weight:90
+cost:300000
+attack:0:0d0
+defence:-2:1d4
+flags:PROT_FEAR | PROT_STUN
+values:STR[1] | WILL[1]
+desc:The legendary dragon helm of Hador's House, an object of dread to the
+desc: servants of Morgoth.
+
+name:of Utumno
+color:D
+base-object:helm:Great Helm
+depth:20
+rarity:20
+weight:100
+cost:10000
+attack:0:0d0
+defence:-2:1d4
+values:CON[2] | GRA[-2]
+desc:A great black helm, wrought in years
+desc: forgotten in Morgoth's first stronghold.
+desc: It offers power, but bends the will of the one who
+desc: wears it to its own dark purposes.
+
+name:of the Dwarrowdelf
+base-object:helm:Dwarf Mask
+depth:16
+rarity:10
+weight:70
+cost:6000
+attack:0:0d0
+defence:-2:1d3
+values:WILL[2] | RES_FIRE[1]
+ability:Will:Strength in Adversity
+desc:A large ornate helm, with curving horns.
+desc: It makes you determined
+desc: to fight on, no matter the circumstances.
+
+name:of Ecthelion
+color:w
+base-object:helm:Mithril Helm
+depth:16
+rarity:12
+weight:40
+cost:25000
+attack:1:0d0
+defence:-1:1d3
+flags:PROT_FEAR
+values:SONG[2] | RES_FIRE[1]
+ability:Song:Song of Staying
+desc:A beautiful helm, wrought of mithril and inlaid with white stones.
+desc: It rises gracefully to a tall point as sharp as any spear.
+
+name:of Maglor
+color:b
+base-object:cloak:Cloak
+depth:13
+rarity:10
+weight:20
+cost:35000
+attack:0:0d0
+defence:1:0d0
+values:SONG[2]
+ability:Song:Song of the Trees
+desc:A cloak worn by Maglor, the mighty singer, and gentlest of Feanor's sons.
+
+name:of Thingol
+color:s
+base-object:cloak:Cloak
+depth:20
+rarity:20
+weight:15
+cost:35000
+attack:0:0d0
+defence:2:0d0
+flags:FREE_ACT
+values:RES_FIRE[1] | RES_COLD[1]
+desc:By what black treachery the fabled grey cloak of Elu Thingol has come
+desc: to the hoards of Angband, you cannot say.
+
+name:of Luthien
+base-object:cloak:Shadow Cloak
+depth:13
+rarity:10
+weight:10
+cost:45000
+attack:0:0d0
+defence:4:0d0
+flags:DARKNESS | SUST_GRA
+values:STEALTH[4]
+ability:Song:Song of Lorien
+desc:A shadowy cloak, woven from soft elven-hair.
+desc: It was made by Luthien Tinuviel, the most
+desc: beautiful being who ever knew death.
+
+name:of Draugluin
+base-object:cloak:Wolf-Hame
+depth:20
+rarity:1
+weight:130
+cost:500000
+attack:-3:0d0
+defence:-3:1d4
+values:STEALTH[2]
+ability:Stealth:Disguise
+desc:The coat of Draugluin, sire of werewolves. If you cast this
+desc: over yourself you may deceive some of the enemy's servants.
+
+name:of Thuringwethil
+base-object:cloak:Bat-Fell
+depth:23
+rarity:1
+weight:50
+cost:500000
+attack:-1:0d0
+defence:2:0d0
+values:STEALTH[2]
+ability:Stealth:Disguise
+desc:With its great black wings, might this remnant of the vampire
+desc: let you pass as a messenger journeying to Morgoth?
+
+name:of Celegorm
+base-object:bow:Shortbow
+depth:7
+rarity:10
+weight:20
+cost:9000
+attack:1:1d9
+defence:0:0d0
+values:GRA[-1]
+desc:The bow of Celegorm the great huntsman, third son of Feanor,
+desc: who in days of old hunted with Orome himself.
+
+name:'Death's Sting'
+base-object:bow:Shortbow
+depth:10
+rarity:15
+weight:10
+cost:9000
+attack:1:1d8
+defence:0:0d0
+ability:Archery:Crippling Shot
+desc:An unassuming if well-fashioned bow, but when you take
+desc: aim with it you find your eye drawn particularly to
+desc: vulnerable places in your foe's armour.
+
+name:'Belthronding'
+color:D
+base-object:bow:Longbow
+depth:14
+rarity:10
+weight:40
+cost:35000
+attack:1:2d6
+defence:0:0d0
+values:PERCEPTION[2]
+desc:The great bow of Beleg Cuthalion, made of black yew and strung with
+desc: elven hair that faintly shimmers a pale clear gold.
+
+name:'Tawarcun'
+base-object:bow:Longbow
+depth:10
+rarity:10
+weight:20
+cost:3500
+attack:2:2d5
+defence:0:0d0
+flags:FREE_ACT
+desc:A long slender bow, well worn at the notches, but supple
+desc: to the touch and easy on the draw.
+
+name:of Avernien
+base-object:bow:Dragon-horn Bow
+depth:20
+rarity:10
+weight:50
+cost:35000
+attack:1:4d3
+defence:0:0d0
+flags:RADIANCE | PROT_FEAR | PROT_CONF | PROT_STUN | PROT_HALLU
+desc:A large exquisite bow fashioned from a single horn of a slain
+desc: dragon. Many are the blessings of the Eldar laid over it.
+
+name:'Dailir'
+color:u
+base-object:arrow:Arrow
+depth:7
+rarity:40
+weight:1
+cost:20000
+attack:11:0d0
+defence:0:0d0
+desc:The unerring arrow of Beleg Cuthalion.
+
+name:of Finrod
+base-object:boots:Pair of Boots
+depth:15
+rarity:20
+weight:20
+cost:40000
+attack:0:0d0
+defence:3:1d1
+flags:FREE_ACT
+desc:Finrod Felagund, once King of Nargathrond, was one of the
+desc: the greatest, and the wisest, of the Noldor. These fine boots
+desc: were made for him for riding, but they are just as nimble on
+desc: the ground, letting you pass through combat as a dance.
+
+name:of Taur-nu-Fuin
+base-object:boots:Pair of Boots
+depth:12
+rarity:15
+weight:20
+cost:25000
+attack:0:0d0
+defence:1:1d1
+values:STEALTH[2] | PERCEPTION[2]
+ability:Perception:Master Hunter
+desc:These boots have helped more than one escape from the
+desc: dread forest of Taur-nu-Fuin.
+
+name:of the Mole
+base-object:boots:Pair of Boots
+depth:5
+rarity:10
+weight:15
+cost:25000
+attack:0:0d0
+defence:0:1d2
+ability:Stealth:Vanish
+ability:Evasion:Dodging
+desc:Sturdy boots of elvish make, covered in dark moleskin. They are
+desc: uncannily clean.
+
+name:of Orodreth
+base-object:boots:Pair of Greaves
+depth:10
+rarity:20
+weight:70
+cost:12000
+attack:0:0d0
+defence:-1:1d2
+values:DEX[1] | RES_FIRE[1]
+desc:Forged for the Elf-prince Orodreth, these fine greaves were made
+desc: for battle against the Balrogs, demons of fire, in the early
+desc: years of the Wars of Beleriand.
+
+name:of the Helcaraxe
+base-object:boots:Pair of Greaves
+depth:14
+rarity:20
+weight:80
+cost:12000
+attack:0:0d0
+defence:0:1d3
+flags:REGEN | SUST_STR | SUST_CON | SUST_DEX | SUST_GRA
+values:RES_COLD[1]
+desc:Among all the deeds of the Noldor, it is said
+desc: none have been more hard-won than the crossing
+desc: of the ice of the Helcaraxe.
+
+name:of the Swallow
+base-object:gloves:Set of Gloves
+depth:8
+rarity:12
+weight:5
+cost:36000
+attack:0:0d0
+defence:0:1d1
+values:ARCHERY[2]
+desc:This pair of gloves bears the insignia of the House of the Swallow,
+desc: who defend Gondolin from harm with their mighty bows.
+
+name:of Celebrimbor
+base-object:gloves:Set of Gloves
+depth:10
+rarity:12
+weight:5
+cost:36000
+attack:0:0d0
+defence:0:1d1
+flags:FREE_ACT
+desc:A pair of gloves worn by the great Celebrimbor, jewelsmith of Nargothrond,
+desc: who would one day forge the rings of power.
+
+name:of Rumil
+base-object:gloves:Set of Gloves
+depth:8
+rarity:25
+weight:5
+cost:36000
+attack:0:0d0
+defence:0:1d0
+values:GRA[1]
+ability:Melee:Subtlety
+desc:A supple pair of leather gloves.
+desc: They lend you subtlety of hand and mind.
+
+name:'Azdulag'
+base-object:gloves:Set of Gauntlets
+depth:14
+rarity:20
+weight:50
+cost:60000
+attack:0:0d0
+defence:-1:2d1
+flags:DARKNESS
+values:STR[1]
+ability:Melee:Knock Back
+desc:The brutal gauntlets forged by Morgoth for the great orc-chieftain Gorgdaz,
+desc: who perished along with many of Morgoth's host at Dagor-nuin-Giliath.
+
+name:of Bregolas
+base-object:gloves:Set of Gauntlets
+depth:12
+rarity:8
+weight:60
+cost:40000
+attack:2:0d0
+defence:0:1d2
+values:RES_COLD[1]
+desc:The fur-lined gauntlets of Bregolas, Lord of Ladros, who died
+desc: fighting shoulder to shoulder alongside Fingolfin's sons during the Dagor
+desc: Bragollach.
+
+name:'Silverhand'
+base-object:gloves:Set of Mithril Gauntlets
+depth:15
+rarity:10
+weight:10
+cost:20000
+attack:0:0d0
+defence:0:1d2
+values:DEX[1]
+ability:Smithing:Jeweller
+desc:These wondrous gloves are as hard as iron, yet as
+desc: supple as fine leather. The hands that wear them
+desc: can move more delicately and swiftly than if bare.
+
+name:of Finwe
+color:o
+base-object:light:Lesser Jewel
+depth:4
+rarity:5
+weight:1
+cost:10000
+attack:0:0d0
+defence:0:0d0
+flags:LIGHT
+values:RES_FIRE[1]
+desc:When Morgoth slew Finwe, High King of the Noldor, he
+desc: took many jewels from his treasuries. Most are now
+desc: lost to the Unlight, but this one shines yet pure.
+
+name:of Morgoth
+base-object:crown:Massive Iron Crown
+graphics:]:D
+pval:3
+depth:20
+rarity:1
+weight:4000
+cost:10000000
+attack:0:0d0
+defence:0:0d0:0
+flags:INDESTRUCTIBLE | NO_RANDOM
+desc:Containing much of the power of he who is the mightiest among the
+desc: Ainur, this plain iron crown has mounted upon it the three
+desc: Silmarils, greatest treasures of Middle-Earth. To attempt to cut
+desc: a Silmaril from the crown, stand over it and press (k).
+
+name:'Grond'
+base-object:hafted:Mighty Hammer
+graphics:\:D
+depth:20
+rarity:1
+weight:1000
+cost:500000
+attack:-9:6d5
+defence:0:0d0
+flags:NO_RANDOM
+values:TUNNEL[3]
+desc:The mighty Hammer of the Underworld, blackened by dark sorceries,
+desc: whose wielder holds the lives of all Morgoth's servants
+desc: in his hand.
+

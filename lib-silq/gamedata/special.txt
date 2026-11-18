@@ -1,0 +1,1030 @@
+
+
+name:of Protection
+alloc:2:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:1
+max-pval:0
+type:shield
+item:boots:Pair of Greaves
+item:boots:Pair of Mithril Greaves
+type:soft armor
+type:mail
+flags:IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+
+name:of Venom's End
+alloc:2:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:soft armor
+type:mail
+values:RES_POIS[1]
+
+name:of Resilience
+alloc:6:10 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:1
+item:soft armor:Galvorn Armour
+item:mail:Mithril Corslet
+flags:IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+values:CON[1]
+
+name:of Brethil
+alloc:10:6 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:soft armor:Leather Armour
+item:soft armor:Studded Leather
+item:boots:Pair of Boots
+item:gloves:Set of Gloves
+flags:FREE_ACT | IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+
+name:of Stealth
+alloc:2:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:3
+type:cloak
+values:STEALTH[1]
+
+name:of Nogrod
+alloc:4:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:boots:Pair of Greaves
+item:boots:Pair of Mithril Greaves
+type:shield
+type:mail
+flags:SUST_STR | SUST_DEX | SUST_CON | SUST_GRA | IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+
+name:of the Iron Hills
+alloc:1:0 to 0
+cost:3000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:boots:Pair of Greaves
+item:mail:Mail Corslet
+item:mail:Hauberk
+flags:PROT_FEAR | IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+
+name:of Ladros
+alloc:10:8 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:boots:Pair of Greaves
+item:gloves:Set of Gauntlets
+flags:IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+values:RES_COLD[1]
+
+name:of Blight
+alloc:1:0 to 0
+cost:0
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:soft armor
+item:mail:Mail Corslet
+item:mail:Hauberk
+
+name:of Deflection
+alloc:1:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:2
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:shield
+flags:IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+
+name:of Frost
+alloc:1:10 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:shield
+flags:IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+values:RES_FIRE[1]
+
+name:with Many Runes
+alloc:20:20 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:shield:Mithril Shield
+
+name:of Wrath
+alloc:2:0 to 10
+cost:0
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:shield:Broken Shield
+item:shield:Round Shield
+item:shield:Kite Shield
+flags:AGGRAVATE
+
+name:of Cuivienen
+alloc:1:0 to 0
+cost:6000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:3
+item:sword:Dagger
+flags:LIGHT | SUST_GRA | SUST_DEX
+values:SONG[1]
+
+name:of Gondolin
+alloc:4:0 to 10
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:polearm:Spear
+item:polearm:Great Spear
+item:polearm:Glaive
+item:sword:Shortsword
+item:sword:Longsword
+item:sword:Bastard Sword
+type:arrow
+item:sword:Mithril Longsword
+item:sword:Mithril Greatsword
+slay:ORC_1
+slay:TROLL_1
+
+name:of Doriath
+alloc:4:2 to 0
+cost:2000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:polearm
+item:sword:Shortsword
+item:sword:Longsword
+item:sword:Bastard Sword
+item:sword:Mithril Longsword
+item:sword:Mithril Greatsword
+type:arrow
+slay:SPIDER_1
+slay:WOLF_1
+
+name:of Nargothrond
+alloc:4:9 to 0
+cost:2000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:polearm:Spear
+item:polearm:Great Spear
+item:polearm:Glaive
+item:sword:Shortsword
+item:sword:Longsword
+item:sword:Bastard Sword
+item:sword:Mithril Longsword
+item:sword:Mithril Greatsword
+slay:RAUKO_1
+slay:DRAGON_1
+
+name:of Final Rest
+alloc:6:7 to 0
+cost:2000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:hafted:War Hammer
+type:polearm
+item:sword:Shortsword
+item:sword:Longsword
+item:sword:Bastard Sword
+item:sword:Greatsword
+item:sword:Mithril Longsword
+item:sword:Mithril Greatsword
+flags:FREE_ACT
+slay:UNDEAD_1
+
+name:of the Firebeards
+alloc:8:4 to 0
+cost:2000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:hafted:War Hammer
+item:polearm:Hand Axe
+item:polearm:Battle Axe
+item:polearm:Great Axe
+item:digger:Mattock
+flags:REGEN | IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+values:RES_FIRE[1]
+
+name:of Hador's House
+alloc:4:8 to 0
+cost:3000
+max-attack:0
+dam-dice:0
+dam-sides:1
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:hafted:War Hammer
+item:polearm:Glaive
+item:polearm:Battle Axe
+item:polearm:Great Axe
+item:sword:Longsword
+item:sword:Bastard Sword
+item:sword:Greatsword
+ability:Melee:Follow-Through
+
+name:of Fury
+alloc:4:10 to 0
+cost:2000
+max-attack:0
+dam-dice:0
+dam-sides:1
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:hafted:War Hammer
+item:polearm:Glaive
+item:polearm:Battle Axe
+item:polearm:Great Axe
+item:sword:Bastard Sword
+item:sword:Greatsword
+flags:AGGRAVATE
+ability:Melee:Whirlwind Attack
+
+name:of the Feanorians
+alloc:10:12 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:1
+item:sword:Shortsword
+item:sword:Longsword
+item:sword:Bastard Sword
+item:sword:Greatsword
+item:sword:Mithril Longsword
+item:sword:Mithril Greatsword
+flags:DANGER
+values:GRA[1] | DEX[1]
+
+name:of Murder
+alloc:1:0 to 4
+cost:2000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:3
+item:sword:Dagger
+item:sword:Curved Sword
+values:STEALTH[1]
+ability:Stealth:Assassination
+
+name:of Accompaniment
+alloc:1:0 to 4
+cost:2000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:2
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:sword:Dagger
+ability:Melee:Two Weapon Fighting
+
+name:of the Vanyar
+alloc:4:10 to 0
+cost:3000
+max-attack:1
+dam-dice:0
+dam-sides:1
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:1
+item:polearm:Spear
+item:polearm:Great Spear
+flags:LIGHT
+values:GRA[1]
+
+name:of Mithrim
+alloc:1:0 to 0
+cost:8000
+max-attack:1
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:hafted:Quarterstaff
+flags:REGEN
+
+name:of the Helcaraxe
+alloc:6:2 to 0
+cost:8000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:1
+item:hafted:Quarterstaff
+values:CON[1] | RES_COLD[1]
+
+name:of Battering
+alloc:2:0 to 0
+cost:2000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:hafted:War Hammer
+ability:Melee:Knock Back
+
+name:of Crushing
+alloc:4:10 to 0
+cost:10000
+max-attack:0
+dam-dice:0
+dam-sides:1
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:1
+item:hafted:War Hammer
+values:STR[1]
+
+name:of Piercing
+alloc:10:10 to 0
+cost:300
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:arrow
+flags:SHARPNESS
+
+name:of Udun
+alloc:10:12 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:sword:Curved Sword
+item:sword:Greatsword
+item:polearm:Battle Axe
+item:polearm:Great Axe
+brand:FIRE_1
+
+name:of Thangorodrim
+alloc:6:2 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:1
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:1
+item:hafted:War Hammer
+item:sword:Curved Sword
+item:sword:Greatsword
+item:polearm:Hand Axe
+item:polearm:Battle Axe
+item:polearm:Great Axe
+values:CON[1]
+
+name:of Black Iron
+alloc:3:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:1
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:sword:Curved Sword
+item:sword:Greatsword
+item:polearm:Glaive
+item:polearm:Hand Axe
+item:polearm:Battle Axe
+item:polearm:Great Axe
+flags:AGGRAVATE
+
+name:(Poisoned)
+alloc:6:6 to 0
+cost:100
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:arrow
+brand:POIS_1
+
+name:(Balanced)
+alloc:20:14 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:polearm
+item:sword:Dagger
+item:sword:Shortsword
+item:sword:Longsword
+item:sword:Bastard Sword
+item:sword:Greatsword
+item:sword:Mithril Longsword
+item:sword:Mithril Greatsword
+
+name:(Defender)
+alloc:4:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:1
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:polearm:Glaive
+item:sword:Shortsword
+item:sword:Longsword
+item:sword:Bastard Sword
+item:sword:Greatsword
+item:sword:Mithril Longsword
+item:sword:Mithril Greatsword
+flags:IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+
+name:(Vampiric)
+alloc:4:4 to 0
+cost:3000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:polearm:Glaive
+item:polearm:Great Axe
+item:sword:Curved Sword
+item:sword:Bastard Sword
+flags:VAMPIRIC | HUNGER
+
+name:of Belegost
+alloc:1:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:1
+item:digger:Mattock
+values:TUNNEL[1]
+
+name:of the Longbeards
+alloc:20:0 to 4
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:digger:Mattock
+values:STR[1]
+
+name:of Brilliance
+alloc:1:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:helm
+flags:LIGHT
+
+name:of Defiance
+alloc:1:0 to 0
+cost:2000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:3
+type:helm
+flags:PROT_FEAR
+values:WILL[1]
+
+name:of True Sight
+alloc:1:0 to 0
+cost:2000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:helm
+item:light:Brass Lantern
+item:light:Lesser Jewel
+item:light:Feanorian Lamp
+flags:PROT_BLIND | SEE_INVIS | PROT_HALLU
+
+name:of Clarity
+alloc:1:0 to 0
+cost:2000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:helm
+flags:PROT_CONF | PROT_STUN | PROT_HALLU
+
+name:of Grace
+alloc:1:0 to 0
+cost:3000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:1
+item:helm:Mithril Helm
+item:light:Lesser Jewel
+values:GRA[1]
+
+name:of Terror
+alloc:4:0 to 0
+cost:3000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:helm:Helm
+item:helm:Great Helm
+item:helm:Dwarf Mask
+flags:COWARDICE
+
+name:of Warmth
+alloc:8:4 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:cloak
+values:RES_COLD[1]
+
+name:of the Traveller
+alloc:1:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:cloak
+flags:SLOW_DIGEST
+
+name:of Winter's Chill
+alloc:1:0 to 0
+cost:0
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:cloak
+
+name:of the Scarlet Heart
+alloc:4:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:cloak:Cloak
+flags:SUST_CON | IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+
+name:of the Golden Flower
+alloc:4:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:cloak:Cloak
+flags:PROT_FEAR | SUST_GRA | IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+
+name:of Blackened Yew
+alloc:2:6 to 0
+cost:3000
+max-attack:0
+dam-dice:0
+dam-sides:1
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:bow:Longbow
+
+name:of Lammoth
+alloc:8:4 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:bow:Shortbow
+flags:DANGER | AGGRAVATE
+values:RES_POIS[1]
+
+name:of Radiance
+alloc:4:6 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:bow
+flags:RADIANCE
+
+name:of the Marchwardens
+alloc:4:6 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:bow
+flags:SEE_INVIS | PROT_FEAR
+
+name:of Falas
+alloc:6:12 to 0
+cost:3000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:3
+type:bow
+values:RES_COLD[1] | PERCEPTION[1]
+
+name:of the Falmari
+alloc:10:12 to 0
+cost:3000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:bow
+
+name:of Ithil's Light
+alloc:2:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:boots:Pair of Mithril Greaves
+flags:RADIANCE
+
+name:of Softest Tread
+alloc:1:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:3
+item:boots:Pair of Boots
+values:STEALTH[1]
+
+name:of Snares Eluded
+alloc:6:10 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:boots:Pair of Mithril Greaves
+flags:FREE_ACT
+
+name:of Speed
+alloc:4:10 to 0
+cost:5000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:boots:Pair of Boots
+ability:Evasion:Sprinting
+
+name:of Leaping
+alloc:4:7 to 0
+cost:4000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:boots:Pair of Boots
+ability:Evasion:Leaping
+
+name:of Treacherous Paths
+alloc:3:5 to 18
+cost:0
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:boots:Pair of Boots
+item:boots:Pair of Greaves
+flags:DANGER
+
+name:of Archery
+alloc:2:2 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:3
+item:gloves:Set of Gloves
+values:ARCHERY[1]
+
+name:of Lorellin
+alloc:4:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:gloves
+
+name:of Swordplay
+alloc:2:4 to 0
+cost:2000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+type:gloves
+ability:Evasion:Parry
+
+name:of the Ironfists
+alloc:6:4 to 0
+cost:2000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:1
+item:gloves:Set of Gauntlets
+values:CON[1] | DEX[-1]
+
+name:of Might
+alloc:4:10 to 0
+cost:3000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:1
+item:gloves:Set of Mithril Gauntlets
+flags:IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
+values:STR[1]
+
+name:of Treachery
+alloc:8:4 to 13
+cost:0
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:1
+item:gloves:Set of Gloves
+item:gloves:Set of Gauntlets
+values:STR[1]
+ability:Stealth:Opportunist
+
+name:of Brightness
+alloc:1:0 to 0
+cost:1000
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:light:Brass Lantern
+item:light:Lesser Jewel
+item:light:Feanorian Lamp
+flags:LIGHT
+
+name:of Flickering Shadow
+alloc:1:0 to 11
+cost:0
+max-attack:0
+dam-dice:0
+dam-sides:0
+max-evasion:0
+prot-dice:0
+prot-sides:0
+max-pval:0
+item:light:Brass Lantern
+flags:DARKNESS
+

@@ -5,6 +5,7 @@
   silq-convert.py monster SILQ_EDIT_DIR NARSIL_GAMEDATA_DIR --diff     (field differences on shared names)
 
   silq-convert.py object SILQ_EDIT_DIR NARSIL_GAMEDATA_DIR tools/silq-new-objects.txt > object.txt
+  silq-convert.py special|artefact SILQ_EDIT_DIR NARSIL_GAMEDATA_DIR tools/silq-new-objects.txt > special.txt
   silq-convert.py tiles NARSIL_GRAF_PREF LIB_SILQ_MONSTER_TXT > graf-mcm.prf   (monster tile lines for NarSil-Q's monsters)
 
 Lines NarSil has and Sil-Q's format cannot express (drop:, drop-artifact:, song:, message-*:) are kept from
@@ -195,7 +196,181 @@ def patch_objects(silq_path, narsil_path, extra_path):
     return "\n".join(out).rstrip() + "\n\n" + open(extra_path).read()
 
 
+SKILLS = ["Melee", "Archery", "Evasion", "Stealth", "Perception", "Will", "Smithing", "Song"]
+PVAL_FLAGS = {"TUNNEL", "DAMAGE_SIDES", "STR", "DEX", "CON", "GRA", "STEALTH", "PERCEPTION", "WILL", "MELEE", "ARCHERY", "SMITHING", "SONG", "EVASION"}
+NEG_FLAGS = {"NEG_STR": "STR", "NEG_DEX": "DEX", "NEG_CON": "CON", "NEG_GRA": "GRA"}
+FLAG_TO_VALUES = {"RES_FIRE": "RES_FIRE[1]", "RES_COLD": "RES_COLD[1]", "RES_POIS": "RES_POIS[1]", "RES_DARK": "RES_DARK[1]"}
+FLAG_TO_FLAGS = {"RES_STUN": "PROT_STUN", "RES_BLIND": "PROT_BLIND", "RES_CONFU": "PROT_CONF", "RES_FEAR": "PROT_FEAR",
+                 "RES_HALLU": "PROT_HALLU", "FEAR": "COWARDICE",
+                 "IGNORE_ALL": "IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE"}
+FLAG_TO_SLAY = {"SLAY_ORC": "ORC_1", "SLAY_TROLL": "TROLL_1", "SLAY_WOLF": "WOLF_1", "SLAY_SPIDER": "SPIDER_1",
+                "SLAY_UNDEAD": "UNDEAD_1", "SLAY_RAUKO": "RAUKO_1", "SLAY_DRAGON": "DRAGON_1"}
+FLAG_TO_BRAND = {"BRAND_FIRE": "FIRE_1", "BRAND_COLD": "COLD_1", "BRAND_ELEC": "ELEC_1", "BRAND_POIS": "POIS_1"}
+
+
+class Tables:
+    """What both games know: object names by (tval, sval), tval -> NarSil type, ability names, flags NarSil has."""
+
+    def __init__(self, silq, gamedata, new_objects):
+        self.sq_obj = read_entries(f"{silq}/object.txt", r"^N:\d+:(.*)")
+        self.by_tval_sval = {}
+        for name, lines in self.sq_obj.items():
+            i = next((l[2:].split(":") for l in lines if l.startswith("I:")), None)
+            if i and len(i) >= 2:
+                self.by_tval_sval[(int(i[0]), int(i[1]))] = name
+        ns = read_entries(f"{gamedata}/object.txt", r"^name:(.*)")
+        extra = read_entries(new_objects, r"^name:(.*)")
+        self.narsil_objects = set(ns) | set(extra)
+        self.type_of_tval = {}
+        for name, lines in self.sq_obj.items():
+            t = next((l[2:].split(":")[0] for l in lines if l.startswith("I:")), None)
+            for src in (ns, extra):
+                ty = next((l[5:] for l in src.get(name, []) if l.startswith("type:")), None)
+                if t and ty:
+                    self.type_of_tval[int(t)] = ty
+        self.abilities = {}
+        for name, lines in read_entries(f"{silq}/ability.txt", r"^N:\d+:(.*)").items():
+            i = next((l[2:].split(":") for l in lines if l.startswith("I:")), None)
+            if i:
+                self.abilities[(int(i[0]), int(i[1]))] = name
+        self.narsil_abilities = {l.split(":", 1)[1].strip() for l in open(f"{gamedata}/ability.txt") if l.startswith("name:")}
+        self.of_flags = {m.group(1) for l in open("src/list-object-flags.h") for m in [re.match(r"OF\((\w+)", l)] if m}
+        self.of_flags |= {"ENCHANTABLE", "THROWING", "AXE", "POLEARM", "TWO_HANDED", "MITHRIL", "DANGER", "SHARPNESS", "SHARPNESS2",
+                          "AGGRAVATE", "FREE_ACT", "SEE_INVIS", "REGEN", "SLOW_DIGEST", "SPEED", "RADIANCE", "VAMPIRIC", "HAUNTED",
+                          "DARKNESS", "HUNGER", "LIGHT", "SUST_STR", "SUST_DEX", "SUST_CON", "SUST_GRA", "NO_RANDOM", "CURSED"}
+        self.dropped = {}
+
+    def drop(self, owner, flag):
+        self.dropped.setdefault(flag, []).append(owner)
+
+    def sval_names(self, tval, lo, hi):
+        """Object names of a tval with sval in lo..hi that NarSil-Q has; None means every one of that tval."""
+        all_sv = sorted(sv for (tv, sv) in self.by_tval_sval if tv == tval)
+        picked = [sv for sv in all_sv if lo <= sv <= hi]
+        if picked == all_sv:
+            return None
+        return [self.by_tval_sval[(tval, sv)] for sv in picked if self.by_tval_sval[(tval, sv)] in self.narsil_objects]
+
+    def flags(self, owner, flags, pval=None):
+        """Sil-Q flags to NarSil's flags, values, slay and brand lines. pval is None for specials (magnitude 1)."""
+        out = {"flags": [], "values": [], "slay": [], "brand": []}
+        mag = 1 if pval is None else pval
+        for f in flags:
+            if f in PVAL_FLAGS:
+                out["values"].append(f"{f}[{mag}]")
+            elif f in NEG_FLAGS:
+                out["values"].append(f"{NEG_FLAGS[f]}[{-mag}]")
+            elif f in FLAG_TO_VALUES:
+                out["values"].append(FLAG_TO_VALUES[f])
+            elif f in FLAG_TO_FLAGS:
+                out["flags"].append(FLAG_TO_FLAGS[f])
+            elif f in FLAG_TO_SLAY:
+                out["slay"].append(FLAG_TO_SLAY[f])
+            elif f in FLAG_TO_BRAND:
+                out["brand"].append(FLAG_TO_BRAND[f])
+            elif f == "EASY_KNOW":
+                pass    # NarSil gets this from the object base
+            elif f in self.of_flags:
+                out["flags"].append(f)
+            else:
+                self.drop(owner, f)
+        return out
+
+
+def bare(name):
+    """'& Pair~ of Boots' as item: and base-object: lines write it: 'Pair of Boots'."""
+    return name.replace("& ", "", 1).replace("~", "")
+
+
+def all_flags(lines):
+    return [x.strip() for l in lines if l.startswith("F:") for x in l[2:].split("|") if x.strip()]
+
+
+def abilities_of(tb, owner, lines):
+    res = []
+    for l in lines:
+        if l.startswith("B:"):
+            for pair in l[2:].split(":"):
+                sk, ab = pair.strip().split("/")
+                name = tb.abilities.get((int(sk), int(ab)))
+                if name and name not in tb.narsil_abilities:
+                    tb.drop(owner, f"ability {name} (not in NarSil-Q yet)")
+                elif name:
+                    res.append(f"ability:{SKILLS[int(sk)]}:{name}")
+                else:
+                    tb.drop(owner, f"ability {pair}")
+    return res
+
+
+def convert_special(tb, name, lines):
+    w = next(l[2:].split(":") for l in lines if l.startswith("W:"))
+    c = next(l[2:].split(":") for l in lines if l.startswith("C:"))
+    out = [f"name:{name}", f"alloc:{w[1]}:{w[0]} to {w[2]}", f"cost:{w[3]}", f"max-attack:{c[0]}", f"dam-dice:{c[1]}",
+           f"dam-sides:{c[2]}", f"max-evasion:{c[3]}", f"prot-dice:{c[4]}", f"prot-sides:{c[5]}", f"max-pval:{c[6]}"]
+    for l in lines:
+        if l.startswith("T:"):
+            tv, lo, hi = (int(x) for x in l[2:].split(":")[:3])
+            ty = tb.type_of_tval.get(tv)
+            if not ty:
+                tb.drop(name, f"tval {tv}")
+                continue
+            names = tb.sval_names(tv, lo, hi)
+            out += [f"type:{ty}"] if names is None else [f"item:{ty}:{bare(n)}" for n in names]
+    f = tb.flags(name, all_flags(lines))
+    for k in ("flags", "values", "slay", "brand"):
+        if f[k]:
+            out += [f"{k}:{' | '.join(f[k])}"] if k in ("flags", "values") else [f"{k}:{x}" for x in f[k]]
+    return out + abilities_of(tb, name, lines)
+
+
+def convert_artefact(tb, name, lines):
+    i = next((l[2:].split(":") for l in lines if l.startswith("I:")), None)
+    w = next(l[2:].split(":") for l in lines if l.startswith("W:"))
+    p = next((l[2:].split(":") for l in lines if l.startswith("P:")), ["0", "0d0", "0", "0d0"])
+    g = next((l[2:].split(":") for l in lines if l.startswith("G:")), None)
+    base = tb.by_tval_sval.get((int(i[0]), int(i[1]))) if i else None
+    ty = tb.type_of_tval.get(int(i[0])) if i else None
+    if not base or not ty or base not in tb.narsil_objects:
+        tb.drop(name, f"base object {base or i}")
+        return None
+    out = [f"name:{name}"]
+    if g:
+        out.append(f"color:{COLOR_MAP.get(g[1], g[1])}")
+    out += [f"base-object:{ty}:{bare(base)}", f"depth:{w[0]}", f"rarity:{w[1]}", f"weight:{w[2]}", f"cost:{w[3]}",
+            f"attack:{int(p[0])}:{p[1]}", f"defence:{int(p[2])}:{p[3]}"]
+    f = tb.flags(name, all_flags(lines), int(i[2]) if len(i) > 2 else 0)
+    for k in ("flags", "values", "slay", "brand"):
+        if f[k]:
+            out += [f"{k}:{' | '.join(f[k])}"] if k in ("flags", "values") else [f"{k}:{x}" for x in f[k]]
+    return out + abilities_of(tb, name, lines) + [l.replace("D:", "desc:", 1) for l in lines if l.startswith("D:")]
+
+
+def convert_items(kind, silq, gamedata, new_objects):
+    tb = Tables(silq, gamedata, new_objects)
+    entries = read_entries(f"{silq}/{kind}.txt", r"^N:\d+:(.*)")
+    conv = convert_special if kind == "special" else convert_artefact
+    head = open(f"{gamedata}/{kind}.txt").read().split("\n")
+    first = next(i for i, l in enumerate(head) if l.startswith("name:"))
+    keep_from = next((i for i in range(first - 1, -1, -1) if not head[i].startswith("#") and head[i].strip()), -1) + 1
+    print("\n".join(head[:keep_from]).rstrip() + "\n")
+    narsil = read_entries(f"{gamedata}/{kind}.txt", r"^name:(.*)")
+    for n, lines in entries.items():
+        if not any(l.startswith("W:") for l in lines):
+            continue
+        res = conv(tb, n, lines)
+        if not res and n in narsil:     # Sil-Q's base object is one NarSil-Q lacks: keep NarSil's own entry
+            res = [f"name:{n}"] + [l for l in narsil[n]]
+            print(f"{kind}: {n} kept as NarSil has it", file=sys.stderr)
+        if res:
+            print("\n".join(res) + "\n")
+    for flag, owners in sorted(tb.dropped.items()):
+        print(f"{kind}: dropped {flag}: {', '.join(owners[:6])}{' ...' if len(owners) > 6 else ''} ({len(owners)})", file=sys.stderr)
+
+
 def main():
+    if len(sys.argv) == 5 and sys.argv[1] in ("special", "artefact"):
+        convert_items(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+        return
     if len(sys.argv) == 5 and sys.argv[1] == "object":
         print(patch_objects(sys.argv[2] + "/object.txt", sys.argv[3] + "/object.txt", sys.argv[4]), end="")
         return
