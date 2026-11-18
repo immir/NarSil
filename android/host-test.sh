@@ -39,6 +39,13 @@ echo "$out" | grep -q 'signal 11 (SEGV)'
 run @crashreport | grep -q '^crashreport: none'
 rm -rf "$work/data"
 
+echo "== fuzz: random keys, taps, actions and answers (two seeds) never hang or trip a sanitizer"
+for seed in 1 2; do
+    rm -rf "$work/data"
+    run "${birth[@]}" "@fuzz=$seed,${FUZZ_STEPS:-1500}" >/dev/null 2>"$work/fuzz.err" || { tail -30 "$work/fuzz.err"; exit 1; }
+    ! grep -qE 'runtime error|AddressSanitizer|hung at' "$work/fuzz.err"
+done
+
 echo "== bridge constants: narsil_bridge.h and NarSilNative.kt agree"
 python3 "$here/check-bridge-constants.py"
 

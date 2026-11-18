@@ -29,6 +29,7 @@
  *   @walk=D @run=D                                native step / run in keypad direction D
  *   @preview@DX,DY @travel@DX,DY                  native path preview / travel, relative to player grid
  *   @dump                                         print the current frame
+ *   @fuzz=SEED,N                                  N random inputs, checking the game never hangs
  *   @crash @crashreport                           raise SIGSEGV (set NARSIL_CRASH_TEST=1 so the bridge's handler is installed) / print and delete crash.txt
  *   @save                                         request a save and wait for it
  *   @save-async                                   request a save; it runs at the next safe point
@@ -38,6 +39,7 @@
  *   anything else                                 typed literally
  */
 #include "narsil_bridge.h"
+#include <unistd.h>
 
 #include "ui-event.h"
 
@@ -126,6 +128,66 @@ static bool settle(void)
 
 static const char *data_dir;
 
+/* Back at input, or parked at a native prompt (which does not read keys, so queued keys cannot be consumed). */
+static bool settle_or_prompt(void)
+{
+	static char text[NB_PROMPT_CAP];
+	for (int ms = 0; ms < WAIT_MS; ms += 50) {
+		if (nb_wait_for_input(50)) return true;
+		if (nb_prompt(text, sizeof(text)) != NB_PROMPT_NONE) return true;
+	}
+	fprintf(stderr, "timeout waiting for input\n");
+	return false;
+}
+
+/* xorshift64*: a seeded, reproducible stream. */
+static uint64_t fuzz_next(uint64_t *const st)
+{
+	*st ^= *st >> 12; *st ^= *st << 25; *st ^= *st >> 27;
+	return *st * 2685821657736338717ull;
+}
+
+/*
+ * @fuzz=SEED,N: N random inputs (keys, taps, long presses, native actions and answers), waiting for the game
+ * to come back to input after each.  Fails if the game hangs; the sanitizers catch the rest.  Stops quietly
+ * when the character dies or the game quits.  ^X, Q and ^C (quit, suicide) are left out.
+ */
+static int fuzz(const char *args)
+{
+	unsigned long long seed = 1, n = 1000;
+	sscanf(args, "%llu,%llu", &seed, &n);
+	uint64_t st = seed * 0x9E3779B97F4A7C15ull | 1;
+	static const char *const text[] = { "x", "Hador", "", "a long name that goes past the usual limit of the field" };
+	for (unsigned long long i = 0; i < n && nb_state() != NB_EXITED; i++) {
+		const uint64_t r = fuzz_next(&st) >> 11;
+		const unsigned kind = (unsigned)(r % 100);
+		const uint64_t v = r / 100;
+		if (getenv("FUZZ_TRACE")) fprintf(stderr, "fuzz %llu: kind %u v %llu\n", i, kind, (unsigned long long)v);
+		if (kind < 45) {
+			uint32_t code = 0x20 + (uint32_t)(v % 95);
+			if (code == 'Q') code = 'q';
+			nb_push_key(code, 0);
+		} else if (kind < 52) {
+			nb_push_key(specials[v % (sizeof(specials) / sizeof(specials[0]))].code, 0);
+		} else if (kind < 56) {
+			const uint32_t ctrl = 1 + (uint32_t)(v % 26);
+			if (ctrl != 'X' - '@' && ctrl != 'C' - '@') nb_push_key(ctrl, KC_MOD_CONTROL);
+		} else if (kind < 70) {
+			nb_push_mouse((int)(v % 80), (int)((v / 80) % 24), 1 + (int)((v / 2000) % 2), 0);
+		} else if (kind < 82) {
+			nb_request_action((enum nb_action)(v % NB_ACT_COUNT));
+		} else if (kind < 92) {
+			nb_answer((int32_t)(v % 40) - 3);
+		} else if (kind < 96) {
+			nb_answer_item((int)(v % 24) - 1);
+		} else {
+			nb_answer_text(text[v % (sizeof(text) / sizeof(text[0]))]);
+		}
+		if (!settle_or_prompt()) { fprintf(stderr, "fuzz: hung at step %llu (seed %llu)\n", i, seed); dump(); if (getenv("FUZZ_HOLD")) sleep(40); return 1; }
+	}
+	return 0;
+}
+
 static int run_token(const char *tok)
 {
 	for (size_t i = 0; i < sizeof(specials) / sizeof(specials[0]); i++)
@@ -134,6 +196,7 @@ static int run_token(const char *tok)
 			return settle() ? 0 : 1;
 		}
 	if (strcmp(tok, "@dump") == 0) { dump(); return 0; }
+	if (strncmp(tok, "@fuzz=", 6) == 0) return fuzz(tok + 6);
 	if (strcmp(tok, "@crash") == 0) { nb_crash_for_test(); return 0; }
 	if (strcmp(tok, "@crashreport") == 0) {
 		char text[4096];
