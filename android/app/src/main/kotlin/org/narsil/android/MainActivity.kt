@@ -260,7 +260,7 @@ class MainActivity : ComponentActivity() {
     /** One prompt's native screen. */
     @Composable
     private fun PromptUi(state: GameState, prompt: GameState.Prompt, answer: (Int) -> Unit) {
-when (prompt) {
+        when (prompt) {
             is GameState.Prompt.Items -> TextScale(settings.itemScale / settings.buttonScale) { ItemSheet(prompt, state::colour, answer) }
             is GameState.Prompt.Check -> CheckDialog(prompt, answer)
             is GameState.Prompt.Choice -> ChoiceSheet(prompt, answer)
@@ -268,18 +268,18 @@ when (prompt) {
             is GameState.Prompt.Abilities -> AbilitiesSheet(prompt, answer)
             is GameState.Prompt.Smith -> SmithSheet(prompt, answer)
             is GameState.Prompt.Text -> TextPrompt(prompt) { answer(-1) }
-        is GameState.Prompt.Quantity -> QuantityDialog(prompt, answer)
+            is GameState.Prompt.Quantity -> QuantityDialog(prompt, answer)
             is GameState.Prompt.Options -> OptionsScreen(prompt, answer, onAppSettings = { showOptions = true }.takeIf { LocalInPanel.current })
-        is GameState.Prompt.Character -> {
-            /* The dump is written in answer to CHARACTER_DUMP; the tab comes back once it exists. */
-            LaunchedEffect(prompt) {
-                if (shareDumpPending) { shareDumpPending = false; Share.file(this@MainActivity, Share.characterDump(this@MainActivity), "text/plain", "Share character dump") }
+            is GameState.Prompt.Character -> {
+                /* The dump is written in answer to CHARACTER_DUMP; the tab comes back once it exists. */
+                LaunchedEffect(prompt) {
+                    if (shareDumpPending) { shareDumpPending = false; Share.file(this@MainActivity, Share.characterDump(this@MainActivity), "text/plain", "Share character dump") }
+                }
+                CharacterSheet(prompt.info, state, onDismiss = { answer(-1) }, actions = listOf(
+                    "Rename" to { answer(NarSilNative.CHARACTER_RENAME) },
+                    "Share dump" to { shareDumpPending = true; answer(NarSilNative.CHARACTER_DUMP) },
+                ))
             }
-            CharacterSheet(prompt.info, state, onDismiss = { answer(-1) }, actions = listOf(
-                "Rename" to { answer(NarSilNative.CHARACTER_RENAME) },
-                "Share dump" to { shareDumpPending = true; answer(NarSilNative.CHARACTER_DUMP) },
-            ))
-        }
             is GameState.Prompt.Knowledge -> KnowledgeScreen(prompt, state::colour, answer)
             is GameState.Prompt.Pack -> TextScale(settings.itemScale / settings.buttonScale) { PackSheet(prompt, state::colour, answer, settings.quickKinds, settings::toggleQuick) }
             is GameState.Prompt.Screen -> ScreenSheet(prompt, answer, onScum = { showScum = true }.takeIf { settings.scumming })
@@ -343,7 +343,7 @@ when (prompt) {
                     (state.prompt as? GameState.Prompt.Direction)?.let { d ->
                         Box(Modifier.align(Alignment.BottomCenter)) { DirectionBar(d, NarSilNative::nativeAnswer) }
                     }
-                    if (state.mapMode && dpadMode() == Settings.DPAD_FLOATING) FloatingDpad(state)
+                    if (state.mapMode && dpadMode() == Settings.DPAD_FLOATING) FloatingDpad(settings) { dpad(state, it) }
                     if (state.mapMode && settings.edgeSwipePanel) EdgeSwipeHandle(Modifier.align(Alignment.CenterEnd))
                 }
                 if (state.mapMode && !rail) TextScale(settings.statusScale) {
@@ -377,43 +377,8 @@ when (prompt) {
     @Composable
     private fun dpadMode(): Int = settings.dpad
 
-    /**
-     * A d-pad gesture: answers an open aim or direction prompt; at the map prompt
-     * steps, runs, waits or rests; elsewhere (-more-) it sends the keypad digit.
-     */
-    private fun dpad(state: GameState, a: PadAction) {
-        val dir = when (a) { is PadAction.Step -> a.dir; is PadAction.Run -> a.dir; else -> 5 }
-        when (val p = state.prompt) {
-            is GameState.Prompt.Aim -> NarSilNative.nativeAnswer(if (dir == 5) NarSilNative.AIM_CURRENT else dir)
-            is GameState.Prompt.Direction -> if (dir != 5 || p.allowHere) NarSilNative.nativeAnswer(dir)
-            null -> when {
-                !state.atPrompt -> router.char('0'.code + dir)
-                a == PadAction.Wait -> NarSilNative.nativeRequestAction(NarSilNative.ACT_HOLD)
-                a == PadAction.Rest -> NarSilNative.nativeRequestAction(NarSilNative.ACT_REST)
-                else -> NarSilNative.nativeRequestMove(dir, a is PadAction.Run)
-            }
-            else -> Unit
-        }
-    }
+    private fun dpad(state: GameState, a: PadAction) = applyPad(state, router, a)
 
-    /** Draggable by its centre; the position is kept as a fraction of the free space. */
-    @Composable
-    private fun FloatingDpad(state: GameState) {
-        BoxWithConstraints(Modifier.fillMaxSize()) {
-            val density = LocalDensity.current
-            val pad = with(density) { settings.dpadSizeDp.dp.toPx() }
-            val freeW = (constraints.maxWidth - pad).coerceAtLeast(1f)
-            val freeH = (constraints.maxHeight - pad).coerceAtLeast(1f)
-            Box(Modifier.offset { IntOffset((settings.dpadX * freeW).roundToInt(), (settings.dpadY * freeH).roundToInt()) }) {
-                Dpad(settings.dpadSizeDp, { dpad(state, it) }) { delta ->
-                    settings.dpadX = (settings.dpadX + delta.x / freeW).coerceIn(0f, 1f)
-                    settings.dpadY = (settings.dpadY + delta.y / freeH).coerceIn(0f, 1f)
-                }
-            }
-        }
-    }
-
-    /** Native game state is process-global and cannot be re-initialised; end the process. */
     /** Options → Export save: save, then hand a copy to the share sheet. */
     private fun exportSave() {
         scope.launch {
@@ -427,6 +392,7 @@ when (prompt) {
         scope.launch { Toast.makeText(this@MainActivity, Scum.take(applicationContext), Toast.LENGTH_SHORT).show() }
     }.takeIf { settings.scumming }
 
+    /** Native game state is process-global and cannot be re-initialised; end the process. */
     private fun exitApp() {
         finishAndRemoveTask()
         Process.killProcess(Process.myPid())

@@ -270,25 +270,8 @@ class GameState {
     }
 
     /** The game's bottom status line as its separate pieces, each with its game colour (runs of 2+ spaces separate them). */
-    fun statusSegments(): List<Pair<String, Int>> {
-        if (rows == 0) return emptyList()
-        val y = rows - 1
-        val out = mutableListOf<Pair<String, Int>>()
-        val text = StringBuilder()
-        var attr = 0
-        var spaces = 0
-        fun flush() { if (text.isNotEmpty()) out += text.toString() to colour(attr % 256 % 32); text.setLength(0) }
-        for (x in 0 until cols) {
-            val cp = term[2 * (y * cols + x)]
-            if (cp == ' '.code || cp == 0) { if (++spaces >= 2) flush(); continue }
-            if (spaces == 1) text.append(' ')
-            if (text.isEmpty()) attr = term[2 * (y * cols + x) + 1]
-            spaces = 0
-            text.appendCodePoint(cp)
-        }
-        flush()
-        return out
-    }
+    fun statusSegments(): List<Pair<String, Int>> =
+        if (rows == 0) emptyList() else splitStatusRow(term, rows - 1, cols).map { (text, attr) -> text to colour(attr % 256 % 32) }
 
     private fun rowText(y: Int): String = buildString(cols) {
         for (x in 0 until cols) appendCodePoint(term[2 * (y * cols + x)])
@@ -304,4 +287,27 @@ class GameState {
     }
 
     fun colour(index: Int): Int = palette.getOrElse(index) { android.graphics.Color.WHITE }
+}
+
+/**
+ * One term row (cells of codepoint, attr) cut into its pieces: a run of two or more blanks ends one, a single blank
+ * stays inside it, and a piece takes the attr of its first character.  GameState.swift's splitStatusRow does the
+ * same (both are tested on the same row).
+ */
+internal fun splitStatusRow(term: IntArray, y: Int, cols: Int): List<Pair<String, Int>> {
+    val out = mutableListOf<Pair<String, Int>>()
+    val text = StringBuilder()
+    var attr = 0
+    var spaces = 0
+    fun flush() { if (text.isNotEmpty()) out += text.toString() to attr; text.setLength(0) }
+    for (x in 0 until cols) {
+        val cp = term[2 * (y * cols + x)]
+        if (cp == ' '.code || cp == 0) { if (++spaces >= 2) flush(); continue }
+        if (spaces == 1) text.append(' ')
+        if (text.isEmpty()) attr = term[2 * (y * cols + x) + 1]
+        spaces = 0
+        text.appendCodePoint(cp)
+    }
+    flush()
+    return out
 }

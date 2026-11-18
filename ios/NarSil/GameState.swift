@@ -150,11 +150,17 @@ final class GameState: ObservableObject {
     /// The game's bottom status line as its separate pieces, each with its game colour (runs of 2+ spaces separate them).
     func statusSegments() -> [(String, UInt32)] {
         guard termRows > 0, term.count == 2 * termCols * termRows else { return [] }
-        let y = termRows - 1
-        var out = [(String, UInt32)](), text = "", attr = 0, spaces = 0
-        func flush() { if !text.isEmpty { out.append((text, colour(attr % 256 % 32))); text = "" } }
-        for x in 0..<termCols {
-            let i = 2 * (y * termCols + x)
+        return GameState.splitStatusRow(term, y: termRows - 1, cols: termCols).map { ($0.0, colour($0.1 % 256 % 32)) }
+    }
+
+    /// One term row (cells of codepoint, attr) cut into its pieces: a run of two or more blanks ends one, a single
+    /// blank stays inside it, and a piece takes the attr of its first character.  GameState.kt's splitStatusRow does
+    /// the same (both are tested on the same row).
+    static func splitStatusRow(_ term: [Int32], y: Int, cols: Int) -> [(String, Int)] {
+        var out = [(String, Int)](), text = "", attr = 0, spaces = 0
+        func flush() { if !text.isEmpty { out.append((text, attr)); text = "" } }
+        for x in 0..<cols {
+            let i = 2 * (y * cols + x)
             let cp = Int(term[i])
             if cp == 32 || cp == 0 { spaces += 1; if spaces >= 2 { flush() }; continue }
             if spaces == 1 && !text.isEmpty { text += " " }
