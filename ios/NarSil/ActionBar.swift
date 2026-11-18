@@ -83,6 +83,7 @@ func moreActions(_ s: Status, messages: @escaping () -> Void, toggleMap: @escapi
         BarAction(label: "Help", run: help),
         BarAction(label: "Options", run: act(NB.ACT_OPTIONS)),
         BarAction(label: tilesOn ? "Tiles: on" : "Tiles: off", run: toggleTiles),
+        BarAction(label: "Retire character", run: { Native.pushKey(Int(UnicodeScalar("Q").value)) }),
         BarAction(label: "Esc", run: { Native.pushKey(Keys.escape) }),
     ]
     return out

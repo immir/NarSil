@@ -110,6 +110,7 @@ fun moreActions(s: GameState.Status, router: KeyRouter, showMessages: () -> Unit
     BarAction("Help", run = showHelp),
     BarAction("Options", run = showOptions),
     BarAction("Keyboard", run = toggleKeyboard),
+    BarAction("Retire character", run = { router.char('Q'.code) }),
     BarAction("Esc", run = { router.special(Keys.ESCAPE) }),
 )
 
