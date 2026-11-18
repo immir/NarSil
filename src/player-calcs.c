@@ -186,6 +186,14 @@ int axe_bonus(struct player *p, const struct object *obj)
 
 
 /**
+ * Bonus for certain races/houses using bows (NarSil-Q's elves)
+ */
+int bow_bonus(struct player *p, const struct object *obj)
+{
+	return player_has(p, PF_BOW_PROFICIENCY) && tval_is_launcher(obj) ? 1 : 0;
+}
+
+/**
  * Bonus for people with polearm affinity
  */
 int polearm_bonus(struct player *p, const struct object *obj)
@@ -1042,7 +1050,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* Analyze launcher */
 	if (launcher) {
-		state->skill_equip_mod[SKILL_ARCHERY] += launcher->att;
+		state->skill_equip_mod[SKILL_ARCHERY] += launcher->att + bow_bonus(p, launcher);
 		state->ammo_tval = TV_ARROW;
 		state->add = launcher->dd;
 		state->ads = total_ads(p, state, launcher, false);
