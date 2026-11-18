@@ -274,6 +274,9 @@ static void whirlwind(struct player *p, struct loc grid)
 /**
  * Attack the monster at the given location with a single blow.
  */
+/* 'Smite' was used in this attack: the player loses a turn recovering (see py_attack) */
+static bool smote;
+
 void py_attack_real(struct player *p, struct loc grid, int attack_type)
 {
 	/* Information about the target of the attack */
@@ -501,6 +504,13 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 			}
 
 			dam = damroll(total_dice, mds);
+
+			/* 'Smite': the first main attack with a two-handed weapon rolls the most it can */
+			if (!off_hand_blow && (attack_type == ATT_MAIN) && obj && of_has(obj->flags, OF_TWO_HANDED) &&
+				(num == 1 || smote) && player_active_ability(p, "Smite")) {
+				dam = total_dice * mds;
+				smote = true;
+			}
 			prt = damroll(race->pd, race->ps);
 
 			prt_percent = prt_after_sharpness(p, obj, &flag);
@@ -716,6 +726,12 @@ void py_attack(struct player *p, struct loc grid, int attack_type)
 		whirlwind(p, grid);
 	} else {
 		py_attack_real(p, grid, attack_type);
+	}
+
+	if (smote) {
+		smote = false;
+		msg("You pause to recover from the mighty blow.");
+		p->upkeep->energy_use += z_info->move_energy;
 	}
 }
 

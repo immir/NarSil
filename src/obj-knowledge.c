@@ -760,6 +760,12 @@ void player_know_object(struct player *p, struct object *obj)
 		object_flavor_aware(p, obj);
 	}
 
+	/* 'Alchemy': potions, staves and horns are known on sight */
+	if ((tval_is_potion(obj) || tval_is_staff(obj) || tval_is_horn(obj)) &&
+		player_active_ability(p, "Alchemy")) {
+		object_flavor_aware(p, obj);
+	}
+
 	/* Know worn objects with Lore-Master */
 	if (player_active_ability(p, "Lore-Master")) {
 		while (!object_runes_known(obj)) {
