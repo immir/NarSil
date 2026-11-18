@@ -453,6 +453,7 @@ int player_active_ability(struct player *p, const char *name)
 bool player_has_prereq_abilities(struct player *p, struct ability *ability)
 {
 	struct ability *prereqs = ability->prerequisites;
+	if (player_active_ability(p, "Quick Study")) return true;
 	if (prereqs) {
 		while (prereqs) {
 			struct ability *possessed = p->abilities;

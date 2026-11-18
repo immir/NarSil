@@ -495,6 +495,10 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 			if (obj && of_has(obj->flags, OF_CUMBERSOME)) crit_bonus_dice = 0;
 			slay_bonus_dice = slay_bonus(p, obj, mon, &slay, &brand);
 			total_dice = mdd + slay_bonus_dice + crit_bonus_dice;
+			if (p->vengeance) {
+				total_dice++;
+				p->vengeance = false;
+			}
 
 			dam = damroll(total_dice, mds);
 			prt = damroll(race->pd, race->ps);
@@ -957,6 +961,11 @@ static struct attack_result make_ranged_shot(struct player *p,
 		attack_mod += 3;
 	}
 
+	/* 'Rout': shots at fleeing monsters count as 5 points more dexterity */
+	if (player_active_ability(p, "Rout") && mon->stance == STANCE_FLEEING) {
+		attack_mod += 5;
+	}
+
 	/* Determine the player's attack score after all modifiers */
 	total_attack_mod = total_player_attack(p, mon, attack_mod);
 	if (attack_penalty) {
@@ -987,6 +996,11 @@ static struct attack_result make_ranged_shot(struct player *p,
 	result.crit_dice = crit_bonus(p, result.hit, bow->weight, race,
 								  SKILL_ARCHERY, false);
 	if (of_has(bow->flags, OF_CUMBERSOME)) result.crit_dice = 0;
+
+	/* 'Ambush': an extra critical die against unwary or sleeping monsters */
+	if (player_active_ability(p, "Ambush") && mon->alertness < 0) {
+		result.crit_dice++;
+	}
 
 	/* Add slay (or brand) dice based on both arrow and bow */
 	slay_bonus_dice = slay_bonus(p, ammo, mon, &arrow_slay, &arrow_brand);
@@ -1030,6 +1044,11 @@ static struct attack_result make_ranged_shot(struct player *p,
 	prt = damroll(race->pd, race->ps);
 	prt = (prt * prt_percent) / 100;
 	result.dmg = MAX(0, dam - prt);
+
+	/* 'Puncture': armour that would block the whole shot still lets five damage through */
+	if (result.dmg == 0 && player_active_ability(p, "Puncture")) {
+		result.dmg = 5;
+	}
 
 	/* Monster description */
 	monster_desc(m_name, sizeof(m_name), mon, MDESC_DEFAULT);
