@@ -142,104 +142,99 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                     Text("Options", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                     TextButton(onClick = onDismiss) { Text("Done") }
                 }
-                Scale("Buttons and menus", settings.buttonScale) { settings.buttonScale = it }
-                Scale("Messages", settings.messageScale) { settings.messageScale = it }
-                Label("Colours")
+                Scale(UiText.BUTTON_SCALE, settings.buttonScale) { settings.buttonScale = it }
+                Scale(UiText.MESSAGE_SCALE, settings.messageScale) { settings.messageScale = it }
+                Label(UiText.COLOURS)
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Theme.ALL.forEachIndexed { i, t -> FilterChip(selected = settings.theme == i, onClick = { settings.theme = i }, label = { Text(t.name) }) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Theme.byIndex(settings.theme).swatch(gamePalette).forEach { c -> Box(Modifier.size(28.dp).background(Color(c), RoundedCornerShape(6.dp))) }
                 }
-                Hint("Bright lifts the game's dark blues and reds so they read on black; Original is the game's own palette.")
-                Scale("Inventory and items", settings.itemScale) { settings.itemScale = it }
-                Scale("Status", settings.statusScale) { settings.statusScale = it }
-                Label("Messages shown")
+                Hint(UiText.COLOURS_HINT)
+                Scale(UiText.ITEM_SCALE, settings.itemScale) { settings.itemScale = it }
+                Scale(UiText.STATUS_SCALE, settings.statusScale) { settings.statusScale = it }
+                Label(UiText.MESSAGE_LINES)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     (2..5).forEach { n -> FilterChip(selected = settings.messageLines == n, onClick = { settings.messageLines = n }, label = { Text("$n") }) }
                 }
-                Label("Panel tabs")
+                Label(UiText.PANEL_TABS)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(Settings.TABS_ICONS_AND_NAMES to "Icons and names", Settings.TABS_ICONS to "Icons", Settings.TABS_NAMES to "Names")
                         .forEach { (style, label) ->
                             FilterChip(selected = settings.panelTabs == style, onClick = { settings.panelTabs = style }, label = { Text(label) })
                         }
                 }
-                Hint("Icons fit the panel without scrolling; names are the scrolling strip.")
+                Hint(UiText.PANEL_TABS_HINT)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Label("Tiles on the map")
-                        Hint("MicroChasm's pictures instead of letters. Lists and menus keep the letters.")
+                        Label(UiText.TILES)
+                        Hint(UiText.TILES_HINT)
                     }
                     Switch(settings.tiles, { settings.tiles = it })
                 }
-                Label("D-pad")
+                Label(UiText.DPAD)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(Settings.DPAD_OFF to "Off", Settings.DPAD_DOCKED to "Beside status", Settings.DPAD_FLOATING to "Floating")
                         .forEach { (mode, label) ->
                             FilterChip(selected = settings.dpad == mode, onClick = { settings.dpad = mode }, label = { Text(label) })
                         }
                 }
-                Hint("Tap a key to step; hold it, or drag from the centre key towards it, to run.  " +
-                     "Centre: tap to wait, hold to rest; on a floating pad hold the centre then drag to move it.  " +
-                     "Beside status sits under the status in portrait and in the side column in landscape.")
+                Hint(UiText.DPAD_HINT)
                 if (settings.dpad != Settings.DPAD_OFF) {
-                    Label("D-pad size  ${settings.dpadSizeDp.roundToInt()} dp")
+                    Label("${UiText.DPAD_SIZE}  ${settings.dpadSizeDp.roundToInt()} dp")
                     Slider(settings.dpadSizeDp, { settings.dpadSizeDp = it }, valueRange = 100f..220f)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Label("Swipe on the map runs")
-                        Hint("Otherwise a swipe takes one step.")
+                        Label(UiText.SWIPE_RUNS)
+                        Hint(UiText.SWIPE_RUNS_HINT)
                     }
                     Switch(settings.swipeRuns, { settings.swipeRuns = it })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Label("Skip -more- prompts")
-                        Hint("Messages are not held for a tap to continue; the message log keeps all of them. This is the game's own " +
-                             "\"Automatically clear -more- prompts\" option, saved with the character." +
-                             if (autoMoreEnabled) "" else "  Change it from the map, or in Game options → User interface.")
+                        Label(UiText.AUTO_MORE)
+                        Hint(UiText.AUTO_MORE_HINT + if (autoMoreEnabled) "" else "  " + UiText.AUTO_MORE_LOCKED_HINT)
                     }
                     Switch(autoMore, onAutoMore, enabled = autoMoreEnabled)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Label("Item details in the pack")
-                        Hint("Says what an ego item gives in general, and what each ability an item grants does, when you open it in the pack.")
+                        Label(UiText.ITEM_DETAILS)
+                        Hint(UiText.ITEM_DETAILS_HINT)
                     }
                     Switch(settings.itemDetails, { settings.itemDetails = it })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Label("Buzz when health is low")
-                        Hint("Below the game's hitpoint warning (Game options → Hitpoint warning), and a short pulse when one turn costs a fifth of your health.")
+                        Label(UiText.LOW_HEALTH_BUZZ)
+                        Hint(UiText.LOW_HEALTH_BUZZ_HINT)
                     }
                     Switch(settings.lowHealthBuzz, { settings.lowHealthBuzz = it })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Label("Swipe from the right edge opens the panel")
-                        Hint("A short stretch in the middle of the right edge, marked by a faint handle, opens the character panel. " +
-                             "That stretch no longer works as the system Back gesture.")
+                        Label(UiText.EDGE_SWIPE)
+                        Hint(UiText.EDGE_SWIPE_HINT)
                     }
                     Switch(settings.edgeSwipePanel, { settings.edgeSwipePanel = it })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Label("Save scumming (for testing)")
-                        Hint("Adds Scum (keep a copy of your save) and Restore scum save to the ☰ menu, and Restore to the death screen. Restore also lists the last three autosaves, at least five minutes apart.")
+                        Label(UiText.SCUMMING)
+                        Hint(UiText.SCUMMING_HINT)
                     }
                     Switch(settings.scumming, { settings.scumming = it })
                 }
-                Label("Saves")
-                Hint("Export sends a copy of your save to another app (Drive, mail…). Import loads one back, replacing the current game.")
+                Label(UiText.SAVES)
+                Hint(UiText.SAVES_HINT)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilledTonalButton(onClick = { onDismiss(); onExportSave() }) { Text("Export save") }
                     FilledTonalButton(onClick = { onDismiss(); onImportSave() }) { Text("Import save…") }
                 }
-                Label("Problems")
-                Hint("Send logs shares a zip of the app's log, your save and character dump, for a bug report.")
+                Label(UiText.PROBLEMS)
+                Hint(UiText.PROBLEMS_HINT)
                 FilledTonalButton(onClick = { onDismiss(); onSendLogs() }) { Text("Send logs") }
                 TextButton(onClick = { onDismiss(); onGameOptions() }) { Text("Game options…") }
             }

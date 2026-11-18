@@ -65,3 +65,38 @@ let firstRunTips: [String] = [
     "The panel button at the right of the messages opens your pack, character, skills, abilities and more.",
     "☰ holds every other command, the app's options, and Help.",
 ]
+
+/// Options labels and hints (ui/settings.txt).
+enum UiText {
+    static let buttonScale = "Buttons and menus"
+    static let messageScale = "Messages"
+    static let colours = "Colours"
+    static let coloursHint = "Bright lifts the game's dark blues and reds so they read on black; Original is the game's own palette."
+    static let itemScale = "Inventory and items"
+    static let statusScale = "Status"
+    static let messageLines = "Messages shown"
+    static let panelTabs = "Panel tabs"
+    static let panelTabsHint = "Icons fit the panel without scrolling; names are the scrolling strip."
+    static let tiles = "Tiles on the map"
+    static let tilesHint = "MicroChasm's pictures instead of letters. Lists and menus keep the letters."
+    static let dpad = "D-pad"
+    static let dpadHint = "Tap a key to step; hold it, or drag from the centre key towards it, to run.  Centre: tap to wait, hold to rest; on a floating pad hold the centre then drag to move it.  Beside status sits under the status in portrait and in the side column in landscape."
+    static let dpadSize = "D-pad size"
+    static let swipeRuns = "Swipe on the map runs"
+    static let swipeRunsHint = "Otherwise a swipe takes one step."
+    static let autoMore = "Skip -more- prompts"
+    static let autoMoreHint = "Messages are not held for a tap to continue; the message log keeps all of them. This is the game's own \"Automatically clear -more- prompts\" option, saved with the character."
+    static let autoMoreLockedHint = "Change it from the map, or in Game options → User interface."
+    static let itemDetails = "Item details in the pack"
+    static let itemDetailsHint = "Says what an ego item gives in general, and what each ability an item grants does, when you open it in the pack."
+    static let lowHealthBuzz = "Buzz when health is low"
+    static let lowHealthBuzzHint = "Below the game's hitpoint warning (Game options → Hitpoint warning), and a short pulse when one turn costs a fifth of your health."
+    static let edgeSwipe = "Swipe from the right edge opens the panel"
+    static let edgeSwipeHint = "A short stretch in the middle of the right edge, marked by a faint handle, opens the character panel. That stretch no longer works as the system Back gesture."
+    static let scumming = "Save scumming (for testing)"
+    static let scummingHint = "Adds Scum (keep a copy of your save) and Restore scum save to the ☰ menu, and Restore to the death screen. Restore also lists the last three autosaves, at least five minutes apart."
+    static let saves = "Saves"
+    static let savesHint = "Export sends a copy of your save to another app (Files, mail…). Import loads one back, replacing the current game; NarSil then closes, and loads it when opened again."
+    static let problems = "Problems"
+    static let problemsHint = "Send logs shares the app's log, your save and character dump, for a bug report."
+}

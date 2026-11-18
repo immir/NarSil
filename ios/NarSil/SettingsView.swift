@@ -39,10 +39,10 @@ struct SettingsSheet: View {
                 }.padding(.horizontal, 16).padding(.vertical, 12)
                 ScrollView {
                     VStack(spacing: 6) {
-                        scale("Buttons and menus", $buttonScale)
-                        scale("Messages", $messageScale)
+                        scale(UiText.buttonScale, $buttonScale)
+                        scale(UiText.messageScale, $messageScale)
                         card(VStack(alignment: .leading, spacing: 6) {
-                            Text("Colours").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                            Text(UiText.colours).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 8) {
                                     ForEach(Array(Theme.all.enumerated()), id: \.offset) { i, t in
@@ -59,40 +59,39 @@ struct SettingsSheet: View {
                                     RoundedRectangle(cornerRadius: 6).fill(Color(rgb: c)).frame(width: 28, height: 28)
                                 }
                             }
-                            Text("Bright lifts the game's dark blues and reds so they read on black; Original is the game's own palette.").scaledFont(12).foregroundColor(Palette.sub)
+                            Text(UiText.coloursHint).scaledFont(12).foregroundColor(Palette.sub)
                         })
-                        scale("Inventory and items", $itemScale)
-                        scale("Status", $statusScale)
-                        choice("Messages shown", nil, $messageLines, [(2, "2"), (3, "3"), (4, "4"), (5, "5")])
-                        choice("Panel tabs", "Icons fit the panel without scrolling; names are the scrolling strip.", $panelTabs,
+                        scale(UiText.itemScale, $itemScale)
+                        scale(UiText.statusScale, $statusScale)
+                        choice(UiText.messageLines, nil, $messageLines, [(2, "2"), (3, "3"), (4, "4"), (5, "5")])
+                        choice(UiText.panelTabs, UiText.panelTabsHint, $panelTabs,
                                [(TabStyle.iconsAndNames.rawValue, "Icons and names"), (TabStyle.iconsOnly.rawValue, "Icons"), (TabStyle.names.rawValue, "Names")])
-                        toggle("Tiles on the map", "MicroChasm's pictures instead of letters. Lists and menus keep the letters.", $tiles)
-                        choice("D-pad", "Tap a key to step; hold it, or drag from the centre key towards it, to run.  Centre: tap to wait, hold to rest; on a floating pad hold the centre then drag to move it.  Beside status sits under the status in portrait and in the side column in landscape.",
+                        toggle(UiText.tiles, UiText.tilesHint, $tiles)
+                        choice(UiText.dpad, UiText.dpadHint,
                                $pad, [(PadMode.off.rawValue, "Off"), (PadMode.docked.rawValue, "Beside status"), (PadMode.floating.rawValue, "Floating")])
                         if pad != PadMode.off.rawValue {
                             card(VStack(alignment: .leading, spacing: 2) {
-                                Text("D-pad size  \(Int(padSize)) pt").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                                Text("\(UiText.dpadSize)  \(Int(padSize)) pt").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
                                 Slider(value: $padSize, in: 100...220, step: 5)
                             })
                         }
-                        toggle("Swipe on the map runs", "Otherwise a swipe takes one step.", $swipeRuns)
-                        toggle("Skip -more- prompts", "Messages are not held for a tap to continue; the message log keeps all of them. This is the game's own \"Automatically clear -more- prompts\" option, saved with the character."
-                               + (autoMoreEnabled ? "" : "  Change it from the map, or in Game options → User interface."),
+                        toggle(UiText.swipeRuns, UiText.swipeRunsHint, $swipeRuns)
+                        toggle(UiText.autoMore, UiText.autoMoreHint + (autoMoreEnabled ? "" : "  " + UiText.autoMoreLockedHint),
                                Binding(get: { autoMore }, set: onAutoMore), enabled: autoMoreEnabled)
-                        toggle("Item details in the pack", "Says what an ego item gives in general, and what each ability an item grants does, when you open it in the pack.", $itemDetails)
-                        toggle("Buzz when health is low", "Below the game's hitpoint warning (Game options → Hitpoint warning), and a short pulse when one turn costs a fifth of your health.", $lowHealthBuzz)
-                        toggle("Save scumming (for testing)", "Adds Scum (keep a copy of your save) and Restore scum save to the ☰ menu, and Restore to the death screen. Restore also lists the last three autosaves, at least five minutes apart.", $scumming)
+                        toggle(UiText.itemDetails, UiText.itemDetailsHint, $itemDetails)
+                        toggle(UiText.lowHealthBuzz, UiText.lowHealthBuzzHint, $lowHealthBuzz)
+                        toggle(UiText.scumming, UiText.scummingHint, $scumming)
                         card(VStack(alignment: .leading, spacing: 6) {
-                            Text("Saves").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
-                            Text("Export sends a copy of your save to another app (Files, mail…). Import loads one back, replacing the current game.").scaledFont(12).foregroundColor(Palette.sub)
+                            Text(UiText.saves).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                            Text(UiText.savesHint).scaledFont(12).foregroundColor(Palette.sub)
                             HStack(spacing: 8) {
                                 button("Export save") { dismiss(); onExportSave() }
                                 button("Import save…") { dismiss(); onImportSave() }
                             }
                         })
                         card(VStack(alignment: .leading, spacing: 6) {
-                            Text("Problems").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
-                            Text("Send logs shares the app's log, your save and character dump, for a bug report.").scaledFont(12).foregroundColor(Palette.sub)
+                            Text(UiText.problems).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                            Text(UiText.problemsHint).scaledFont(12).foregroundColor(Palette.sub)
                             button("Send logs") { dismiss(); onSendLogs() }
                         })
                     }.padding(.bottom, 16)

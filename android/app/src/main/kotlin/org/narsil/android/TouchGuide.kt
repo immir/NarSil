@@ -66,3 +66,38 @@ internal val FIRST_RUN_TIPS: List<String> = listOf(
     "The panel button at the right of the messages opens your pack, character, skills, abilities and more.",
     "☰ holds every other command, the app's options, and Help.",
 )
+
+/** Options labels and hints (ui/settings.txt). */
+internal object UiText {
+    const val BUTTON_SCALE = "Buttons and menus"
+    const val MESSAGE_SCALE = "Messages"
+    const val COLOURS = "Colours"
+    const val COLOURS_HINT = "Bright lifts the game's dark blues and reds so they read on black; Original is the game's own palette."
+    const val ITEM_SCALE = "Inventory and items"
+    const val STATUS_SCALE = "Status"
+    const val MESSAGE_LINES = "Messages shown"
+    const val PANEL_TABS = "Panel tabs"
+    const val PANEL_TABS_HINT = "Icons fit the panel without scrolling; names are the scrolling strip."
+    const val TILES = "Tiles on the map"
+    const val TILES_HINT = "MicroChasm's pictures instead of letters. Lists and menus keep the letters."
+    const val DPAD = "D-pad"
+    const val DPAD_HINT = "Tap a key to step; hold it, or drag from the centre key towards it, to run.  Centre: tap to wait, hold to rest; on a floating pad hold the centre then drag to move it.  Beside status sits under the status in portrait and in the side column in landscape."
+    const val DPAD_SIZE = "D-pad size"
+    const val SWIPE_RUNS = "Swipe on the map runs"
+    const val SWIPE_RUNS_HINT = "Otherwise a swipe takes one step."
+    const val AUTO_MORE = "Skip -more- prompts"
+    const val AUTO_MORE_HINT = "Messages are not held for a tap to continue; the message log keeps all of them. This is the game's own \"Automatically clear -more- prompts\" option, saved with the character."
+    const val AUTO_MORE_LOCKED_HINT = "Change it from the map, or in Game options → User interface."
+    const val ITEM_DETAILS = "Item details in the pack"
+    const val ITEM_DETAILS_HINT = "Says what an ego item gives in general, and what each ability an item grants does, when you open it in the pack."
+    const val LOW_HEALTH_BUZZ = "Buzz when health is low"
+    const val LOW_HEALTH_BUZZ_HINT = "Below the game's hitpoint warning (Game options → Hitpoint warning), and a short pulse when one turn costs a fifth of your health."
+    const val EDGE_SWIPE = "Swipe from the right edge opens the panel"
+    const val EDGE_SWIPE_HINT = "A short stretch in the middle of the right edge, marked by a faint handle, opens the character panel. That stretch no longer works as the system Back gesture."
+    const val SCUMMING = "Save scumming (for testing)"
+    const val SCUMMING_HINT = "Adds Scum (keep a copy of your save) and Restore scum save to the ☰ menu, and Restore to the death screen. Restore also lists the last three autosaves, at least five minutes apart."
+    const val SAVES = "Saves"
+    const val SAVES_HINT = "Export sends a copy of your save to another app (Drive, mail…). Import loads one back, replacing the current game."
+    const val PROBLEMS = "Problems"
+    const val PROBLEMS_HINT = "Send logs shares a zip of the app's log, your save and character dump, for a bug report."
+}
