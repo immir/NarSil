@@ -13,3 +13,4 @@
 PF(NONE, "")
 PF(BLADE_PROFICIENCY, "Blade proficiency")
 PF(AXE_PROFICIENCY,   "Axe proficiency")
+PF(BOW_PROFICIENCY,   "Bow proficiency")

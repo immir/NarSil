@@ -16,7 +16,14 @@ cmake -S "$here/../bridge" -B "$build" -DCMAKE_BUILD_TYPE=Debug ${cc:+-DCMAKE_C_
     -DCMAKE_C_FLAGS="-fsanitize=$san -fno-omit-frame-pointer -g" >/dev/null
 cmake --build "$build" -j"$(nproc)" >/dev/null
 
-run() { timeout 120 "$build/narsil_host" "$root/lib" "$work/data" "$@"; }
+# GAME=silq runs everything on NarSil-Q's data: lib with lib-silq over it.
+game=${GAME:-narsil}
+case "$game" in
+    narsil) lib="$root/lib" ;;
+    silq) lib="$work/lib-silq"; "$root/tools/merge-lib.sh" "$root/lib" "$root/lib-silq" "$lib" ;;
+    *) echo "GAME is narsil or silq" >&2; exit 2 ;;
+esac
+run() { timeout 120 "$build/narsil_host" "$lib" "$work/data" "$@"; }
 # The native birth screens: race, house, sex (first of each), accept stats and
 # skills, keep the name, accept history, begin; dismiss the opening text.
 birth=(@answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc)
@@ -46,6 +53,7 @@ for seed in 1 2; do
     ! grep -qE 'runtime error|AddressSanitizer|hung at' "$work/fuzz.err"
 done
 
+if [ "$game" = narsil ]; then
 echo "== NarSil unchanged: a seeded game matches the recorded baseline (UPDATE_BASELINE=1 re-records it)"
 rm -rf "$work/data"
 baseline_run=("${birth[@]}" @map @walk=6 @walk=2 @walk=4 @run=8 @act=20 @info @look @messages @map @dump)
@@ -53,6 +61,16 @@ NARSIL_SEED=7 run "${baseline_run[@]}" 2>/dev/null > "$work/baseline.txt"
 if [ -n "${UPDATE_BASELINE:-}" ]; then cp "$work/baseline.txt" "$here/baselines/narsil-seed7.txt"
 else diff -u "$here/baselines/narsil-seed7.txt" "$work/baseline.txt" | head -40; cmp -s "$here/baselines/narsil-seed7.txt" "$work/baseline.txt"; fi
 rm -rf "$work/data"
+fi
+
+if [ "$game" = silq ]; then
+echo "== NarSil-Q: saves are tagged USLQ, and NarSil's data refuses them"
+rm -rf "$work/data"
+run "${birth[@]}" @save "${quit[@]}" >/dev/null 2>&1
+head -c 8 "$work/data/save/Harness" | grep -q '^SaveUSLQ$'
+timeout 120 "$build/narsil_host" "$root/lib" "$work/data" @answer=0 @esc @esc 2>/dev/null | tail -1 | grep -q 'exit="Broken savefile"'
+rm -rf "$work/data"
+fi
 
 echo "== bridge constants: narsil_bridge.h and NarSilNative.kt agree"
 python3 "$here/check-bridge-constants.py"
@@ -249,7 +267,8 @@ echo "$out" | grep -qP '^#O\t[0-9]+\t1\t0\tAutomatically clear'
 echo "== welcome: the splash screen is native (verse, welcome, Begin)"
 rm -rf "$work/data"
 out=$(run @prompt "${birth[@]}" "${quit[@]}")
-echo "$out" | grep -qP '^Screen\twelcome\tNarSil$'
+title=$([ "$game" = silq ] && echo NarSil-Q || echo NarSil)
+echo "$out" | grep -qP "^Screen\twelcome\t$title\$"
 echo "$out" | grep -qP '^#V\tThe world was young'
 echo "$out" | grep -qP '^#O\t1\tBegin\t'
 
@@ -336,4 +355,4 @@ echo "$out" | grep -q '^walk [0-9]: moved 1$'
 [ "$(echo "$out" | grep -c '^run [0-9]: moved')" = 4 ]
 echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 
-echo "PASS ($san) work=$work"
+echo "PASS ($game, $san) work=$work"

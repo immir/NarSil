@@ -7,7 +7,7 @@ name: Android port
 on:
   push:
     branches: [ android ]
-    paths: [ 'android/**', 'bridge/**', 'src/**', 'lib/**', 'ui/**', 'tools/**', '.github/workflows/android-port.yaml' ]
+    paths: [ 'android/**', 'bridge/**', 'src/**', 'lib/**', 'lib-silq/**', 'ui/**', 'tools/**', '.github/workflows/android-port.yaml' ]
   workflow_dispatch:
 
 concurrency:
@@ -35,8 +35,11 @@ jobs:
           echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
           yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "ndk;26.1.10909125" "cmake;3.22.1" "platforms;android-35" > /dev/null
 
-      - name: Host harness (ASan/UBSan)
+      - name: Host harness (ASan/UBSan), NarSil
         run: ./host-test.sh
+
+      - name: Host harness (ASan/UBSan), NarSil-Q
+        run: GAME=silq ./host-test.sh
 
       - name: Unit tests, release APK and app bundle
         run: ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleRelease :app:bundleRelease

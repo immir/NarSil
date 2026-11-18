@@ -93,11 +93,16 @@ static void dump(void)
 	fflush(stdout);
 }
 
+/* The text may land a frame after the game blocks for input (a redraw after loading): look for up to 2 s. */
 static bool expect(const char *needle)
 {
 	static char text[1 << 16];
-	render(text, sizeof(text));
-	return strstr(text, needle) != NULL;
+	for (int ms = 0; ms <= 2000; ms += 20) {
+		render(text, sizeof(text));
+		if (strstr(text, needle)) return true;
+		nanosleep(&(struct timespec){ .tv_nsec = 20000000 }, NULL);
+	}
+	return false;
 }
 
 /* Screen position of the player glyph, searching below the message line. */

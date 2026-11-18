@@ -102,6 +102,7 @@ int hand_and_a_half_bonus(struct player *p, const struct object *obj);
 bool two_handed_melee(struct player *p);
 int blade_bonus(struct player *p, const struct object *obj);
 int axe_bonus(struct player *p, const struct object *obj);
+int bow_bonus(struct player *p, const struct object *obj);
 int polearm_bonus(struct player *p, const struct object *obj);
 uint8_t total_ads(struct player *p, struct player_state *state,
 				  const struct object *obj, bool single_shot);
