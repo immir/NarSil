@@ -191,6 +191,8 @@ def patch_objects(silq_path, narsil_path, extra_path):
             body[at:at] = [f"{k}:{v}" for k, v in nums]
         elif name is not None:
             body = [l for l in body if not l.startswith("alloc:")]
+        if "type:horn" in body:     # Sil-Q's horns sound in a 90 degree cone, not a line
+            body = [re.sub(r"^effect:BEAM:(\w+)$", r"effect:ARC:\1:0:90", l) for l in body]
         out.extend(body + tail)
 
     for line in open(narsil_path).read().split("\n"):
