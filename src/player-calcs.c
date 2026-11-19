@@ -946,6 +946,9 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 	if (p->timed[TMD_SLOW]) {
 		state->speed -= 1;
 	}
+	if (p->timed[TMD_KEEN]) {
+		state->skill_misc_mod[SKILL_PERCEPTION] += 10;
+	}
 	if (p->timed[TMD_SINVIS]) {
 		state->flags[OF_SEE_INVIS] += 1;
 		state->flags[OF_PROT_BLIND] += 1;

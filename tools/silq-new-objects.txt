@@ -153,3 +153,22 @@ effect:SPHERE:DARK_WEAK:7
 dice:0
 desc:It darkens an area with a radius of 7 squares, plus the entire room
 desc: if you are currently in one.
+
+name:Esgalduin
+graphics:!:d
+type:potion
+depth:4
+weight:5
+cost:200
+attack:0:0d0
+defence:0:0d0
+alloc:4:3
+alloc:12:6
+effect:TIMED_INC:KEEN
+dice:20d4
+effect:RESTORE_MANA
+dice:$B
+expr:B:PLAYER_MAX_VOICE:/ 4
+flags:EASY_KNOW
+desc:It grants a bonus of +10 to perception for 20d4 turns, and
+desc: restores a quarter of your voice.
