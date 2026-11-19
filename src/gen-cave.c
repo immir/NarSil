@@ -61,6 +61,7 @@
 #include "game-event.h"
 #include "game-world.h"
 #include "generate.h"
+#include "player-quest.h"
 #include "init.h"
 #include "mon-group.h"
 #include "mon-make.h"
@@ -1180,6 +1181,15 @@ struct chunk *cave_gen(struct player *p)
 
 		/* Find a suitable place */
 		while (cave_find(c, &grid, square_suits_start) && count--) {
+			/* NarSil-Q: he starts nearer the more Silmarils you carry */
+			if (z_info->rule_morgoth_anger) {
+				const int danger = 6 - silmarils_possessed(p);
+				assert(danger >= 1);
+				const int dx = grid.x - p->grid.x, dy = grid.y - p->grid.y;
+				const struct loc nearer = loc(grid.x - 2 * (dx / danger), grid.y - 2 * (dy / danger));
+				if (!square_in_bounds_fully(c, nearer) || !square_suits_start(c, nearer)) continue;
+				grid = nearer;
+			}
 			/* Out of sight of the player */
 			if (!los(c, p->grid, grid)) {
 				struct monster_group_info info = {0, 0};
