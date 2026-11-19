@@ -58,6 +58,15 @@
  * Ability-based attack functions
  * ------------------------------------------------------------------------ */
 /**
+ * The attacks the player makes on their own turn (as opposed to free attacks on the monsters' turns)
+ */
+static bool is_normal_attack(int attack_type)
+{
+	return (attack_type == ATT_MAIN) || (attack_type == ATT_FLANKING) ||
+		(attack_type == ATT_CONTROLLED_RETREAT) || (attack_type == ATT_IMPALE);
+}
+
+/**
  *  Determines whether an attack is a charge attack
  */
 static bool valid_charge(struct player *p, struct loc grid, int attack_type)
@@ -68,8 +77,7 @@ static bool valid_charge(struct player *p, struct loc grid, int attack_type)
 	int delta_x = grid.x - p->grid.x;
 	
 	if (player_active_ability(p, "Charge") && (p->state.speed > 1) &&
-	    ((attack_type == ATT_MAIN) || (attack_type == ATT_FLANKING) ||
-		 (attack_type == ATT_CONTROLLED_RETREAT))) { 
+	    is_normal_attack(attack_type)) { 
 		/* Try all three directions */
 		for (i = -1; i <= 1; i++) {
 			d = cycle[chome[dir_from_delta(delta_y, delta_x)] + i];
@@ -91,13 +99,12 @@ static void possible_follow_through(struct player *p, struct loc grid,
 {
 	int d, i;
 	struct loc new_grid;
-	int delta_y = grid.y - p->grid.y;
-	int delta_x = grid.x - p->grid.x;
+	/* An impale victim two squares away counts as the adjacent square in that direction */
+	int delta_y = MAX(-1, MIN(1, grid.y - p->grid.y));
+	int delta_x = MAX(-1, MIN(1, grid.x - p->grid.x));
 	
 	if (player_active_ability(p, "Follow-Through") && !p->timed[TMD_CONFUSED] &&
-		((attack_type == ATT_MAIN) || (attack_type == ATT_FLANKING) || 
-		 (attack_type == ATT_CONTROLLED_RETREAT) ||
-		 (attack_type == ATT_FOLLOW_THROUGH))) {
+		(is_normal_attack(attack_type) || (attack_type == ATT_FOLLOW_THROUGH))) {
         /* Look through adjacent squares in an anticlockwise direction */
         for (i = 1; i < 8; i++) {
 			struct monster *mon;
@@ -353,6 +360,16 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 		}
     }
 
+	/* An oath of mercy: free attacks are quietly skipped, the player's own are confirmed first */
+	if (mon && player_oath_active(p, OATH_MERCY) &&
+		(rf_has(race->flags, RF_MAN) || rf_has(race->flags, RF_ELF))) {
+		if (!is_normal_attack(attack_type)) {
+			abort_attack = true;
+		} else if (monster_is_visible(mon) && !get_check("Are you sure you wish to break your oath? ")) {
+			abort_attack = true;
+		}
+	}
+
     /* Cancel the attack if needed */
     if (abort_attack) {
         if (!p->attacked) {
@@ -391,14 +408,13 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 		blows++;
 		rapid_attack = true;
 	}
-	if (p->state.mds2 > 0) {
+	if ((p->state.mds2 > 0) && (attack_type != ATT_IMPALE)) {
 		blows++;
 	}
 
 	/* Attack types that take place in the opponents' turns only allow a
 	 * single attack */
-	if ((attack_type != ATT_MAIN) && (attack_type != ATT_FLANKING) &&
-		(attack_type != ATT_CONTROLLED_RETREAT)) {
+	if (!is_normal_attack(attack_type)) {
 		blows = 1;
 		
 		/* Undo strength adjustment to the attack (if any) */
@@ -426,7 +442,7 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 		}
 
 		/* Adjust for off-hand weapon if it is being used */
-		if ((num == blows) && (num != 1) && (p->state.mds2 > 0)) {
+		if ((num == blows) && (num != 1) && (p->state.mds2 > 0) && (attack_type != ATT_IMPALE)) {
 			off_hand_blow = true;
 			rapid_attack = false;
 			
@@ -453,8 +469,7 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 		/* Reward melee attacks on sleeping monsters by characters with the
 		 * asssassination ability (only when a main, flanking, or controlled
 		 * retreat attack, and not charging) */
-		if (((attack_type == ATT_MAIN) || (attack_type == ATT_FLANKING) ||
-			 (attack_type == ATT_CONTROLLED_RETREAT)) && !charge) {
+		if (is_normal_attack(attack_type) && !charge) {
 			stealth_bonus = stealth_melee_bonus(mon);
 		}
 
@@ -506,7 +521,9 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 			dam = damroll(total_dice, mds);
 
 			/* 'Smite': the first main attack with a two-handed weapon rolls the most it can */
-			if (!off_hand_blow && (attack_type == ATT_MAIN) && obj && of_has(obj->flags, OF_TWO_HANDED) &&
+			if (!off_hand_blow && ((attack_type == ATT_MAIN) || (attack_type == ATT_FLANKING) ||
+				(attack_type == ATT_IMPALE) || (attack_type == ATT_FOLLOW_THROUGH) ||
+				(attack_type == ATT_WHIRLWIND)) && obj && of_has(obj->flags, OF_TWO_HANDED) &&
 				(num == 1 || smote) && player_active_ability(p, "Smite")) {
 				dam = total_dice * mds;
 				smote = true;
@@ -528,6 +545,10 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 					 punct);
 			} else if (charge) {
 					msgt(MSG_HIT, "You charge %s%s", m_name, punct);
+			} else if (smote) {
+				msgt(MSG_HIT, "You smite %s%s", m_name, punct);
+			} else if (attack_type == ATT_IMPALE) {
+				msgt(MSG_HIT, "You impale %s%s", m_name, punct);
 			} else {
 				msgt(MSG_HIT, "You hit %s%s", m_name, punct);
 			}
@@ -716,6 +737,14 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 /**
  * Attack the monster at the given location
  */
+static bool can_impale(const struct player *p)
+{
+	const struct object *weapon = equipped_item_by_slot_name((struct player *) p, "weapon");
+	if (!weapon || !player_active_ability((struct player *) p, "Impale")) return false;
+	if (of_has(weapon->flags, OF_AXE)) return false;
+	return (weapon->tval == TV_POLEARM) || ((weapon->tval == TV_SWORD) && of_has(weapon->flags, OF_TWO_HANDED));
+}
+
 void py_attack(struct player *p, struct loc grid, int attack_type)
 {
 	/* An oath of mercy asks before a blow at a Man or an Elf */
@@ -734,13 +763,6 @@ void py_attack(struct player *p, struct loc grid, int attack_type)
 		}
 		return;
 	}
-	if (target && monster_is_visible(target) &&
-		(rf_has(target->race->flags, RF_MAN) || rf_has(target->race->flags, RF_ELF)) &&
-		player_oath_active(p, OATH_MERCY) &&
-		!get_check("Are you sure you wish to break your oath? ")) {
-		return;
-	}
-
 	/* Store the action type */
 	p->previous_action[0] = ACTION_MISC;
 
@@ -748,19 +770,14 @@ void py_attack(struct player *p, struct loc grid, int attack_type)
 		!p->timed[TMD_AFRAID]) {
 		whirlwind(p, grid);
 	} else {
-		py_attack_real(p, grid, attack_type);
-
-		/* 'Impale': a polearm or greatsword also strikes the foe behind the one attacked */
-		if ((attack_type == ATT_MAIN) && player_active_ability(p, "Impale")) {
-			struct object *weapon = equipped_item_by_slot_name(p, "weapon");
-			if (weapon && !of_has(weapon->flags, OF_AXE) &&
-				((weapon->tval == TV_POLEARM) || strstr(weapon->kind->name, "Greatsword"))) {
-				const struct loc behind = loc_sum(grid, loc_diff(grid, p->grid));
-				struct monster *beyond = square_in_bounds(cave, behind) ? square_monster(cave, behind) : NULL;
-				if (beyond && !rf_has(beyond->race->flags, RF_PEACEFUL) && !player->is_dead) {
-					py_attack_real(p, behind, ATT_MAIN + 0);
-				}
-			}
+		/* 'Impale': a polearm or two-handed sword strikes the foe behind the one attacked as well,
+		 * both as impale attacks (no off-hand blow) */
+		const struct loc behind = loc_sum(grid, loc_diff(grid, p->grid));
+		if (can_impale(p) && square_in_bounds(cave, behind) && square_monster(cave, behind)) {
+			py_attack_real(p, grid, ATT_IMPALE);
+			if (!p->is_dead) py_attack_real(p, behind, ATT_IMPALE);
+		} else {
+			py_attack_real(p, grid, attack_type);
 		}
 	}
 
