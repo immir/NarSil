@@ -296,6 +296,7 @@ add_library(OurCoreLib OBJECT
         src/ui-visuals.c
         src/ui-wizard.c
         src/wiz-debug.c
+        src/wiz-seeds.c
         src/wiz-spoil.c
         src/wiz-stats.c
         src/z-bitflag.c

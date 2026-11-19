@@ -13,6 +13,7 @@
 #include "mon-util.h"
 #include "obj-pile.h"
 #include "savefile.h"
+#include "wizard.h"
 #include "z-file.h"
 #include "monster.h"
 #include "obj-util.h"
@@ -38,7 +39,7 @@ int setup_tests(void **state) {
 
 int teardown_tests(void *state) {
 	gen_baseline_free(baseline);
-	wipe_mon_list(cave, player);
+	if (cave) wipe_mon_list(cave, player);
 	cleanup_angband();
 	return 0;
 }
@@ -97,6 +98,7 @@ static uint32_t level_hash(struct chunk *c) {
 
 /* Generate a visit to depth from the baseline, with the game's RNG first set to scramble. */
 static void generate(int depth, int visit, uint32_t scramble) {
+	level_discard(player);
 	gen_baseline_restore(player, baseline);
 	player->depth = depth;
 	player->level_visits[depth] = visit;
@@ -155,6 +157,7 @@ static int test_state_changes_stay_local(void *state) {
 	generate(8, 0, 1);
 	const uint32_t terrain = terrain_hash(cave), monsters = monster_hash(cave);
 	const int n = object_sigs(cave, first, 512);
+	level_discard(player);
 	gen_baseline_restore(player, baseline);
 	player->depth = 8;
 	player->level_visits[8] = 0;
@@ -277,6 +280,49 @@ static int test_seed_parse(void *state) {
 	ok;
 }
 
+/* Read a whole text file (for comparing two catalogs). */
+static char *slurp(const char *path) {
+	ang_file *f = file_open(path, MODE_READ, FTYPE_TEXT);
+	char line[2048];
+	size_t size = 1;
+	char *text = mem_zalloc(size);
+
+	if (!f) return text;
+	while (file_getl(f, line, sizeof(line))) {
+		const size_t add = strlen(line) + 1;
+		text = mem_realloc(text, size + add);
+		memcpy(text + size - 1, line, strlen(line));
+		text[size - 1 + strlen(line)] = '\n';
+		text[size + add - 1] = '\0';
+		size += add;
+	}
+	file_close(f);
+	return text;
+}
+
+/* The seed catalog is the same every time, names what the levels hold, and changes with the seed. */
+static int test_catalog_is_reproducible(void *state) {
+	spoil_seeds("SeedCat1", 5150, 8, 2);
+	Rand_state_seed(1);
+	spoil_seeds("SeedCat2", 5150, 8, 2);
+	spoil_seeds("SeedCat3", 5151, 8, 2);
+	char *one = slurp("SeedCat1"), *two = slurp("SeedCat2"), *three = slurp("SeedCat3");
+
+	require(strlen(one) > 500);
+	require(strstr(one, "seed catalog") != NULL);
+	require(strstr(one, "== 400 ft (level 8), visit 2 ==") != NULL);
+	require(strstr(one, "(nothing)") == NULL);
+	require(streq(one, two));
+	require(!streq(one, three));
+	mem_free(one);
+	mem_free(two);
+	mem_free(three);
+	file_delete("SeedCat1");
+	file_delete("SeedCat2");
+	file_delete("SeedCat3");
+	ok;
+}
+
 const char *suite_name = "game/seed";
 struct test tests[] = {
 	{ "the same seed, depth and visit give the same level", test_same_seed_same_level },
@@ -288,5 +334,6 @@ struct test tests[] = {
 	{ "new monsters get drop seeds, fixed by the level seed", test_new_monsters_get_seeds },
 	{ "the seed, visits and drop seeds survive a save and load", test_save_load_keeps_seeds },
 	{ "reading a typed seed", test_seed_parse },
+	{ "the seed catalog is reproducible", test_catalog_is_reproducible },
 	{ NULL, NULL }
 };

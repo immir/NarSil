@@ -763,6 +763,19 @@ static struct chunk *cave_generate(struct player *p)
 }
 
 /**
+ * Throw the current level away without the penalties of leaving it in play (artefacts left behind are not
+ * lost), so the next one can be generated as if from a saved baseline (the seed catalog, tests).
+ */
+void level_discard(struct player *p)
+{
+	if (cave) {
+		cave_clear(cave, p);
+		cave = NULL;
+	}
+	character_dungeon = false;
+}
+
+/**
  * Prepare the level the player is about to enter
  *
  * \param p is the current player struct, in practice the global player

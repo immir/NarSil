@@ -43,6 +43,7 @@ NarSil is a very complex game, and it may be difficult to grasp everything at fi
    :caption: Technical Details
 
    playing
+   seeds
    command
    option
    customize
