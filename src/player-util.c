@@ -44,6 +44,7 @@
 #include "player-history.h"
 #include "player-quest.h"
 #include "player-timed.h"
+#include "mon-calcs.h"
 #include "player-util.h"
 #include "project.h"
 #include "score.h"
@@ -275,32 +276,112 @@ bool player_cheat_death(struct player *p)
 }
 
 /**
- * The song of Delvings slowly reveals terrain next to what the player already knows.
+ * Is the grid known to the player (remembered or in view)?
  */
-void player_delve(struct player *p)
+static bool known_to_delvings(const struct loc grid)
 {
-	struct song *delvings = lookup_song("Delvings");
-	if (!delvings || !player_is_singing(p, delvings) || !one_in_(3)) return;
+	return square_in_bounds(cave, grid) && (square_isknown(cave, grid) || square_isseen(cave, grid));
+}
 
-	const int reach = 4 + song_bonus(p, p->state.skill_use[SKILL_SONG], delvings);
-	struct loc picks[256];
-	int n = 0;
-	for (int y = p->grid.y - reach; y <= p->grid.y + reach; y++) {
-		for (int x = p->grid.x - reach; x <= p->grid.x + reach; x++) {
-			struct loc grid = loc(x, y);
-			if (!square_in_bounds_fully(cave, grid) || square_isknown(cave, grid)) continue;
-			for (int d = 0; d < 8 && n < (int) N_ELEMENTS(picks); d++) {
-				if (square_isknown(cave, loc_sum(grid, ddgrid_ddd[d]))) {
-					picks[n++] = grid;
-					break;
+/**
+ * The song of Delvings reveals terrain that borders what the player already knows: each grid within
+ * (score + 10) of the player is mapped when any of its neighbours is known and a d6 roll beats the song's
+ * score less the distance.  Hidden doors the song learns of are found, and stairs, forges and traps within
+ * five grids along a row or column of a delved grid are shown.
+ */
+void player_delve(struct player *p, int score)
+{
+	const int range = score + 10;
+	const int min_y = MAX(1, p->grid.y - range), max_y = MIN(cave->height - 1, p->grid.y + range + 1);
+	const int min_x = MAX(1, p->grid.x - range), max_x = MIN(cave->width - 1, p->grid.x + range + 1);
+	const int rows = max_y - min_y, cols = max_x - min_x;
+	if (rows <= 0 || cols <= 0) return;
+
+	bool *delved = mem_zalloc((size_t) rows * cols * sizeof(bool));
+	for (int y = min_y; y < max_y; y++) {
+		for (int x = min_x; x < max_x; x++) {
+			const int adjusted = score - distance(p->grid, loc(x, y));
+			for (int yy = y - 1; yy <= y + 1 && !delved[(y - min_y) * cols + (x - min_x)]; yy++) {
+				for (int xx = x - 1; xx <= x + 1; xx++) {
+					if (known_to_delvings(loc(xx, yy)) && randint1(6) < adjusted) {
+						delved[(y - min_y) * cols + (x - min_x)] = true;
+						break;
+					}
 				}
 			}
 		}
 	}
-	if (n > 0) {
-		const struct loc grid = picks[randint0(n)];
-		square_memorize(cave, grid);
-		square_light_spot(cave, grid);
+
+	for (int y = min_y; y < max_y; y++) {
+		for (int x = min_x; x < max_x; x++) {
+			const struct loc grid = loc(x, y);
+			if (!delved[(y - min_y) * cols + (x - min_x)]) continue;
+			if (square_issecretdoor(cave, grid) && known_to_delvings(grid)) {
+				square_set_feat(cave, grid, FEAT_CLOSED);
+			}
+			if (!square_isstairs(cave, grid) && !square_isforge(cave, grid) && !square_isdisarmabletrap(cave, grid)) {
+				square_memorize(cave, grid);
+				square_light_spot(cave, grid);
+			}
+		}
+	}
+
+	/* Stairs, forges and traps stand out: seen from five grids along a row or column of a delved grid */
+	for (int y = min_y; y < max_y; y++) {
+		for (int x = min_x; x < max_x; x++) {
+			const struct loc grid = loc(x, y);
+			if (!square_isstairs(cave, grid) && !square_isforge(cave, grid) && !square_isdisarmabletrap(cave, grid)) continue;
+			bool spotted = false;
+			for (int j = MAX(min_y, y - 5); j < MIN(max_y, y + 5) && !spotted; j++)
+				spotted = delved[(j - min_y) * cols + (x - min_x)];
+			for (int i = MAX(min_x, x - 5); i < MIN(max_x, x + 5) && !spotted; i++)
+				spotted = delved[(y - min_y) * cols + (i - min_x)];
+			if (!spotted) continue;
+			if (square_isdisarmabletrap(cave, grid)) square_reveal_trap(cave, grid, false);
+			square_memorize(cave, grid);
+			square_light_spot(cave, grid);
+		}
+	}
+
+	mem_free(delved);
+	p->upkeep->redraw |= PR_MAP;
+}
+
+/**
+ * The song of Challenge goads every monster that fails a will check, which wakes it and boosts its morale.
+ */
+void player_sing_challenge(struct player *p, int score)
+{
+	for (int i = cave_monster_max(cave) - 1; i >= 1; i--) {
+		struct monster *mon = cave_monster(cave, i);
+		if (!mon || !mon->race) continue;
+
+		const int will = monster_skill(mon, SKILL_WILL);
+		const int resistance = (will * will) / 10;
+		const int result = skill_check(source_player(), score,
+			resistance + flow_dist(cave->player_noise, mon->grid), source_monster(mon->midx));
+		if (result > 0) {
+			set_alertness(mon, mon->alertness + result);
+			mon->tmp_morale = MAX(mon->tmp_morale, 30);
+			calc_morale(mon);
+			calc_stance(mon);
+		}
+	}
+}
+
+/**
+ * The song of Staunching stops all bleeding and heals score/12 hit points a turn, plus the odd extra one.
+ */
+void player_sing_staunching(struct player *p, int score)
+{
+	const int cycle = p->song_duration % 12, fraction = score % 12;
+	int heal = score / 12;
+
+	player_clear_timed(p, TMD_CUT, true, false);
+	if ((cycle * fraction) % 12 < fraction) heal++;
+	if (heal > 0 && p->chp < p->mhp) {
+		p->chp = MIN(p->chp + heal, p->mhp);
+		p->upkeep->redraw |= PR_HP;
 	}
 }
 
@@ -450,13 +531,6 @@ void player_regen_hp(struct player *p)
 	int regen_multiplier = p->state.flags[OF_REGEN] + 1;
 	int regen_period = z_info->player_regen_period;
 	struct song *este = lookup_song("Este");
-	struct song *staunching = lookup_song("Staunching");
-
-	/* The song of Staunching stops bleeding and heals like the song of Este */
-	if (staunching && player_is_singing(p, staunching)) {
-		este = staunching;
-		player_clear_timed(p, TMD_CUT, true, false);
-	}
 
 	/* Various things interfere with physical healing */
 	if (p->timed[TMD_FOOD] < PY_FOOD_STARVE) return;

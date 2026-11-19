@@ -404,6 +404,14 @@ void player_sing(struct player *p)
 			cost++;
 		}
 
+		/* NarSil-Q's songs act in code, as Sil-Q's do */
+		{
+			const int score = song_bonus(p, p->state.skill_use[SKILL_SONG], song);
+			if (streq(song->name, "Challenge")) player_sing_challenge(p, score);
+			else if (streq(song->name, "Delvings")) player_delve(p, score);
+			else if (streq(song->name, "Staunching")) player_sing_staunching(p, score);
+		}
+
 		/* Song effects */
 		if (song->effect) {
 			bool dummy = false;

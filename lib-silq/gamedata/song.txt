@@ -167,8 +167,8 @@ name:Delvings
 verb:begin a
 desc:of deep places and old stone
 bonus-mult:1
-bonus-div:2
-bonus-min:1
+bonus-div:1
+bonus-min:0
 noise:4
 extend:1
 
@@ -176,8 +176,8 @@ name:Staunching
 verb:begin a
 desc:to close wounds and ease pain
 bonus-mult:1
-bonus-div:4
-bonus-min:2
+bonus-div:1
+bonus-min:0
 noise:4
 extend:0
 

@@ -504,9 +504,7 @@ struct file_parser player_timed_parser = {
 int player_timed_decrement_amount(struct player *p, int idx)
 {
 	struct song *este = lookup_song("Este");
-	struct song *staunching = lookup_song("Staunching");
 	struct song *freedom = lookup_song("Freedom");
-	if (staunching && player_is_singing(p, staunching)) este = staunching;
 	int bonus_este = song_bonus(p, p->state.skill_use[SKILL_SONG], este);
 	int bonus_freedom = song_bonus(p, p->state.skill_use[SKILL_SONG], freedom);
 	int amount = 1;
