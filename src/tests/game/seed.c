@@ -259,6 +259,24 @@ static int test_save_load_keeps_seeds(void *state) {
 	ok;
 }
 
+/* What a player may type as a seed. */
+static int test_seed_parse(void *state) {
+	uint32_t seed = 99;
+
+	require(seed_parse("12345", &seed)); eq(seed, 12345);
+	require(seed_parse("  42  ", &seed)); eq(seed, 42);
+	require(seed_parse("4294967295", &seed)); eq(seed, 4294967295U);
+	require(seed_parse("", &seed)); eq(seed, 0);
+	require(seed_parse("   ", &seed)); eq(seed, 0);
+	require(!seed_parse("0", &seed));
+	require(!seed_parse("4294967296", &seed));
+	require(!seed_parse("99999999999999999999", &seed));
+	require(!seed_parse("12ab", &seed));
+	require(!seed_parse("-5", &seed));
+	require(!seed_parse("1 2", &seed));
+	ok;
+}
+
 const char *suite_name = "game/seed";
 struct test tests[] = {
 	{ "the same seed, depth and visit give the same level", test_same_seed_same_level },
@@ -269,5 +287,6 @@ struct test tests[] = {
 	{ "a monster drop follows its seed", test_drop_follows_seed },
 	{ "new monsters get drop seeds, fixed by the level seed", test_new_monsters_get_seeds },
 	{ "the seed, visits and drop seeds survive a save and load", test_save_load_keeps_seeds },
+	{ "reading a typed seed", test_seed_parse },
 	{ NULL, NULL }
 };

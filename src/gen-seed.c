@@ -55,6 +55,27 @@ void seed_game_choose(void)
 	seed_game_requested = 0;
 }
 
+/**
+ * Read a seed typed by a player: decimal digits, 1 to 4294967295.  Blank is allowed and means
+ * "choose one" (*seed is 0); anything else, including 0 and an overflow, is refused.
+ */
+bool seed_parse(const char *text, uint32_t *seed)
+{
+	uint64_t value = 0;
+
+	while (*text == ' ') text++;
+	*seed = 0;
+	if (!*text) return true;
+	for (; *text >= '0' && *text <= '9'; text++) {
+		value = value * 10 + (uint64_t)(*text - '0');
+		if (value > UINT32_MAX) return false;
+	}
+	while (*text == ' ') text++;
+	if (*text || !value) return false;
+	*seed = (uint32_t)value;
+	return true;
+}
+
 uint32_t level_seed(uint32_t game_seed, int depth, int visit)
 {
 	assert(depth >= 0 && depth < SEED_DEPTHS && visit >= 0);

@@ -37,6 +37,7 @@ extern uint32_t seed_game;
 extern uint32_t seed_game_requested;
 
 void seed_game_choose(void);
+bool seed_parse(const char *text, uint32_t *seed);
 uint32_t level_seed(uint32_t game_seed, int depth, int visit);
 int level_visit(const struct player *p, int depth);
 void level_visit_done(struct player *p, int depth);

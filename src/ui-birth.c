@@ -16,6 +16,7 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 
+#include "gen-seed.h"
 #include "angband.h"
 #include "cmds.h"
 #include "cmd-core.h"
@@ -963,6 +964,23 @@ static enum birth_stage stat_points_command(void)
  * Asking for the player's chosen name.
  * ------------------------------------------------------------------------ */
 //phantom changes for server
+/**
+ * Ask for the dungeon's seed: the same seed gives the same levels and items, so games can be
+ * shared.  Skipped if one was given on the command line; Enter or Escape picks a random one.
+ */
+static void get_seed_command(void)
+{
+	char text[16] = "";
+
+	if (seed_game_requested) return;
+	while (get_string("Seed for the dungeon (Enter for a random one): ", text, sizeof(text))
+			&& !seed_parse(text, &seed_game_requested)) {
+		msg("A seed is a number from 1 to 4294967295.");
+		seed_game_requested = 0;
+		text[0] = '\0';
+	}
+}
+
 static enum birth_stage get_name_command(void)
 {
 	enum birth_stage next;
@@ -980,6 +998,7 @@ static enum birth_stage get_name_command(void)
 	 * player.
 	 */
 	if (arg_force_name) {
+		get_seed_command();
 		next = BIRTH_HISTORY_CHOICE;
 	} else if (get_character_name(name, sizeof(name))
 			&& (savefile[0]
@@ -987,6 +1006,7 @@ static enum birth_stage get_name_command(void)
 			|| get_check("A savefile for that name exists.  Overwrite it? "))) {
 		cmdq_push(CMD_NAME_CHOICE);
 		cmd_set_arg_string(cmdq_peek(), "name", name);
+		get_seed_command();
 		next = BIRTH_HISTORY_CHOICE;
 	} else {
 		next = BIRTH_BACK;
