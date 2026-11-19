@@ -8,7 +8,16 @@ converted from Sil-Q 1.5.1's `lib/edit/*.txt` with credit and thanks.
 
 This directory is an **overlay**: it holds only the files that differ from `../lib`.
 The game's lib dir for NarSil-Q is `../lib` with these files copied over it
-(`tools/merge-lib.sh`, also used by the Android and iOS builds).
+(`tools/merge-lib.sh`).
+
+## Playing it
+
+Build NarSil as usual (for example `./configure --with-no-install && make`), then run
+`tools/narsil-q.sh`, giving it the usual front-end arguments (`tools/narsil-q.sh -mgcu`). It merges the
+data into `build-silq/lib` and keeps NarSil-Q's saves and scores in `build-silq/user`, apart from NarSil's.
+The savefiles carry their own tag (USLQ), so neither game will load the other's characters.
+
+Sil-Q's Fletchery command is on `-`, as in Sil-Q.
 
 What differs:
 
