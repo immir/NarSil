@@ -664,7 +664,7 @@ cost:100000
 attack:-5:3d7
 defence:1:0d0
 flags:LIGHT
-values:CON[1]
+values:CON[1] | RES_COLD[-1]
 brand:FIRE_1
 desc:A cruel and heavy blade, wreathed in undying flames. It was originally
 desc: forged for the great Valarauko, Gothmog, to break any dissension amongst
@@ -777,7 +777,7 @@ cost:100000
 attack:1:1d15
 defence:1:0d0
 flags:FREE_ACT
-values:GRA[-1]
+values:GRA[-1] | RES_POIS[-1]
 brand:POIS_1
 desc:A mighty black spear, once wielded by the Lord of Darkness
 desc: himself as he came to Valinor in wrath. Its envenomed bite pierced
@@ -1015,7 +1015,7 @@ weight:100
 cost:10000
 attack:0:0d0
 defence:-2:1d4
-values:CON[2] | GRA[-2]
+values:CON[2] | GRA[-2] | RES_FIRE[-1]
 desc:A great black helm, wrought in years
 desc: forgotten in Morgoth's first stronghold.
 desc: It offers power, but bends the will of the one who
