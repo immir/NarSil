@@ -122,6 +122,9 @@ static void do_cmd_go_up_aux(void)
 		return;
 	}
 	
+	/* Going up without a Silmaril breaks an oath of iron */
+	if ((silmarils_possessed(player) == 0) && !player_oath_break(player, OATH_IRON, true)) return;
+
 	/* Calculate the depth to aim for */
 	new_depth = dungeon_get_next_level(player, player->depth, change);
 	

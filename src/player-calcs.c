@@ -964,6 +964,11 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		state->flags[OF_PROT_HALLU] += 1;
 	}
 
+	/* The oath being kept brings its reward */
+	if (player_oath_active(p, OATH_IRON)) state->stat_misc_mod[STAT_CON] += 2;
+	if (player_oath_active(p, OATH_SILENCE)) state->stat_misc_mod[STAT_STR] += 1;
+	if (player_oath_active(p, OATH_MERCY)) state->stat_misc_mod[STAT_GRA] += 1;
+
 	/* 'Indomitable' protects from fear as well, and slows hunger to a third */
 	if (player_active_ability(p, "Indomitable")) {
 		state->flags[OF_PROT_FEAR] += 1;

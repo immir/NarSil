@@ -1017,6 +1017,11 @@ bool mon_take_hit(struct monster *mon, struct player *p, int dam,
 	/* No damage, we're done */
 	if (dam == 0) return false;
 
+	/* Hurting a Man or an Elf in plain view breaks an oath of mercy */
+	if (monster_is_visible(mon) && (rf_has(mon->race->flags, RF_MAN) || rf_has(mon->race->flags, RF_ELF))) {
+		player_oath_break(p, OATH_MERCY, false);
+	}
+
 	/* Hurt it */
 	mon->hp -= dam;
 	if (mon->hp <= 0) {

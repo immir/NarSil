@@ -551,6 +551,8 @@ struct player {
 	uint16_t noscore;			/* Cheating flags */
 
 	bool is_dead;				/* Player is dead */
+	uint8_t oath_type;			/* NarSil-Q: the oath sworn (OATH_*), 0 for none */
+	uint8_t oaths_broken;		/* NarSil-Q: flags of oaths that can no longer be kept */
 	bool deadly_hail;			/* Deadly Hail: the next arrow does double damage (not saved) */
 	bool vengeance;				/* Vengeance: the next successful melee blow gets a die (not saved) */
 
