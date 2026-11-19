@@ -271,6 +271,11 @@ static int32_t effect_value_base_player_hp(void)
 	return player->chp;
 }
 
+static int32_t effect_value_base_player_max_voice(void)
+{
+	return player->msp;
+}
+
 static int32_t effect_value_base_player_max_hp(void)
 {
 	return player->mhp;
@@ -307,6 +312,7 @@ expression_base_value_f effect_value_base_by_name(const char *name)
 		{ "MAX_SIGHT", effect_value_base_max_sight },
 		{ "PLAYER_HP", effect_value_base_player_hp },
 		{ "PLAYER_MAX_HP", effect_value_base_player_max_hp },
+		{ "PLAYER_MAX_VOICE", effect_value_base_player_max_voice },
 		{ "PLAYER_WILL", effect_value_base_player_will },
 		{ "PLAYER_CUT", effect_value_base_player_cut },
 		{ "PLAYER_POIS", effect_value_base_player_pois },

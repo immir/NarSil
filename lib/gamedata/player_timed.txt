@@ -268,3 +268,8 @@ on-increase:You feel more resistant to poison!
 msgt:RES_POIS
 resist:POIS
 
+name:KEEN
+desc:keen senses
+grade:G:10000:Keen:Your senses sharpen.
+on-end:Your senses dull.
+on-increase:Your senses sharpen further.
