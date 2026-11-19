@@ -48,7 +48,13 @@ xtool dev build         # ios/xtool/NarSil.app
 xtool dev               # build, sign, install and launch on the connected iPhone (run in a normal terminal)
 ```
 Free-account installs expire after 7 days; run `xtool dev` again.  Check after a build that the binary does not link
-`SwiftUICore` (it does not exist before iOS 18 and the app would die at launch):
+`SwiftUICore` (it does not exist before iOS 18 and the app would die at launch).
+
+**Re-run `./xtool-prepare.sh` before every build.** `ios/lib` and `ios/lib-silq` are copies, not links. If the engine
+has gained a data entry since the last staging, the app dies at start. `./build-ipa.sh` always stages, builds the
+unsigned release `.ipa` for Sideloadly, and checks both the bundled data and the SwiftUICore link.
+
+The SwiftUICore check:
 `llvm-otool -L xtool/NarSil.app/NarSil | grep SwiftUICore` must print nothing.  `Package.swift` links SwiftUI
 explicitly for this; if it ever comes back, that is the first place to look.  Crash reports: `idevicecrashreport -e -k dir`.
 
