@@ -24,6 +24,9 @@
 #include "cave.h"
 #include "combat.h"
 #include "effects.h"
+#include "game-world.h"
+#include "obj-desc.h"
+#include "obj-gear.h"
 #include "init.h"
 #include "mon-attack.h"
 #include "mon-blows.h"
@@ -432,7 +435,6 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 		if ((crit_bonus_dice > 0) && player_active_ability(p, "Outwit") &&
 			(skill_check(source_player(), p->state.skill_use[SKILL_PERCEPTION],
 						 monster_skill(mon, SKILL_PERCEPTION), source_monster(mon->midx)) > 0)) {
-			msg("You outwit the blow and avoid the worst of it.");
 			crit_bonus_dice = 0;
 		}
 
@@ -450,6 +452,28 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 
 		/* Now calculate net_dam, taking protection into account */
 		net_dam = MAX((dam - prt), 0);
+
+		/* Traitor weapons and shields may expose their user to a big (non-lethal) hit */
+		{
+			struct object *wield = equipped_item_by_slot_name(p, "weapon");
+			struct object *arm = equipped_item_by_slot_name(p, "arm");
+			const bool betray_wield = wield && of_has(wield->flags, OF_TRAITOR);
+			const bool betray_arm = arm && of_has(arm->flags, OF_TRAITOR);
+			if ((betray_wield || betray_arm) && (health_level(p->chp, p->mhp) > HEALTH_ALMOST_DEAD) && one_in_(20)) {
+				const int max_dam = (dd + crit_bonus_dice + elem_bonus_dice) * ds;
+				const int min_prt = do_prt ? protection_roll(p, PROJ_HURT, true, MINIMISE) : 0;
+				if (max_dam - min_prt > p->chp - 3) {
+					struct object *traitor = betray_wield ? wield : arm;
+					char name[120];
+					object_desc(name, sizeof(name), traitor, ODESC_BASE, p);
+					prt = min_prt;
+					net_dam = p->chp - randint1(4);
+					dam = net_dam + prt;
+					msg("Your %s feels suddenly heavy! You fail to %s the blow!", name, betray_wield ? "parry" : "block");
+					equip_learn_flag(p, OF_TRAITOR);
+				}
+			}
+		}
 
 		/* Message */
 		if (act) {
@@ -542,8 +566,12 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 
 		/* 'Vengeance': being hurt in melee adds a die to the next successful strike */
 		if ((net_dam > 0) && player_active_ability(p, "Vengeance")) {
+			if (!p->vengeance) msg("You feel vengeful!");
 			p->vengeance = true;
 		}
+
+		/* A traitor helm betrays the badly wounded */
+		if (net_dam > 0) player_betrayal_helm(p);
 
 		/* Deal with Cruel Blow */
 		if (rf_has(mon->race->flags, RF_CRUEL_BLOW) && (crit_bonus_dice >= 1) &&
@@ -556,13 +584,14 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 			/* Only happens on the main attack (so bites don't knock back) */
 			if (blow == 0) {
 				/* Determine if the player is knocked back */
-				if (p->state.flags[OF_STAND_FAST]) {
-					msg("You stand your ground.");
-					equip_learn_flag(p, OF_STAND_FAST);
-				} else if (skill_check(source_monster(mon->midx),
+				if (skill_check(source_monster(mon->midx),
 								monster_stat(mon, STAT_STR) * 2,
 								p->state.stat_use[STAT_CON] * 2,
 								source_player()) > 0) {
+					if (p->state.flags[OF_STAND_FAST]) {
+						msg("%s attempts to knock you back, but you stand fast.", m_name);
+						equip_learn_flag(p, OF_STAND_FAST);
+					} else {
 					/* Do the knocking back */
 					knock_back(mon->grid, p->grid);
 
@@ -570,6 +599,7 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 					if (monster_is_visible(mon)) {
 						rf_on(lore->flags, RF_KNOCK_BACK);
                     }
+					}
                 }
             }
 		}

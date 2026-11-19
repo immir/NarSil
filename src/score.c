@@ -64,7 +64,8 @@ static int score_points(const struct high_score *score)
 
 	/* Points from depth (01 0 00000 to 40 0 00000) */
 	if (silmarils == 0) {
-		points += depth_factor * atoi(score->cur_dun);
+		/* NarSil-Q, like Sil-Q, ranks by the deepest level reached */
+		points += depth_factor * atoi(z_info->game_silq ? score->max_dun : score->cur_dun);
 	} else {
 		points += depth_factor * (40 - atoi(score->cur_dun));
 	}

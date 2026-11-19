@@ -191,8 +191,14 @@ def patch_objects(silq_path, narsil_path, extra_path):
             body[at:at] = [f"{k}:{v}" for k, v in nums]
         elif name is not None:
             body = [l for l in body if not l.startswith("alloc:")]
-        if "type:horn" in body:     # Sil-Q's horns sound in a 90 degree cone, not a line
-            body = [re.sub(r"^effect:BEAM:(\w+)$", r"effect:ARC:\1:0:90", l) for l in body]
+        if "type:horn" in body:     # Sil-Q's horns sound in a 90 degree cone reaching three grids, not a line
+            body = [re.sub(r"^effect:BEAM:(\w+)$", r"effect:ARC:\1:3:90", l) for l in body]
+            text = "\n".join(body)
+            text = text.replace("dice:4d4m$M", "dice:10d4m$M")      # Thunder: 10d4 in Sil-Q
+            text = text.replace("effect:TERRAIN_BEAM:KILL_WALL:0:1\ndice:m$M", "effect:TERRAIN_BEAM:KILL_WALL:3:1\ndice:8d4m$M")
+            text = text.replace("effect:ARC:FORCE:3:90\ndice:m$M\nexpr:M:PLAYER_WILL: + 10",
+                                "effect:HORN_FORCE\ndice:$B\nexpr:B:PLAYER_WILL: + 0\neffect:ARC:NOTHING:3:90\ndice:m$M\nexpr:M:PLAYER_WILL: + 0")
+            body = text.split("\n")
         out.extend(body + tail)
 
     for line in open(narsil_path).read().split("\n"):

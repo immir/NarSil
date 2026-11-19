@@ -1743,7 +1743,7 @@ attack:0:0d0
 defence:0:0d0
 alloc:3:2
 alloc:6:2
-effect:ARC:FEAR:0:90
+effect:ARC:FEAR:3:90
 dice:m$M
 expr:M:PLAYER_WILL: + 0
 effect:NOISE:PLAYER
@@ -1761,8 +1761,8 @@ cost:100
 attack:0:0d0
 defence:0:0d0
 alloc:10:6
-effect:ARC:SOUND:0:90
-dice:4d4m$M
+effect:ARC:SOUND:3:90
+dice:10d4m$M
 expr:M:PLAYER_WILL: + 0
 effect:NOISE:PLAYER
 dice:-20
@@ -1779,9 +1779,12 @@ cost:100
 attack:0:0d0
 defence:0:0d0
 alloc:12:6
-effect:ARC:FORCE:0:90
+effect:HORN_FORCE
+dice:$B
+expr:B:PLAYER_WILL: + 0
+effect:ARC:NOTHING:3:90
 dice:m$M
-expr:M:PLAYER_WILL: + 10
+expr:M:PLAYER_WILL: + 0
 effect:NOISE:PLAYER
 dice:-20
 desc:Its sound blows your enemies back. 
@@ -1797,8 +1800,8 @@ cost:100
 attack:0:0d0
 defence:0:0d0
 alloc:13:6
-effect:TERRAIN_BEAM:KILL_WALL:0:1
-dice:m$M
+effect:TERRAIN_BEAM:KILL_WALL:3:1
+dice:8d4m$M
 expr:M:PLAYER_WILL: + 0
 effect:NOISE:PLAYER
 dice:-30
@@ -1817,7 +1820,7 @@ cost:0
 attack:0:0d0
 defence:0:0d0
 alloc:7:12
-effect:ARC:NOTHING:0:90
+effect:ARC:NOTHING:3:90
 dice:m$M
 expr:M:PLAYER_WILL: + 0
 effect:NOISE:PLAYER

@@ -24,6 +24,8 @@
 #include "mon-calcs.h"
 #include "mon-desc.h"
 #include "mon-lore.h"
+#include "mon-timed.h"
+#include "player-quest.h"
 #include "mon-make.h"
 #include "mon-move.h"
 #include "mon-spell.h"
@@ -120,7 +122,7 @@ bool effect_handler_HEAL_HP(effect_handler_context_t *context)
 	if (num < minh) num = minh;
 
 	/* Each piece of medic equipment adds a third */
-	if (num > 0) num += (num / 3) * player->state.flags[OF_MEDIC];
+	if (num > 0) num += (minh / 3) * player->state.flags[OF_MEDIC];
 	if (num <= 0) {
 		/*
 		 * There's no healing: either because not damaged enough for
@@ -853,6 +855,56 @@ bool effect_handler_BREATH(effect_handler_context_t *context)
  * Send a cone of the given type from the player towards the target or in a direction (NarSil-Q's horns).
  * context->other is the width in degrees.
  */
+/**
+ * The horn of Force (Sil-Q): in a cone three grids long, a foe that fails to hold firm (Will + 10 against twice
+ * its Constitution) is thrown back once for each grid nearer than three and stunned; a foe that cannot be
+ * thrown is staggered for longer.  Either way it loses its turn and wakes.
+ */
+bool effect_handler_HORN_FORCE(effect_handler_context_t *context)
+{
+	struct loc aim = loc(-1, -1);
+	int flg = 0;
+	get_target(context->origin, context->dir, &aim, &flg);
+	const int will = context->value.base;
+	const int direction = chome[dir_from_delta(aim.y - player->grid.y, aim.x - player->grid.x)];
+
+	for (int i = -1; i < 2; i++) {
+		for (int j = 3; j > 0; j--) {
+			const int toward = cycle[direction + i];
+			const struct loc grid = loc(player->grid.x + j * ddx[toward], player->grid.y + j * ddy[toward]);
+			if (!square_in_bounds(cave, grid)) continue;
+			struct monster *mon = square_monster(cave, grid);
+			if (!mon) continue;
+
+			char name[80];
+			monster_desc(name, sizeof(name), mon, MDESC_STANDARD);
+
+			if (skill_check(source_player(), will + 10, monster_stat(mon, STAT_CON) * 2,
+							source_monster(mon->midx)) > 0) {
+				bool knocked = false;
+				for (int k = 3; k > j; k--) {
+					if (knock_back(player->grid, mon->grid)) knocked = true;
+				}
+				if (monster_is_visible(mon)) {
+					msg(knocked ? "%s is blown backwards by the force." : "%s is staggered by the force.", name);
+					context->ident = true;
+				}
+				mon->energy = 0;
+				mon_inc_timed(mon, MON_TMD_STUN, (knocked ? will : will * 2) / j, MON_TMD_FLG_NOMESSAGE);
+				set_alertness(mon, MAX(mon->alertness, rand_range(ALERTNESS_ALERT, ALERTNESS_QUITE_ALERT)));
+			} else if (monster_is_visible(mon)) {
+				msg("%s holds firm against the force of the blast.", name);
+				context->ident = true;
+			}
+
+			if (mon->race == lookup_monster("Morgoth, Lord of Darkness")) {
+				drop_iron_crown(mon, "Your blast unseats the crown from his head and it falls to the floor.");
+			}
+		}
+	}
+	return true;
+}
+
 bool effect_handler_ARC(effect_handler_context_t *context)
 {
 	struct loc grid = loc(-1, -1);
@@ -919,6 +971,17 @@ bool effect_handler_TERRAIN_BEAM(effect_handler_context_t *context)
 			player_blast_floor(player);
 		}
 		context->ident = true;
+	} else if (context->radius > 0) {
+		/* NarSil-Q: a cone of the given length, as Sil-Q's horn of Blasting */
+		struct loc grid = loc(-1, -1);
+		int flg = PROJECT_ARC | PROJECT_KILL | PROJECT_GRID | PROJECT_ITEM | PROJECT_THRU | PROJECT_RANGE_DAM;
+
+		get_target(context->origin, context->dir, &grid, &flg);
+		if (project(context->origin, context->radius, grid, context->value.dice, context->value.sides,
+					context->value.m_bonus, context->subtype, flg, 90, 0, context->obj)
+			&& !player->timed[TMD_BLIND]) {
+			context->ident = true;
+		}
 	} else {
 		int flg = PROJECT_BEAM | PROJECT_GRID | PROJECT_ITEM
 			| PROJECT_WALL;

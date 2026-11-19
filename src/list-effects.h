@@ -24,6 +24,7 @@ EFFECT(SPOT,						false,	"dam",		4,		EFINFO_SPOT,	"creates a ball of %s with rad
 EFFECT(SPHERE,						false,	"dam",		4,		EFINFO_SPOT,	"creates a ball of %s with radius %d, centred on the player, with full intensity to radius %d, dealing %s damage at the centre",	"project %s")
 EFFECT(EXPLOSION,					false,	"dam",		1,		EFINFO_PROJ,	"produces a blast of %s",	"blast %s")
 EFFECT(BREATH,						true,	NULL,		3,		EFINFO_BREATH,	"breathes a cone of %s with width %d degrees, dealing %s damage at the source",	"breathe a cone of %s")
+EFFECT(HORN_FORCE,						true,	NULL,		0,		EFINFO_NONE,	"blows nearby enemies back and staggers them",	"blow your enemies back")
 EFFECT(ARC,							true,	NULL,		3,		EFINFO_BREATH,	"sounds a cone of %s with width %d degrees, dealing %s damage at the source",	"sound a cone of %s")
 EFFECT(BOLT,						true,	"dam",		2,		EFINFO_BOLT,	"casts a bolt of %s dealing %s damage",	"cast a bolt of %s")
 EFFECT(BEAM,						true,	"dam",		2,		EFINFO_BOLT,	"casts a beam of %s dealing %s damage",	"cast a beam of %s")

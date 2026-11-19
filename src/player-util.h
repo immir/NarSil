@@ -78,6 +78,7 @@ bool player_cheat_death(struct player *p);
 void player_betrayal(struct player *p);
 void player_thrall_quest(struct player *p, struct monster *mon);
 void player_thrall_arrival(struct player *p);
+void player_betrayal_helm(struct player *p);
 void player_delve(struct player *p, int score);
 void player_sing_challenge(struct player *p, int score);
 void player_sing_staunching(struct player *p, int score);

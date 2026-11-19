@@ -1605,10 +1605,9 @@ void do_cmd_smith_aux(bool flush)
 			turns = player->smithing_leftover;
 		} else {
 			/* Get the number of turns required */
-			turns = MAX(10, object_difficulty(obj, &cost) * 10);
-
-			/* 'Expertise' halves the time taken */
-			if (player_active_ability(player, "Expertise")) turns = MAX(5, turns / 2);
+			/* 'Expertise' halves the time per point of difficulty */
+			turns = MAX(10, object_difficulty(obj, &cost) *
+						(player_active_ability(player, "Expertise") ? 5 : 10));
 
 			/* Also set the smithing leftover counter
 			 * (to allow you to resume if interrupted) */
