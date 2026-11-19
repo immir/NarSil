@@ -21,6 +21,7 @@
 #include "angband.h"
 #include "cmd-core.h"
 #include "combat.h"
+#include "gen-seed.h"
 #include "game-event.h"
 #include "game-input.h"
 #include "init.h"
@@ -298,11 +299,25 @@ static bool ask_text(const char *title, char *buf, size_t cap, bool random_allow
 	}
 }
 
+/* get_seed_command(): the dungeon's seed, a number (blank: a random one); skipped if one was already given. */
+static void seed_stage(void)
+{
+	char text[16] = "";
+
+	if (seed_game_requested) return;
+	while (ask_text("Dungeon seed (blank for a random one)", text, sizeof(text), false)) {
+		if (seed_parse(text, &seed_game_requested)) return;
+		seed_game_requested = 0;
+		text[0] = '\0';
+		msg("A seed is a number from 1 to 4294967295.");
+	}
+}
+
 /* get_name_command(). */
 static enum birth_stage name_stage(void)
 {
 	if (arg_name[0]) my_strcpy(player->full_name, arg_name, sizeof(player->full_name));
-	if (arg_force_name) return BIRTH_HISTORY_CHOICE;
+	if (arg_force_name) { seed_stage(); return BIRTH_HISTORY_CHOICE; }
 	char name[PLAYER_NAME_LEN];
 	my_strcpy(name, player->full_name, sizeof(name));
 	if (!ask_text("Your character's name", name, sizeof(name), true)) return BIRTH_BACK;
@@ -312,6 +327,7 @@ static enum birth_stage name_stage(void)
 		return BIRTH_BACK;
 	cmdq_push(CMD_NAME_CHOICE);
 	cmd_set_arg_string(cmdq_peek(), "name", name);
+	seed_stage();
 	return BIRTH_HISTORY_CHOICE;
 }
 

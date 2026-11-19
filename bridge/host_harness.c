@@ -287,6 +287,10 @@ static int run_token(const char *tok)
 		nb_answer_text(tok + 6);
 		return settle() ? 0 : 1;
 	}
+	if (strncmp(tok, "@gameseed=", 10) == 0) {
+		nb_test_game_seed((uint32_t)strtoul(tok + 10, NULL, 10));
+		return 0;
+	}
 	if (strncmp(tok, "@depth=", 7) == 0) {
 		nb_test_depth(atoi(tok + 7));
 		return settle() ? 0 : 1;

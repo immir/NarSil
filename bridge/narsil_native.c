@@ -23,6 +23,7 @@
 #include "game-world.h"
 #include "obj-chest.h"
 #include "obj-gear.h"
+#include "gen-seed.h"
 #include "init.h"
 #include "obj-knowledge.h"
 #include "obj-make.h"
@@ -734,6 +735,7 @@ static void character_sheet(void)
 		player->depth < player_min_depth(player) ? COLOUR_YELLOW : COLOUR_L_GREEN);
 	info_add("Light radius\t%d\t%d\t\n", player->upkeep->cur_light, COLOUR_L_GREEN);
 	info_add("Game turn\t%d\t%d\t\n", player->turn, COLOUR_L_GREEN);
+	info_add("Seed\t%u\t%d\t%s\n", seed_game, COLOUR_L_BLUE, game_title());
 
 	if (player->history && player->history[0]) {
 		char history[1024];
@@ -1031,6 +1033,12 @@ void nb_request_move(int dir, bool run)
 void nb_test_die(void)
 {
 	post((request){ .kind = REQ_TEST_DIE });
+}
+
+/* Test hook: the game thread reads this only after the host's next answer, which is handed over under the lock. */
+void nb_test_game_seed(uint32_t seed)
+{
+	seed_game_requested = seed;
 }
 
 void nb_test_depth(int level)

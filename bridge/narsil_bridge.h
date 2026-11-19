@@ -261,6 +261,7 @@ void nb_request_move(int dir, bool run);
 #ifdef NB_TEST_HOOKS
 /* Host tests only: at the command prompt, take a fatal hit (as a monster's blow would). */
 void nb_test_die(void);
+void nb_test_game_seed(uint32_t seed); /* before the character is accepted: the game seed to use (0: random); the birth question is skipped */
 void nb_test_depth(int level); /* at the command prompt, go straight to dungeon level `level` (50' each) */
 /* Forges on the current level, and (NarSil-Q) the guaranteed forges made so far; only while the game waits for input. */
 int nb_test_forges(int *fixed_made, int *depth);
