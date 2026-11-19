@@ -16,6 +16,7 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 
+#include "gen-seed.h"
 #include "angband.h"
 #include "cave.h"
 #include "effects.h"
@@ -1548,6 +1549,26 @@ int rd_monster_groups(void)
 /**
  * NarSil-Q's own state (absent from NarSil's savefiles)
  */
+int rd_seeds(void)
+{
+	uint16_t depths, n;
+
+	rd_u32b(&seed_game);
+	rd_u16b(&depths);
+	for (int depth = 0; depth < depths; depth++) {
+		uint8_t visits;
+		rd_byte(&visits);
+		if (depth < SEED_DEPTHS) player->level_visits[depth] = visits;
+	}
+	rd_u16b(&n);
+	for (int i = 1; i < n; i++) {
+		uint32_t seed;
+		rd_u32b(&seed);
+		if (i < cave_monster_max(cave)) cave_monster(cave, i)->drop_seed = seed;
+	}
+	return 0;
+}
+
 int rd_silq(void)
 {
 	rd_byte(&player->fixed_forge_count);

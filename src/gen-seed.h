@@ -57,6 +57,7 @@ struct gen_baseline *gen_baseline_save(const struct player *p);
 void gen_baseline_restore(struct player *p, const struct gen_baseline *b);
 void gen_baseline_free(struct gen_baseline *b);
 
+uint32_t gen_drop_seed(void);
 void rng_push_seed(uint32_t seed);
 void rng_pop_seed(void);
 

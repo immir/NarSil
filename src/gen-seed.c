@@ -140,6 +140,16 @@ void gen_entity_pop(void)
 }
 
 /**
+ * A seed for a new monster's drop, from the stream in use (nonzero: 0 means "none").
+ */
+uint32_t gen_drop_seed(void)
+{
+	const uint32_t seed = (Rand_div(0x10000) << 16) | Rand_div(0x10000);
+
+	return seed ? seed : 1;
+}
+
+/**
  * Run what follows on its own stream from seed (a monster's drop), until
  * rng_pop_seed() puts the RNG back.
  */

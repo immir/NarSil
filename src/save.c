@@ -16,6 +16,7 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 
+#include "gen-seed.h"
 #include "angband.h"
 #include "cave.h"
 #include "game-world.h"
@@ -984,6 +985,20 @@ void wr_monster_groups(void)
 /**
  * NarSil-Q's own state (only NarSil-Q writes this block)
  */
+/**
+ * The game's seed, the levels seen at each depth, and the drop seeds of the
+ * current level's monsters (in monster order).
+ */
+void wr_seeds(void)
+{
+	wr_u32b(seed_game);
+	wr_u16b(SEED_DEPTHS);
+	for (int depth = 0; depth < SEED_DEPTHS; depth++) wr_byte(player->level_visits[depth]);
+	const int n = player->is_dead ? 0 : cave_monster_max(cave);
+	wr_u16b(n);
+	for (int i = 1; i < n; i++) wr_u32b(cave_monster(cave, i)->drop_seed);
+}
+
 void wr_silq(void)
 {
 	wr_byte(player->fixed_forge_count);

@@ -873,6 +873,9 @@ bool place_new_monster_one(struct chunk *c, struct loc grid,
 	/* Save the race */
 	mon->race = race;
 
+	/* What it drops is fixed now, by the stream the monster was made on */
+	mon->drop_seed = gen_drop_seed();
+
 	/* Determine group leader, if any */
 	group = monster_group_by_index(c, index);
 	if (group) {
