@@ -46,7 +46,7 @@ static struct {
 
 /* The seed catalog (-l) and its settings */
 static const char *catalog_path;
-static uint32_t catalog_seed;
+static uint32_t catalog_seed, catalog_seed_last;
 static int catalog_depth = 127;
 static int catalog_visits = 3;
 
@@ -59,7 +59,7 @@ const char help_spoil[] =
 	"              -M fname    Write extended monster spoilers to fname\n"
 	"              -o fname    Write object spoilers to fname\n"
 	"              -l fname    Write a seed catalog to fname: what the seed -S gives on each level\n"
-	"              -S seed     The seed for -l (a number, 1 to 4294967295)\n"
+	"              -S seed     The seed for -l (a number, 1 to 4294967295), or a range such as 1-100\n"
 	"              -D depth    Deepest level for -l (default: all)\n"
 	"              -V visits   Visits to each depth for -l (default 3)\n";
 
@@ -109,11 +109,22 @@ errr init_spoil(int argc, char *argv[]) {
 				result = 1;
 			} else if (letter == 'l') {
 				catalog_path = argv[i + 1];
+			} else if (letter == 'S') {
+				/* A seed, or a range of them: 7 or 1-100 */
+				char *dash = strchr(argv[i + 1], '-');
+				char first[16];
+
+				my_strcpy(first, argv[i + 1], MIN(sizeof(first), dash ? (size_t)(dash - argv[i + 1]) + 1 : sizeof(first)));
+				if (!seed_parse(first, &catalog_seed) || !catalog_seed
+						|| (dash && (!seed_parse(dash + 1, &catalog_seed_last) || catalog_seed_last < catalog_seed
+						|| !catalog_seed_last))) {
+					printf("init-spoil: '-S' needs a seed or a range of seeds, such as 7 or 1-100\n");
+					result = 1;
+				}
+				if (!dash) catalog_seed_last = catalog_seed;
 			} else if (!seed_parse(argv[i + 1], &value) || !value) {
 				printf("init-spoil: '%s' needs a positive number\n", argv[i]);
 				result = 1;
-			} else if (letter == 'S') {
-				catalog_seed = value;
 			} else if (letter == 'D') {
 				catalog_depth = (int)MIN(value, 127);
 			} else {
@@ -187,7 +198,7 @@ errr init_spoil(int argc, char *argv[]) {
 				printf("init-spoil: -l needs a seed: -S <number>\n");
 				result = 1;
 			} else {
-				spoil_seeds(catalog_path, catalog_seed, catalog_depth, catalog_visits);
+				spoil_seeds(catalog_path, catalog_seed, catalog_seed_last, catalog_depth, catalog_visits);
 			}
 		}
 	}

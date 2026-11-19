@@ -41,8 +41,9 @@ The spoiler front end can list what a seed holds, so that you can pick a seed to
 
     ./narsil -mspoil -- -l catalog.txt -S 424242 -D 12 -V 3
 
-``-l`` names the output file, ``-S`` is the seed, ``-D`` the deepest level to list (default all) and ``-V``
-the number of visits to each depth (default 3).  For every depth and visit the catalog gives:
+``-l`` names the output file, ``-S`` is the seed or a range of them such as ``1-100``, ``-D`` the deepest
+level to list (default all) and ``-V`` the number of visits to each depth (default 3).  For every depth and visit
+the catalog gives:
 
 * the artefacts, ego items and out-of-depth items on the floor, with their grids;
 * forges, and the name of a greater vault;
