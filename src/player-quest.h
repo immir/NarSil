@@ -24,6 +24,8 @@ void drop_iron_crown(struct monster *mon, const char *message);
 void shatter_weapon(struct player *p, int silnum);
 void break_truce(struct player *p, bool obvious);
 void check_truce(struct player *p);
+void morgoth_apply_anger(int level);
+void anger_morgoth(struct player *p, int level);
 void wake_all_monsters(struct player *p);
 void prise_silmaril(struct player *p);
 int silmarils_possessed(struct player *p);

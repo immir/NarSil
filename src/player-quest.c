@@ -82,10 +82,14 @@ void drop_iron_crown(struct monster *mon, const char *message)
 
 		/* Lower Morgoth's protection, remove his light source, increase his
 		 * will and perception */
-		race->pd -= 1;
-		race->light = 0;
-		race->wil += 5;
-		race->per += 5;
+		if (z_info->rule_morgoth_anger) {
+			anger_morgoth(player, 1);
+		} else {
+			race->pd -= 1;
+			race->light = 0;
+			race->wil += 5;
+			race->per += 5;
+		}
 	}
 }
 
@@ -194,6 +198,37 @@ void break_truce(struct player *p, bool obvious)
 }
 
 /**
+ * Morgoth's skills at each stage of anger (NarSil-Q): 1 he loses his crown, 2 he is hurt or a Silmaril is
+ * freed, 3 badly hurt, 4 desperate.
+ */
+void morgoth_apply_anger(int level)
+{
+	struct monster_race *race = lookup_monster("Morgoth, Lord of Darkness");
+	if (!race) return;
+
+	switch (level) {
+		case 1: race->evn = 22; race->light = 0; race->per = 15; break;
+		case 2:
+			race->blow[0].dice.base = 30; race->blow[0].dice.dice = 7;
+			race->wil = 30; race->per = 20; race->evn = 25;
+			break;
+		case 3: race->pd = 7; race->wil = 35; race->per = 25; break;
+		case 4:
+			race->evn = 30; race->blow[0].dice.base = 40; race->blow[0].dice.dice = 8;
+			race->wil = 40; race->per = 30;
+			break;
+		default: break;
+	}
+}
+
+void anger_morgoth(struct player *p, int level)
+{
+	if (!z_info->rule_morgoth_anger || p->morgoth_state >= level) return;
+	morgoth_apply_anger(level);
+	p->morgoth_state = level;
+}
+
+/**
  * Check whether to break the truce in Morgoth's throne room
  */
 void check_truce(struct player *p)
@@ -281,6 +316,9 @@ void prise_silmaril(struct player *p)
 			break;
 		}
 	}
+
+	/* Freeing a Silmaril angers Morgoth */
+	anger_morgoth(p, 2);
 
 	/* Get the weapon */
 	weapon = equipped_item_by_slot_name(p, "weapon");

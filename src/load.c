@@ -1059,7 +1059,7 @@ int rd_artifacts(void)
 	}
 
 	/* Change Morgoth's stats if his crown has been knocked off */
-	if (is_artifact_created(crown)) {
+	if (is_artifact_created(crown) && !z_info->rule_morgoth_anger) {
 		struct monster_race *race = lookup_monster("Morgoth, Lord of Darkness");
 		race->pd -= 1;
 		race->light = 0;
@@ -1553,6 +1553,8 @@ int rd_silq(void)
 	rd_byte(&player->fixed_forge_count);
 	rd_s32b(&player->min_depth_counter);
 	rd_byte(&player->thrall_quest);
+	rd_byte(&player->morgoth_state);
+	for (int level = 1; level <= player->morgoth_state; level++) morgoth_apply_anger(level);
 	rd_byte(&player->oath_type);
 	rd_byte(&player->oaths_broken);
 	return 0;

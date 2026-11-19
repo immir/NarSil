@@ -50,6 +50,7 @@
 #include "player-abilities.h"
 #include "player-attack.h"
 #include "player-calcs.h"
+#include "player-quest.h"
 #include "player-timed.h"
 #include "player-util.h"
 #include "project.h"
@@ -3676,6 +3677,21 @@ void process_monsters(int minimum_energy)
 		/* Handle monster regeneration if requested */
 		if (regen)
 			regen_monster(mon, 1);
+
+		/* Morgoth grows angrier as he is hurt */
+		if (z_info->rule_morgoth_anger && mon->race == lookup_monster("Morgoth, Lord of Darkness")) {
+			const int health = health_level(mon->hp, mon->maxhp);
+			if (health <= HEALTH_ALMOST_DEAD && player->morgoth_state < 4) {
+				msg("Morgoth grows desperate.");
+				anger_morgoth(player, 4);
+			} else if (health <= HEALTH_BADLY_WOUNDED && player->morgoth_state < 3) {
+				msg("Morgoth unslings his mighty shield.");
+				anger_morgoth(player, 3);
+			} else if (health <= HEALTH_WOUNDED && player->morgoth_state < 2) {
+				msg("Morgoth grows angry.");
+				anger_morgoth(player, 2);
+			}
+		}
 
 		/* Give this monster some energy */
 		mon->energy += turn_energy(mon->mspeed);
