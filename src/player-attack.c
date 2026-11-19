@@ -720,6 +720,20 @@ void py_attack(struct player *p, struct loc grid, int attack_type)
 {
 	/* An oath of mercy asks before a blow at a Man or an Elf */
 	struct monster *target = square_monster(cave, grid);
+	if (target && rf_has(target->race->flags, RF_PEACEFUL)) {
+		/* The player never attacks the peaceful; an alert thrall asks for help instead */
+		if (attack_type == ATT_MAIN) {
+			if (rf_has(target->race->flags, RF_SMART) && target->race->sleep == 0 &&
+				(streq(target->race->name, "Alert human thrall") || streq(target->race->name, "Alert elven thrall"))) {
+				player_thrall_quest(p, target);
+			} else {
+				char name[80];
+				monster_desc(name, sizeof(name), target, MDESC_DEFAULT);
+				msg("You stop before you bump into %s.", name);
+			}
+		}
+		return;
+	}
 	if (target && monster_is_visible(target) &&
 		(rf_has(target->race->flags, RF_MAN) || rf_has(target->race->flags, RF_ELF)) &&
 		player_oath_active(p, OATH_MERCY) &&

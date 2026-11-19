@@ -454,6 +454,9 @@ struct player_upkeep {
  * which must be saved in the savefile precedes all the information
  * which can be recomputed as needed.
  */
+/* States of NarSil-Q's thrall quest */
+enum { THRALL_NOT_STARTED = 0, THRALL_GIVER_PRESENT = 1, THRALL_REWARD_MAP = 2, THRALL_COMPLETE = 10 };
+
 struct player {
 	const struct player_sex *sex;
 	const struct player_race *race;
@@ -551,6 +554,7 @@ struct player {
 	uint16_t noscore;			/* Cheating flags */
 
 	bool is_dead;				/* Player is dead */
+	uint8_t thrall_quest;		/* NarSil-Q: THRALL_* state of the chained captive who begs for help */
 	int32_t min_depth_counter;	/* NarSil-Q: the adaptive depth clock (in 1/100000 levels) */
 	uint8_t oath_type;			/* NarSil-Q: the oath sworn (OATH_*), 0 for none */
 	uint8_t oaths_broken;		/* NarSil-Q: flags of oaths that can no longer be kept */

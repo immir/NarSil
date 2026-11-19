@@ -926,6 +926,9 @@ void on_new_level(void)
 	/* Disturb */
 	disturb(player, false);
 
+	/* A thrall's quest moves on */
+	player_thrall_arrival(player);
+
 	/* Display the entry poetry, prepare for guaranteed forge */
 	if (player->turn == 0) {
 		event_signal_poem(EVENT_POEM, player->sex->poetry_name, 5, 15);

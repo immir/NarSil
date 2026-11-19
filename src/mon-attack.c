@@ -348,6 +348,9 @@ bool make_attack_normal(struct monster *mon, struct player *p)
 	int att, dd, ds;
 	int total_attack_mod, total_evasion_mod;
 	bool visible = monster_is_visible(mon) || (mon->race->light > 0);
+
+	/* Some monsters (NarSil-Q's chained captives) have no blows to give */
+	if (rf_has(mon->race->flags, RF_NEVER_BLOW)) return false;
 	bool obvious = false;
 
 	bool do_cut, do_stun, do_prt;
