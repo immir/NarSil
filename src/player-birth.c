@@ -16,6 +16,7 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 
+#include "gen-seed.h"
 #include "angband.h"
 #include "cmd-core.h"
 #include "cmds.h"
@@ -917,6 +918,9 @@ void do_cmd_accept_character(struct command *cmd)
 
 	/* Seed for flavors */
 	seed_flavor = randint0(0x10000000);
+
+	/* The game's seed, which fixes every level it generates */
+	seed_game_choose();
 	flavor_init();
 
 	/* Outfit the player, if they can sell the stuff */

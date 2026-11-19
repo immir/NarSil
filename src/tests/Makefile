@@ -23,6 +23,7 @@ SUITES = \
 	z-expression/suite.mk \
 	z-file/suite.mk \
 	z-quark/suite.mk \
+	z-rand/suite.mk \
 	z-textblock/suite.mk \
 	z-util/suite.mk \
 	z-virt/suite.mk

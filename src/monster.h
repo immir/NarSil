@@ -389,6 +389,7 @@ struct monster {
 
 	struct loc grid;			/* Location on map */
 
+	uint32_t drop_seed;		/* Seeds what it drops when it dies (gen-seed.c); 0: use the game's RNG */
 	int16_t hp;				/* Current Hit points */
 	int16_t maxhp;				/* Max Hit points */
 

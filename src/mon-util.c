@@ -16,6 +16,7 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 
+#include "gen-seed.h"
 #include "angband.h"
 #include "cmd-core.h"
 #include "effects.h"
@@ -818,8 +819,10 @@ void drop_loot(struct chunk *c, struct monster *mon, struct loc grid,
 	/* Forget objects */
 	mon->held_obj = NULL;
 
-	/* Drop some objects */
+	/* Drop some objects, from the monster's own seed if it has one */
+	if (mon->drop_seed) rng_push_seed(mon->drop_seed);
 	dump_item = mon_create_drop(c, mon, grid, stats);
+	if (mon->drop_seed) rng_pop_seed();
 
 	/* Take note of any dropped treasure */
 	if (visible && dump_item && stats) {

@@ -16,6 +16,7 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 
+#include "gen-seed.h"
 #include "angband.h"
 #include "buildid.h"
 #include "init.h"
@@ -423,6 +424,10 @@ int main(int argc, char *argv[])
 				change_path(arg);
 				continue;
 
+			case 'S':
+				if (!seed_parse(arg, &seed_game_requested) || !seed_game_requested) goto usage;
+				continue;
+
 			case '-':
 				argv[i] = argv[0];
 				argc = argc - i;
@@ -439,6 +444,7 @@ int main(int argc, char *argv[])
 				puts("  -w             Resurrect dead character (marks savefile)");
 				puts("  -g             Request graphics mode");
 				puts("  -u<who>        Use your <who> savefile");
+				puts("  -S<seed>       Start new characters with this seed (a number): same seed, same levels");
 				puts("  -d<dir>=<path> Override a specific directory with <path>. <path> can be:");
 				for (i = 0; i < (int)N_ELEMENTS(change_path_values); i++) {
 #ifdef SETGID

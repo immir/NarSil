@@ -15,6 +15,9 @@
  *    and not for profit purposes provided that this copyright and statement
  *    are included in all such copies.  Other copyrights may also apply.
  */
+#include "buildid.h"
+#include "gen-seed.h"
+#include "init.h"
 #include "angband.h"
 #include "buildid.h"
 #include "combat.h"
@@ -281,6 +284,19 @@ static struct panel *get_panel_topleft(void) {
 	return p;
 }
 
+static struct panel *get_panel_seed(void) {
+	struct panel *p = panel_allocate(1);
+
+	/* The seed is settled when the character is accepted, so there is none to show during birth */
+	if (character_generated) {
+		panel_line(p, COLOUR_L_BLUE, "Seed", "%u", seed_game);
+	} else {
+		panel_space(p);
+	}
+
+	return p;
+}
+
 static struct panel *get_panel_midleft(void) {
 	struct panel *p = panel_allocate(8);
 
@@ -391,6 +407,7 @@ static const struct {
 	/*   x  y wid rows */
 	{ {  1, 1, 18, 4 }, true,  get_panel_topleft },	/* Name, Class, ... */
 	{ { 22, 1, 12, 3 }, false, get_panel_misc },	/* Age, ht, wt, ... */
+	{ {  1, 5, 18, 1 }, false, get_panel_seed },	/* The game's seed */
 	{ {  1, 6, 18, 9 }, false, get_panel_midleft },	/* Cur Exp, Max Exp, ... */
 	{ { 22, 6, 16, 9 }, false, get_panel_combat },
 };
@@ -471,7 +488,7 @@ void write_character_dump(ang_file *fff)
 
 
 	/* Begin dump */
-	file_putf(fff, "  [%s Character Dump]\n\n", buildid);
+	file_putf(fff, "  [%s %s Character Dump]\n\n", game_title(), buildver);
 
 	/* Display player basics */
 	display_player(0);

@@ -207,4 +207,30 @@ int random_chance_scaled(random_chance c, int scale);
 
 extern void rand_fix(uint32_t val);
 
+/**
+ * The whole RNG state as a value, so a computation can run on its own seeded
+ * stream and leave the game's RNG exactly as it found it.
+ */
+struct rand_state {
+	uint32_t state[RAND_DEG];
+	uint32_t state_i;
+	uint32_t value;
+	bool quick;
+};
+
+void Rand_state_save(struct rand_state *s);
+void Rand_state_load(const struct rand_state *s);
+
+/**
+ * Seed the complex RNG from seed alone: unlike Rand_state_init(), the result
+ * does not depend on the RNG's history.
+ */
+void Rand_state_seed(uint32_t seed);
+
+/**
+ * Combine two values into a well-mixed 32-bit seed (for deriving seeds, e.g.
+ * a level's from the game's seed and the depth).
+ */
+uint32_t Rand_mix(uint32_t a, uint32_t b);
+
 #endif /* INCLUDED_Z_RAND_H */

@@ -20,6 +20,7 @@
 
 #ifdef USE_SPOIL
 
+#include "gen-seed.h"
 #include "datafile.h"
 #include "game-world.h"
 #include "init.h"
@@ -43,6 +44,12 @@ static struct {
 	{ 'o', spoil_obj_desc, false, NULL },
 };
 
+/* The seed catalog (-l) and its settings */
+static const char *catalog_path;
+static uint32_t catalog_seed;
+static int catalog_depth = 127;
+static int catalog_visits = 3;
+
 const char help_spoil[] =
 	"Spoiler generation mode, subopts\n"
 	"              -a fname    Write artifact spoilers to fname;\n"
@@ -50,7 +57,11 @@ const char help_spoil[] =
 	"                          the standard artifacts\n"
 	"              -m fname    Write brief monster spoilers to fname\n"
 	"              -M fname    Write extended monster spoilers to fname\n"
-	"              -o fname    Write object spoilers to fname\n";
+	"              -o fname    Write object spoilers to fname\n"
+	"              -l fname    Write a seed catalog to fname: what the seed -S gives on each level\n"
+	"              -S seed     The seed for -l (a number, 1 to 4294967295)\n"
+	"              -D depth    Deepest level for -l (default: all)\n"
+	"              -V visits   Visits to each depth for -l (default 3)\n";
 
 /**
  * Usage:
@@ -87,6 +98,29 @@ errr init_spoil(int argc, char *argv[]) {
 
 		if (i >= argc) {
 			break;
+		}
+
+		if (argv[i][0] == '-' && argv[i][1] && !argv[i][2] && strchr("lSDV", argv[i][1])) {
+			const char letter = argv[i][1];
+			uint32_t value = 0;
+
+			if (i >= argc - 1) {
+				printf("init-spoil: '%s' requires an argument\n", argv[i]);
+				result = 1;
+			} else if (letter == 'l') {
+				catalog_path = argv[i + 1];
+			} else if (!seed_parse(argv[i + 1], &value) || !value) {
+				printf("init-spoil: '%s' needs a positive number\n", argv[i]);
+				result = 1;
+			} else if (letter == 'S') {
+				catalog_seed = value;
+			} else if (letter == 'D') {
+				catalog_depth = (int)MIN(value, 127);
+			} else {
+				catalog_visits = (int)MIN(value, 20);
+			}
+			i += 2;
+			continue;
 		}
 
 		if (argv[i][0] == '-') {
@@ -147,6 +181,14 @@ errr init_spoil(int argc, char *argv[]) {
 		for (i = 0; i < (int)N_ELEMENTS(opts); ++i) {
 			if (!opts[i].enabled) continue;
 			(*(opts[i].func))(opts[i].path);
+		}
+		if (catalog_path) {
+			if (!catalog_seed) {
+				printf("init-spoil: -l needs a seed: -S <number>\n");
+				result = 1;
+			} else {
+				spoil_seeds(catalog_path, catalog_seed, catalog_depth, catalog_visits);
+			}
 		}
 	}
 

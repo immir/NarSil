@@ -190,6 +190,7 @@ add_library(OurCoreLib OBJECT
         src/gen-cave.c
         src/generate.c
         src/gen-room.c
+        src/gen-seed.c
         src/gen-util.c
         src/grafmode.c
         src/guid.c
@@ -295,6 +296,7 @@ add_library(OurCoreLib OBJECT
         src/ui-visuals.c
         src/ui-wizard.c
         src/wiz-debug.c
+        src/wiz-seeds.c
         src/wiz-spoil.c
         src/wiz-stats.c
         src/z-bitflag.c
@@ -773,6 +775,7 @@ set(ANGBAND_TEST_CASE_SOURCES
     effects/earthquake.c
     effects/info.c
     game/basic.c
+    game/seed.c
     message/message.c
     monster/attack.c
     monster/desc.c
@@ -831,6 +834,7 @@ set(ANGBAND_TEST_CASE_SOURCES
     z-file/filename-index.c
     z-file/path-normalize.c
     z-quark/quark.c
+    z-rand/state.c
     z-textblock/textblock.c
     z-util/util.c
     z-virt/mem.c

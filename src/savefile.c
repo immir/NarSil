@@ -16,6 +16,7 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 #include <errno.h>
+#include "gen-seed.h"
 #include "angband.h"
 #include "game-world.h"
 #include "init.h"
@@ -127,6 +128,7 @@ static const struct {
 	{ "traps", wr_traps, 1 },
 	{ "history", wr_history, 1 },
 	{ "monster groups", wr_monster_groups, 1 },
+	{ "seeds", wr_seeds, 1 },
 	{ "narsil-q", wr_silq, 1 },	/* NarSil-Q only (see savefile_save) */
 };
 
@@ -151,6 +153,7 @@ static const struct blockinfo loaders[] = {
 	{ "traps", rd_traps, 1 },
 	{ "history", rd_history, 1 },
 	{ "monster groups", rd_monster_groups, 1 },
+	{ "seeds", rd_seeds, 1 },
 	{ "narsil-q", rd_silq, 1 },
 };
 
@@ -656,8 +659,11 @@ bool savefile_load(const char *path, bool cheat_death)
 		return false;
 	}
 
+	/* A savefile from before seeded levels has no seeds block: give the game a seed now */
+	seed_game = 0;
 	ok = try_load(f, loaders);
 	file_close(f);
+	if (ok && !seed_game) seed_game_choose();
 
 	if (player->chp < 0) {
 		player->is_dead = true;

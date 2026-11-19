@@ -16,6 +16,7 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 
+#include "gen-seed.h"
 #include "angband.h"
 #include "alloc.h"
 #include "game-world.h"
@@ -872,6 +873,9 @@ bool place_new_monster_one(struct chunk *c, struct loc grid,
 	/* Save the race */
 	mon->race = race;
 
+	/* What it drops is fixed now, by the stream the monster was made on */
+	mon->drop_seed = gen_drop_seed();
+
 	/* Determine group leader, if any */
 	group = monster_group_by_index(c, index);
 	if (group) {
@@ -1199,7 +1203,7 @@ static void place_monster_escort(struct chunk *c, struct loc grid,
  * `origin` is the item origin to use for any monster drops (e.g. ORIGIN_DROP,
  * ORIGIN_DROP_PIT, etc.)
  */
-bool place_new_monster(struct chunk *c, struct loc grid,
+static bool place_new_monster_body(struct chunk *c, struct loc grid,
 					   struct monster_race *race, bool sleep, bool group_ok,
 					   struct monster_group_info group_info, uint8_t origin)
 {
@@ -1258,6 +1262,17 @@ bool place_new_monster(struct chunk *c, struct loc grid,
 	return true;
 }
 
+/* Generation gives each monster its own seeded stream (see gen-seed.c) */
+bool place_new_monster(struct chunk *c, struct loc grid,
+					   struct monster_race *race, bool sleep, bool group_ok,
+					   struct monster_group_info group_info, uint8_t origin)
+{
+	gen_entity_push(GEN_MONSTER);
+	const bool result = place_new_monster_body(c, grid, race, sleep, group_ok, group_info, origin);
+	gen_entity_pop();
+	return result;
+}
+
 
 /**
  * Picks a monster race, makes a new monster of that race, then attempts to
@@ -1275,7 +1290,7 @@ bool place_new_monster(struct chunk *c, struct loc grid,
  *
  * Returns true if we successfully place a monster.
  */
-bool pick_and_place_monster(struct chunk *c, struct loc grid, int depth,
+static bool pick_and_place_monster_body(struct chunk *c, struct loc grid, int depth,
 		bool sleep, bool group_okay, uint8_t origin)
 {
 	/* Pick a monster race, no specified group */
@@ -1289,6 +1304,16 @@ bool pick_and_place_monster(struct chunk *c, struct loc grid, int depth,
 	} else {
 		return false;
 	}
+}
+
+/* Generation gives each monster its own seeded stream (see gen-seed.c) */
+bool pick_and_place_monster(struct chunk *c, struct loc grid, int depth,
+		bool sleep, bool group_okay, uint8_t origin)
+{
+	gen_entity_push(GEN_MONSTER);
+	const bool result = pick_and_place_monster_body(c, grid, depth, sleep, group_okay, origin);
+	gen_entity_pop();
+	return result;
 }
 
 
@@ -1386,7 +1411,7 @@ void place_monster_by_letter(struct chunk *c, struct loc grid, char ch,
  *
  * Returns true if we successfully place a monster.
  */
-bool pick_and_place_monster_on_stairs(struct chunk *c, struct player *p,
+static bool pick_and_place_monster_on_stairs_body(struct chunk *c, struct player *p,
 									  bool sleep, int depth, bool force_undead)
 {
 	struct loc stair, grid;
@@ -1529,6 +1554,16 @@ bool pick_and_place_monster_on_stairs(struct chunk *c, struct player *p,
 	return false;
 }
 
+/* Generation gives each monster its own seeded stream (see gen-seed.c) */
+bool pick_and_place_monster_on_stairs(struct chunk *c, struct player *p,
+									  bool sleep, int depth, bool force_undead)
+{
+	gen_entity_push(GEN_MONSTER);
+	const bool result = pick_and_place_monster_on_stairs_body(c, p, sleep, depth, force_undead);
+	gen_entity_pop();
+	return result;
+}
+
 
 /**
  * Picks a monster race, makes a new monster of that race, then attempts to
@@ -1540,7 +1575,7 @@ bool pick_and_place_monster_on_stairs(struct chunk *c, struct player *p,
  *
  * Returns true if we successfully place a monster.
  */
-bool pick_and_place_distant_monster(struct chunk *c, struct player *p,
+static bool pick_and_place_distant_monster_body(struct chunk *c, struct player *p,
 									bool sleep, int depth)
 {
 	struct loc grid;
@@ -1573,6 +1608,16 @@ bool pick_and_place_distant_monster(struct chunk *c, struct player *p,
 
 	/* Nope */
 	return false;
+}
+
+/* Generation gives each monster its own seeded stream (see gen-seed.c) */
+bool pick_and_place_distant_monster(struct chunk *c, struct player *p,
+									bool sleep, int depth)
+{
+	gen_entity_push(GEN_MONSTER);
+	const bool result = pick_and_place_distant_monster_body(c, p, sleep, depth);
+	gen_entity_pop();
+	return result;
 }
 
 struct init_module mon_make_module = {

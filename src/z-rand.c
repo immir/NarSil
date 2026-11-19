@@ -125,6 +125,46 @@ void Rand_state_init(uint32_t seed)
 	}
 }
 
+void Rand_state_save(struct rand_state *s)
+{
+	memcpy(s->state, STATE, sizeof(STATE));
+	s->state_i = state_i;
+	s->value = Rand_value;
+	s->quick = Rand_quick;
+}
+
+void Rand_state_load(const struct rand_state *s)
+{
+	assert(s->state_i < RAND_DEG);
+	memcpy(STATE, s->state, sizeof(STATE));
+	state_i = s->state_i;
+	Rand_value = s->value;
+	Rand_quick = s->quick;
+}
+
+void Rand_state_seed(uint32_t seed)
+{
+	state_i = 0;
+	Rand_quick = false;
+	Rand_state_init(seed);
+}
+
+/**
+ * The murmur3 finaliser applied to a combination of the two values; every bit
+ * of each input affects every bit of the result.
+ */
+uint32_t Rand_mix(uint32_t a, uint32_t b)
+{
+	uint32_t h = a ^ (b * 0x9e3779b9U + 0x7f4a7c15U + (a << 6) + (a >> 2));
+
+	h ^= h >> 16;
+	h *= 0x85ebca6bU;
+	h ^= h >> 13;
+	h *= 0xc2b2ae35U;
+	h ^= h >> 16;
+	return h;
+}
+
 /**
  * Initialise the RNG
  */

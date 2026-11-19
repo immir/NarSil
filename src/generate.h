@@ -184,6 +184,7 @@ extern struct room_template *room_templates;
 
 /* generate.c */
 void prepare_next_level(struct player *p);
+void level_discard(struct player *p);
 bool fixed_forge_due(const struct player *p);
 int get_room_builder_count(void);
 int get_room_builder_index_from_name(const char *name);
