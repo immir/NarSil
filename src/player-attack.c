@@ -1098,6 +1098,11 @@ static struct attack_result make_ranged_shot(struct player *p,
 	/* Calculate the damage done */
 	total_dd = bow->dd + result.crit_dice + slay_bonus_dice;
 
+	/* 'Deadly Hail': the arrow after a kill rolls twice the dice */
+	if (p->deadly_hail_now) {
+		total_dd *= 2;
+	}
+
 	/* Note that this is recalculated in case the player has rapid shots but
 	 * only one arrow */
 	total_ds = MAX(total_ads(p, &p->state, bow, one_shot), 0);
@@ -1107,12 +1112,6 @@ static struct attack_result make_ranged_shot(struct player *p,
 	prt = damroll(race->pd, race->ps);
 	prt = (prt * prt_percent) / 100;
 	result.dmg = MAX(0, dam - prt);
-
-	/* 'Deadly Hail': the arrow after a kill does twice the damage */
-	if (p->deadly_hail) {
-		result.dmg *= 2;
-		p->deadly_hail = false;
-	}
 
 	/* 'Puncture': armour that would block the whole shot still lets five damage through */
 	if (result.dmg == 0 && player_active_ability(p, "Puncture")) {
@@ -1311,7 +1310,11 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 	p->upkeep->energy_use = z_info->move_energy;
 
 	/* Store the action type */
-	p->previous_action[0] = ACTION_MISC;
+	p->previous_action[0] = archery ? ACTION_ARCHERY : ACTION_MISC;
+
+	/* Deadly Hail is spent by any shot, hit or miss */
+	p->deadly_hail_now = archery && p->deadly_hail && player_active_ability(p, "Deadly Hail");
+	p->deadly_hail = false;
 
 	/* Calculate the path */
 	path_n = project_path(cave, path_g, range, grid, &target, 0);

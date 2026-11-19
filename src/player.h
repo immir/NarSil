@@ -116,7 +116,8 @@ enum {
 	ACTION_SW = 1,
 	ACTION_S = 2,
 	ACTION_SE = 3,
-	ACTION_MISC = 10
+	ACTION_MISC = 10,
+	ACTION_ARCHERY = 11
 };
 
 /**
@@ -559,6 +560,7 @@ struct player {
 	int32_t min_depth_counter;	/* NarSil-Q: the adaptive depth clock (in 1/100000 levels) */
 	uint8_t oath_type;			/* NarSil-Q: the oath sworn (OATH_*), 0 for none */
 	uint8_t oaths_broken;		/* NarSil-Q: flags of oaths that can no longer be kept */
+	bool deadly_hail_now;		/* Deadly Hail applies to the shot in flight (not saved) */
 	bool deadly_hail;			/* Deadly Hail: the next arrow does double damage (not saved) */
 	bool vengeance;				/* Vengeance: the next successful melee blow gets a die (not saved) */
 

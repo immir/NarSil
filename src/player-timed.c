@@ -687,6 +687,12 @@ bool player_set_timed(struct player *p, int idx, int v, bool notify,
 		}
 	}
 
+	/* Terror silences the song of Challenge */
+	if (idx == TMD_AFRAID && v > 0 && p->timed[idx] == 0) {
+		struct song *challenge = lookup_song("Challenge");
+		if (challenge && player_is_singing(p, challenge)) player_change_song(p, NULL, false);
+	}
+
 	/* Deal with graded effects */
 	if (new_grade) {
 		/* Find the grade we will be going to, and the current one */

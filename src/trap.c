@@ -1187,6 +1187,37 @@ void square_set_door_jam(struct chunk *c, struct loc grid, int power)
 }
 
 /**
+ * Ward a closed door to a given power (NarSil-Q's song of Thresholds)
+ */
+void square_set_door_ward(struct chunk *c, struct loc grid, int power)
+{
+	struct trap_kind *ward = lookup_trap("door ward");
+	assert(ward);
+
+	if (!square_iscloseddoor(c, grid)) return;
+	if (!square_trap_specific(c, grid, ward->tidx))
+		place_trap(c, grid, ward->tidx, 0);
+
+	for (struct trap *trap = square_trap(c, grid); trap; trap = trap->next)
+		if (trap->kind == ward) trap->power = power;
+}
+
+/**
+ * Return the power of the ward on a door
+ */
+int square_door_ward_power(struct chunk *c, struct loc grid)
+{
+	struct trap_kind *ward = lookup_trap("door ward");
+
+	if (!ward || !square_iscloseddoor(c, grid)) return 0;
+	if (!square_trap_specific(c, grid, ward->tidx)) return 0;
+
+	for (struct trap *trap = square_trap(c, grid); trap; trap = trap->next)
+		if (trap->kind == ward) return trap->power;
+	return 0;
+}
+
+/**
  * Return the power of the jam on a door
  */
 int square_door_jam_power(struct chunk *c, struct loc grid)

@@ -592,10 +592,21 @@ static bool do_cmd_close_aux(struct loc grid)
 		player->upkeep->update |= (PU_UPDATE_VIEW | PU_MONSTERS);
 		sound(MSG_SHUTDOOR);
 
-		/* A door closed during the song of Thresholds is warded (jammed) against enemies */
-		if (lookup_song("Thresholds") && player_is_singing(player, lookup_song("Thresholds"))) {
-			struct trap_kind *jam = lookup_trap("door jam");
-			if (jam) place_trap(cave, grid, jam->tidx, 0);
+		/* A door closed during the song of Thresholds is warded; the better the song, the stronger the ward */
+		struct song *thresholds = lookup_song("Thresholds");
+		if (thresholds && player_is_singing(player, thresholds)) {
+			const int result = skill_check(source_player(),
+				song_bonus(player, player->state.skill_use[SKILL_SONG], thresholds), 15, source_none());
+			if (result > 9) {
+				msg("You close the door, singing a song of trust unbroken.");
+				square_set_door_ward(cave, grid, 3);
+			} else if (result > 0) {
+				msg("You close the door, singing charms of binding.");
+				square_set_door_ward(cave, grid, 2);
+			} else {
+				msg("You close the door, singing words of warding.");
+				square_set_door_ward(cave, grid, 1);
+			}
 		}
 	}
 

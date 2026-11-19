@@ -608,6 +608,11 @@ static void pre_process_player(void)
 		options_list_challenge();
 	}
 
+	/* Deadly Hail only lasts while the player keeps shooting */
+	if (player->previous_action[0] != ACTION_ARCHERY) {
+		player->deadly_hail = false;
+	}
+
 	/* Shuffle along the array of previous actions */
 	for (i = MAX_ACTION - 1; i > 0; i--) {
 		player->previous_action[i] = player->previous_action[i - 1];
