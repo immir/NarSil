@@ -831,6 +831,7 @@ set(ANGBAND_TEST_CASE_SOURCES
     z-file/filename-index.c
     z-file/path-normalize.c
     z-quark/quark.c
+    z-rand/state.c
     z-textblock/textblock.c
     z-util/util.c
     z-virt/mem.c
