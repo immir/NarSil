@@ -749,6 +749,19 @@ void py_attack(struct player *p, struct loc grid, int attack_type)
 		whirlwind(p, grid);
 	} else {
 		py_attack_real(p, grid, attack_type);
+
+		/* 'Impale': a polearm or greatsword also strikes the foe behind the one attacked */
+		if ((attack_type == ATT_MAIN) && player_active_ability(p, "Impale")) {
+			struct object *weapon = equipped_item_by_slot_name(p, "weapon");
+			if (weapon && !of_has(weapon->flags, OF_AXE) &&
+				((weapon->tval == TV_POLEARM) || strstr(weapon->kind->name, "Greatsword"))) {
+				const struct loc behind = loc_sum(grid, loc_diff(grid, p->grid));
+				struct monster *beyond = square_in_bounds(cave, behind) ? square_monster(cave, behind) : NULL;
+				if (beyond && !rf_has(beyond->race->flags, RF_PEACEFUL) && !player->is_dead) {
+					py_attack_real(p, behind, ATT_MAIN + 0);
+				}
+			}
+		}
 	}
 
 	if (smote) {
