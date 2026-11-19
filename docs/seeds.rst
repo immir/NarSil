@@ -56,3 +56,17 @@ command with the same seed always writes the same catalog.
 For NarSil-Q, use the launcher, which sets up NarSil-Q's data first::
 
     tools/narsil-q.sh -mspoil -- -l catalog.txt -S 424242 -D 12
+
+Ready-made lists
+================
+
+``docs/seed-lists/`` holds catalogs for seeds 1 to 100, levels 1 to 12 (50 to 600 feet), three visits each, one
+file per game::
+
+    narsil-seeds-1-100.txt
+    narsil-q-seeds-1-100.txt
+
+Search them for what you want (``Doriath``, ``Iron Crown``, ``forge``, a unique's name) and play that seed.
+Each file's first line names the game and version it was made with, and it only holds for that one.  If the
+game has changed since, regenerate them with ``tools/gen-seed-lists.sh`` (a built desktop game is needed), or
+make a different range, depth or visit count with its ``FIRST``, ``LAST``, ``DEPTH`` and ``VISITS`` settings.
