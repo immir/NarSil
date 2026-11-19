@@ -825,6 +825,7 @@ static void process_player_post_energy_use_cleanup(void)
 	}
 
 	player->turn++;
+	player_advance_depth_clock(player);
 }
 
 /**

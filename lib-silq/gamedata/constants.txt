@@ -177,3 +177,4 @@ rules:staff-will-check:0
 # Guaranteed forges at 100', 300' and 500' (with at least three uses)
 # instead of a forge after a long enough "drought"
 rules:forge-depths:1
+rules:depth-clock:1

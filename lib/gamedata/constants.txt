@@ -178,3 +178,7 @@ rules:staff-will-check:1
 # Guaranteed forges at 100', 300' and 500' (with at least three uses)
 # instead of a forge after a long enough "drought"
 rules:forge-depths:0
+
+# The minimum depth rises on a clock that adapts to the player: laggards get
+# more time, divers a little less (0 keeps the fixed clock)
+rules:depth-clock:0
