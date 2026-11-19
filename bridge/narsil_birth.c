@@ -460,7 +460,7 @@ enum welcome_choice native_welcome(void)
 	}
 	if (prose[0]) para("%s", prose);
 	if (fp) file_close(fp);
-	para("Version %s", buildver);
+	para("Version %s (engine %s)", NB_APP_VERSION, buildver);
 	option(1, "Begin", NULL, NULL);
 	option(1, "Tutorial", "A short guided dungeon; your own character is untouched.", NULL);
 	if (z_info->game_silq)

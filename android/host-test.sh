@@ -108,6 +108,13 @@ fi
 echo "== bridge constants: narsil_bridge.h and NarSilNative.kt agree"
 python3 "$here/check-bridge-constants.py"
 
+echo "== app version: narsil_bridge.h, Android versionName and both iOS plists agree"
+appver=$(sed -n 's/^#define NB_APP_VERSION "\(.*\)"$/\1/p' "$root/bridge/narsil_bridge.h")
+test -n "$appver"
+grep -qx "        versionName = \"$appver\"" "$here/app/build.gradle.kts"
+grep -q "<key>CFBundleShortVersionString</key><string>$appver</string>" "$root/ios/xtool-Info.plist"
+grep -qx "        CFBundleShortVersionString: \"$appver\"" "$root/ios/project.yml"
+
 echo "== new game; save requested during birth is deferred to first command prompt"
 run @answer=0 @save-async "${birth[@]:1}" @expect=Harness 6 4 @save ^x @enter @esc | tail -1 \
     | grep -qx 'state=2 exit="" saves=2'

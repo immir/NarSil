@@ -22,6 +22,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* The mobile apps' release; versionName (Android) and CFBundleShortVersionString (iOS) must match it. */
+#define NB_APP_VERSION "0.3"
+
 typedef struct {
 	const char *lib_dir;     /* read-only data: gamedata/ customize/ help/ screens/ */
 	const char *data_dir;    /* writable: user/ (save/ scores/ panic/ archive/) */
