@@ -525,6 +525,8 @@ item:polearm:Hand Axe
 item:polearm:Battle Axe
 item:polearm:Great Axe
 flags:AGGRAVATE
+slay:MAN_1
+slay:ELF_1
 
 name:(Poisoned)
 alloc:6:6 to 0
