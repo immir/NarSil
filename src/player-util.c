@@ -1129,8 +1129,9 @@ bool player_can_refuel(struct player *p, bool show_msg)
 {
 	struct object *obj = equipped_item_by_slot_name(p, "light");
 
-	if (!obj && show_msg) {
-		msg("You are not wielding a light");
+	if (!obj) {
+		if (show_msg) msg("You are not wielding a light");
+		return false;
 	}
 
 	if (of_has(obj->flags, OF_TAKES_FUEL) || of_has(obj->flags, OF_BURNS_OUT)) {
