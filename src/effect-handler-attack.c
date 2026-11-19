@@ -850,6 +850,24 @@ bool effect_handler_BREATH(effect_handler_context_t *context)
 }
 
 /**
+ * Send a cone of the given type from the player towards the target or in a direction (NarSil-Q's horns).
+ * context->other is the width in degrees.
+ */
+bool effect_handler_ARC(effect_handler_context_t *context)
+{
+	struct loc grid = loc(-1, -1);
+	int flg = PROJECT_ARC | PROJECT_KILL | PROJECT_GRID | PROJECT_ITEM | PROJECT_THRU | PROJECT_RANGE_DAM;
+
+	get_target(context->origin, context->dir, &grid, &flg);
+	if (project(context->origin, context->radius, grid, context->value.dice, context->value.sides,
+				context->value.m_bonus, context->subtype, flg, context->other, 0, context->obj)
+		&& !player->timed[TMD_BLIND]) {
+		context->ident = true;
+	}
+	return true;
+}
+
+/**
  * Cast a bolt spell
  * Stop if we hit a monster, as a bolt
  * Affect monsters (not grids or objects)

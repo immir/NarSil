@@ -1743,7 +1743,7 @@ attack:0:0d0
 defence:0:0d0
 alloc:3:2
 alloc:6:2
-effect:BEAM:FEAR
+effect:ARC:FEAR:0:90
 dice:m$M
 expr:M:PLAYER_WILL: + 0
 effect:NOISE:PLAYER
@@ -1761,7 +1761,7 @@ cost:100
 attack:0:0d0
 defence:0:0d0
 alloc:10:6
-effect:BEAM:SOUND
+effect:ARC:SOUND:0:90
 dice:4d4m$M
 expr:M:PLAYER_WILL: + 0
 effect:NOISE:PLAYER
@@ -1779,7 +1779,7 @@ cost:100
 attack:0:0d0
 defence:0:0d0
 alloc:12:6
-effect:BEAM:FORCE
+effect:ARC:FORCE:0:90
 dice:m$M
 expr:M:PLAYER_WILL: + 10
 effect:NOISE:PLAYER
@@ -1817,7 +1817,7 @@ cost:0
 attack:0:0d0
 defence:0:0d0
 alloc:7:12
-effect:BEAM:NOTHING
+effect:ARC:NOTHING:0:90
 dice:m$M
 expr:M:PLAYER_WILL: + 0
 effect:NOISE:PLAYER
