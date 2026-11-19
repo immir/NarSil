@@ -207,7 +207,7 @@ def patch_objects(silq_path, narsil_path, extra_path):
 SKILLS = ["Melee", "Archery", "Evasion", "Stealth", "Perception", "Will", "Smithing", "Song"]
 PVAL_FLAGS = {"TUNNEL", "DAMAGE_SIDES", "STR", "DEX", "CON", "GRA", "STEALTH", "PERCEPTION", "WILL", "MELEE", "ARCHERY", "SMITHING", "SONG", "EVASION"}
 NEG_FLAGS = {"NEG_STR": "STR", "NEG_DEX": "DEX", "NEG_CON": "CON", "NEG_GRA": "GRA"}
-FLAG_TO_VALUES = {"RES_FIRE": "RES_FIRE[1]", "RES_COLD": "RES_COLD[1]", "RES_POIS": "RES_POIS[1]", "RES_DARK": "RES_DARK[1]"}
+FLAG_TO_VALUES = {"VUL_FIRE": "RES_FIRE[-1]", "VUL_COLD": "RES_COLD[-1]", "VUL_POIS": "RES_POIS[-1]", "RES_FIRE": "RES_FIRE[1]", "RES_COLD": "RES_COLD[1]", "RES_POIS": "RES_POIS[1]", "RES_DARK": "RES_DARK[1]"}
 FLAG_TO_FLAGS = {"RES_STUN": "PROT_STUN", "RES_BLIND": "PROT_BLIND", "RES_CONFU": "PROT_CONF", "RES_FEAR": "PROT_FEAR",
                  "RES_HALLU": "PROT_HALLU", "FEAR": "COWARDICE",
                  "IGNORE_ALL": "IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE"}

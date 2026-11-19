@@ -37,3 +37,119 @@ effect:CURE:POISONED
 effect:NOURISH:INC_BY
 dice:100
 desc:It cures any current poisoning.
+
+name:Bauglir's Vanguard
+graphics:=:d
+type:ring
+depth:6
+weight:1
+cost:300
+attack:0:0d0
+defence:0:0d0
+alloc:6:2
+flags:PROT_STUN | SUST_STR | HUNGER | EASY_KNOW
+
+name:Cowardice
+graphics:=:d
+type:ring
+depth:7
+weight:1
+cost:0
+attack:0:0d0
+defence:0:0d0
+alloc:7:6
+flags:COWARDICE | EASY_KNOW
+
+name:Ered Luin
+graphics:=:d
+type:ring
+depth:8
+weight:1
+cost:150
+attack:0:0d0
+defence:0:0d0
+alloc:8:10
+values:WILL[99]
+flags:PROT_FEAR | PROT_CONF
+special:-1+m5:1
+
+name:Secrets
+graphics:=:d
+type:ring
+depth:15
+weight:1
+cost:500
+attack:0:0d0
+defence:0:0d0
+alloc:15:30
+values:PERCEPTION[99]
+special:-1+m5:1
+
+name:the Laiquendi
+graphics:=:d
+type:ring
+depth:8
+weight:1
+cost:1000
+attack:0:0d0
+defence:0:0d0
+alloc:8:20
+values:STEALTH[99] | ARCHERY[99]
+flags:EASY_KNOW
+special:-1+m5:1
+
+name:Last Chances
+graphics:":d
+type:amulet
+depth:7
+weight:1
+cost:20
+attack:0:0d0
+defence:0:0d0
+alloc:12:40
+flags:CHEAT_DEATH | EASY_KNOW
+
+name:the Vigilant Eye
+graphics:":d
+type:amulet
+depth:4
+weight:1
+cost:0
+attack:0:0d0
+defence:0:0d0
+alloc:10:20
+values:PERCEPTION[99]
+flags:PROT_HALLU
+special:-1+m5:1
+
+name:Dismay
+graphics:_:d
+type:staff
+depth:13
+weight:50
+cost:400
+attack:0:0d0
+defence:0:0d0
+alloc:6:3
+alloc:11:2
+charges:2d2
+effect:PROJECT_LOS:CONFUSION
+dice:$B
+expr:B:PLAYER_WILL: + 0
+desc:It confuses all monsters in line of sight.
+
+name:Shadows
+graphics:_:d
+type:staff
+depth:9
+weight:50
+cost:0
+attack:0:0d0
+defence:0:0d0
+alloc:3:3
+charges:4d2
+effect:DARKEN_AREA
+effect:SPHERE:DARK_WEAK:7
+dice:0
+desc:It darkens an area with a radius of 7 squares, plus the entire room
+desc: if you are currently in one.

@@ -134,6 +134,7 @@ max-pval:0
 type:soft armor
 item:mail:Mail Corslet
 item:mail:Hauberk
+values:RES_POIS[-1]
 
 name:of Deflection
 alloc:1:0 to 0
@@ -741,6 +742,7 @@ prot-dice:0
 prot-sides:0
 max-pval:0
 type:cloak
+values:RES_COLD[-1]
 
 name:of the Scarlet Heart
 alloc:4:0 to 0
@@ -779,6 +781,7 @@ prot-dice:0
 prot-sides:0
 max-pval:0
 item:bow:Longbow
+values:RES_FIRE[-1]
 
 name:of Lammoth
 alloc:8:4 to 0
