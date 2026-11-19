@@ -718,6 +718,15 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
  */
 void py_attack(struct player *p, struct loc grid, int attack_type)
 {
+	/* An oath of mercy asks before a blow at a Man or an Elf */
+	struct monster *target = square_monster(cave, grid);
+	if (target && monster_is_visible(target) &&
+		(rf_has(target->race->flags, RF_MAN) || rf_has(target->race->flags, RF_ELF)) &&
+		player_oath_active(p, OATH_MERCY) &&
+		!get_check("Are you sure you wish to break your oath? ")) {
+		return;
+	}
+
 	/* Store the action type */
 	p->previous_action[0] = ACTION_MISC;
 

@@ -285,6 +285,9 @@ void player_change_song(struct player *p, struct song *song, bool exchange)
 		return;
 	}
 
+	/* Singing breaks an oath of silence (and spoils it for good) */
+	if (song && !exchange && !player_oath_break(p, OATH_SILENCE, true)) return;
+
 	/* Recalculate various bonuses */
 	p->upkeep->redraw |= (PR_SONG);
 	p->upkeep->update |= (PU_BONUS);

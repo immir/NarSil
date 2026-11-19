@@ -490,6 +490,57 @@ bool player_can_gain_ability(struct player *p, struct ability *ability)
 	return player_ability_cost(p, ability) <= p->new_exp;
 }
 
+static const char *const oath_names[OATH_MAX] = { "", "mercy", "silence", "iron" };
+static const char *const oath_vows[OATH_MAX] = { "",
+	"never to attack Men or Elves (+1 Grace while kept)",
+	"never to sing (+1 Strength while kept)",
+	"never to go up stairs without a Silmaril (+2 Constitution while kept)" };
+
+/**
+ * Is the player bound by this oath and still keeping it?
+ */
+bool player_oath_active(const struct player *p, int oath)
+{
+	return (p->oath_type == oath) && !(p->oaths_broken & (1 << (oath - 1))) &&
+		player_active_ability((struct player *) p, "Oath");
+}
+
+/**
+ * The player does what this oath forbids.  With ask, a keeper is asked first (false if they decline).
+ * The oath can never be sworn afterwards, whether or not it was sworn before.
+ */
+bool player_oath_break(struct player *p, int oath, bool ask)
+{
+	const bool keeping = player_oath_active(p, oath);
+
+	if (keeping && ask && !get_check("Are you sure you wish to break your oath? ")) return false;
+	if (keeping) {
+		msg("You break your oath of %s.", oath_names[oath]);
+		p->upkeep->update |= PU_BONUS;
+	}
+	p->oaths_broken |= (1 << (oath - 1));
+	return true;
+}
+
+/**
+ * Asks which oath to swear, one at a time; false if none was sworn.
+ */
+static bool player_choose_oath(struct player *p)
+{
+	for (int round = 0; round < 3; round++) {
+		for (int oath = OATH_MERCY; oath < OATH_MAX; oath++) {
+			char prompt[160];
+			if (p->oaths_broken & (1 << (oath - 1))) continue;
+			strnfmt(prompt, sizeof(prompt), "Swear an oath of %s: %s? ", oath_names[oath], oath_vows[oath]);
+			if (get_check(prompt)) {
+				p->oath_type = oath;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 bool player_gain_ability(struct player *p, struct ability *ability)
 {
 	struct ability *new;
@@ -498,7 +549,15 @@ bool player_gain_ability(struct player *p, struct ability *ability)
 		msg("You do not have enough experience to acquire this ability.");
 		return false;
 	}
+	if (streq(ability->name, "Oath")) {
+		if (p->oaths_broken == 7) {
+			msg("Every oath has been broken before it was made.");
+			return false;
+		}
+		if (!player_choose_oath(p)) return false;
+	}
 	if (!get_check("Are you sure you wish to gain this ability? ")) {
+		if (streq(ability->name, "Oath")) p->oath_type = OATH_NONE;
 		return false;
 	}
 	p->new_exp -= cost;

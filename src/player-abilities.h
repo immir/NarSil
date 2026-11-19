@@ -55,6 +55,10 @@ int player_active_ability(struct player *p, const char *name);
 bool player_has_prereq_abilities(struct player *p, struct ability *ability);
 int player_ability_cost(struct player *p, struct ability *ability);
 bool player_can_gain_ability(struct player *p, struct ability *ability);
+/* NarSil-Q's oaths of the "Oath" ability; the flag of an oath is 1 << (oath - 1) */
+enum { OATH_NONE, OATH_MERCY, OATH_SILENCE, OATH_IRON, OATH_MAX };
+bool player_oath_active(const struct player *p, int oath);
+bool player_oath_break(struct player *p, int oath, bool ask);
 bool player_gain_ability(struct player *p, struct ability *ability);
 void release_ability_list(struct ability *head);
 struct ability *copy_ability_list(const struct ability *head);
