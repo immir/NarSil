@@ -34,6 +34,7 @@
 #include "obj-gear.h"
 #include "obj-ignore.h"
 #include "obj-knowledge.h"
+#include "obj-make.h"
 #include "obj-pile.h"
 #include "obj-tval.h"
 #include "obj-util.h"
@@ -300,6 +301,84 @@ void player_delve(struct player *p)
 		const struct loc grid = picks[randint0(n)];
 		square_memorize(cave, grid);
 		square_light_spot(cave, grid);
+	}
+}
+
+/**
+ * NarSil-Q's chained captives: an alert thrall begs for a light (a human) or food (an elf), and rewards the
+ * kindness with a herb, healing or word of passages near the next level.
+ */
+static bool thrall_wants_light(const struct object *obj)
+{
+	return tval_is_light(obj) && (of_has(obj->flags, OF_TAKES_FUEL) || of_has(obj->flags, OF_BURNS_OUT));
+}
+
+static bool thrall_wants_food(const struct object *obj)
+{
+	return tval_is_food(obj) && !tval_is_herb(obj);
+}
+
+static void thrall_gives_herb(struct player *p, const char *herb)
+{
+	const int tval = tval_find_idx("herb");
+	struct object_kind *kind = lookup_kind(tval, lookup_sval(tval, herb));
+	if (!kind) return;
+	struct object *obj = object_new();
+	object_prep(obj, kind, 0, RANDOMISE);
+	if (inven_carry_okay(obj)) {
+		inven_carry(p, obj, true, true);
+	} else {
+		drop_near(cave, &obj, 0, p->grid, true, false);
+	}
+}
+
+void player_thrall_quest(struct player *p, struct monster *mon)
+{
+	const bool elf = rf_has(mon->race->flags, RF_ELF);
+	char name[80];
+	struct object *gift = NULL;
+
+	monster_desc(name, sizeof(name), mon, MDESC_DEFAULT);
+	if (p->thrall_quest > THRALL_GIVER_PRESENT) {
+		msg("%s thanks you again.", name);
+		return;
+	}
+	msg("Looking up at you, %s begs you for %s.", name, elf ? "something to eat" : "something to lighten the darkness");
+
+	if (!get_item(&gift, "Give which item? ", elf ? "You have no food." : "You have no spare light.",
+				  CMD_NULL, elf ? thrall_wants_food : thrall_wants_light, USE_INVEN)) {
+		return;
+	}
+	gear_object_for_use(p, gift, 1, true, NULL);
+	p->upkeep->energy_use = z_info->move_energy;
+
+	msg("%s %s and thanks you.", name, elf ? "begins eating it" : "hides it among their rags");
+	if (elf && p->chp < p->mhp / 2) {
+		msg("%s murmurs the song of staunching.", name);
+		player_clear_timed(p, TMD_CUT, true, false);
+		p->chp = MIN(p->mhp, p->chp + 50);
+		p->upkeep->redraw |= PR_HP;
+		p->thrall_quest = THRALL_COMPLETE;
+		return;
+	}
+	switch (randint1(3)) {
+		case 1: msg("%s gives you a ragged herb.", name); thrall_gives_herb(p, "Rage"); p->thrall_quest = THRALL_COMPLETE; break;
+		case 2: msg("%s gives you a ragged herb.", name); thrall_gives_herb(p, "Terror"); p->thrall_quest = THRALL_COMPLETE; break;
+		default: msg("%s tells you about some passages a little way off.", name); p->thrall_quest = THRALL_REWARD_MAP;
+	}
+}
+
+/**
+ * On entering a level: a promised map of passages is delivered once; an unanswered plea is forgotten.
+ */
+void player_thrall_arrival(struct player *p)
+{
+	if (p->thrall_quest == THRALL_GIVER_PRESENT) p->thrall_quest = THRALL_NOT_STARTED;
+	if (p->thrall_quest == THRALL_REWARD_MAP) {
+		bool ident = false;
+		msg("You remember the thrall's directions to some passages nearby.");
+		effect_simple(EF_MAP_AREA, source_player(), "0", 0, 30, 0, &ident);
+		p->thrall_quest = THRALL_COMPLETE;
 	}
 }
 

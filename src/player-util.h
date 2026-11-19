@@ -76,6 +76,8 @@ void dungeon_change_level(struct player *p, int dlev);
 int int_exp(int base, int power);
 bool player_cheat_death(struct player *p);
 void player_betrayal(struct player *p);
+void player_thrall_quest(struct player *p, struct monster *mon);
+void player_thrall_arrival(struct player *p);
 void player_delve(struct player *p);
 void take_hit(struct player *p, int dam, const char *kb_str);
 void death_knowledge(struct player *p);

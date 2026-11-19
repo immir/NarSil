@@ -107,6 +107,7 @@ bool target_able(struct monster *m)
 	bool rage_visible = player->is_dead || !player->timed[TMD_RAGE] ||
 		(m && m->race &&square_isseen(cave, m->grid));
 	return m && m->race && monster_is_visible(m) &&
+		!rf_has(m->race->flags, RF_PEACEFUL) &&
 		projectable(cave, player->grid, m->grid, PROJECT_NONE) &&
 		!player->timed[TMD_IMAGE] && rage_visible;
 }

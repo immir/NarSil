@@ -6,6 +6,7 @@
 
   silq-convert.py object SILQ_EDIT_DIR NARSIL_GAMEDATA_DIR tools/silq-new-objects.txt > object.txt
   silq-convert.py special|artefact SILQ_EDIT_DIR NARSIL_GAMEDATA_DIR tools/silq-new-objects.txt > special.txt
+  silq-convert.py vault SILQ_EDIT_DIR NARSIL_GAMEDATA_DIR > vault.txt
   silq-convert.py tiles NARSIL_GRAF_PREF LIB_SILQ_MONSTER_TXT > graf-mcm.prf   (monster tile lines for NarSil-Q's monsters)
 
 Lines NarSil has and Sil-Q's format cannot express (drop:, drop-artifact:, song:, message-*:) are kept from
@@ -406,7 +407,43 @@ def convert_ability(silq, gamedata, new_objects):
             print("\n".join(out) + "\n")
 
 
+VAULT_TYPES = {"6": "Interesting room", "7": "Lesser vault", "8": "Greater vault", "9": "Throne room", "10": "Gates of Angband"}
+
+
+def convert_vault(silq, gamedata):
+    """Sil-Q's vault.txt in NarSil's layout (the vault symbols are the same, plus , z and Z)."""
+    entries = read_entries(f"{silq}/vault.txt", r"^N:\d+:(.*)")
+    head = open(f"{gamedata}/vault.txt").read().split("\n")
+    first = next(i for i, l in enumerate(head) if l.startswith("name:"))
+    keep = next((i for i in range(first - 1, -1, -1) if not head[i].startswith("#") and head[i].strip()), -1) + 1
+    print("\n".join(head[:keep]).rstrip() + "\n")
+    raw = open(f"{silq}/vault.txt", errors="replace").read().split("\n")
+    cur, rows = None, OrderedDict()
+    for line in raw:                      # D: lines can be all spaces or start with '#', so read them raw
+        m = re.match(r"^N:\d+:(.*)", line)
+        if m:
+            cur = m.group(1).strip()
+            rows[cur] = {"X": None, "F": [], "D": []}
+        elif cur and line.startswith("X:"):
+            rows[cur]["X"] = line[2:].split(":")
+        elif cur and line.startswith("F:"):
+            rows[cur]["F"] += [f.strip() for f in line[2:].split("|") if f.strip() and f.strip() != "SURFACE"]
+        elif cur and line.startswith("D:"):
+            rows[cur]["D"].append(line[2:])
+    for name, v in rows.items():
+        if not v["X"] or not v["D"]:
+            continue
+        ty, depth, rarity = v["X"][:3]
+        print(f"name:{name}\ntype:{VAULT_TYPES.get(ty, ty)}\ndepth:{depth}\nrarity:{rarity}")
+        if v["F"]:
+            print("flags:" + " | ".join(v["F"]))
+        print("\n".join("D:" + d for d in v["D"]) + "\n")
+
+
 def main():
+    if len(sys.argv) == 4 and sys.argv[1] == "vault":
+        convert_vault(sys.argv[2], sys.argv[3])
+        return
     if len(sys.argv) == 5 and sys.argv[1] == "ability":
         convert_ability(sys.argv[2], sys.argv[3], sys.argv[4])
         return

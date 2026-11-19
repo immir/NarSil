@@ -532,6 +532,35 @@ bool build_vault(struct chunk *c, struct loc centre, struct vault *v, bool flip)
 					break;
 				}
 				
+				/* sunlight: a lit floor */
+				case ',': {
+					square_set_feat(c, grid, FEAT_FLOOR);
+					sqinfo_on(square(c, grid)->info, SQUARE_GLOW);
+					break;
+				}
+
+				/* thrall (NarSil-Q): sometimes the one who begs for help */
+				case 'z': {
+					bool human = one_in_(2);
+					if (player->thrall_quest == THRALL_NOT_STARTED && one_in_(8)) {
+						human = one_in_(2);
+						player->thrall_quest = THRALL_GIVER_PRESENT;
+						place_new_monster_one(c, grid, lookup_monster(human ? "Alert human thrall" : "Alert elven thrall"),
+											  true, true, info, ORIGIN_DROP_VAULT);
+					} else {
+						place_new_monster_one(c, grid, lookup_monster(human ? "Dejected human thrall" : "Dejected elven thrall"),
+											  true, true, info, ORIGIN_DROP_VAULT);
+					}
+					break;
+				}
+
+				/* orc thrallmaster (NarSil-Q) */
+				case 'Z': {
+					place_new_monster_one(c, grid, lookup_monster("Orc thrallmaster"),
+										  true, true, info, ORIGIN_DROP_VAULT);
+					break;
+				}
+
 				/* silent watcher */
 				case 'H': {
 					place_new_monster_one(c, grid,
