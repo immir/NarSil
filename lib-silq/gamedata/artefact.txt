@@ -487,6 +487,8 @@ attack:-1:2d5
 defence:1:0d0
 flags:AGGRAVATE
 values:STR[2] | GRA[-2]
+slay:MAN_1
+slay:ELF_1
 desc:A dread black blade greatly famed among the orcs. Its cruel
 desc: edge was forged in Orodruth long ere the Noldor came
 desc: to Beleriand.
@@ -725,6 +727,8 @@ defence:0:0d0
 flags:SEE_INVIS | FREE_ACT | AGGRAVATE | THROWING
 values:GRA[-1]
 slay:RAUKO_1
+slay:MAN_1
+slay:ELF_1
 desc:A weapon forged after the Dagor Bragollach by Sauron,
 desc: tainted to slay Morgoth's foes whether they be man, elf or Maiar.
 desc: Black-hafted, with a bronze head, it throws no shadow.

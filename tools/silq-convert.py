@@ -212,7 +212,7 @@ FLAG_TO_FLAGS = {"RES_STUN": "PROT_STUN", "RES_BLIND": "PROT_BLIND", "RES_CONFU"
                  "RES_HALLU": "PROT_HALLU", "FEAR": "COWARDICE",
                  "IGNORE_ALL": "IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE"}
 FLAG_TO_SLAY = {"SLAY_ORC": "ORC_1", "SLAY_TROLL": "TROLL_1", "SLAY_WOLF": "WOLF_1", "SLAY_SPIDER": "SPIDER_1",
-                "SLAY_UNDEAD": "UNDEAD_1", "SLAY_RAUKO": "RAUKO_1", "SLAY_DRAGON": "DRAGON_1"}
+                "SLAY_UNDEAD": "UNDEAD_1", "SLAY_RAUKO": "RAUKO_1", "SLAY_DRAGON": "DRAGON_1", "SLAY_MAN_OR_ELF": "MAN_1 ELF_1"}
 FLAG_TO_BRAND = {"BRAND_FIRE": "FIRE_1", "BRAND_COLD": "COLD_1", "BRAND_ELEC": "ELEC_1", "BRAND_POIS": "POIS_1"}
 
 
@@ -273,7 +273,7 @@ class Tables:
             elif f in FLAG_TO_FLAGS:
                 out["flags"].append(FLAG_TO_FLAGS[f])
             elif f in FLAG_TO_SLAY:
-                out["slay"].append(FLAG_TO_SLAY[f])
+                out["slay"].extend(FLAG_TO_SLAY[f].split())
             elif f in FLAG_TO_BRAND:
                 out["brand"].append(FLAG_TO_BRAND[f])
             elif f == "EASY_KNOW":
