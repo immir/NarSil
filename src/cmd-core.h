@@ -83,6 +83,7 @@ typedef enum cmd_code {
 	CMD_FIRE,
 	CMD_THROW,
 	CMD_SMITH,
+	CMD_FLETCH,
 	CMD_PICKUP,
 	CMD_AUTOPICKUP,
 	CMD_IGNORE,

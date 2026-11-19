@@ -153,6 +153,7 @@ enum nb_context {
 	NB_CTX_FORGE           = 1 << 11, /* standing on a forge */
 	NB_CTX_DOWN_KNOWN      = 1 << 12, /* a known down staircase elsewhere on the level (NB_ACT_TRAVEL_DOWN) */
 	NB_CTX_UP_KNOWN        = 1 << 13, /* likewise up */
+	NB_CTX_CAN_FLETCH      = 1 << 15, /* has Fletchery and ordinary arrows (NB_ACT_FLETCH) */
 	NB_CTX_ADJ_CHEST       = 1 << 14, /* a closed chest underfoot or adjacent (NB_ACT_OPEN); a known-trapped one also sets NB_CTX_ADJ_TRAP */
 };
 
@@ -175,6 +176,7 @@ enum nb_action {
 	NB_ACT_PANEL,         /* the character panel at its last tab */
 	NB_ACT_REPEAT,        /* repeat the previous command (the game's 'n') */
 	NB_ACT_TRAVEL_DOWN, NB_ACT_TRAVEL_UP, /* walk to the nearest known staircase */
+	NB_ACT_FLETCH,        /* Fletchery: improve ordinary arrows */
 	NB_ACT_COUNT
 };
 

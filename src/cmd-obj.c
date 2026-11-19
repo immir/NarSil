@@ -1067,6 +1067,47 @@ void do_cmd_refuel(struct command *cmd)
 	player->previous_action[0] = ACTION_MISC;
 }
 
+static bool obj_is_ordinary_arrow(const struct object *obj)
+{
+	return tval_is_ammo(obj) && !obj->ego && !obj->artifact && obj->att == 0;
+}
+
+bool player_can_fletch(const struct player *p)
+{
+	if (!player_active_ability((struct player *)p, "Fletchery")) return false;
+	for (const struct object *o = p->gear; o; o = o->next)
+		if (obj_is_ordinary_arrow(o)) return true;
+	return false;
+}
+
+/*
+ * Fletchery (Sil-Q): give a stack of ordinary arrows +3 to hit.  Sil-Q spends a
+ * turn per arrow; here the whole stack costs that many turns of energy at once.
+ */
+void do_cmd_fletch(struct command *cmd)
+{
+	struct object *obj;
+	bool none_left = false;
+
+	if (!player_active_ability(player, "Fletchery")) {
+		msg("You need the ability 'Fletchery' to do that.");
+		return;
+	}
+	if (cmd_get_item(cmd, "item", &obj, "Improve which arrows? ",
+			"You need ordinary arrows to do that.", obj_is_ordinary_arrow,
+			USE_INVEN | USE_QUIVER | USE_FLOOR) != CMD_OK) return;
+
+	const int count = obj->number;
+	struct object *improved = gear_object_for_use(player, obj, count, false, &none_left);
+	improved->att = 3;
+	msg("You straighten and adjust the feathering of %d arrow%s.", count, count == 1 ? "" : "s");
+	inven_carry(player, improved, true, true);
+	player->upkeep->energy_use = z_info->move_energy * count;
+	player->upkeep->notice |= (PN_COMBINE);
+	player->upkeep->redraw |= (PR_INVEN);
+	player->previous_action[0] = ACTION_MISC;
+}
+
 /*
  * Destroy an item
  */

@@ -15,6 +15,7 @@
 #include "angband.h"
 #include "cave.h"
 #include "cmd-core.h"
+#include "cmds.h"
 #include "combat.h"
 #include "player-abilities.h"
 #include "project.h"
@@ -269,6 +270,7 @@ static int32_t context_flags(void)
 	if (game.stairs_up.x >= 0 && !square_isupstairs(cave, g)) f |= NB_CTX_UP_KNOWN;
 	if (player_can_fire_quiver1(player, false)) f |= NB_CTX_CAN_FIRE;
 	if (player_has_throwable(player, false)) f |= NB_CTX_CAN_THROW;
+	if (player_can_fletch(player)) f |= NB_CTX_CAN_FLETCH;
 	if (player->stealth_mode) f |= NB_CTX_STEALTH;
 	if (player->song[SONG_MAIN]) f |= NB_CTX_SINGING;
 	for (int d = 0; d < 8; d++) {
@@ -913,6 +915,7 @@ static void run_action(enum nb_action a)
 	native_prompt_set_intent(a);
 	switch (a) {
 		case NB_ACT_REST: push_choice(CMD_REST, REST_COMPLETE); break;
+		case NB_ACT_FLETCH: cmdq_push(CMD_FLETCH); break;
 		case NB_ACT_REPEAT: cmdq_push(CMD_REPEAT); break;
 		case NB_ACT_TRAVEL_DOWN: if (game.stairs_down.x >= 0) push_travel(game.stairs_down); break;
 		case NB_ACT_TRAVEL_UP: if (game.stairs_up.x >= 0) push_travel(game.stairs_up); break;
