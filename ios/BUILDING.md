@@ -54,6 +54,8 @@ Free-account installs expire after 7 days; run `xtool dev` again.  Check after a
 - xtool can't compile an asset catalog on Linux, so it bundles loose PNGs from `icons/`. They're listed in
   `xtool.yml` and in `CFBundleIcons` in `xtool-Info.plist`.
 - Xcode compiles `Assets.xcassets`.
+- iOS caches home-screen icons. If an update still shows an old or blank icon, restart the phone. Don't delete the
+  app: that deletes its saves.
 
 **Re-run `./xtool-prepare.sh` before every build.** `ios/lib` and `ios/lib-silq` are copies, not links. If the engine
 has gained a data entry since the last staging, the app dies at start. `./build-ipa.sh` always stages, builds the
