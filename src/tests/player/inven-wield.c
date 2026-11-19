@@ -16,6 +16,7 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-birth.h"
+#include "player-util.h"
 #include "z-quark.h"
 
 static bool empty_gear(struct player *p) {
@@ -725,6 +726,15 @@ static int test_inven_wield_ring_two(void *state) {
 	ok;
 }
 
+/* Refuelling with no light wielded says so and fails; it used to read the missing light. */
+static int test_refuel_no_light(void *state) {
+	require(empty_gear(player));
+	require(!equipped_item_by_slot_name(player, "light"));
+	eq(player_can_refuel(player, false), false);
+	eq(player_can_refuel(player, true), false);
+	ok;
+}
+
 const char *suite_name = "player/inven-wield";
 struct test tests[] = {
 	{ "inven_wield pack/single/empty slot", test_inven_wield_pack_single_empty },
@@ -741,5 +751,6 @@ struct test tests[] = {
 	{ "inven_wield ring none carried", test_inven_wield_ring_none },
 	{ "inven_wield ring one carried", test_inven_wield_ring_one },
 	{ "inven_wield ring two carried", test_inven_wield_ring_two },
+	{ "player_can_refuel with no light", test_refuel_no_light },
 	{ NULL, NULL }
 };
