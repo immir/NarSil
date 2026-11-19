@@ -314,6 +314,14 @@ static int test_catalog_is_reproducible(void *state) {
 	require(strstr(one, "(nothing)") == NULL);
 	require(streq(one, two));
 	require(!streq(one, three));
+
+	/* In each level, the items come before the features, so no item line follows "Features" */
+	bool in_features = false;
+	for (const char *line = one; *line; line = strchr(line, '\n') ? strchr(line, '\n') + 1 : line + strlen(line)) {
+		if (strncmp(line, "== ", 3) == 0) in_features = false;
+		else if (strncmp(line, "  Features", 10) == 0) in_features = true;
+		else if (in_features) require(strncmp(line, "    (", 5) != 0);
+	}
 	mem_free(one);
 	mem_free(two);
 	mem_free(three);

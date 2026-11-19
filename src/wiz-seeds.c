@@ -109,21 +109,20 @@ static void put_level(ang_file *f, struct chunk *c, int depth, int visit)
 	file_putf(f, "== %d ft (level %d), visit %d ==\n", depth * 50, depth, visit + 1);
 
 	for (int y = 0; y < c->height; y++)
-		for (int x = 0; x < c->width; x++) {
-			const struct loc grid = loc(x, y);
-
-			for (const struct object *obj = square_object(c, grid); obj; obj = obj->next) {
+		for (int x = 0; x < c->width; x++)
+			for (const struct object *obj = square_object(c, loc(x, y)); obj; obj = obj->next) {
 				items++;
 				if (!notable_object(obj, depth)) continue;
 				if (!listed++) file_putf(f, "  Items\n");
 				file_putf(f, "    (%d,%d) ", x, y);
 				put_object(f, "", obj);
 			}
-			if (square_isforge(c, grid)) {
+	for (int y = 0; y < c->height; y++)
+		for (int x = 0; x < c->width; x++)
+			if (square_isforge(c, loc(x, y))) {
 				if (!forges++) file_putf(f, "  Features\n");
 				file_putf(f, "    forge at (%d,%d)\n", x, y);
 			}
-		}
 	if (c->vault_name && c->vault_name[0]) {
 		if (!forges) file_putf(f, "  Features\n");
 		file_putf(f, "    greater vault: %s\n", c->vault_name);
