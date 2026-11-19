@@ -378,6 +378,13 @@ void set_alertness(struct monster *mon, int alertness)
 	
 	/* Bound the alertness value */
 	alertness = (MAX(MIN(alertness, ALERTNESS_MAX), ALERTNESS_MIN));
+
+	/* Dejected thralls cannot be roused beyond unwary */
+	if ((streq(mon->race->name, "Dejected human thrall") || streq(mon->race->name, "Dejected elven thrall")) &&
+		(alertness >= ALERTNESS_UNWARY)) {
+		alertness = ALERTNESS_UNWARY;
+	}
+	if (mon->alertness == alertness) return;
 	
 	/* First deal with cases where the monster becomes more alert */
 	if (mon->alertness < alertness) {

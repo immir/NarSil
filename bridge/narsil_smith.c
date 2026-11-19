@@ -172,7 +172,7 @@ static void add_item_panel(void)
 	exclude_pval();
 	native_sanitise(name);
 	native_prompt_add("#I\t%s   %d.%d lb\t%d\t%d\t%d\t%d\t%d\n", name, weight / 10, weight % 10, dif, skill,
-		current_cost.drain > 0, MAX(10, dif * 10), player->smithing_leftover);
+		current_cost.drain > 0, MAX(10, dif * (player_active_ability(player, "Expertise") ? 5 : 10)), player->smithing_leftover);
 
 	const struct { bool need; const char *name; } abilities[] = {
 		{ current_cost.weaponsmith, "Weaponsmith" }, { current_cost.armoursmith, "Armoursmith" },

@@ -262,9 +262,9 @@ bool player_cheat_death(struct player *p)
 		object_desc(name, sizeof(name), obj, ODESC_PREFIX | ODESC_BASE, p);
 		p->chp = 1;
 		p->energy = z_info->move_energy;
-		for (int t = 0; t < TMD_MAX; t++) {
-			if (t != TMD_FOOD) player_clear_timed(p, t, true, false);
-		}
+		static const int cured[] = { TMD_BLIND, TMD_CONFUSED, TMD_POISONED, TMD_AFRAID, TMD_ENTRANCED,
+									 TMD_IMAGE, TMD_STUN, TMD_CUT, TMD_SLOW };
+		for (size_t t = 0; t < N_ELEMENTS(cured); t++) player_clear_timed(p, cured[t], true, false);
 		msgt(MSG_LEVEL, "Your %s breaks into two pieces!", name);
 		gear_excise_object(p, obj);
 		object_delete(cave, p->cave, &obj);
@@ -431,7 +431,8 @@ void player_thrall_quest(struct player *p, struct monster *mon)
 		return;
 	}
 	gear_object_for_use(p, gift, 1, true, NULL);
-	p->upkeep->energy_use = z_info->move_energy;
+	/* It takes a couple of turns */
+	p->upkeep->energy_use = 2 * z_info->move_energy;
 
 	msg("%s %s and thanks you.", name, elf ? "begins eating it" : "hides it among their rags");
 	if (elf && p->chp < p->mhp / 2) {
@@ -457,43 +458,79 @@ void player_thrall_arrival(struct player *p)
 	if (p->thrall_quest == THRALL_GIVER_PRESENT) p->thrall_quest = THRALL_NOT_STARTED;
 	if (p->thrall_quest == THRALL_REWARD_MAP) {
 		bool ident = false;
-		msg("You remember the thrall's directions to some passages nearby.");
+		msg("You remember the thrall told you of the passages here.");
 		effect_simple(EF_MAP_AREA, source_player(), "0", 0, 30, 0, &ident);
 		p->thrall_quest = THRALL_COMPLETE;
 	}
 }
 
 /**
- * Items of betrayal: a ring or amulet slips off when many foes are in view, and a helm or crown
- * twists over the eyes of the badly wounded. Called once per player turn.
+ * Items of betrayal (Sil-Q): a ring or amulet slips away when more than four foes are near, alerting
+ * them all; the necklace is taken first.  Called once per player turn.
  */
 void player_betrayal(struct player *p)
 {
-	static const char *const jewellery[] = { "right hand", "left hand", "neck" };
-	struct object *head = equipped_item_by_slot_name(p, "head");
-	int seen = 0;
+	static const char *const jewellery[] = { "neck", "right hand", "left hand" };
+	struct object *traitor = NULL;
+	int near = 0;
+
+	for (size_t i = 0; i < N_ELEMENTS(jewellery) && !traitor; i++) {
+		struct object *obj = equipped_item_by_slot_name(p, jewellery[i]);
+		if (obj && of_has(obj->flags, OF_TRAITOR)) traitor = obj;
+	}
+	if (!traitor || p->truce) return;
 
 	for (int i = cave_monster_max(cave) - 1; i >= 1; i--) {
-		const struct monster *mon = cave_monster(cave, i);
-		if (mon && mon->race && monster_is_visible(mon)) seen++;
+		struct monster *mon = cave_monster(cave, i);
+		if (mon && mon->race && target_able(mon) && (distance(p->grid, mon->grid) <= 4)) near++;
 	}
+	if (near <= 4 || !one_in_(100 / near)) return;
 
-	for (size_t i = 0; i < N_ELEMENTS(jewellery); i++) {
-		struct object *obj = equipped_item_by_slot_name(p, jewellery[i]);
-		if (obj && of_has(obj->flags, OF_TRAITOR) && seen > 4 && one_in_(100 / seen)) {
-			char name[80];
-			object_desc(name, sizeof(name), obj, ODESC_BASE, p);
-			msg("Your %s %s.", name, i == 2 ? "comes loose from its chain and falls!" : "slips from your finger and rolls away!");
-			equip_learn_flag(p, OF_TRAITOR);
-			inven_takeoff(obj);
-			inven_drop(obj, 1);
-			return;
+	char name[120];
+	const bool necklace = (equipped_item_by_slot_name(p, "neck") == traitor);
+	object_desc(name, sizeof(name), traitor, ODESC_BASE, p);
+	msg("Your %s %s", name, necklace ? "comes loose from its chain and falls!" : "slips from your finger and rolls away!");
+	equip_learn_flag(p, OF_TRAITOR);
+
+	for (int i = cave_monster_max(cave) - 1; i >= 1; i--) {
+		struct monster *mon = cave_monster(cave, i);
+		if (mon && mon->race && target_able(mon) && (distance(p->grid, mon->grid) <= 4)) {
+			set_alertness(mon, ALERTNESS_VERY_ALERT);
 		}
 	}
 
-	if (head && of_has(head->flags, OF_TRAITOR) && one_in_(20) && p->chp * 3 <= p->mhp) {
-		msg("Your helm twists to cover your eyes!");
+	bool in_chasm = false;
+	for (int d = 0; d < 8 && !in_chasm; d++) {
+		in_chasm = square_ischasm(cave, loc_sum(p->grid, ddgrid_ddd[d]));
+	}
+	if (in_chasm) {
+		msg("Your %s falls into a chasm!", name);
+		struct object *gone = gear_object_for_use(p, traitor, 1, false, &(bool){ false });
+		object_delete(cave, p->cave, &gone);
+	} else {
+		struct object *dropped = gear_object_for_use(p, traitor, 1, false, &(bool){ false });
+		struct loc landing = p->grid;
+		for (int tries = 0; tries < 1000; tries++) {
+			const struct loc g = loc(p->grid.x + rand_range(-3, 3), p->grid.y + rand_range(-3, 3));
+			if (square_in_bounds_fully(cave, g) && square_isfloor(cave, g)) { landing = g; break; }
+		}
+		drop_near(cave, &dropped, 0, landing, true, false);
+	}
+	p->upkeep->update |= (PU_BONUS | PU_INVEN);
+	p->upkeep->redraw |= (PR_EQUIP | PR_INVEN);
+}
+
+/**
+ * A traitor helm or crown twists over the eyes of the badly wounded when a monster lands a blow.
+ */
+void player_betrayal_helm(struct player *p)
+{
+	struct object *head = equipped_item_by_slot_name(p, "head");
+	if (head && of_has(head->flags, OF_TRAITOR) && one_in_(20) && health_level(p->chp, p->mhp) <= HEALTH_BADLY_WOUNDED) {
+		char name[120];
+		object_desc(name, sizeof(name), head, ODESC_BASE, p);
 		player_inc_timed(p, TMD_BLIND, damroll(3, 2), true, true, false);
+		msg("Your %s twists to cover your eyes!", name);
 		equip_learn_flag(p, OF_TRAITOR);
 	}
 }

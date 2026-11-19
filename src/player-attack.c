@@ -607,14 +607,12 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 			const struct loc victim_grid = mon->grid;
 			fatal_blow = mon_take_hit(mon, p, net_dam, NULL);
 
-			/* 'Formidable': a kill in melee scares every enemy that could see it */
+			/* 'Formidable': a kill in melee frightens every foe in view, with the player's will as the power */
 			if (fatal_blow && player_active_ability(p, "Formidable")) {
-				for (int m = cave_monster_max(cave) - 1; m >= 1; m--) {
-					struct monster *other = cave_monster(cave, m);
-					if (other && other->race && projectable(cave, victim_grid, other->grid, PROJECT_NONE)) {
-						other->tmp_morale -= 60;
-					}
-				}
+				bool daunted = false;
+				effect_simple(EF_PROJECT_LOS, source_player(),
+							  format("%d", p->state.skill_use[SKILL_WILL]), PROJ_FEAR, 0, 0, &daunted);
+				if (daunted) msg("Your foes are daunted!");
 			}
 
 			/* Display depending on whether knock back triggered */
