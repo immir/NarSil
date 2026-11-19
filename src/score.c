@@ -19,6 +19,7 @@
 #include "buildid.h"
 #include "game-world.h"
 #include "init.h"
+#include "player-abilities.h"
 #include "player-quest.h"
 #include "score.h"
 
@@ -37,7 +38,9 @@ static int score_points(const struct high_score *score)
 	int silmarils;
 	
 	int maxturns = 100000;
-	int silmarils_factor = maxturns;
+	/* NarSil-Q ranks a harder start above an easier one (the challenge, 0 to 9, rides in the uid field) */
+	int challenge_factor = maxturns;
+	int silmarils_factor = z_info->game_silq ? challenge_factor * 10 : maxturns;
 	int depth_factor = silmarils_factor * 10;
 	int morgoth_factor = depth_factor * 100;
 
@@ -48,6 +51,11 @@ static int score_points(const struct high_score *score)
 	}
 	if (points >= maxturns)	{
 		points = maxturns - 1;
+	}
+
+	/* Points from the challenge taken on (NarSil-Q: 0 00000 to 9 00000) */
+	if (z_info->game_silq) {
+		points += challenge_factor * MIN(MAX(atoi(score->uid), 0), 9);
 	}
 
 	/* Points from silmarils (0 00000 to 3 00000) */
@@ -277,6 +285,12 @@ void build_score(struct high_score *entry, const struct player *p,
 
 	/* Save the player info XXX XXX XXX */
 	strnfmt(entry->uid, sizeof(entry->uid), "%7u", player_uid);
+	if (z_info->game_silq) {
+		/* Sil-Q's bonus for the harder starts: Sindar and Naugrim 3, Edain 5, and 2 more for an unbroken iron vow */
+		const int race = (p->race->ridx == 3) ? 5 : (p->race->ridx == 1 || p->race->ridx == 2) ? 3 : 0;
+		const int iron = (p->oaths_broken & (1 << (OATH_IRON - 1))) ? 0 : 2;
+		strnfmt(entry->uid, sizeof(entry->uid), "%7d", race + iron);
+	}
 	strnfmt(entry->p_s, sizeof(entry->p_s), "%2d", p->sex->sidx);
 	strnfmt(entry->p_r, sizeof(entry->p_r), "%2d", p->race->ridx);
 	strnfmt(entry->p_h, sizeof(entry->p_h), "%2d", p->house->hidx);
