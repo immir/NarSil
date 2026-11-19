@@ -41,8 +41,9 @@ The spoiler front end can list what a seed holds, so that you can pick a seed to
 
     ./narsil -mspoil -- -l catalog.txt -S 424242 -D 12 -V 3
 
-``-l`` names the output file, ``-S`` is the seed, ``-D`` the deepest level to list (default all) and ``-V``
-the number of visits to each depth (default 3).  For every depth and visit the catalog gives:
+``-l`` names the output file, ``-S`` is the seed or a range of them such as ``1-100``, ``-D`` the deepest
+level to list (default all) and ``-V`` the number of visits to each depth (default 3).  For every depth and visit
+the catalog gives:
 
 * the artefacts, ego items and out-of-depth items on the floor, with their grids;
 * forges, and the name of a greater vault;
@@ -55,3 +56,17 @@ command with the same seed always writes the same catalog.
 For NarSil-Q, use the launcher, which sets up NarSil-Q's data first::
 
     tools/narsil-q.sh -mspoil -- -l catalog.txt -S 424242 -D 12
+
+Ready-made lists
+================
+
+``docs/seed-lists/`` holds catalogs for seeds 1 to 100, levels 1 to 12 (50 to 600 feet), three visits each, one
+file per game::
+
+    narsil-seeds-1-100.txt
+    narsil-q-seeds-1-100.txt
+
+Search them for what you want (``Doriath``, ``Iron Crown``, ``forge``, a unique's name) and play that seed.
+Each file's first line names the game and version it was made with, and it only holds for that one.  If the
+game has changed since, regenerate them with ``tools/gen-seed-lists.sh`` (a built desktop game is needed), or
+make a different range, depth or visit count with its ``FIRST``, ``LAST``, ``DEPTH`` and ``VISITS`` settings.

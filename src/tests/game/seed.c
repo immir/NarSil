@@ -302,10 +302,10 @@ static char *slurp(const char *path) {
 
 /* The seed catalog is the same every time, names what the levels hold, and changes with the seed. */
 static int test_catalog_is_reproducible(void *state) {
-	spoil_seeds("SeedCat1", 5150, 8, 2);
+	spoil_seeds("SeedCat1", 5150, 5150, 8, 2);
 	Rand_state_seed(1);
-	spoil_seeds("SeedCat2", 5150, 8, 2);
-	spoil_seeds("SeedCat3", 5151, 8, 2);
+	spoil_seeds("SeedCat2", 5150, 5150, 8, 2);
+	spoil_seeds("SeedCat3", 5151, 5151, 8, 2);
 	char *one = slurp("SeedCat1"), *two = slurp("SeedCat2"), *three = slurp("SeedCat3");
 
 	require(strlen(one) > 500);
@@ -314,12 +314,42 @@ static int test_catalog_is_reproducible(void *state) {
 	require(strstr(one, "(nothing)") == NULL);
 	require(streq(one, two));
 	require(!streq(one, three));
+
+	/* In each level, the items come before the features, so no item line follows "Features" */
+	bool in_features = false;
+	for (const char *line = one; *line; line = strchr(line, '\n') ? strchr(line, '\n') + 1 : line + strlen(line)) {
+		if (strncmp(line, "== ", 3) == 0) in_features = false;
+		else if (strncmp(line, "  Features", 10) == 0) in_features = true;
+		else if (in_features) require(strncmp(line, "    (", 5) != 0);
+	}
 	mem_free(one);
 	mem_free(two);
 	mem_free(three);
 	file_delete("SeedCat1");
 	file_delete("SeedCat2");
 	file_delete("SeedCat3");
+	ok;
+}
+
+/* A range of seeds is each seed's catalog in turn, under a heading of its own. */
+static int test_catalog_range(void *state) {
+	spoil_seeds("SeedRange", 5150, 5152, 6, 2);
+	char *range = slurp("SeedRange");
+
+	require(strstr(range, "Seeds 5150 to 5152") != NULL);
+	for (uint32_t seed = 5150; seed <= 5152; seed++) {
+		spoil_seeds("SeedOne", seed, seed, 6, 2);
+		char *one = slurp("SeedOne");
+		const char *levels = strstr(one, "== 50 ft");
+
+		require(levels != NULL);
+		require(strstr(range, format("######## Seed %u ########", seed)) != NULL);
+		require(strstr(range, levels) != NULL);
+		mem_free(one);
+	}
+	mem_free(range);
+	file_delete("SeedRange");
+	file_delete("SeedOne");
 	ok;
 }
 
@@ -335,5 +365,6 @@ struct test tests[] = {
 	{ "the seed, visits and drop seeds survive a save and load", test_save_load_keeps_seeds },
 	{ "reading a typed seed", test_seed_parse },
 	{ "the seed catalog is reproducible", test_catalog_is_reproducible },
+	{ "a range of seeds is each seed in turn", test_catalog_range },
 	{ NULL, NULL }
 };

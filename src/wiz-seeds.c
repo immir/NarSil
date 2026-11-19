@@ -109,21 +109,20 @@ static void put_level(ang_file *f, struct chunk *c, int depth, int visit)
 	file_putf(f, "== %d ft (level %d), visit %d ==\n", depth * 50, depth, visit + 1);
 
 	for (int y = 0; y < c->height; y++)
-		for (int x = 0; x < c->width; x++) {
-			const struct loc grid = loc(x, y);
-
-			for (const struct object *obj = square_object(c, grid); obj; obj = obj->next) {
+		for (int x = 0; x < c->width; x++)
+			for (const struct object *obj = square_object(c, loc(x, y)); obj; obj = obj->next) {
 				items++;
 				if (!notable_object(obj, depth)) continue;
 				if (!listed++) file_putf(f, "  Items\n");
 				file_putf(f, "    (%d,%d) ", x, y);
 				put_object(f, "", obj);
 			}
-			if (square_isforge(c, grid)) {
+	for (int y = 0; y < c->height; y++)
+		for (int x = 0; x < c->width; x++)
+			if (square_isforge(c, loc(x, y))) {
 				if (!forges++) file_putf(f, "  Features\n");
 				file_putf(f, "    forge at (%d,%d)\n", x, y);
 			}
-		}
 	if (c->vault_name && c->vault_name[0]) {
 		if (!forges) file_putf(f, "  Features\n");
 		file_putf(f, "    greater vault: %s\n", c->vault_name);
@@ -154,11 +153,15 @@ static int forges_given(int depth, int visit)
 	return given;
 }
 
-void spoil_seeds(const char *fname, uint32_t seed, int max_depth, int visits)
+/**
+ * Write the catalog for the seeds first_seed to last_seed, one section each.
+ */
+void spoil_seeds(const char *fname, uint32_t first_seed, uint32_t last_seed, int max_depth, int visits)
 {
 	ang_file *f = file_open(fname, MODE_WRITE, FTYPE_TEXT);
 	struct gen_baseline *baseline = gen_baseline_save(player);
 
+	assert(first_seed >= 1 && first_seed <= last_seed);
 	if (!f) {
 		printf("spoil_seeds: could not write '%s'\n", fname);
 		gen_baseline_free(baseline);
@@ -167,23 +170,30 @@ void spoil_seeds(const char *fname, uint32_t seed, int max_depth, int visits)
 	max_depth = MIN(max_depth, MIN(z_info->max_depth - 1, SEED_DEPTHS - 1));
 
 	file_putf(f, "%s %s seed catalog\n", game_title(), buildver);
-	file_putf(f, "Seed %u, levels at 50 ft to %d ft, %d visit%s each\n", seed, max_depth * 50, visits,
-			  visits == 1 ? "" : "s");
+	if (first_seed == last_seed) {
+		file_putf(f, "Seed %u", first_seed);
+	} else {
+		file_putf(f, "Seeds %u to %u", first_seed, last_seed);
+	}
+	file_putf(f, ", levels at 50 ft to %d ft, %d visit%s each\n", max_depth * 50, visits, visits == 1 ? "" : "s");
 	file_putf(f, "A seed gives the same levels only on the same game, version and data.  Each level is shown as\n"
 				 "for a character diving straight down: artefacts found and uniques killed in a real game\n"
 				 "change what later levels hold.\n\n");
 
-	seed_game = seed;
-	for (int depth = 1; depth <= max_depth; depth++) {
-		for (int visit = 0; visit < visits; visit++) {
-			level_discard(player);
-			gen_baseline_restore(player, baseline);
-			if (z_info->rule_forge_depths) player->fixed_forge_count = forges_given(depth, visit);
-			player->depth = depth;
-			player->level_visits[depth] = visit;
-			player->turn = (depth == 1 && visit == 0) ? 0 : 1;
-			prepare_next_level(player);
-			put_level(f, cave, depth, visit);
+	for (uint32_t seed = first_seed; seed <= last_seed; seed++) {
+		if (last_seed > first_seed) file_putf(f, "######## Seed %u ########\n\n", seed);
+		seed_game = seed;
+		for (int depth = 1; depth <= max_depth; depth++) {
+			for (int visit = 0; visit < visits; visit++) {
+				level_discard(player);
+				gen_baseline_restore(player, baseline);
+				if (z_info->rule_forge_depths) player->fixed_forge_count = forges_given(depth, visit);
+				player->depth = depth;
+				player->level_visits[depth] = visit;
+				player->turn = (depth == 1 && visit == 0) ? 0 : 1;
+				prepare_next_level(player);
+				put_level(f, cave, depth, visit);
+			}
 		}
 	}
 	file_close(f);
