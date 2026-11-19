@@ -466,8 +466,8 @@ enum welcome_choice native_welcome(void)
 	if (z_info->game_silq)
 		option(1, "Play NarSil instead", "NarSil itself; each game keeps its own characters and saves.", NULL);
 	else
-		option(1, "Play NarSil-Q instead", "NarSil with Sil-Q's content and rules, arriving in stages; "
-			"each game keeps its own characters and saves.", NULL);
+		option(1, "Play NarSil-Q instead", "NarSil's engine playing Sil-Q 1.5.1: its monsters, items, "
+			"abilities, songs and rules; each game keeps its own characters and saves.", NULL);
 	switch (ask_screen()) {
 		case 1: return WELCOME_TUTORIAL;
 		case 2: return WELCOME_SWITCH_GAME;

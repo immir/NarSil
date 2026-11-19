@@ -32,11 +32,14 @@ is on. See its settings.
 ## Two games in one app
 
 - **NarSil** is the default.
-- **NarSil-Q** is NarSil's engine playing Sil-Q's monsters, items, abilities and rules. Choose "Play NarSil-Q
-  instead" on the welcome screen. Its title is blue, so you can tell which game you're in.
+- **NarSil-Q** is NarSil's engine playing all of Sil-Q 1.5.1: its houses, monsters, items, artefacts, abilities,
+  songs, oaths, forges, thralls, Morgoth's anger and the depth clock. Its rules have been checked against Sil-Q's
+  source. Choose "Play NarSil-Q instead" on the welcome screen. Its title is blue, so you can tell which game
+  you're in.
 - Each game keeps its own characters and saves.
-- NarSil-Q is new. Many of its rules were ported recently and haven't been played much, especially the songs
-  (Delvings, Challenge, Thresholds), Impale, the horns, betrayal items and thralls.
+- NarSil-Q's newest ports have had the least play, so reports on them are especially welcome. These include the
+  songs (Delvings, Challenge, Thresholds), Impale, the horns, betrayal items and thralls. If something behaves
+  differently from Sil-Q, that's worth reporting too.
 
 ## Reporting problems
 
@@ -48,6 +51,19 @@ Please send:
 
 ## Known gaps
 
-- NarSil-Q leaves out the staff of Self Knowledge, the light curse and the throne-room crowds. See
-  `lib-silq/README.md` for why.
+- NarSil-Q deliberately leaves out a few things from Sil-Q:
+  - **The staff of Self Knowledge:** it isn't in the game, because the abilities and character screens already
+    show what it would.
+  - **The light curse:** in Sil-Q it marks an item as cursed, keeps it out of "good" rolls, and lowers a cursed
+    special's bonus when smithed. NarSil-Q's affected artefacts and specials have their other drawbacks but not
+    the curse marking.
+  - **The throne-room crowds:** the guards in Morgoth's throne room don't shy away from you. Sil-Q describes this
+    but has no code for it beyond what NarSil already does.
+  - **The +1 score:** NarSil-Q doesn't award Sil-Q's +1 score for not using fixed experience.
+- A few things differ in how they're presented or in small details:
+  - **Oaths:** you choose one through a series of yes/no questions rather than Sil-Q's menu. The oaths and
+    their effects are Sil-Q's.
+  - **Delvings:** it reveals nearby stairs, forges and traps the way Sil-Q's code intends. Sil-Q's version has
+    an indexing slip that NarSil-Q doesn't copy.
+  - **The horn of Blasting:** it may not break walls in exactly the same pattern as in Sil-Q.
 - Expect rough edges. The game saves often, but keep a copy of a precious save.
