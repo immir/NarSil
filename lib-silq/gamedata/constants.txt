@@ -178,3 +178,4 @@ rules:staff-will-check:0
 # instead of a forge after a long enough "drought"
 rules:forge-depths:1
 rules:depth-clock:1
+rules:morgoth-anger:1

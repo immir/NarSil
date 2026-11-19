@@ -182,3 +182,7 @@ rules:forge-depths:0
 # The minimum depth rises on a clock that adapts to the player: laggards get
 # more time, divers a little less (0 keeps the fixed clock)
 rules:depth-clock:0
+
+# Morgoth grows angrier as he is hurt or loses his crown (his skills improve in
+# stages)
+rules:morgoth-anger:0

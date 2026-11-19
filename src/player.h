@@ -554,6 +554,7 @@ struct player {
 	uint16_t noscore;			/* Cheating flags */
 
 	bool is_dead;				/* Player is dead */
+	uint8_t morgoth_state;		/* NarSil-Q: how angry Morgoth has become (0 to 4) */
 	uint8_t thrall_quest;		/* NarSil-Q: THRALL_* state of the chained captive who begs for help */
 	int32_t min_depth_counter;	/* NarSil-Q: the adaptive depth clock (in 1/100000 levels) */
 	uint8_t oath_type;			/* NarSil-Q: the oath sworn (OATH_*), 0 for none */
