@@ -50,6 +50,11 @@ xtool dev               # build, sign, install and launch on the connected iPhon
 Free-account installs expire after 7 days; run `xtool dev` again.  Check after a build that the binary does not link
 `SwiftUICore` (it does not exist before iOS 18 and the app would die at launch).
 
+**The app icon:** `AppIcon.svg` is the source, and `./make-icons.sh` renders it for both builds.
+- xtool can't compile an asset catalog on Linux, so it bundles loose PNGs from `icons/`. They're listed in
+  `xtool.yml` and in `CFBundleIcons` in `xtool-Info.plist`.
+- Xcode compiles `Assets.xcassets`.
+
 **Re-run `./xtool-prepare.sh` before every build.** `ios/lib` and `ios/lib-silq` are copies, not links. If the engine
 has gained a data entry since the last staging, the app dies at start. `./build-ipa.sh` always stages, builds the
 unsigned release `.ipa` for Sideloadly, and checks both the bundled data and the SwiftUICore link.

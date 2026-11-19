@@ -14,7 +14,7 @@ targets:
   NarSil:
     type: application
     platform: iOS
-    sources: [NarSil]
+    sources: [NarSil, Assets.xcassets]
     dependencies:
       - framework: build/NarSilCore.xcframework
         embed: false
@@ -53,6 +53,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.narsil.NarSil
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: "1,2"
   NarSilTests:
     type: bundle.unit-test

@@ -3,5 +3,9 @@ bundleID: org.narsil.NarSil
 resources:
   - lib
   - lib-silq
+  - icons/AppIcon60x60@2x.png
+  - icons/AppIcon60x60@3x.png
+  - icons/AppIcon76x76@2x~ipad.png
+  - icons/AppIcon83.5x83.5@2x~ipad.png
 infoPath: xtool-Info.plist
 iconPath: AppIcon.png

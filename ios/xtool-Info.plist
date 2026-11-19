@@ -5,6 +5,14 @@
 	<key>CFBundleDisplayName</key><string>NarSil</string>
 	<key>CFBundleShortVersionString</key><string>0.3</string>
 	<key>CFBundleVersion</key><string>3</string>
+	<key>CFBundleIcons</key>
+	<dict><key>CFBundlePrimaryIcon</key><dict>
+		<key>CFBundleIconFiles</key><array><string>AppIcon60x60</string></array>
+	</dict></dict>
+	<key>CFBundleIcons~ipad</key>
+	<dict><key>CFBundlePrimaryIcon</key><dict>
+		<key>CFBundleIconFiles</key><array><string>AppIcon60x60</string><string>AppIcon76x76</string><string>AppIcon83.5x83.5</string></array>
+	</dict></dict>
 	<key>UIFileSharingEnabled</key><true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key><true/>
 	<key>UIStatusBarHidden</key><true/>
