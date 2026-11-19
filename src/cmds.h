@@ -66,6 +66,8 @@ void do_cmd_blow_horn(struct command *cmd);
 void do_cmd_eat_food(struct command *cmd);
 void do_cmd_quaff_potion(struct command *cmd);
 void do_cmd_use(struct command *cmd);
+void do_cmd_fletch(struct command *cmd);
+bool player_can_fletch(const struct player *p);
 void do_cmd_refuel(struct command *cmd);
 
 /* cmd-pickup.c */
