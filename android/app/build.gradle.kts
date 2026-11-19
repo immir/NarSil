@@ -18,7 +18,7 @@ val syncGameData by tasks.registering(Sync::class) {
     into(generatedAssets.map { it.dir("lib") })
 }
 val syncSilqData by tasks.registering(Sync::class) {
-    from(silqOverlay) { include("gamedata/**") }
+    from(silqOverlay) { include("gamedata/**", "tiles/**") }
     into(generatedAssets.map { it.dir("lib-silq") })
 }
 
