@@ -69,6 +69,7 @@ enum {
  */
 #define REST_REQUIRED_FOR_REGEN 5
 
+void player_advance_depth_clock(struct player *p);
 int player_min_depth(struct player *p);
 int dungeon_get_next_level(struct player *p, int dlev, int added);
 void dungeon_change_level(struct player *p, int dlev);

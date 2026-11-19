@@ -1551,6 +1551,7 @@ int rd_monster_groups(void)
 int rd_silq(void)
 {
 	rd_byte(&player->fixed_forge_count);
+	rd_s32b(&player->min_depth_counter);
 	rd_byte(&player->oath_type);
 	rd_byte(&player->oaths_broken);
 	return 0;

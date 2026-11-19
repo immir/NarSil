@@ -573,6 +573,8 @@ static enum parser_error parse_constants_rules(struct parser *p) {
 		z->rule_floor_light = value;
 	else if (streq(label, "staff-will-check"))
 		z->rule_staff_will_check = value;
+	else if (streq(label, "depth-clock"))
+		z->rule_depth_clock = value;
 	else if (streq(label, "forge-depths"))
 		z->rule_forge_depths = value;
 	else

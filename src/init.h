@@ -116,6 +116,7 @@ struct angband_constants
 	/* Rule switches ("rules:" in constants.txt); the defaults are NarSil's own rules */
 	uint8_t rule_floor_light;	/**< Objects on the floor shed their light (default 1) */
 	uint8_t rule_staff_will_check;	/**< Using a staff needs a Will check (default 1) */
+	uint8_t rule_depth_clock;	/**< The minimum-depth clock adapts to the player: laggards get time, divers less (default 0) */
 	uint8_t rule_forge_depths;	/**< Guaranteed forges at 100', 300', 500' instead of the drought timer (default 0) */
 };
 

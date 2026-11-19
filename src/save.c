@@ -987,6 +987,7 @@ void wr_monster_groups(void)
 void wr_silq(void)
 {
 	wr_byte(player->fixed_forge_count);
+	wr_s32b(player->min_depth_counter);
 	wr_byte(player->oath_type);
 	wr_byte(player->oaths_broken);
 }

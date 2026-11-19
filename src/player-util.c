@@ -67,10 +67,15 @@ int player_min_depth(struct player *p)
 	int turns = 0;
 	int depth = 0;
 
-	/* Base minimum depth */
-	while (turns < p->turn) {
-		depth += 1;
-		turns += 1000 + 50 * depth;
+	if (z_info->rule_depth_clock) {
+		/* NarSil-Q: the counter advances with the player's own pace (see player_advance_depth_clock) */
+		depth = p->min_depth_counter / 100000 + 1;
+	} else {
+		/* Base minimum depth */
+		while (turns < p->turn) {
+			depth += 1;
+			turns += 1000 + 50 * depth;
+		}
 	}
 
 	/* Bounds on the base */
@@ -87,6 +92,19 @@ int player_min_depth(struct player *p)
 	}
 
 	return depth;
+}
+
+/**
+ * Once per player turn under the adaptive clock: it starts brisk and slows, and the deeper the player is
+ * below the minimum, the faster it runs (divers get a little less time).
+ */
+void player_advance_depth_clock(struct player *p)
+{
+	if (!z_info->rule_depth_clock) return;
+
+	int step = 85 - (p->turn / 850);
+	step += 3 * (p->depth - player_min_depth(p));
+	if (step > 0) p->min_depth_counter += step;
 }
 
 /**
