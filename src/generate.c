@@ -27,6 +27,7 @@
  * See the "room_template.txt" file for more room templates.
  */
 
+#include "gen-seed.h"
 #include "angband.h"
 #include "cave.h"
 #include "datafile.h"
@@ -667,7 +668,8 @@ static struct chunk *cave_generate(struct player *p)
 	int i, tries = 0;
 	struct chunk *chunk = NULL;
 
-	/* Generate */
+	/* Generate, on streams from this visit's level seed (gen-seed.c) */
+	gen_rng_begin(level_seed(seed_game, p->depth, level_visit(p, p->depth)));
 	for (tries = 0; tries < 100 && error; tries++) {
 		int y, x;
 		struct dun_data dun_body;
@@ -738,6 +740,7 @@ static struct chunk *cave_generate(struct player *p)
 		cleanup_dun_data(dun);
 	}
 
+	gen_rng_end();
 	if (error) quit_fmt("cave_generate() failed 100 times!");
 
 	/* Validate the dungeon (we could use more checks here) */
@@ -805,6 +808,7 @@ void prepare_next_level(struct player *p)
 
 	/* Generate a new level */
 	cave = cave_generate(p);
+	level_visit_done(p, p->depth);
 	event_signal_flag(EVENT_GEN_LEVEL_END, true);
 
 	/* Note any forges generated, done here in case generation fails earlier */

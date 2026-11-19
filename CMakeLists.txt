@@ -190,6 +190,7 @@ add_library(OurCoreLib OBJECT
         src/gen-cave.c
         src/generate.c
         src/gen-room.c
+        src/gen-seed.c
         src/gen-util.c
         src/grafmode.c
         src/guid.c
@@ -773,6 +774,7 @@ set(ANGBAND_TEST_CASE_SOURCES
     effects/earthquake.c
     effects/info.c
     game/basic.c
+    game/seed.c
     message/message.c
     monster/attack.c
     monster/desc.c

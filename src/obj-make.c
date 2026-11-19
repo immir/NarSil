@@ -16,6 +16,7 @@
  *    are included in all such copies.  Other copyrights may also apply.
  */
 
+#include "gen-seed.h"
 #include "angband.h"
 #include "alloc.h"
 #include "cave.h"
@@ -1309,7 +1310,7 @@ struct object_kind *get_obj_num(int level)
  *
  * \return a pointer to the newly allocated object, or NULL on failure.
  */
-struct object *make_object(struct chunk *c, int lev, bool good, bool great,
+static struct object *make_object_body(struct chunk *c, int lev, bool good, bool great,
 		struct drop *drop)
 {
 	struct object_kind *kind = NULL;
@@ -1376,6 +1377,16 @@ struct object *make_object(struct chunk *c, int lev, bool good, bool great,
 	apply_magic(new_obj, lev, true, good, great);
 
 	return new_obj;
+}
+
+/* Generation gives each object its own seeded stream (see gen-seed.c) */
+struct object *make_object(struct chunk *c, int lev, bool good, bool great,
+		struct drop *drop)
+{
+	gen_entity_push(GEN_OBJECT);
+	struct object *const result = make_object_body(c, lev, good, great, drop);
+	gen_entity_pop();
+	return result;
 }
 
 

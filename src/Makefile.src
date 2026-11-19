@@ -124,6 +124,7 @@ ANGFILES0 = \
 	generate.o \
 	gen-cave.o \
 	gen-room.o \
+	gen-seed.o \
 	gen-util.o \
 	grafmode.o \
 	guid.o \
