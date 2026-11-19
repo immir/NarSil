@@ -131,7 +131,8 @@ struct cmd_info cmd_item[] =
 	{ "Quaff a potion", { 'q' }, CMD_QUAFF, NULL, NULL, 0, NULL, NULL, NULL, 0 },
 	{ "Fuel your light source", { KTRL('F') }, CMD_REFUEL, NULL, player_can_refuel_prereq, 0, NULL, NULL, NULL, 0 },
 	{ "Use an item", { 'u', KTRL('U'), 'U', KTRL('U') }, CMD_USE, NULL, NULL, 0, NULL, NULL, NULL, 0 },
-	{ "Smith an item", { '0', '0', KTRL('D'), KTRL('D') }, CMD_SMITH, NULL, NULL, 0, NULL, NULL, NULL, 0 }
+	{ "Smith an item", { '0', '0', KTRL('D'), KTRL('D') }, CMD_SMITH, NULL, NULL, 0, NULL, NULL, NULL, 0 },
+	{ "Fletch arrows", { '-' }, CMD_FLETCH, NULL, NULL, 0, NULL, NULL, NULL, 0 }
 };
 
 /**

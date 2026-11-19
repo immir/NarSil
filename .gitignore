@@ -79,3 +79,4 @@ src/version.h
 /ios/*.xcodeproj
 /ios/NarSil/Info.plist
 __pycache__/
+/build-silq/
