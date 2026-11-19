@@ -604,7 +604,6 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 			}
 
 			/* Damage, check for death */
-			const struct loc victim_grid = mon->grid;
 			fatal_blow = mon_take_hit(mon, p, net_dam, NULL);
 
 			/* 'Formidable': a kill in melee frightens every foe in view, with the player's will as the power */

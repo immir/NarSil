@@ -374,11 +374,11 @@ void player_sing_challenge(struct player *p, int score)
  */
 void player_sing_staunching(struct player *p, int score)
 {
-	const int cycle = p->song_duration % 12, fraction = score % 12;
+	const int step = p->song_duration % 12, fraction = score % 12;
 	int heal = score / 12;
 
 	player_clear_timed(p, TMD_CUT, true, false);
-	if ((cycle * fraction) % 12 < fraction) heal++;
+	if ((step * fraction) % 12 < fraction) heal++;
 	if (heal > 0 && p->chp < p->mhp) {
 		p->chp = MIN(p->chp + heal, p->mhp);
 		p->upkeep->redraw |= PR_HP;
