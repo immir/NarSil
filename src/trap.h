@@ -115,6 +115,8 @@ void square_set_door_lock(struct chunk *c, struct loc grid, int power);
 int square_door_lock_power(struct chunk *c, struct loc grid);
 void square_set_door_jam(struct chunk *c, struct loc grid, int power);
 int square_door_jam_power(struct chunk *c, struct loc grid);
+void square_set_door_ward(struct chunk *c, struct loc grid, int power);
+int square_door_ward_power(struct chunk *c, struct loc grid);
 void square_set_forge(struct chunk *c, struct loc grid, int uses);
 int square_forge_uses(struct chunk *c, struct loc grid);
 

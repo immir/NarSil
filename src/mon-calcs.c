@@ -282,6 +282,15 @@ void calc_stance(struct monster *mon)
 		}
 	}
 
+	/* The song of Challenge makes the not-yet-frightened attack overconfidently */
+	{
+		struct song *challenge = lookup_song("Challenge");
+		if (challenge && player_is_singing(player, challenge) && (mon->morale > 50) &&
+			!rf_has(race->flags, RF_NO_CONF)) {
+			stances[1] = STANCE_AGGRESSIVE;
+		}
+	}
+
 	/* Monsters that have been angered have confident turned into aggressive */
 	if (mflag_has(mon->mflag, MFLAG_AGGRESSIVE)) {
 		stances[1] = STANCE_AGGRESSIVE;
@@ -299,17 +308,6 @@ void calc_stance(struct monster *mon)
 	/* Override this for unwary/sleeping monsters */
 	if (mon->alertness < ALERTNESS_ALERT) {
 		stance = stances[1];
-	}
-
-	/* The song of Challenge draws weak-willed foes into melee, whatever their strategy */
-	{
-		struct song *challenge = lookup_song("Challenge");
-		if (challenge && player_is_singing(player, challenge) && (mon->alertness >= ALERTNESS_ALERT) &&
-			(stance != STANCE_FLEEING || mon->morale > -100) &&
-			(monster_skill(mon, SKILL_WILL) <= song_bonus(player, player->state.skill_use[SKILL_SONG], challenge) + 5)) {
-			stance = STANCE_AGGRESSIVE;
-			mon->min_range = 1;
-		}
 	}
 
 	/* React to changes in stance */

@@ -299,6 +299,16 @@ int monster_entry_chance(struct chunk *c, struct monster *mon, struct loc grid,
 				return 0;
 			}
 
+			/* A song-woven ward is overcome by will, by opening or bashing alike */
+			const int ward = square_door_ward_power(c, grid);
+			if (ward > 0) {
+				const int will_chance = success_chance(10, monster_skill(mon, SKILL_WILL), 15 + 5 * ward);
+				unlock_chance = rf_has(mon->race->flags, RF_OPEN_DOOR) ? will_chance : 0;
+				bash_chance = rf_has(mon->race->flags, RF_BASH_DOOR) ? will_chance : 0;
+				*bash = (unlock_chance <= bash_chance) && (bash_chance > 0);
+				return MIN(move_chance, MAX(unlock_chance, bash_chance));
+			}
+
 			/* Monster can open doors that are not jammed */
 			if (rf_has(mon->race->flags, RF_OPEN_DOOR) &&
 				!square_isjammeddoor(c, grid)) {
@@ -399,6 +409,24 @@ static int distance_squared(struct loc grid1, struct loc grid2)
  * overhead it could be calculated only when something has changed (monster HP,
  * chance of escaping, etc)
  */
+/**
+ * How seriously a monster is affected by the song of Challenge (0 = not at all): an aggressive monster
+ * that is not immune to confusion makes a will check against the singer, harder the further away it is.
+ */
+static int challenge_check(struct monster *mon)
+{
+	struct song *challenge = lookup_song("Challenge");
+	if (!challenge || !player_is_singing(player, challenge) || mon->stance != STANCE_AGGRESSIVE ||
+		rf_has(mon->race->flags, RF_NO_CONF) || rf_has(mon->race->flags, RF_QUESTOR)) return 0;
+
+	/* The check works best against lower-will monsters */
+	const int will = monster_skill(mon, SKILL_WILL);
+	const int resistance = (will * will) / 10;
+	return skill_check(source_player(),
+		song_bonus(player, player->state.skill_use[SKILL_SONG], challenge),
+		resistance + flow_dist(cave->player_noise, mon->grid), source_monster(mon->midx));
+}
+
 static void monster_find_range(struct monster *mon)
 {
 	/* Monsters will run up to z_info->flee_range grids out of sight */
@@ -433,8 +461,17 @@ static void monster_find_range(struct monster *mon)
 	/* Now find preferred range */
 	mon->best_range = mon->min_range;
 
-	/* Breathers like range 2 */
-	if ((mon->race->freq_ranged > 15) && !rf_has(mon->race->flags, RF_QUESTOR)){
+	if (challenge_check(mon) > 0) {
+		/* Goaded foes forget their ranged tricks and charge */
+		if (monster_is_visible(mon)) {
+			char m_name[80];
+			monster_desc(m_name, sizeof(m_name), mon, MDESC_STANDARD);
+			msg("%s is agitated by your song.", m_name);
+		}
+		mon->mana = 0;
+		mon->best_range = 0;
+		mon->min_range = 0;
+	} else if ((mon->race->freq_ranged > 15) && !rf_has(mon->race->flags, RF_QUESTOR)){
 		if (monster_breathes(mon) && (mon->best_range < 6)) {
 			mon->best_range = 2;
 		} else if (mon->mana >= z_info->mana_max / 5) {
@@ -2738,6 +2775,9 @@ static void process_move(struct monster *mon, struct loc tgrid, bool bash)
 					mon->noise += 15;
 				}
 			} else if (square_iscloseddoor(cave, next)) {
+				const int ward = square_door_ward_power(cave, next);
+				if (ward > 0 && square_isview(cave, next))
+					msg("Your ward on the door is broken!");
 				/* Monster passes through doors */
 				if (rf_has(race->flags, RF_PASS_DOOR)) {
 					/* Monster went through a door */
@@ -2769,7 +2809,12 @@ static void process_move(struct monster *mon, struct loc tgrid, bool bash)
 					}
 				} else {
 					/* Monster opens the door */
-					if (square_islockeddoor(cave, next)) {
+					if (ward > 0) {
+						/* A broken ward leaves an ordinary closed door */
+						did_unlock_door = true;
+						square_set_door_ward(cave, next, 0);
+						do_move = false;
+					} else if (square_islockeddoor(cave, next)) {
 						/* Note that the monster unlocked the door */
 						did_unlock_door = true;
 

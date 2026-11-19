@@ -269,3 +269,9 @@ dice:10
 desc:A strange coloured spot on the ground - beware its acidic attack.
 msg:You are splashed with acid!
 
+
+name:door ward:door ward
+graphics: :w
+rarity:0
+flags:WARD | INVISIBLE
+desc:A song-woven ward that monsters must overcome with their will to pass a closed door.

@@ -253,6 +253,13 @@ int monster_cast_chance(struct monster *mon)
 	/* Stunned monsters use ranged attacks half as often. */
 	if (mon->m_timed[MON_TMD_STUN]) chance /= 2;
 
+	/* Aggressive monsters goaded by the song of Challenge get no ranged attacks. */
+	{
+		struct song *challenge = lookup_song("Challenge");
+		if (challenge && player_is_singing(player, challenge) && mon->stance == STANCE_AGGRESSIVE)
+			chance = 0;
+	}
+
 	return chance;
 }
 
