@@ -995,6 +995,7 @@ static size_t prt_tmd(int row, int col)
 				&& Term->sidebar_mode == SIDEBAR_LEFT) {
 			continue;
 		}
+		if (i == TMD_KEEN && !player->timed[i]) continue;
 		len += prt_one_tmd(row, col + len, i) + 1;
 	}
 
