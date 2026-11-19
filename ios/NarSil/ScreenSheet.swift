@@ -167,7 +167,7 @@ private struct Welcome: View {
             Palette.splash.ignoresSafeArea()
             ScrollView {
                 VStack(spacing: 4) {
-                    Text(p.title).scaledFont(34, weight: .semibold).tracking(2).foregroundColor(Palette.gold).padding(.top, 28)
+                    Text(p.title).scaledFont(34, weight: .semibold).tracking(2).foregroundColor(GameLauncher.game == .silq ? Color(rgb: 0x7AD3F3) : Palette.gold).padding(.top, 28)
                     ForEach(Array(p.verse.enumerated()), id: \.offset) { _, v in
                         Text(v).font(.system(size: 16).italic()).foregroundColor(Palette.verse).multilineTextAlignment(.center)
                     }

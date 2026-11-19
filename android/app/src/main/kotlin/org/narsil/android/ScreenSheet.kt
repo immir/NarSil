@@ -156,7 +156,7 @@ private fun Welcome(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
     Surface(color = Color(0xFF0E0E10), modifier = Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp, vertical = 32.dp),
                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Text(p.title, color = GOLD, fontSize = 34.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+            Text(p.title, color = if (N.silq) Color(0xFF7AD3F3) else GOLD, fontSize = 34.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
             Box(Modifier.padding(top = 28.dp))
             p.verse.forEach { v ->
                 Text(v, color = Color(0xFF8FC3FF), fontSize = 16.sp, fontStyle = FontStyle.Italic, textAlign = TextAlign.Center)
