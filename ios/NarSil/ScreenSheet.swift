@@ -62,6 +62,9 @@ private struct Birth: View {
                         Button("Reset") { answer(NB.SKILL_RESET) }
                         Button("Accept") { answer(NB.SKILL_ACCEPT) }.buttonStyle(.borderedProminent)
                     }
+                    if p.stage == "death", FileManager.default.fileExists(atPath: Saves.characterDump.path) {
+                        Button("Share dump") { ShareSheet.present([Saves.characterDump]) }
+                    }
                     if p.stage == "death", let onScum { Button("Restore scum save", action: onScum).buttonStyle(.borderedProminent) }
                     if p.stage == "text" { Button("Done") { answer(-1) }.buttonStyle(.borderedProminent) }
                 }

@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -79,6 +80,12 @@ fun ScreenSheet(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit, onScum: (()
                 if (p.stage == "stats") {
                     TextButton(onClick = { onAnswer(N.SKILL_RESET) }) { Text("Reset") }
                     Button(onClick = { onAnswer(N.SKILL_ACCEPT) }) { Text("Accept") }
+                }
+                if (p.stage == "death") {
+                    /* The bridge writes the dump as the death screen opens (narsil_birth.c). */
+                    val context = LocalContext.current
+                    val dump = remember { Share.characterDump(context) }
+                    if (dump.isFile) TextButton(onClick = { Share.file(context, dump, "text/plain", "Share character dump") }) { Text("Share dump") }
                 }
                 if (p.stage == "death" && onScum != null) Button(onClick = onScum) { Text("Restore scum save") }
                 if (p.stage == "text") Button(onClick = { onAnswer(-1) }) { Text("Done") }

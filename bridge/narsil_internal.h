@@ -40,6 +40,8 @@ void native_prompt_set_intent(int nb_action);
 
 /* Implemented by narsil_prompt.c (game thread, command prompt): spend experience on skills. */
 void native_gain_skills(void);
+/* Writes the character dump to user/character-dump.txt, the file the apps share; false if that failed. */
+bool native_write_dump(void);
 /* gain_skills() natively, in either context: 1 accepted, -1 cancelled. */
 int native_skill_points(int cmd_context, bool reset);
 

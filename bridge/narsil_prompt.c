@@ -1039,12 +1039,17 @@ static void rename_character(void)
 }
 
 /* The 's' of do_cmd_change_name(), to a fixed file the UI can share. */
-static void share_character_dump(void)
+bool native_write_dump(void)
 {
 	char path[1024];
 	path_build(path, sizeof(path), ANGBAND_DIR_USER, "character-dump.txt");
+	return dump_save(path);
+}
+
+static void share_character_dump(void)
+{
 	/* No flush: a -more- now would sit under the panel. */
-	msg(dump_save(path) ? "Character dump written." : "Character dump failed!");
+	msg(native_write_dump() ? "Character dump written." : "Character dump failed!");
 }
 
 static void character_tab(void)

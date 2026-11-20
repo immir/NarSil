@@ -407,6 +407,10 @@ out=$(run "${birth[@]}" @die @enter @prompt @answer=3 @prompt @answer=-1 @prompt
 echo "$out" | grep -qP '^Knowledge\thistory\t'
 echo "$out" | grep -qP '^Knowledge\tscores\t'
 echo "$out" | grep -qP 'killed by the test harness at 50 ft\t'
+echo "$out" | grep -qP '^#H\tSeed [0-9]+$'
+grep -q 'Killed by the test harness' "$work/data/user/character-dump.txt"
+grep -qE '^ Seed +[0-9]+' "$work/data/user/character-dump.txt"
+grep -q '\[Last Messages\]' "$work/data/user/character-dump.txt"
 
 echo "== character tab: rename (text prompt) and write the dump for sharing"
 rm -rf "$work/data"

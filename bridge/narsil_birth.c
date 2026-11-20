@@ -605,11 +605,15 @@ void native_death_screen(void)
 	event_signal(EVENT_MESSAGE_FLUSH);
 	const char *fate = player->escaped ? "You have escaped" : streq(player->died_from, "Retiring") ? "You have retired"
 		: "You have been slain";
+	/* Written now, while the death is the last thing in the message log: the death screen's Share dump sends it. */
+	const bool dumped = native_write_dump();
 	while (!play_again) {
 		begin("death", fate);
 		if (!player->escaped && !streq(player->died_from, "Retiring"))
 			para("%s was killed by %s at %d ft.", player->full_name, player->died_from, player->depth * 50);
 		para("Experience %d · deepest %d ft · %d turns", player->exp, player->max_depth * 50, player->turn);
+		para("Seed %u", seed_game);
+		if (!dumped) para("The character dump could not be written.");
 		option(1, "Character", NULL, NULL);
 		option(1, "Inventory and equipment", NULL, NULL);
 		option(1, "Final messages", NULL, NULL);
