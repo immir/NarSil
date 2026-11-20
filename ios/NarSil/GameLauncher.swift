@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 /// Starts the game thread.  The native game is process-global and cannot be restarted, so this runs once.
 enum GameLauncher {
@@ -33,10 +34,17 @@ enum GameLauncher {
     /// The welcome screen's "Play the other game": remembered for the next launch (iOS apps can't relaunch themselves).
     static func chooseOtherGame() { UserDefaults.standard.set(game.other.rawValue, forKey: "game") }
 
+    /// The session record's fields (Trace.swift).
+    static var traceHeader: [(String, Any)] {
+        [("app", "ios"), ("game", dataDir.lastPathComponent), ("version", Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"),
+         ("os", UIDevice.current.systemVersion)]
+    }
+
     @MainActor static func ensureStarted() {
         guard Native.state == NB.IDLE else { return }
         try? FileManager.default.createDirectory(at: dataDir, withIntermediateDirectories: true)
         AppLog.open()
+        Trace.start(dir: dataDir, on: UserDefaults.standard.bool(forKey: "traceUsage"), header: traceHeader)
         Saves.applyPendingRestore()
         let ok = Native.start(libDir: libDir.path, dataDir: dataDir.path, player: player, cols: cols, rows: rows)
         assert(ok, "nb_start failed")

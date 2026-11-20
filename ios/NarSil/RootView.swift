@@ -32,6 +32,7 @@ struct RootView: View {
     @AppStorage("dpad") private var pad = PadMode.docked.rawValue
     @AppStorage("lowHealthBuzz") private var lowHealthBuzz = true
     @AppStorage("combatBuzz") private var combatBuzz = true
+    @AppStorage("traceUsage") private var traceUsage = false
     @State private var lastFeel = 0
     @AppStorage("panelTabs") private var panelTabs = TabStyle.iconsAndNames.rawValue
     @StateObject private var abilities = AbilitiesNav()
@@ -88,8 +89,9 @@ struct RootView: View {
         .textScale(buttonScale)
         .onChange(of: theme) { game.themeIndex = $0 }
         .onChange(of: quickKinds) { Native.setQuickKinds(QuickPins.decode($0)) }
-        .onAppear { game.themeIndex = theme; Native.setQuickKinds(QuickPins.decode(quickKinds)); Native.setTiles(tiles); Native.setItemDetails(itemDetails); game.start() }
+        .onAppear { game.themeIndex = theme; Native.setQuickKinds(QuickPins.decode(quickKinds)); Native.setTiles(tiles); Native.setItemDetails(itemDetails); Trace.setEnabled(traceUsage, header: GameLauncher.traceHeader); game.start() }
         .onChange(of: tiles) { Native.setTiles($0) }
+        .onChange(of: traceUsage) { Trace.setEnabled($0, header: GameLauncher.traceHeader) }
         .onChange(of: itemDetails) { Native.setItemDetails($0) }
         .onChange(of: game.status.lowHp) { low in if low && lowHealthBuzz { UINotificationFeedbackGenerator().notificationOccurred(.warning) } }
         .onChange(of: game.status.feelSeq) { seq in
@@ -110,24 +112,24 @@ struct RootView: View {
 
     private var portrait: some View {
         VStack(spacing: 0) {
-            MessageStrip(game: game, lines: messageLines, onPanel: { Native.requestAction(NB.ACT_PANEL) }, onMessages: { showMessages = true }).textScale(messageScale)
+            MessageStrip(game: game, lines: messageLines, onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
             MapView(game: game, handle: map, swipeRuns: swipeRuns, tiles: tiles).overlay(floatingPad)
             HStack(alignment: .center, spacing: 0) {
                 StatusStrip(game: game, stacked: true).textScale(statusScale)
                 if pad == PadMode.docked.rawValue { Dpad(size: padSize, onAction: padAction).padding(4) }
             }.background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
             promptBar
-            ActionBar(actions: bar) { showMore = true }
+            ActionBar(actions: bar) { Trace.log("menu.open"); showMore = true }
         }
     }
 
     private var landscape: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
-                MessageStrip(game: game, lines: messageLines, onPanel: { Native.requestAction(NB.ACT_PANEL) }, onMessages: { showMessages = true }).textScale(messageScale)
+                MessageStrip(game: game, lines: messageLines, onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
                 MapView(game: game, handle: map, swipeRuns: swipeRuns, tiles: tiles).overlay(floatingPad)
                 promptBar
-                ActionBar(actions: bar) { showMore = true }
+                ActionBar(actions: bar) { Trace.log("menu.open"); showMore = true }
             }
             VStack(spacing: 0) {
                 StatusStrip(game: game, stacked: true).textScale(statusScale)
@@ -207,7 +209,7 @@ struct RootView: View {
         if showSettings { SettingsSheet(buttonScale: $buttonScale, messageScale: $messageScale, itemScale: $itemScale, statusScale: $statusScale,
                           theme: $theme, gamePalette: game.gamePalette, messageLines: $messageLines, panelTabs: $panelTabs, tiles: $tiles, pad: $pad, padSize: $dpadSize, swipeRuns: $swipeRuns,
                           autoMore: game.status.autoMore, autoMoreEnabled: game.atPrompt && game.prompt == nil, onAutoMore: Native.setAutoMore,
-                          itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, combatBuzz: $combatBuzz, scumming: $scumming,
+                          itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, combatBuzz: $combatBuzz, traceUsage: $traceUsage, scumming: $scumming,
                           onExportSave: { Task { if let url = await Saves.export() { ShareSheet.present([url]) } else { say(Saves.cantSave) } } },
                           onImportSave: { importing = true },
                           onSendLogs: { ShareSheet.present(Saves.reportFiles) }) { showSettings = false } }
@@ -267,6 +269,7 @@ struct RootView: View {
     /// A d-pad gesture: answers an open aim or direction prompt; at the map prompt steps, runs, waits or rests;
     /// elsewhere (-more-) it sends the keypad digit.
     private func padAction(_ a: PadAction) {
+        Trace.log("pad", ("kind", { () -> String in switch a { case .step: return "step"; case .run: return "run"; case .wait: return "wait"; case .rest: return "rest" } }()))
         let dir: Int
         switch a {
         case .step(let d), .run(let d): dir = d

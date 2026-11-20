@@ -40,7 +40,7 @@ struct MessageStrip: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 10).padding(.vertical, 4)
             .contentShape(Rectangle())
-            .onTapGesture { if more { Native.pushKey(Keys.enter) } else { onMessages() } }
+            .onTapGesture { if more { Trace.log("more.tap"); Native.pushKey(Keys.enter) } else { onMessages() } }
             Button(action: onPanel) {
                 PanelIcon(index: IconIndex.panel).stroke(style: StrokeStyle(lineWidth: 1.8 * 26 / 24, lineCap: .round, lineJoin: .round))
                     .frame(width: 26, height: 26)
@@ -81,7 +81,7 @@ struct StatusStrip: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(stripBackground)
         .contentShape(Rectangle())
-        .onTapGesture { Native.requestAction(NB.ACT_CHARACTER) }
+        .onTapGesture { Trace.log("panel.request", ("via", "status")); Native.requestAction(NB.ACT_CHARACTER) }
     }
 }
 

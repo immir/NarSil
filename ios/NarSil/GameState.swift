@@ -74,7 +74,52 @@ final class GameState: ObservableObject {
     /// Polls once per display frame while started; idempotent.
     func start() {
         if ticker == nil { ticker = FrameTicker { [weak self] in self?.poll() } }
+        Trace.answerHook = { [weak self] v in if Thread.isMainThread { MainActor.assumeIsolated { self?.traceAnswer(v) } } }
         ticker?.start()
+    }
+
+    // MARK: usage trace (Trace.swift; the events are those of GameState.kt)
+    private var tracedPanelTab = -1
+    private var tracedPrompt: String?
+    private var tracedDepth = -1
+    private var panelOpenedAt = DispatchTime.now()
+    private var actedInPanel = false
+
+    /// The case's name capitalised, as Kotlin's class name is ("Pack", "LookList"), so both apps' traces use the same words.
+    private static func name(_ value: Any) -> String { let n = String("\(value)".prefix { $0 != "(" }); return n.prefix(1).uppercased() + n.dropFirst() }
+    private static func kind(_ p: Prompt?) -> String? { p.map(name) }
+
+    /// What changed on screen since the last poll: the panel opening, closing, switching tab; a new prompt; a new level.
+    private func traceTransitions() {
+        guard Trace.enabled else { return }
+        if panelTab != tracedPanelTab {
+            if tracedPanelTab < 0 {
+                panelOpenedAt = .now(); actedInPanel = false
+                Trace.log("panel.open", ("tab", panelTab))
+            } else if panelTab < 0 {
+                Trace.log("panel.close", ("open_ms", Int((DispatchTime.now().uptimeNanoseconds - panelOpenedAt.uptimeNanoseconds) / 1_000_000)), ("acted", actedInPanel))
+            } else {
+                Trace.log("tab.show", ("tab", panelTab))
+            }
+            tracedPanelTab = panelTab
+        }
+        let kind = Self.kind(prompt)
+        if kind != tracedPrompt { if let kind { Trace.log("prompt.show", ("kind", kind)) }; tracedPrompt = kind }
+        if status.depth != tracedDepth { if tracedDepth >= 0 { Trace.log("level", ("depth", status.depth)) }; tracedDepth = status.depth }
+    }
+
+    fileprivate func traceAnswer(_ value: Int) {
+        guard Trace.enabled else { return }
+        if value >= NB.PANEL_TAB && value < NB.PANEL_CLOSE { Trace.log("tab.pick", ("tab", value - NB.PANEL_TAB)); return }
+        if value == NB.PANEL_CLOSE { Trace.log("panel.dismiss"); return }
+        let kind = Self.kind(prompt)
+        if kind == "Pack", value >= NB.PACK_ACT, value < NB.PANEL_TAB {
+            actedInPanel = true
+            Trace.log("pack.action", ("item", (value - NB.PACK_ACT) / NB.PACK_ACT_STRIDE), ("act", (value - NB.PACK_ACT) % NB.PACK_ACT_STRIDE))
+            return
+        }
+        if !(kind == "Pack" && value < NB.PACK_ACT) && kind != "Knowledge" { actedInPanel = true }
+        Trace.log("answer", ("prompt", kind ?? "none"), ("v", value))
     }
     func stop() { ticker?.stop() }
 
@@ -113,11 +158,12 @@ final class GameState: ObservableObject {
             changed = true  // the map draws aim targets
         }
         if changed { mapVersion += 1 }
+        traceTransitions()
         let mg = Native.messagesGeneration
         if mg != messagesGen { messagesGen = mg; messages = Parse.messages(Native.messages()) }
         let ig = Native.infoGeneration
         if let seen = infoGen {
-            if ig != seen { infoGen = ig; info = Parse.info(Native.info()) }
+            if ig != seen { infoGen = ig; info = Parse.info(Native.info()); if let info { Trace.log("info.show", ("kind", Self.name(info))) } }
         } else {
             infoGen = ig  // ignore whatever was there before this UI existed
         }

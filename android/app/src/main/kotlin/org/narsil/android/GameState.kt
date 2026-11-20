@@ -228,16 +228,40 @@ class GameState {
             prompt = null
             panelTab = N.nativePanelTab()
         }
+        traceTransitions()
         N.nativeMessagesGeneration().let { gen -> if (gen != messagesGen) { messagesGen = gen; messages = Parse.messages(N.nativeMessages()) } }
         N.nativeInfoGeneration().let { gen ->
             if (infoGen < 0) infoGen = gen  // ignore whatever was there before this UI existed
-            else if (gen != infoGen) { infoGen = gen; info = Parse.info(N.nativeInfo()) }
+            else if (gen != infoGen) { infoGen = gen; info = Parse.info(N.nativeInfo()); info?.let { Trace.log("info.show", "kind" to it::class.simpleName.orEmpty()) } }
         }
     }
 
     private var holdUntilNanos = 0L
     /** A pack action or Make it: that screen stays shown while the command runs; it reopens within moments. */
     val holding get() = holdUntilNanos != 0L
+
+    private var tracedPanelTab = -1
+    private var tracedPrompt: String? = null
+    private var tracedDepth = -1
+    private var panelOpenedAt = 0L
+    private var actedInPanel = false
+
+    /** Usage trace: what changed on screen since the last poll (the panel opening, closing, switching tab; a new prompt; a new level). */
+    private fun traceTransitions() {
+        if (!Trace.enabled) return
+        val now = System.nanoTime()
+        if (panelTab != tracedPanelTab) {
+            when {
+                tracedPanelTab < 0 -> { panelOpenedAt = now; actedInPanel = false; Trace.log("panel.open", "tab" to panelTab) }
+                panelTab < 0 -> Trace.log("panel.close", "open_ms" to (now - panelOpenedAt) / 1_000_000, "acted" to actedInPanel)
+                else -> Trace.log("tab.show", "tab" to panelTab)
+            }
+            tracedPanelTab = panelTab
+        }
+        val kind = prompt?.let { it::class.simpleName }
+        if (kind != tracedPrompt) { if (kind != null) Trace.log("prompt.show", "kind" to kind); tracedPrompt = kind }
+        if (status.depth != tracedDepth) { if (tracedDepth >= 0) Trace.log("level", "depth" to status.depth); tracedDepth = status.depth }
+    }
 
     /** Called with every answer the UI sends: an action from the pack keeps the pack on screen until it reopens. */
     fun answered(value: Int) {
@@ -247,6 +271,25 @@ class GameState {
             else -> false
         }
         if (runsCommand) holdUntilNanos = System.nanoTime() + HOLD_NANOS
+        traceAnswer(value)
+    }
+
+    private fun traceAnswer(value: Int) {
+        if (!Trace.enabled) return
+        when {
+            value >= N.PANEL_TAB && value < N.PANEL_CLOSE -> Trace.log("tab.pick", "tab" to value - N.PANEL_TAB)
+            value == N.PANEL_CLOSE -> Trace.log("panel.dismiss")
+            else -> {
+                val p = prompt
+                if (p is Prompt.Pack && value >= N.PACK_ACT && value < N.PANEL_TAB) {
+                    actedInPanel = true
+                    Trace.log("pack.action", "item" to (value - N.PACK_ACT) / N.PACK_ACT_STRIDE, "act" to (value - N.PACK_ACT) % N.PACK_ACT_STRIDE)
+                } else {
+                    if (!(p is Prompt.Pack && value < N.PACK_ACT) && p !is Prompt.Knowledge) actedInPanel = true
+                    Trace.log("answer", "prompt" to (p?.let { it::class.simpleName } ?: "none"), "v" to value)
+                }
+            }
+        }
     }
 
     private fun pollMap(): Boolean {

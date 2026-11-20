@@ -162,7 +162,7 @@ enum Saves {
 
     /// For a bug report: the app's log, the crash note, the savefile and the character dump, whichever exist.
     static var reportFiles: [URL] {
-        [AppLog.url, AppLog.previous, crashKept, saveFile, characterDump].filter { fm.fileExists(atPath: $0.path) }
+        ([AppLog.url, AppLog.previous, crashKept, saveFile, characterDump] + Trace.files(in: GameLauncher.dataDir)).filter { fm.fileExists(atPath: $0.path) }
     }
 }
 

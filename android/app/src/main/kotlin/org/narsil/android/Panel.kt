@@ -229,7 +229,7 @@ fun EdgeSwipeHandle(modifier: Modifier = Modifier) {
         modifier.width(24.dp).fillMaxHeight(0.4f).systemGestureExclusion()
             .pointerInput(Unit) {
                 detectHorizontalDragGestures(onDragStart = { dx = 0f },
-                    onDragEnd = { if (-dx > threshold) N.nativeRequestAction(N.ACT_PANEL) }) { _, d -> dx += d }
+                    onDragEnd = { if (-dx > threshold) { Trace.log("panel.request", "via" to "edge"); N.nativeRequestAction(N.ACT_PANEL) } }) { _, d -> dx += d }
             },
         contentAlignment = Alignment.CenterEnd,
     ) {

@@ -51,7 +51,7 @@ internal val TOUCH_GUIDE: List<Pair<String, List<String>>> = listOf(
     "Saving and problems" to listOf(
         "The game saves when you switch away from the app, even with the panel or a menu open, and every so often while you play. It cannot save in the middle of a command's own question (a how-many, an aim); it waits until that is answered.",
         "Options (☰, or the panel's Options tab → Display and controls) can export your save to another app, or import one back.",
-        "Options → Send logs shares a zip of the app's log, your save and your character dump, for a bug report.",
+        "Options → Send logs shares a zip of the app's log, your save, your character dump and, if you turned on Record usage trace, that trace, for a bug report.",
         "The Character tab can rename your character and share a character dump.",
         "For testing, Options → Save scumming adds Scum (keep a copy) and Restore to ☰; Restore also offers the last three autosaves, kept at least five minutes apart.",
     ),
@@ -90,6 +90,8 @@ internal object UiText {
     const val AUTO_MORE_LOCKED_HINT = "Change it from the map, or in Game options → User interface."
     const val ITEM_DETAILS = "Item details in the pack"
     const val ITEM_DETAILS_HINT = "Says what an ego item gives in general, and what each ability an item grants does, when you open it in the pack."
+    const val TRACE_USAGE = "Record usage trace"
+    const val TRACE_USAGE_HINT = "Keeps a log on this device of which buttons, panels and tabs you use, never what you type or the game's text, to help improve the controls. Nothing leaves the phone unless you choose Options → Send logs."
     const val COMBAT_BUZZ = "Buzz in combat"
     const val COMBAT_BUZZ_HINT = "A tick when your blow lands, a stronger one when it kills, and a faint one when you miss."
     const val LOW_HEALTH_BUZZ = "Buzz when health is low"

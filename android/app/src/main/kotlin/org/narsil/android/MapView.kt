@@ -264,10 +264,11 @@ class MapView(context: Context, private val state: GameState, private val router
     }
 
     private fun onTap(g: Pair<Int, Int>) {
-        if (aim != null) { N.nativeAnswer(aimAt(g.first, g.second)); return }
+        if (aim != null) { Trace.log("map.tap", "kind" to "aim"); N.nativeAnswer(aimAt(g.first, g.second)); return }
         /* In a fight -more- comes often and the eyes are on the map: any tap continues. */
-        if (!state.atPrompt && state.prompt == null && state.messageLine.contains("-more-")) { router.special(Keys.ENTER); return }
+        if (!state.atPrompt && state.prompt == null && state.messageLine.contains("-more-")) { Trace.log("more.tap", "via" to "map"); router.special(Keys.ENTER); return }
         direction?.let { d ->
+            Trace.log("map.tap", "kind" to "direction")
             val (px, py) = player
             val dx = g.first - px
             val dy = g.second - py
@@ -278,9 +279,9 @@ class MapView(context: Context, private val state: GameState, private val router
         val (px, py) = player
         val adjacent = abs(g.first - px) <= 1 && abs(g.second - py) <= 1 && g != player
         when {
-            adjacent -> { select(null); N.nativeRequestTravel(g.first, g.second) }
-            g == selected -> { selected = null; N.nativeRequestTravel(g.first, g.second) }
-            else -> select(g)
+            adjacent -> { Trace.log("map.tap", "kind" to "step"); select(null); N.nativeRequestTravel(g.first, g.second) }
+            g == selected -> { Trace.log("map.tap", "kind" to "go", "dist" to maxOf(abs(g.first - px), abs(g.second - py))); selected = null; N.nativeRequestTravel(g.first, g.second) }
+            else -> { Trace.log("map.tap", "kind" to "preview", "dist" to maxOf(abs(g.first - px), abs(g.second - py))); select(g) }
         }
     }
 
@@ -297,6 +298,7 @@ class MapView(context: Context, private val state: GameState, private val router
             if (multiTouch || aim != null || direction != null) return
             gridAt(e.x, e.y)?.let { (x, y) ->
                 performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                Trace.log("map.hold", "kind" to "inspect")
                 N.nativeRequestInspect(x, y)
             }
         }
@@ -308,6 +310,7 @@ class MapView(context: Context, private val state: GameState, private val router
             val dy = e2.y - start.y
             if (hypot(dx, dy) < 2f * cellW) return false
             val o = octant(dx, dy)
+            Trace.log("map.swipe", "kind" to if (aim != null || direction != null) "answer" else if (state.atPrompt && state.prompt == null) (if (swipeRuns()) "run" else "step") else "key")
             when {
                 aim != null || direction != null -> N.nativeAnswer(OCTANT_TO_DIR[o])
                 state.atPrompt && state.prompt == null -> N.nativeRequestMove(OCTANT_TO_DIR[o], swipeRuns())

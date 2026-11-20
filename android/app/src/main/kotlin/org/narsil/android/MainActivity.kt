@@ -92,6 +92,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         settings = Settings(applicationContext)
+        Trace.start(GameLauncher.dataDir(applicationContext), settings.traceUsage, traceHeader())
         crash = Share.pendingCrash(applicationContext)
         onBackPressedDispatcher.addCallback(this) { router.special(Keys.ESCAPE) }
         setContent {
@@ -100,6 +101,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private var crash by mutableStateOf<String?>(null)
+
+    private fun traceHeader() = listOf("app" to "android", "game" to GameLauncher.game(applicationContext).data,
+        "version" to (packageManager.getPackageInfo(packageName, 0).versionName ?: "?"), "sdk" to android.os.Build.VERSION.SDK_INT)
 
     /** Runs at the game's next safe point (top-level command prompt). */
     override fun onDestroy() {
@@ -110,12 +114,14 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
+        Trace.log("app.start")
         game?.start()
     }
 
     /** Saves, and stops polling the game while nothing is on screen. */
     override fun onStop() {
         super.onStop()
+        Trace.log("app.stop")
         game?.stop()
         if (NarSilNative.nativeState() == NarSilNative.STATE_RUNNING) NarSilNative.nativeRequestSave()
     }
@@ -123,6 +129,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun App() {
         var phase by remember { mutableStateOf<Phase>(Phase.Loading) }
+        LaunchedEffect(settings.traceUsage) { Trace.setEnabled(settings.traceUsage, traceHeader()) }
 
         LaunchedEffect(Unit) {
             phase = runCatching { withContext(Dispatchers.IO) { GameLauncher.ensureStarted(applicationContext) } }
@@ -331,7 +338,7 @@ class MainActivity : ComponentActivity() {
             Column(Modifier.weight(1f).fillMaxHeight()) {
                 /* At -more- a tap continues; otherwise it opens the scrollable history. */
                 if (state.mapMode) TextScale(settings.messageScale) {
-                    MessageStrip(state, settings.messageLines) { if (state.messageLine.contains("-more-")) router.special(Keys.ENTER) else showMessages = true }
+                    MessageStrip(state, settings.messageLines) { if (state.messageLine.contains("-more-")) { Trace.log("more.tap"); router.special(Keys.ENTER) } else { Trace.log("messages.open", "via" to "strip"); showMessages = true } }
                 }
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     AndroidView(
@@ -358,7 +365,7 @@ class MainActivity : ComponentActivity() {
                         Box(Modifier.padding(4.dp)) { Dpad(settings.dpadSizeDp, { dpad(state, it) }) }
                     } else StatusStrip(state, stacked = false, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz)
                 }
-                if (state.mapMode && !rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { showMore = true } }
+                if (state.mapMode && !rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { Trace.log("menu.open"); showMore = true } }
                 if (!state.mapMode) TextScale(settings.buttonScale) { KeyBar(state.waiting, router, { terminal?.toggleKeyboard() }) { showKeys = true } }
             }
             if (rail) Column(Modifier.width(260.dp).fillMaxHeight().background(Color(0xFF141414))) {
@@ -369,7 +376,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        if (rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { showMore = true } }
+        if (rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { Trace.log("menu.open"); showMore = true } }
         }
     }
 

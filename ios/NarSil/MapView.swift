@@ -271,26 +271,32 @@ final class MapUIView: UIView {
         guard r.state == .ended, let g = grid(at: r.location(in: self)) else { return }
         switch game.prompt {
         case .aim?:
+            Trace.log("map.tap", ("kind", "aim"))
             Native.answer(Direction.aimAt(x: g.x, y: g.y))
             return
         case .direction(let d)?:
+            Trace.log("map.tap", ("kind", "direction"))
             let dx = g.x - player.x, dy = g.y - player.y
             if abs(dx) <= 1 && abs(dy) <= 1 && (dx != 0 || dy != 0 || d.allowHere) { Native.answer(Direction.keypad(dx: dx, dy: dy)) }
             return
         default: break
         }
         /* In a fight -more- comes often and the eyes are on the map: any tap continues. */
-        if moreWaiting() { Native.pushKey(Keys.enter); return }
+        if moreWaiting() { Trace.log("more.tap", ("via", "map")); Native.pushKey(Keys.enter); return }
         guard game.atPrompt else { return }
         let p = player
         let adjacent = abs(g.x - p.x) <= 1 && abs(g.y - p.y) <= 1 && g != p
+        let dist = max(abs(g.x - p.x), abs(g.y - p.y))
         if adjacent {
+            Trace.log("map.tap", ("kind", "step"))
             select(nil)
             Native.requestTravel(x: g.x, y: g.y)
         } else if g == selected {
+            Trace.log("map.tap", ("kind", "go"), ("dist", dist))
             selected = nil
             Native.requestTravel(x: g.x, y: g.y)
         } else {
+            Trace.log("map.tap", ("kind", "preview"), ("dist", dist))
             select(g)
         }
     }
@@ -299,6 +305,7 @@ final class MapUIView: UIView {
     @objc private func pressed(_ r: UILongPressGestureRecognizer) {
         guard r.state == .began, game.prompt == nil || !isAimingOrDirecting, let g = grid(at: r.location(in: self)) else { return }
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        Trace.log("map.hold", ("kind", "inspect"))
         Native.requestInspect(x: g.x, y: g.y)
     }
 
@@ -314,6 +321,7 @@ final class MapUIView: UIView {
         let t = r.translation(in: self)
         guard hypot(t.x, t.y) >= 2 * cellW else { return }
         let dir = Direction.octantToDir[Direction.octant(dx: t.x, dy: t.y)]
+        Trace.log("map.swipe", ("kind", isAimingOrDirecting ? "answer" : (game.atPrompt && game.prompt == nil ? (swipeRuns ? "run" : "step") : "none")))
         if isAimingOrDirecting {
             Native.answer(dir)
         } else if game.atPrompt && game.prompt == nil {

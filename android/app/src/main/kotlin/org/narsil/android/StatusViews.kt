@@ -79,7 +79,7 @@ private fun depthText(s: GameState.Status): String =
 internal fun PanelButton() {
     Box(Modifier.padding(4.dp).size(40.dp).background(Color(0xFF26262B), RoundedCornerShape(10.dp))
             .semantics { contentDescription = "Character panel"; role = Role.Button }
-            .clickable { NarSilNative.nativeRequestAction(NarSilNative.ACT_PANEL) },
+            .clickable { Trace.log("panel.request", "via" to "button"); NarSilNative.nativeRequestAction(NarSilNative.ACT_PANEL) },
         contentAlignment = Alignment.Center) {
         PanelGlyph(PANEL_ICON_PATHS[ICON_PANEL], Color(0xFFF3D27A), Modifier.size(26.dp))
     }
@@ -92,7 +92,7 @@ internal fun StatusStrip(state: GameState, stacked: Boolean, buzzOnLowHealth: Bo
     LowHealthBuzz(s.lowHp && buzzOnLowHealth)
     if (buzzOnLowHealth) BigHitBuzz(s.hp, s.maxHp)
     val hpColour = if (s.lowHp) Color(0xFFFF3B30) else Color(0xFFD04040)
-    Column(Modifier.fillMaxWidth().background(Color(0xFF141414)).clickable { NarSilNative.nativeRequestAction(NarSilNative.ACT_CHARACTER) }
+    Column(Modifier.fillMaxWidth().background(Color(0xFF141414)).clickable { Trace.log("panel.request", "via" to "status"); NarSilNative.nativeRequestAction(NarSilNative.ACT_CHARACTER) }
                .padding(horizontal = 8.dp, vertical = 4.dp)) {
         if (stacked) {
             Meter("HP", s.hp, s.maxHp, hpColour, Modifier.fillMaxWidth(), alarm = s.lowHp)

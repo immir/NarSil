@@ -40,6 +40,7 @@ object Share {
             File(GameLauncher.dataDir(context), "save/${GameLauncher.PLAYER}").takeIf { it.isFile }?.let { put("save/${it.name}", it.readBytes()) }
             crashKept(context).takeIf { it.isFile }?.let { put("crash.txt", it.readBytes()) }
             characterDump(context).takeIf { it.isFile }?.let { put("character-dump.txt", it.readBytes()) }
+            Trace.files(GameLauncher.dataDir(context)).forEach { put(it.name, it.readBytes()) }
         }
         zip
     }

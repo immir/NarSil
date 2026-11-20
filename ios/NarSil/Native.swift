@@ -57,7 +57,7 @@ enum Native {
     static func requestUseKind(_ kind: Int) { nb_request_use_kind(Int32(kind)) }
 
     // Answers to the open prompt.
-    static func answer(_ value: Int) { nb_answer(Int32(value)) }
+    static func answer(_ value: Int) { Trace.answerHook?(value); nb_answer(Int32(value)) }
     static func answerItem(_ index: Int) { nb_answer_item(Int32(index)) }
     static func answerText(_ text: String) { text.withCString { nb_answer_text($0) } }
 

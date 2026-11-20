@@ -103,6 +103,10 @@ struct ActionBar: View {
             }
             .padding(.horizontal, 6).padding(.vertical, 6)
         }
+        /* A drag along the bar is a scroll: a sign it does not hold what the player wants. */
+        .simultaneousGesture(DragGesture(minimumDistance: 12).onEnded { v in
+            if abs(v.translation.width) > abs(v.translation.height) { Trace.log("bar.scroll", ("dx", Int(v.translation.width))) }
+        })
         .background(Color(red: 0x10 / 255, green: 0x10 / 255, blue: 0x12 / 255))
     }
 }
@@ -119,8 +123,8 @@ private struct BarButton: View {
             .padding(.horizontal, 14).frame(minHeight: 40)
             .background(fill, in: Capsule())
             .contentShape(Capsule())
-            .onTapGesture { action.run() }
-            .onLongPressGesture(minimumDuration: 0.5) { action.longPress?() }
+            .onTapGesture { Trace.log("bar.tap", ("act", action.label)); action.run() }
+            .onLongPressGesture(minimumDuration: 0.5) { Trace.log("bar.longpress", ("act", action.label)); action.longPress?() }
     }
 }
 
@@ -139,8 +143,8 @@ struct MoreSheet: View {
                         Text((a.pin.map { pinned.contains($0) } == true ? "● " : "") + a.label).lineLimit(1).frame(maxWidth: .infinity, minHeight: 44)
                             .background(Color.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 10))
                             .contentShape(Rectangle())
-                            .onTapGesture { dismiss(); a.run() }
-                            .onLongPressGesture(minimumDuration: 0.5) { if let id = a.pin { onPin(id) } }
+                            .onTapGesture { Trace.log("menu.pick", ("act", a.label)); dismiss(); a.run() }
+                            .onLongPressGesture(minimumDuration: 0.5) { if let id = a.pin { Trace.log("menu.pin", ("act", a.label)); onPin(id) } }
                     }
                     if i + 1 >= actions.count { Spacer().frame(maxWidth: .infinity) }
                 }

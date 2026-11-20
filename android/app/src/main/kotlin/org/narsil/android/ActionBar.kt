@@ -37,6 +37,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import org.narsil.android.NarSilNative as N
 
 /** One tappable action: a native action id, or an arbitrary handler. */
@@ -117,8 +121,13 @@ fun moreActions(s: GameState.Status, router: KeyRouter, showMessages: () -> Unit
 
 @Composable
 fun ActionBar(actions: List<BarAction>, onMore: () -> Unit) {
+    val scroll = rememberScrollState()
+    /* A scroll of the bar is a sign it does not hold what the player wants: log where it came to rest. */
+    LaunchedEffect(scroll) {
+        snapshotFlow { scroll.isScrollInProgress }.drop(1).filter { !it }.collect { Trace.log("bar.scroll", "at" to scroll.value, "of" to scroll.maxValue) }
+    }
     Row(
-        Modifier.fillMaxWidth().background(Color(0xFF101012)).horizontalScroll(rememberScrollState())
+        Modifier.fillMaxWidth().background(Color(0xFF101012)).horizontalScroll(scroll)
             .padding(horizontal = 6.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -132,19 +141,20 @@ fun ActionBar(actions: List<BarAction>, onMore: () -> Unit) {
 @Composable
 private fun BarButton(a: BarAction) {
     val padding = PaddingValues(horizontal = 14.dp)
+    val run = { Trace.log("bar.tap", "act" to a.label); a.run() }
     when {
         /* Material buttons take no long press: the same look, drawn by hand. */
         a.longPress != null -> Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.heightIn(min = 40.dp).combinedClickable(onLongClick = a.longPress, onClick = a.run)) {
+                modifier = Modifier.heightIn(min = 40.dp).combinedClickable(onLongClick = { Trace.log("bar.longpress", "act" to a.label); a.longPress?.invoke() }, onClick = run)) {
             Box(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
                 Text(a.label, style = MaterialTheme.typography.labelLarge)
             }
         }
-        a.emphasised -> Button(onClick = a.run, contentPadding = padding) { Text(a.label, fontWeight = FontWeight.SemiBold) }
-        a.active -> Button(onClick = a.run, contentPadding = padding,
+        a.emphasised -> Button(onClick = run, contentPadding = padding) { Text(a.label, fontWeight = FontWeight.SemiBold) }
+        a.active -> Button(onClick = run, contentPadding = padding,
                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A5F8A))) { Text(a.label) }
-        else -> FilledTonalButton(onClick = a.run, contentPadding = padding) { Text(a.label) }
+        else -> FilledTonalButton(onClick = run, contentPadding = padding) { Text(a.label) }
     }
 }
 
@@ -170,7 +180,7 @@ fun MoreSheet(actions: List<BarAction>, pinned: List<Int> = emptyList(), onPin: 
                             Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.secondaryContainer,
                                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                                     modifier = Modifier.weight(1f).heightIn(min = 40.dp).combinedClickable(
-                                        onLongClick = a.pin?.let { id -> { onPin(id) } }, onClick = { onDismiss(); a.run() })) {
+                                        onLongClick = a.pin?.let { id -> { Trace.log("menu.pin", "act" to a.label); onPin(id) } }, onClick = { Trace.log("menu.pick", "act" to a.label); onDismiss(); a.run() })) {
                                 Box(Modifier.padding(horizontal = 6.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
                                     Text(mark + a.label, maxLines = 1, style = MaterialTheme.typography.labelLarge)
                                 }

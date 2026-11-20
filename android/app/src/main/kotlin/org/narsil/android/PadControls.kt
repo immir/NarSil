@@ -17,6 +17,7 @@ import kotlin.math.roundToInt
  */
 fun applyPad(state: GameState, router: KeyRouter, a: PadAction) {
     val dir = when (a) { is PadAction.Step -> a.dir; is PadAction.Run -> a.dir; else -> 5 }
+    Trace.log("pad", "kind" to when (a) { is PadAction.Step -> "step"; is PadAction.Run -> "run"; PadAction.Wait -> "wait"; PadAction.Rest -> "rest" })
     when (val p = state.prompt) {
         is GameState.Prompt.Aim -> NarSilNative.nativeAnswer(if (dir == 5) NarSilNative.AIM_CURRENT else dir)
         is GameState.Prompt.Direction -> if (dir != 5 || p.allowHere) NarSilNative.nativeAnswer(dir)

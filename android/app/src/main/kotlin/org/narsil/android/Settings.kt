@@ -65,6 +65,7 @@ class Settings(context: Context) {
     private val details = mutableStateOf(prefs.getBoolean("itemDetails", false))
     private val buzz = mutableStateOf(prefs.getBoolean("lowHealthBuzz", true))
     private val combat = mutableStateOf(prefs.getBoolean("combatBuzz", true))
+    private val tracing = mutableStateOf(prefs.getBoolean("traceUsage", false))
     private val msgLines = mutableIntStateOf(prefs.getInt("messageLines", 3))
     private val panelTabStyle = mutableIntStateOf(prefs.getInt("panelTabs", TABS_ICONS_AND_NAMES))
     private val themeChoice = mutableIntStateOf(prefs.getInt("theme", 0))
@@ -87,6 +88,8 @@ class Settings(context: Context) {
     /** A short buzz when health falls below the game's hitpoint warning. */
     /** A tick when the player's blow lands, a stronger one for a kill. */
     var combatBuzz: Boolean get() = combat.value; set(v) { combat.value = v; prefs.edit().putBoolean("combatBuzz", v).apply() }
+    /** Records a usage trace on the device (Trace.kt); off until a tester turns it on. */
+    var traceUsage: Boolean get() = tracing.value; set(v) { tracing.value = v; prefs.edit().putBoolean("traceUsage", v).apply() }
     var lowHealthBuzz: Boolean get() = buzz.value; set(v) { buzz.value = v; prefs.edit().putBoolean("lowHealthBuzz", v).apply() }
     /** How the panel's tabs are drawn: [TABS_ICONS_AND_NAMES], [TABS_ICONS] or [TABS_NAMES] (a scrolling strip). */
     var panelTabs: Int get() = panelTabStyle.intValue; set(v) { panelTabStyle.intValue = v; prefs.edit().putInt("panelTabs", v).apply() }
@@ -213,6 +216,13 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                         Hint(UiText.ITEM_DETAILS_HINT)
                     }
                     Switch(settings.itemDetails, { settings.itemDetails = it })
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Label(UiText.TRACE_USAGE)
+                        Hint(UiText.TRACE_USAGE_HINT)
+                    }
+                    Switch(settings.traceUsage, { settings.traceUsage = it })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
