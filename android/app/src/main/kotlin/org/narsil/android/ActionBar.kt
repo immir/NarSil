@@ -53,7 +53,7 @@ private fun Modifier.holdMark(colour: Color): Modifier = drawWithContent {
     drawContent()
     val stroke = Stroke(1.dp.toPx())
     for (inset in listOf(1.5.dp.toPx(), 4.5.dp.toPx())) {
-        drawRoundRect(colour.copy(alpha = 0.55f), Offset(inset, inset), Size(size.width - 2 * inset, size.height - 2 * inset),
+        drawRoundRect(colour.copy(alpha = 0.25f), Offset(inset, inset), Size(size.width - 2 * inset, size.height - 2 * inset),
                       CornerRadius(maxOf(size.height / 2f - inset, 0f)), style = stroke)
     }
 }
@@ -87,7 +87,7 @@ fun contextActions(s: GameState.Status): List<BarAction> = buildList {
     if (s.has(N.CTX_UP_STAIRS)) add(BarAction("Up ▲", emphasised = true, run = act(N.ACT_GO_UP)))
     if (s.has(N.CTX_FLOOR_ITEMS)) add(BarAction(if (s.has(N.CTX_FLOOR_SPECIAL)) "Pick up ✦" else "Pick up", emphasised = true, longPress = act(N.ACT_FLOOR), run = act(N.ACT_PICKUP)))
     if (s.has(N.CTX_FORGE)) add(BarAction("Forge", emphasised = true, run = act(N.ACT_SMITH)))
-    if (s.has(N.CTX_CAN_FIRE)) add(BarAction("Fire", emphasised = true, run = act(N.ACT_FIRE_NEAREST)))
+    if (s.has(N.CTX_CAN_FIRE)) add(BarAction("Fire", emphasised = true, longPress = { N.nativeRequestLookMonsters() }, run = act(N.ACT_FIRE_NEAREST)))
     if (s.has(N.CTX_CAN_FLETCH)) add(BarAction("Fletch", run = act(N.ACT_FLETCH)))
     if (s.has(N.CTX_CAN_THROW)) add(BarAction("Throw", emphasised = true, run = act(N.ACT_THROW_NEAREST)))
     if (s.has(N.CTX_ADJ_CLOSED_DOOR) || s.has(N.CTX_ADJ_CHEST)) add(BarAction("Open", emphasised = true, run = act(N.ACT_OPEN)))
