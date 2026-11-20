@@ -196,6 +196,18 @@ rm -rf "$work/data"
 out=$(run "${birth[@]}" @pile @act=1 @messages "${quit[@]}")
 echo "$out" | grep -qP 'You see .*, .*, .* and 1 more\.'
 
+echo "== special items underfoot are marked in the message (ego name, and {??} for properties still to find) and flagged for the action bar"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @specials @act=1 @messages @ctx "${quit[@]}")
+echo "$out" | grep -qP "You see a Shortsword \x013\{\?\?\}\x02 and a Shortsword \x011of Hador's House\x02"
+ctx=($(echo "$out" | grep -o 'context=0x[0-9a-f]*' | sed 's/context=//'))
+[ $(( ctx[0] & 0x10000 )) -ne 0 ] && [ $(( ctx[0] & 0x4 )) -ne 0 ]
+
+echo "== long-press on Pick up opens the pack at the floor section (focus 2)"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @specials @act=1 @esc @esc @act=33 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qP '^Pack\t-1\t2\t'
+
 echo "== the status area's data: a lit torch has turns left; the monsters-only look list has its own header"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @ctx @lookm "${quit[@]}")

@@ -159,6 +159,7 @@ enum nb_context {
 	NB_CTX_DOWN_KNOWN      = 1 << 12, /* a known down staircase elsewhere on the level (NB_ACT_TRAVEL_DOWN) */
 	NB_CTX_UP_KNOWN        = 1 << 13, /* likewise up */
 	NB_CTX_CAN_FLETCH      = 1 << 15, /* has Fletchery and ordinary arrows (NB_ACT_FLETCH) */
+	NB_CTX_FLOOR_SPECIAL   = 1 << 16, /* something underfoot is an artefact, an ego item, or has properties still to find (NB_CTX_FLOOR_ITEMS is also set) */
 	NB_CTX_ADJ_CHEST       = 1 << 14, /* a closed chest underfoot or adjacent (NB_ACT_OPEN); a known-trapped one also sets NB_CTX_ADJ_TRAP */
 };
 
@@ -182,6 +183,7 @@ enum nb_action {
 	NB_ACT_REPEAT,        /* repeat the previous command (the game's 'n') */
 	NB_ACT_TRAVEL_DOWN, NB_ACT_TRAVEL_UP, /* walk to the nearest known staircase */
 	NB_ACT_FLETCH,        /* Fletchery: improve ordinary arrows */
+	NB_ACT_FLOOR,         /* the pack, scrolled to what is on the floor */
 	NB_ACT_COUNT
 };
 
@@ -268,7 +270,7 @@ void nb_test_message(int type); /* at the command prompt, send a game message of
 void nb_test_depth(int level); /* at the command prompt, go straight to dungeon level `level` (50' each) */
 /* Forges on the current level, and (NarSil-Q) the guaranteed forges made so far; only while the game waits for input. */
 int nb_test_forges(int *fixed_made, int *depth);
-void nb_test_chest(int kind); /* 0: a locked small chest under the player; 1: a trapped one; 2: a pile of four, reported as stepping on it would be; 3: a known short sword of Hador's House into the pack*/
+void nb_test_chest(int kind); /* 0: a locked small chest under the player; 1: a trapped one; 2: a pile of four, reported as stepping on it would be; 3: a known short sword of Hador's House into the pack; 4: under the player, a known Hador's House sword and a plain one with a property still to find */
 #endif
 
 /* Path as (x, y) pairs: the target first, then each step; 0 = no path. */

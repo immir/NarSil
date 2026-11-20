@@ -70,7 +70,7 @@ fun pinnedActions(ids: List<Int>, shown: List<BarAction>, unpin: (Int) -> Unit):
 fun contextActions(s: GameState.Status): List<BarAction> = buildList {
     if (s.has(N.CTX_DOWN_STAIRS)) add(BarAction("Down ▼", emphasised = true, run = act(N.ACT_GO_DOWN)))
     if (s.has(N.CTX_UP_STAIRS)) add(BarAction("Up ▲", emphasised = true, run = act(N.ACT_GO_UP)))
-    if (s.has(N.CTX_FLOOR_ITEMS)) add(BarAction("Pick up", emphasised = true, run = act(N.ACT_PICKUP)))
+    if (s.has(N.CTX_FLOOR_ITEMS)) add(BarAction(if (s.has(N.CTX_FLOOR_SPECIAL)) "Pick up ✦" else "Pick up", emphasised = true, longPress = act(N.ACT_FLOOR), run = act(N.ACT_PICKUP)))
     if (s.has(N.CTX_FORGE)) add(BarAction("Forge", emphasised = true, run = act(N.ACT_SMITH)))
     if (s.has(N.CTX_CAN_FIRE)) add(BarAction("Fire", emphasised = true, run = act(N.ACT_FIRE_NEAREST)))
     if (s.has(N.CTX_CAN_FLETCH)) add(BarAction("Fletch", run = act(N.ACT_FLETCH)))
@@ -144,11 +144,12 @@ private fun BarButton(a: BarAction) {
     val run = { Trace.log("bar.tap", "act" to a.label); a.run() }
     when {
         /* Material buttons take no long press: the same look, drawn by hand. */
-        a.longPress != null -> Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        a.longPress != null -> Surface(shape = RoundedCornerShape(50),
+                color = if (a.emphasised) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = if (a.emphasised) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.heightIn(min = 40.dp).combinedClickable(onLongClick = { Trace.log("bar.longpress", "act" to a.label); a.longPress?.invoke() }, onClick = run)) {
             Box(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
-                Text(a.label, style = MaterialTheme.typography.labelLarge)
+                Text(a.label, style = MaterialTheme.typography.labelLarge, fontWeight = if (a.emphasised) FontWeight.SemiBold else null)
             }
         }
         a.emphasised -> Button(onClick = run, contentPadding = padding) { Text(a.label, fontWeight = FontWeight.SemiBold) }

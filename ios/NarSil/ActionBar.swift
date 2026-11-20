@@ -32,7 +32,7 @@ func contextActions(_ s: Status) -> [BarAction] {
     var out = [BarAction]()
     if s.has(NB.CTX_DOWN_STAIRS) { out.append(BarAction(label: "Down ▼", emphasised: true, run: act(NB.ACT_GO_DOWN))) }
     if s.has(NB.CTX_UP_STAIRS) { out.append(BarAction(label: "Up ▲", emphasised: true, run: act(NB.ACT_GO_UP))) }
-    if s.has(NB.CTX_FLOOR_ITEMS) { out.append(BarAction(label: "Pick up", emphasised: true, run: act(NB.ACT_PICKUP))) }
+    if s.has(NB.CTX_FLOOR_ITEMS) { out.append(BarAction(label: s.has(NB.CTX_FLOOR_SPECIAL) ? "Pick up ✦" : "Pick up", emphasised: true, longPress: act(NB.ACT_FLOOR), run: act(NB.ACT_PICKUP))) }
     if s.has(NB.CTX_FORGE) { out.append(BarAction(label: "Forge", emphasised: true, run: act(NB.ACT_SMITH))) }
     if s.has(NB.CTX_CAN_FIRE) { out.append(BarAction(label: "Fire", emphasised: true, run: act(NB.ACT_FIRE_NEAREST))) }
     if s.has(NB.CTX_CAN_FLETCH) { out.append(BarAction(label: "Fletch", run: act(NB.ACT_FLETCH))) }

@@ -356,8 +356,8 @@ static int run_token(const char *tok)
 		return 0;
 	}
 	if (strcmp(tok, "@chest") == 0 || strcmp(tok, "@trapchest") == 0 || strcmp(tok, "@pile") == 0
-		|| strcmp(tok, "@ego") == 0) {
-		nb_test_chest(strcmp(tok, "@ego") == 0 ? 3 : tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
+		|| strcmp(tok, "@ego") == 0 || strcmp(tok, "@specials") == 0) {
+		nb_test_chest(strcmp(tok, "@specials") == 0 ? 4 : strcmp(tok, "@ego") == 0 ? 3 : tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
 		return settle() ? 0 : 1;
 	}
 	if (sscanf(tok, "@details=%d%c", &mx, &tail) == 1) {

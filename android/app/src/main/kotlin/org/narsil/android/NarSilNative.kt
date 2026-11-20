@@ -75,6 +75,7 @@ object NarSilNative {
     const val CTX_UP_STAIRS = 1 shl 0
     const val CTX_DOWN_STAIRS = 1 shl 1
     const val CTX_FLOOR_ITEMS = 1 shl 2
+    const val CTX_FLOOR_SPECIAL = 1 shl 16
     const val CTX_CAN_FIRE = 1 shl 3
     const val CTX_CAN_THROW = 1 shl 4
     const val CTX_STEALTH = 1 shl 5
@@ -123,6 +124,7 @@ object NarSilNative {
     const val ACT_TRAVEL_DOWN = 30
     const val ACT_TRAVEL_UP = 31
     const val ACT_FLETCH = 32
+    const val ACT_FLOOR = 33
 
     /** Only honoured at the command prompt. */
     @JvmStatic external fun nativeRequestAction(action: Int)

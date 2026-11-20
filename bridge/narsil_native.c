@@ -155,15 +155,23 @@ static void mark_special(char *text, const size_t cap)
 	for (int i = 0; i < k && n < N_ELEMENTS(candidates); i++) candidates[n++] = floor[i];
 	for (size_t i = 0; i < n; i++) {
 		const char *const name = native_special_name(candidates[i]);
-		char *const at = name ? strstr(text, name) : NULL;
-		if (!at || (at >= text + 2 && at[-2] == NB_MARK_BEGIN)) continue;  /* none, or already marked */
-		char marked[512 + 32];
-		const size_t before = (size_t)(at - text);
-		const char *const after = at + strlen(name);
-		my_strcpy(marked, text, MIN(sizeof(marked), before + 1));
-		strnfcat(marked, sizeof(marked), &(size_t){ before }, "%c%d%s%c%s", NB_MARK_BEGIN,
-			native_special_tier(candidates[i]), name, NB_MARK_END, after);
-		my_strcpy(text, marked, cap);
+		if (!name) continue;
+		const int tier = native_special_tier(candidates[i]);
+		/* An ego or artefact name is marked once; every "{??}" is (a pile can hold several unknown items). */
+		for (size_t from = 0; from <= strlen(text); ) {
+			char *const at = strstr(text + from, name);
+			if (!at) break;
+			if (at >= text + 2 && at[-2] == NB_MARK_BEGIN) { from = (size_t)(at - text) + strlen(name); continue; }
+			char marked[512 + 32];
+			const size_t before = (size_t)(at - text);
+			const char *const after = at + strlen(name);
+			my_strcpy(marked, text, MIN(sizeof(marked), before + 1));
+			size_t len = before;
+			strnfcat(marked, sizeof(marked), &len, "%c%d%s%c%s", NB_MARK_BEGIN, tier, name, NB_MARK_END, after);
+			my_strcpy(text, marked, cap);
+			if (tier != 3) break;
+			from = before + 3 + strlen(name);
+		}
 	}
 }
 
@@ -200,7 +208,11 @@ static void native_floor_pile(struct object **const list, const int num, const c
 	enum { NAMED = 3 };
 	char names[NAMED][80];
 	const int shown = MIN(num, NAMED);
-	for (int i = 0; i < shown; i++) object_desc(names[i], sizeof(names[i]), list[i], ODESC_PREFIX | ODESC_BASE, player);
+	for (int i = 0; i < shown; i++) {
+		object_desc(names[i], sizeof(names[i]), list[i], ODESC_PREFIX | ODESC_BASE, player);
+		/* The "??" the full description would carry: properties still to find, so worth a look. */
+		if (native_special_tier(list[i]) == 3) my_strcat(names[i], " {??}", sizeof(names[i]));
+	}
 	const int more = num - shown;
 	event_signal(EVENT_MESSAGE_FLUSH);
 	if (more > 0) msg("You %s %s, %s, %s and %d more.", verb, names[0], names[1], names[2], more);
@@ -281,6 +293,11 @@ static int32_t context_flags(void)
 	if (square_isupstairs(cave, g)) f |= NB_CTX_UP_STAIRS;
 	if (square_isdownstairs(cave, g)) f |= NB_CTX_DOWN_STAIRS;
 	if (square_object(cave, g)) f |= NB_CTX_FLOOR_ITEMS;
+	if (square_object(cave, g)) {
+		struct object *floor[16];
+		const int k = scan_floor(floor, (int)N_ELEMENTS(floor), player, OFLOOR_SENSE | OFLOOR_VISIBLE, NULL);
+		for (int i = 0; i < k; i++) if (native_special_tier(floor[i])) f |= NB_CTX_FLOOR_SPECIAL;
+	}
 	if (square_isforge(cave, g)) f |= NB_CTX_FORGE;
 	if (game.stairs_down.x >= 0 && !square_isdownstairs(cave, g)) f |= NB_CTX_DOWN_KNOWN;
 	if (game.stairs_up.x >= 0 && !square_isupstairs(cave, g)) f |= NB_CTX_UP_KNOWN;
@@ -806,6 +823,31 @@ bool native_service(bool at_prompt)
 		native_publish(at_prompt);
 		return false;
 	}
+	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 4) {
+		/* Underfoot: a known Hador's House sword and a plain one with a property still to find, as stepping on them reports it. */
+		for (int i = 0; i < 2; i++) {
+			struct object *sword = object_new(); /* mutable: drop_near() takes the pointer and clears it */
+			object_prep(sword, lookup_kind(TV_SWORD, lookup_sval(TV_SWORD, "Shortsword")), 5, RANDOMISE);
+			if (i == 0) {
+				for (struct ego_item *e = e_info; e < e_info + z_info->e_max; e++)
+					if (e->name && strstr(e->name, "Hador")) sword->ego = e;
+				assert(sword->ego);
+				for (struct ability *a = sword->ego->abilities; a; a = a->next) add_ability(&sword->abilities, a);  /* as make_ego_item() */
+			} else {
+				sword->modifiers[OBJ_MOD_STEALTH] = 1;
+			}
+			drop_near(cave, &sword, 0, player->grid, false, true);
+			square_know_pile(cave, player->grid);
+		}
+		for (struct object *o = square_object(player->cave, player->grid); o; o = o->next) {
+			if (o->ego) o->ego->aware = true;
+			if (o->ego && o->known) o->known->ego = o->ego;
+			else if (o->known) o->known->notice |= OBJ_NOTICE_ASSESSED;
+		}
+		event_signal(EVENT_SEEFLOOR);
+		native_publish(at_prompt);
+		return false;
+	}
 	if (r.kind == REQ_TEST_CHEST && at_prompt) {
 		const int count = r.dir == 2 ? 4 : 1; /* 2: a pile, as stepping on one reports it */
 		for (int i = 0; i < count; i++) {
@@ -949,6 +991,7 @@ static void run_action(enum nb_action a)
 		case NB_ACT_BASH: cmdq_push(CMD_BASH); break;
 		case NB_ACT_EXCHANGE: cmdq_push(CMD_EXCHANGE); break;
 		case NB_ACT_INVENTORY: (void)native_panel(NB_TAB_PACK, NB_ITEM_INVENTORY); break;
+		case NB_ACT_FLOOR: (void)native_panel(NB_TAB_PACK, NB_ITEM_FLOOR); break;
 		case NB_ACT_EQUIPMENT: (void)native_panel(NB_TAB_PACK, NB_ITEM_EQUIPMENT); break;
 		case NB_ACT_PANEL: (void)native_panel(-1, NB_ITEM_INVENTORY); break;
 		case NB_ACT_MAP: do_cmd_view_map(); break;

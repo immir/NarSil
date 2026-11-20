@@ -251,6 +251,7 @@ const char *native_special_name(const struct object *obj)
 	switch (native_special_tier(obj)) {
 		case 2: return obj->artifact->name;
 		case 1: return obj->ego->name;
+		case 3: return "{??}";
 		default: return NULL;
 	}
 }

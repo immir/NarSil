@@ -22,7 +22,7 @@ internal val TOUCH_GUIDE: List<Pair<String, List<String>>> = listOf(
         "A floating pad moves if you hold the centre key and then drag. Its size is in Options. Docked, it sits under the status in portrait and in the side column in landscape.",
     ),
     "Buttons" to listOf(
-        "The action bar shows what fits where you stand first (stairs, items, doors, a forge, a target), then Rest, Wait, Stealth, Song, Pack, Look and Again. In landscape the status moves to a column beside the map.",
+        "The action bar shows what fits where you stand first (stairs, items, doors, a forge, a target); Pick up gets a ✦ when something underfoot is special or has properties still to find, and long-pressing it opens the pack at what is on the floor, then Rest, Wait, Stealth, Song, Pack, Look and Again. In landscape the status moves to a column beside the map.",
         "Walk to ▼ and Walk to ▲ are in ☰ once you know where a staircase is; they walk you to the nearest one. Again repeats your previous command.",
         "Long-press Rest to choose how long to rest: as needed, until health and voice are full, until either is full, or a number of turns.",
         "Fire shoots your first quiver at your target while it is in view, otherwise at the nearest creature. Throw works the same way.",
