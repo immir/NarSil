@@ -38,10 +38,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import org.narsil.android.NarSilNative as N
+
+/** Two thin concentric outlines inside a pill: the mark of a button that does more when held. */
+private fun Modifier.holdMark(colour: Color): Modifier = drawWithContent {
+    drawContent()
+    val stroke = Stroke(1.dp.toPx())
+    for (inset in listOf(1.5.dp.toPx(), 4.5.dp.toPx())) {
+        drawRoundRect(colour.copy(alpha = 0.55f), Offset(inset, inset), Size(size.width - 2 * inset, size.height - 2 * inset),
+                      CornerRadius(maxOf(size.height / 2f - inset, 0f)), style = stroke)
+    }
+}
 
 /** One tappable action: a native action id, or an arbitrary handler. */
 data class BarAction(val label: String, val emphasised: Boolean = false, val active: Boolean = false,
@@ -147,7 +162,9 @@ private fun BarButton(a: BarAction) {
         a.longPress != null -> Surface(shape = RoundedCornerShape(50),
                 color = if (a.emphasised) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = if (a.emphasised) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.heightIn(min = 40.dp).combinedClickable(onLongClick = { Trace.log("bar.longpress", "act" to a.label); a.longPress?.invoke() }, onClick = run)) {
+                modifier = Modifier.heightIn(min = 40.dp)
+                    .holdMark(if (a.emphasised) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer)
+                    .combinedClickable(onLongClick = { Trace.log("bar.longpress", "act" to a.label); a.longPress?.invoke() }, onClick = run)) {
             Box(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
                 Text(a.label, style = MaterialTheme.typography.labelLarge, fontWeight = if (a.emphasised) FontWeight.SemiBold else null)
             }
@@ -180,7 +197,9 @@ fun MoreSheet(actions: List<BarAction>, pinned: List<Int> = emptyList(), onPin: 
                             val mark = if (a.pin != null && a.pin in pinned) "● " else ""
                             Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.secondaryContainer,
                                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    modifier = Modifier.weight(1f).heightIn(min = 40.dp).combinedClickable(
+                                    modifier = Modifier.weight(1f).heightIn(min = 40.dp)
+                                        .then(if (a.pin != null) Modifier.holdMark(MaterialTheme.colorScheme.onSecondaryContainer) else Modifier)
+                                        .combinedClickable(
                                         onLongClick = a.pin?.let { id -> { Trace.log("menu.pin", "act" to a.label); onPin(id) } }, onClick = { Trace.log("menu.pick", "act" to a.label); onDismiss(); a.run() })) {
                                 Box(Modifier.padding(horizontal = 6.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
                                     Text(mark + a.label, maxLines = 1, style = MaterialTheme.typography.labelLarge)

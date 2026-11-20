@@ -1,5 +1,22 @@
 import SwiftUI
 
+/// Two thin concentric outlines inside a shape: the mark of a button that does more when held (holdMark in ActionBar.kt).
+private struct HoldMark<S: InsettableShape>: ViewModifier {
+    let shape: S
+    let enabled: Bool
+
+    func body(content: Content) -> some View {
+        content.overlay {
+            if enabled {
+                ZStack {
+                    shape.inset(by: 1.5).stroke(Color.white.opacity(0.55), lineWidth: 1)
+                    shape.inset(by: 4.5).stroke(Color.white.opacity(0.55), lineWidth: 1)
+                }.allowsHitTesting(false)
+            }
+        }
+    }
+}
+
 /// One tappable action (ActionBar.kt).
 struct BarAction: Identifiable {
     let id = UUID()
@@ -122,6 +139,7 @@ private struct BarButton: View {
             .lineLimit(1)
             .padding(.horizontal, 14).frame(minHeight: 40)
             .background(fill, in: Capsule())
+            .modifier(HoldMark(shape: Capsule(), enabled: action.longPress != nil))
             .contentShape(Capsule())
             .onTapGesture { Trace.log("bar.tap", ("act", action.label)); action.run() }
             .onLongPressGesture(minimumDuration: 0.5) { Trace.log("bar.longpress", ("act", action.label)); action.longPress?() }
@@ -142,6 +160,7 @@ struct MoreSheet: View {
                     ForEach(actions[i..<min(i + 2, actions.count)]) { a in
                         Text((a.pin.map { pinned.contains($0) } == true ? "● " : "") + a.label).lineLimit(1).frame(maxWidth: .infinity, minHeight: 44)
                             .background(Color.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 10))
+                            .modifier(HoldMark(shape: RoundedRectangle(cornerRadius: 10), enabled: a.pin != nil))
                             .contentShape(Rectangle())
                             .onTapGesture { Trace.log("menu.pick", ("act", a.label)); dismiss(); a.run() }
                             .onLongPressGesture(minimumDuration: 0.5) { if let id = a.pin { Trace.log("menu.pin", ("act", a.label)); onPin(id) } }
