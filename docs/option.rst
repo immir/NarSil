@@ -138,6 +138,11 @@ Force player descent (never make up stairs) ``birth_force_descend``
 Restrict creation of artifacts ``birth_no_artifacts``
   No artifacts will be created. Ever. Just *how* masochistic are you?
 
+Choose the dungeon's seed (otherwise a random one) ``birth_choose_seed``
+  With this option on, you are asked for the dungeon's seed when you name the
+  character, so that you can play a seed someone has shared.  With it off, the
+  game picks a random seed.  See :ref:`Seeds`.
+
 
 Cheating options
 ================
