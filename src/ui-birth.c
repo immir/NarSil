@@ -966,13 +966,14 @@ static enum birth_stage stat_points_command(void)
 //phantom changes for server
 /**
  * Ask for the dungeon's seed: the same seed gives the same levels and items, so games can be
- * shared.  Skipped if one was given on the command line; Enter or Escape picks a random one.
+ * shared.  Only asked if the birth option says so, and skipped if one was given on the command line;
+ * Enter or Escape picks a random one.
  */
 static void get_seed_command(void)
 {
 	char text[16] = "";
 
-	if (seed_game_requested) return;
+	if (seed_game_requested || !OPT(player, birth_choose_seed)) return;
 	while (get_string("Seed for the dungeon (Enter for a random one): ", text, sizeof(text))
 			&& !seed_parse(text, &seed_game_requested)) {
 		msg("A seed is a number from 1 to 4294967295.");

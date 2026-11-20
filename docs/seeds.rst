@@ -13,8 +13,10 @@ how two characters handled the same dungeon.
 The seed
 ========
 
-When you create a character, after the name, you are asked for a seed.  Type a number, or press Enter for a
-random one.  From the command line, ``-S<seed>`` starts new characters with that seed and skips the question.
+A new character gets a random seed.  To choose one, turn on the birth option "Choose the dungeon's seed"
+(``birth_choose_seed``) before the name is asked; you are then asked for a seed after the name.  Type a number,
+or press Enter for a random one.  From the command line, ``-S<seed>`` starts new characters with that seed and
+skips the question, whether or not the option is on.
 
 The seed is shown on the character sheet (``@``), in the character dump, and on the death screen, below
 the house.  The character dump also names the game and its version.  A seed only gives the same dungeon on

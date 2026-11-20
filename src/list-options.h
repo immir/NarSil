@@ -107,4 +107,6 @@ OP(birth_force_descend,   "Force player descent (never make up stairs)",
 BIRTH, false)
 OP(birth_no_artifacts,    "Restrict creation of artifacts",
 BIRTH, false)
+OP(birth_choose_seed,     "Choose the dungeon's seed (otherwise a random one)",
+BIRTH, false)
 
