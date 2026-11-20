@@ -242,7 +242,7 @@ class GameState {
     /** Called with every answer the UI sends: an action from the pack keeps the pack on screen until it reopens. */
     fun answered(value: Int) {
         val runsCommand = when (val p = prompt) {
-            is Prompt.Pack -> value >= N.PACK_ACT
+            is Prompt.Pack -> value >= N.PACK_ACT && value < N.PANEL_TAB  // not a tab switch or the panel closing
             is Prompt.Smith -> p.view == "main" && value == SMITH_MAKE && p.options.getOrNull(value)?.state != N.OPT_OFF
             else -> false
         }

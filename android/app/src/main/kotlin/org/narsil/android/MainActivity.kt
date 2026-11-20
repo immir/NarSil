@@ -39,6 +39,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -300,16 +301,17 @@ class MainActivity : ComponentActivity() {
         val prompt = state.prompt
         val live = state.panelTab >= 0
         var tab by remember { mutableIntStateOf(0) }
-        var shown by remember { mutableStateOf<GameState.Prompt?>(null) }
+        /* By identity: a reopened pack equal to the one last shown must still replace it. */
+        var shown by remember { mutableStateOf<GameState.Prompt?>(null, referentialEqualityPolicy()) }
         if (live) {
             tab = state.panelTab
             if (prompt?.isPanelContent() == true) shown = prompt
         }
-        val interactive = prompt != null && prompt === shown
+        val interactive = prompt?.isPanelContent() == true
         /* Dimmed under a question asked over it; not in the moment between two tabs (no prompt yet). */
-        val dimmed = prompt != null && prompt !== shown
+        val dimmed = prompt != null && !interactive
         if (live) PanelHost(tab, settings.panelTabs, answer) {
-            shown?.let { c ->
+            (if (interactive) prompt else shown)?.let { c ->
                 Box(Modifier.fillMaxSize()) {
                     PromptUi(state, c, if (interactive) answer else { _ -> })
                     if (dimmed) Box(Modifier.fillMaxSize().background(Color(0x55000000))
