@@ -158,7 +158,7 @@ class GameState {
                       val depth: Int = 0, val exp: Int = 0, val context: Int = 0, val foe: Foe? = null,
                       val newExp: Int = 0, val hpWarn: Int = 0, val autoMore: Boolean = false,
                       val threats: Int = 0, val threatsAlert: Int = 0, val threatNearest: Int = -1, val lightTurns: Int = -1,
-                      val minDepth: Int = 0) {
+                      val minDepth: Int = 0, val feelSeq: Int = 0, val feelBits: Int = 0) {
         fun has(flag: Int) = context and flag != 0
         /** Below the game's hitpoint warning (tenths of maximum health). */
         val lowHp get() = maxHp > 0 && hpWarn > 0 && hp * 10 < maxHp * hpWarn
@@ -265,7 +265,7 @@ class GameState {
                             meta[N.META_FOE_HEALTH], meta[N.META_FOE_STANCE], meta[N.META_FOE_MORALE]),
                         meta[N.META_NEW_EXP], meta[N.META_HP_WARN], meta[N.META_AUTO_MORE] != 0,
                         meta[N.META_THREATS], meta[N.META_THREATS_ALERT], meta[N.META_THREAT_NEAREST], meta[N.META_LIGHT_TURNS],
-                        meta[N.META_MIN_DEPTH])
+                        meta[N.META_MIN_DEPTH], meta[N.META_FEEL_SEQ], meta[N.META_FEEL_BITS])
         quickSlots = N.nativeQuickSlots().lines().filter { it.isNotEmpty() }.map { it.split('\t', limit = 3) }
             .map { f -> QuickSlot(f[0].toInt(), f[1].toInt(), f[2]) }
         return true

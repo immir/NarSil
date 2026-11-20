@@ -67,7 +67,7 @@ fun InspectSheet(info: GameState.Info.Inspect, state: GameState, onDismiss: () -
                     if (info.isTarget) TextButton(onClick = { N.nativeRequestTarget(-1, -1); onDismiss() }) { Text("◎ Clear target", color = Color(0xFFFF8A80)) }
                     else if (info.targetable) FilledTonalButton(onClick = { N.nativeRequestTarget(info.x, info.y) }) { Text("Target") }
                 }
-                if (m.recall.isNotEmpty()) Text(m.recall, color = Color(0xFFC8C8CC), fontSize = 14.sp)
+                if (m.recall.isNotEmpty()) Text(colouredText(m.recall, state::colour), color = Color(0xFFC8C8CC), fontSize = 14.sp)
             }
             info.objects.forEach { o -> Text(o, color = Color.White, fontSize = 16.sp) }
             info.terrain?.let { t -> Text(t, color = Color(0xFF9A9AA0), fontSize = 14.sp) }

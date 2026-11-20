@@ -12,6 +12,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+struct textblock;
+
 struct object;
 struct smithing_cost;
 
@@ -119,6 +121,8 @@ void native_options_birth(void);
  */
 void native_prompt_begin(void);
 void native_prompt_add(const char *fmt, ...);
+/* The textblock as UTF-8 with tabs as spaces and its colours as NB_COLOUR_* runs; free with mem_free(). */
+char *native_textblock_marked(struct textblock *tb);
 void native_prompt_end(void);
 int32_t native_ask(enum nb_prompt_kind kind);
 /* Tabs and newlines to spaces, so a field stays one field. */

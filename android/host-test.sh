@@ -412,12 +412,23 @@ grep -q 'Killed by the test harness' "$work/data/user/character-dump.txt"
 grep -qE '^ Seed +[0-9]+' "$work/data/user/character-dump.txt"
 grep -q '\[Last Messages\]' "$work/data/user/character-dump.txt"
 
+echo "== item descriptions carry the game's colours (an NB_COLOUR run)"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=15 @prompt @answer=1001 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qP '^#D\tIntensity \x03.1'
+
 echo "== character tab: rename (text prompt) and write the dump for sharing"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=20 @prompt @answer=2 @prompt @text=Beren @prompt @answer=3 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qx 'Your name'
 echo "$out" | grep -qP '^#S\tBeren$'
 grep -q 'Name   Beren' "$work/data/user/character-dump.txt"
+
+echo "== combat feel: a landed blow, a miss and a kill each move the feel counter once; other messages do not"
+msg_type() { awk -v n="$1" 'index($0, "MSG(" n ",") == 1 {print c; exit} /^MSG\(/ {c++}' "$root/src/list-message.h"; }
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @feel "@msgt=$(msg_type HIT)" @feel "@msgt=$(msg_type MISS)" @feel "@msgt=$(msg_type KILL)" @feel "@msgt=$(msg_type MON_HIT)" @feel "${quit[@]}")
+[ "$(echo "$out" | grep -x 'feel .*' | tr '\n' '|')" = "feel 0 0|feel 1 1|feel 2 2|feel 3 4|feel 3 4|" ]
 
 echo "== tiles: map cells carry a MicroChasm tile once switched on; ASCII elsewhere unchanged"
 rm -rf "$work/data"

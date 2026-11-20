@@ -89,7 +89,7 @@ struct KnowledgeView: View {
                 }.frame(minHeight: 46).padding(.horizontal, 16).padding(.vertical, 6).contentShape(Rectangle())
             }.buttonStyle(.plain)
             if open && !prompt.text.isEmpty {
-                Text(prompt.text).scaledFont(14).foregroundColor(Color(rgb: 0xC8C8CC)).padding(.leading, 50).padding(.trailing, 16).padding(.bottom, 12)
+                Text(colouredText(prompt.text, colour: colour)).scaledFont(14).foregroundColor(Color(rgb: 0xC8C8CC)).padding(.leading, 50).padding(.trailing, 16).padding(.bottom, 12)
             }
             if open && !prompt.actions.isEmpty {
                 HStack(spacing: 8) {

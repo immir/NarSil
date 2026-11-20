@@ -142,7 +142,7 @@ final class GameState: ObservableObject {
                         newExp: m(NB.META_NEW_EXP), hpWarn: m(NB.META_HP_WARN), autoMore: m(NB.META_AUTO_MORE) != 0,
                         threats: m(NB.META_THREATS), threatsAlert: m(NB.META_THREATS_ALERT),
                         threatNearest: m(NB.META_THREAT_NEAREST), lightTurns: m(NB.META_LIGHT_TURNS),
-                        minDepth: m(NB.META_MIN_DEPTH))
+                        minDepth: m(NB.META_MIN_DEPTH), feelSeq: m(NB.META_FEEL_SEQ), feelBits: m(NB.META_FEEL_BITS))
         recolour(Native.palette())
         let quick = Native.quickSlots().split(separator: "\n").compactMap(Self.quickSlot)
         if quick != quickSlots { quickSlots = quick }

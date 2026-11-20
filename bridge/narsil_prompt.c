@@ -172,26 +172,6 @@ static void text_add(const char *fmt, ...)
 	va_end(vp);
 }
 
-static void text_add_utf8(uint32_t cp)
-{
-	char b[4];
-	size_t n;
-	if (cp < 0x80) { b[0] = (char)cp; n = 1; }
-	else if (cp < 0x800) { b[0] = (char)(0xC0 | (cp >> 6)); b[1] = (char)(0x80 | (cp & 0x3F)); n = 2; }
-	else if (cp < 0x10000) {
-		b[0] = (char)(0xE0 | (cp >> 12)); b[1] = (char)(0x80 | ((cp >> 6) & 0x3F));
-		b[2] = (char)(0x80 | (cp & 0x3F)); n = 3;
-	} else {
-		b[0] = (char)(0xF0 | (cp >> 18)); b[1] = (char)(0x80 | ((cp >> 12) & 0x3F));
-		b[2] = (char)(0x80 | ((cp >> 6) & 0x3F)); b[3] = (char)(0x80 | (cp & 0x3F)); n = 4;
-	}
-	if (text_len + n < sizeof(shared.text)) {
-		memcpy(shared.text + text_len, b, n);
-		text_len += n;
-		shared.text[text_len] = '\0';
-	}
-}
-
 /* Fields are tab-separated and records newline-separated: flatten both. */
 static void sanitise(char *s)
 {
@@ -440,12 +420,14 @@ static void publish_pack(const candidate *c, int n, int expanded, int focus)
 	if (expanded >= 0 && object_is_carried(player, c[expanded].obj) && native_use_command(c[expanded].obj) != CMD_NULL)
 		text_add("#K\t%d\n", (int)c[expanded].obj->kind->kidx);
 	if (tb) {
+		char *const marked = native_textblock_marked(tb);
 		text_add("#D\t");
-		for (const wchar_t *p = textblock_text(tb); p && *p; p++) {
-			if (*p == L'\n') text_add("\n#D\t");
-			else text_add_utf8(*p == L'\t' ? ' ' : (uint32_t)*p);
+		for (const char *p = marked; *p; p++) {
+			if (*p == '\n') text_add("\n#D\t");
+			else text_add("%c", *p);
 		}
 		text_add("\n");
+		mem_free(marked);
 	}
 	if (details[0]) {
 		for (const char *line = strtok(details, "\n"); line; line = strtok(NULL, "\n")) text_add("#D\t%s\n", line);
@@ -1252,6 +1234,33 @@ void native_prompt_begin(void) { pthread_mutex_lock(&shared.lock); text_reset();
 void native_prompt_end(void) { pthread_mutex_unlock(&shared.lock); }
 int32_t native_ask(enum nb_prompt_kind kind) { return ask(kind); }
 void native_sanitise(char *s) { sanitise(s); }
+
+char *native_textblock_marked(struct textblock *const tb)
+{
+	const wchar_t *const text = textblock_text(tb);
+	const int *const attrs = textblock_attrs(tb);
+	size_t cap = 1;
+	for (const wchar_t *w = text; w && *w; w++) cap += 4 + 3;  /* a character, plus a colour change around it at worst */
+	char *const out = mem_zalloc(cap);
+	size_t n = 0;
+	int open = COLOUR_WHITE;
+	for (size_t i = 0; text && text[i]; i++) {
+		const bool newline = text[i] == L'\n';
+		const int attr = newline || text[i] == L' ' ? open : attrs[i] ;
+		if (attr != open) {
+			if (open != COLOUR_WHITE) out[n++] = NB_COLOUR_END;
+			if (attr != COLOUR_WHITE) { out[n++] = NB_COLOUR_BEGIN; out[n++] = (char)('@' + attr); }
+			open = attr;
+		}
+		if (newline && open != COLOUR_WHITE) { out[n++] = NB_COLOUR_END; open = COLOUR_WHITE; }
+		char mb[8];
+		const int k = text_wctomb(mb, text[i] == L'\t' ? L' ' : text[i]);
+		if (k > 0) { memcpy(out + n, mb, (size_t)k); n += (size_t)k; }
+	}
+	if (open != COLOUR_WHITE) out[n++] = NB_COLOUR_END;
+	out[n] = '\0';
+	return out;
+}
 
 void native_prompt_add(const char *fmt, ...)
 {

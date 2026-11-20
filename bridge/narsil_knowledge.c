@@ -61,14 +61,14 @@ enum { RUNE_INSCRIBE = NB_KNOW_ACTION, RUNE_UNINSCRIBE };
 
 static void add_text(textblock *tb)
 {
+	char *const marked = native_textblock_marked(tb);
 	native_prompt_add("#T\t");
-	for (const wchar_t *p = textblock_text(tb); p && *p; p++) {
-		if (*p == L'\n') { native_prompt_add("\n#T\t"); continue; }
-		char mb[8];
-		const int k = text_wctomb(mb, *p == L'\t' ? L' ' : *p);
-		if (k > 0) { mb[k] = '\0'; native_prompt_add("%s", mb); }
+	for (const char *p = marked; *p; p++) {
+		if (*p == '\n') native_prompt_add("\n#T\t");
+		else native_prompt_add("%c", *p);
 	}
 	native_prompt_add("\n");
+	mem_free(marked);
 }
 
 static void add_entry(wchar_t glyph, int attr, const char *name, const char *note)

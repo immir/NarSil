@@ -117,6 +117,8 @@ enum nb_meta {
 	NB_META_THREAT_NEAREST, /* distance to the nearest of them, or -1 */
 	NB_META_LIGHT_TURNS,    /* turns left on the wielded torch or lantern, or -1 if the light does not burn out (or none) */
 	NB_META_MIN_DEPTH,      /* the shallowest level the player may now go up to (the depth clock); 50 ft each */
+	NB_META_FEEL_SEQ,       /* counts the updates in which the player landed a blow, missed or killed: a change means feel the bits */
+	NB_META_FEEL_BITS,      /* NB_FEEL_* of the latest such update */
 	NB_META_COUNT
 };
 
@@ -262,6 +264,7 @@ void nb_request_move(int dir, bool run);
 /* Host tests only: at the command prompt, take a fatal hit (as a monster's blow would). */
 void nb_test_die(void);
 void nb_test_game_seed(uint32_t seed); /* before the character is accepted: the game seed to use (0: random); the birth question is skipped */
+void nb_test_message(int type); /* at the command prompt, send a game message of this MSG_ type (see the feel bits in the meta) */
 void nb_test_depth(int level); /* at the command prompt, go straight to dungeon level `level` (50' each) */
 /* Forges on the current level, and (NarSil-Q) the guaranteed forges made so far; only while the game waits for input. */
 int nb_test_forges(int *fixed_made, int *depth);
@@ -312,6 +315,8 @@ enum nb_ability_state {
 /* Text prompt: title; default text; maximum length in bytes; 1 if NB_TEXT_RANDOM is offered. */
 enum { NB_TEXT_RANDOM = 2 };
 /* Screen answers besides an option index.  The birth stats screen answers like skills (NB_SKILL_*). */
+/* What the player's attacks did since the previous update (NB_META_FEEL_BITS): for haptics. */
+enum { NB_FEEL_HIT = 1, NB_FEEL_MISS = 2, NB_FEEL_KILL = 4 };
 enum { NB_SCREEN_RANDOM = 1000, NB_SCREEN_OPTIONS = 1001 };
 
 enum { NB_KNOW_COLLAPSE = 99999, NB_KNOW_ACTION = 100000 };
@@ -385,6 +390,13 @@ void nb_answer_item(int index);
  */
 #define NB_MARK_BEGIN '\x01'
 #define NB_MARK_END '\x02'
+/*
+ * Coloured description text (monster recall, item descriptions, knowledge): a run in a colour other than white is
+ * wrapped as NB_COLOUR_BEGIN, the colour (the game's attr index, as the character '@' + attr), text, NB_COLOUR_END.
+ * Runs never span a newline.
+ */
+#define NB_COLOUR_BEGIN '\x03'
+#define NB_COLOUR_END '\x04'
 enum { NB_MESSAGES_CAP = 160 * 1024 };
 uint64_t nb_messages_generation(void);
 size_t nb_messages(char *text, size_t cap);

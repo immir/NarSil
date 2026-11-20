@@ -31,6 +31,8 @@ struct RootView: View {
     @AppStorage("messageLines") private var messageLines = 3
     @AppStorage("dpad") private var pad = PadMode.docked.rawValue
     @AppStorage("lowHealthBuzz") private var lowHealthBuzz = true
+    @AppStorage("combatBuzz") private var combatBuzz = true
+    @State private var lastFeel = 0
     @AppStorage("panelTabs") private var panelTabs = TabStyle.iconsAndNames.rawValue
     @StateObject private var abilities = AbilitiesNav()
     private let map = MapHandle()
@@ -90,6 +92,15 @@ struct RootView: View {
         .onChange(of: tiles) { Native.setTiles($0) }
         .onChange(of: itemDetails) { Native.setItemDetails($0) }
         .onChange(of: game.status.lowHp) { low in if low && lowHealthBuzz { UINotificationFeedbackGenerator().notificationOccurred(.warning) } }
+        .onChange(of: game.status.feelSeq) { seq in
+            /* A tick when the player's blow lands, a stronger one for a kill, a faint one for a miss. */
+            defer { lastFeel = seq }
+            guard combatBuzz, seq != lastFeel else { return }
+            let bits = game.status.feelBits
+            if bits & NB.FEEL_KILL != 0 { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
+            else if bits & NB.FEEL_HIT != 0 { UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
+            else if bits & NB.FEEL_MISS != 0 { UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.4) }
+        }
         .onChange(of: game.status.hp) { hp in
             /* A short pulse when one turn costs a fifth or more of maximum health. */
             if lowHealthBuzz, game.status.maxHp > 0, lastHp - hp >= max(1, game.status.maxHp / 5) { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
@@ -196,7 +207,7 @@ struct RootView: View {
         if showSettings { SettingsSheet(buttonScale: $buttonScale, messageScale: $messageScale, itemScale: $itemScale, statusScale: $statusScale,
                           theme: $theme, gamePalette: game.gamePalette, messageLines: $messageLines, panelTabs: $panelTabs, tiles: $tiles, pad: $pad, padSize: $dpadSize, swipeRuns: $swipeRuns,
                           autoMore: game.status.autoMore, autoMoreEnabled: game.atPrompt && game.prompt == nil, onAutoMore: Native.setAutoMore,
-                          itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, scumming: $scumming,
+                          itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, combatBuzz: $combatBuzz, scumming: $scumming,
                           onExportSave: { Task { if let url = await Saves.export() { ShareSheet.present([url]) } else { say(Saves.cantSave) } } },
                           onImportSave: { importing = true },
                           onSendLogs: { ShareSheet.present(Saves.reportFiles) }) { showSettings = false } }

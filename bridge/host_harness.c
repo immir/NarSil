@@ -307,6 +307,16 @@ static int run_token(const char *tok)
 		printf("forges %d fixed %d depth %d\n", n, fixed, depth);
 		return 0;
 	}
+	if (sscanf(tok, "@msgt=%d%c", &mx, &tail) == 1) {
+		nb_test_message(mx);
+		return settle() ? 0 : 1;
+	}
+	if (strcmp(tok, "@feel") == 0) {
+		int32_t meta[NB_META_COUNT];
+		nb_map_snapshot(meta, NULL, 0);
+		printf("feel %d %d\n", meta[NB_META_FEEL_SEQ], meta[NB_META_FEEL_BITS]);
+		return 0;
+	}
 	if (strcmp(tok, "@die") == 0) {
 		nb_test_die();
 		return settle() ? 0 : 1;

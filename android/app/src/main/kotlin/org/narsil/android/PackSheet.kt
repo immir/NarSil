@@ -120,7 +120,7 @@ private fun PackRow(item: GameState.Item, p: GameState.Prompt.Pack, colour: (Int
         }
         if (open) {
             Column(Modifier.padding(start = 68.dp, end = 16.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (p.description.isNotEmpty()) Text(p.description, color = Color(0xFFC8C8CC), fontSize = 14.sp, lineHeight = 19.sp)
+                if (p.description.isNotEmpty()) Text(colouredText(p.description, colour), color = Color(0xFFC8C8CC), fontSize = 14.sp, lineHeight = 19.sp)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     p.actions.forEach { a ->
                         FilledTonalButton(onClick = { onAnswer(N.PACK_ACT + item.index * N.PACK_ACT_STRIDE + a.index) }, enabled = a.valid) {

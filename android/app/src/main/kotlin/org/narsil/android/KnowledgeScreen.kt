@@ -145,7 +145,7 @@ private fun EntryRow(e: KnowRow.Entry, p: GameState.Prompt.Knowledge, colour: (I
             if (e.note.isNotEmpty()) Text(e.note, color = SUB, fontSize = 12.sp)
         }
         if (open && p.text.isNotEmpty())
-            Text(p.text, color = Color(0xFFC8C8CC), fontSize = 14.sp, lineHeight = 19.sp,
+            Text(colouredText(p.text, colour), color = Color(0xFFC8C8CC), fontSize = 14.sp, lineHeight = 19.sp,
                  modifier = Modifier.padding(start = 50.dp, end = 16.dp, bottom = 12.dp))
         if (open && p.actions.isNotEmpty())
             Row(Modifier.padding(start = 50.dp, end = 16.dp, bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

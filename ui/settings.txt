@@ -16,6 +16,7 @@ swipeRuns | Swipe on the map runs | Otherwise a swipe takes one step.
 autoMore | Skip -more- prompts | Messages are not held for a tap to continue; the message log keeps all of them. This is the game's own "Automatically clear -more- prompts" option, saved with the character.
 autoMoreLocked | | Change it from the map, or in Game options → User interface.
 itemDetails | Item details in the pack | Says what an ego item gives in general, and what each ability an item grants does, when you open it in the pack.
+combatBuzz | Buzz in combat | A tick when your blow lands, a stronger one when it kills, and a faint one when you miss.
 lowHealthBuzz | Buzz when health is low | Below the game's hitpoint warning (Game options → Hitpoint warning), and a short pulse when one turn costs a fifth of your health.
 edgeSwipe | Swipe from the right edge opens the panel | A short stretch in the middle of the right edge, marked by a faint handle, opens the character panel. That stretch no longer works as the system Back gesture.
 scumming | Save scumming (for testing) | Adds Scum (keep a copy of your save) and Restore scum save to the ☰ menu, and Restore to the death screen. Restore also lists the last three autosaves, at least five minutes apart.

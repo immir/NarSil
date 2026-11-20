@@ -354,15 +354,15 @@ class MainActivity : ComponentActivity() {
                 }
                 if (state.mapMode && !rail) TextScale(settings.statusScale) {
                     if (dpadMode() == Settings.DPAD_DOCKED) Row(Modifier.background(Color(0xFF141414)), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f)) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz) }
+                        Box(Modifier.weight(1f)) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
                         Box(Modifier.padding(4.dp)) { Dpad(settings.dpadSizeDp, { dpad(state, it) }) }
-                    } else StatusStrip(state, stacked = false, buzzOnLowHealth = settings.lowHealthBuzz)
+                    } else StatusStrip(state, stacked = false, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz)
                 }
                 if (state.mapMode && !rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { showMore = true } }
                 if (!state.mapMode) TextScale(settings.buttonScale) { KeyBar(state.waiting, router, { terminal?.toggleKeyboard() }) { showKeys = true } }
             }
             if (rail) Column(Modifier.width(260.dp).fillMaxHeight().background(Color(0xFF141414))) {
-                TextScale(settings.statusScale) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz) }
+                TextScale(settings.statusScale) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
                 Spacer(Modifier.weight(1f))
                 if (dpadMode() == Settings.DPAD_DOCKED) Box(Modifier.fillMaxWidth().padding(4.dp), contentAlignment = Alignment.Center) {
                     Dpad(settings.dpadSizeDp.coerceAtMost(150f), { dpad(state, it) })

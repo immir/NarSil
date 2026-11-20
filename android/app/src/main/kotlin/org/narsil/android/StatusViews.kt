@@ -86,8 +86,9 @@ internal fun PanelButton() {
 }
 
 @Composable
-internal fun StatusStrip(state: GameState, stacked: Boolean, buzzOnLowHealth: Boolean) {
+internal fun StatusStrip(state: GameState, stacked: Boolean, buzzOnLowHealth: Boolean, buzzInCombat: Boolean) {
     val s = state.status
+    if (buzzInCombat) CombatBuzz(s.feelSeq, s.feelBits)
     LowHealthBuzz(s.lowHp && buzzOnLowHealth)
     if (buzzOnLowHealth) BigHitBuzz(s.hp, s.maxHp)
     val hpColour = if (s.lowHp) Color(0xFFFF3B30) else Color(0xFFD04040)
@@ -127,6 +128,32 @@ internal fun BigHitBuzz(hp: Int, maxHp: Int) {
         if (maxHp > 0 && was - hp >= maxOf(1, maxHp / 5)) buzz(context, longArrayOf(0, 120))
         was = hp
     }
+}
+
+/** Feedback for the player's own attacks: a firm tick for a blow that lands, a stronger double pulse for a kill, a faint one for a miss. */
+@Composable
+internal fun CombatBuzz(seq: Int, bits: Int) {
+    val context = LocalContext.current
+    var seen by remember { mutableStateOf(seq) }
+    LaunchedEffect(seq) {
+        if (seq != seen) {
+            when {
+                bits and NarSilNative.FEEL_KILL != 0 -> pulse(context, longArrayOf(0, 40, 50, 90), intArrayOf(0, 200, 0, 255))
+                bits and NarSilNative.FEEL_HIT != 0 -> pulse(context, longArrayOf(0, 35), intArrayOf(0, 200))
+                bits and NarSilNative.FEEL_MISS != 0 -> pulse(context, longArrayOf(0, 15), intArrayOf(0, 70))
+            }
+        }
+        seen = seq
+    }
+}
+
+private fun pulse(context: Context, timings: LongArray, amplitudes: IntArray) {
+    val vibrator = if (Build.VERSION.SDK_INT >= 31) context.getSystemService(VibratorManager::class.java)?.defaultVibrator
+                   else @Suppress("DEPRECATION") context.getSystemService(Vibrator::class.java)
+    if (vibrator?.hasVibrator() != true) return
+    if (Build.VERSION.SDK_INT >= 26 && vibrator.hasAmplitudeControl()) vibrator.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
+    else if (Build.VERSION.SDK_INT >= 26) vibrator.vibrate(VibrationEffect.createWaveform(timings, -1))
+    else @Suppress("DEPRECATION") vibrator.vibrate(timings, -1)
 }
 
 private fun buzz(context: Context, pattern: LongArray = longArrayOf(0, 70, 90, 70)) {

@@ -34,7 +34,9 @@ enum NB {
     static let META_THREAT_NEAREST = 27
     static let META_LIGHT_TURNS = 28
     static let META_MIN_DEPTH = 29
-    static let META_COUNT = 30
+    static let META_FEEL_SEQ = 30
+    static let META_FEEL_BITS = 31
+    static let META_COUNT = 32
     static let STANCE_NONE = 0
     static let STANCE_SLEEPING = 1
     static let STANCE_UNWARY = 2
@@ -128,6 +130,9 @@ enum NB {
     static let ABILITY_ITEM_ON = 4
     static let ABILITY_ITEM_OFF = 5
     static let TEXT_RANDOM = 2
+    static let FEEL_HIT = 1
+    static let FEEL_MISS = 2
+    static let FEEL_KILL = 4
     static let SCREEN_RANDOM = 1000
     static let SCREEN_OPTIONS = 1001
     static let KNOW_COLLAPSE = 99999

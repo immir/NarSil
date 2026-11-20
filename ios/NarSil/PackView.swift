@@ -61,7 +61,7 @@ struct PackView: View {
             }.buttonStyle(.plain)
             if open {
                 VStack(alignment: .leading, spacing: 10) {
-                    if !prompt.description.isEmpty { Text(prompt.description).scaledFont(14).foregroundColor(Color(rgb: 0xC8C8CC)) }
+                    if !prompt.description.isEmpty { Text(colouredText(prompt.description, colour: colour)).scaledFont(14).foregroundColor(Color(rgb: 0xC8C8CC)) }
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 90), alignment: .leading)], alignment: .leading, spacing: 6) {
                         ForEach(prompt.actions, id: \.index) { a in
                             Button(a.label) { answer(NB.PACK_ACT + item.index * NB.PACK_ACT_STRIDE + a.index) }

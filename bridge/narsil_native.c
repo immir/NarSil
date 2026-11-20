@@ -65,7 +65,7 @@ enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MA
  * overlay bits: NB_TILE_ALERT, NB_TILE_GLOW. */
 typedef struct { int32_t cp, attr_flags, tile, tile_bg, tile_flags; } map_cell;
 
-enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_TEST_DEPTH, REQ_TEST_CHEST, REQ_REST, REQ_AUTO_MORE, REQ_USE_KIND };
+enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_TEST_MSG, REQ_TEST_DEPTH, REQ_TEST_CHEST, REQ_REST, REQ_AUTO_MORE, REQ_USE_KIND };
 typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; int dir; bool run; } request;
 
 /* Game thread only. */
@@ -118,10 +118,25 @@ static void mark_dirty(game_event_type type, game_event_data *data, void *user)
 	game.dirty = true;
 }
 
+/* How the player's attacks went, from the game's message types; accumulated until the next published update. */
+static int32_t feel_pending, feel_bits, feel_seq;
+
+static int32_t feel_of(const int msg_type)
+{
+	switch (msg_type) {
+		case MSG_HIT: case MSG_HIT_GOOD: case MSG_HIT_GREAT: case MSG_HIT_SUPERB:
+		case MSG_HIT_HI_GREAT: case MSG_HIT_HI_SUPERB: case MSG_SHOOT_HIT: return NB_FEEL_HIT;
+		case MSG_MISS: return NB_FEEL_MISS;
+		case MSG_KILL: case MSG_KILL_UNIQUE: case MSG_KILL_KING: return NB_FEEL_KILL;
+		default: return 0;
+	}
+}
+
 static void mark_messages(game_event_type type, game_event_data *data, void *user)
 {
 	(void)type; (void)user;
 	game.messages_dirty = true;
+	if (data) feel_pending |= feel_of(data->message.type);
 	if (data && data->message.type == MSG_HITWALL) game.travel.hit_wall = true;
 }
 
@@ -393,6 +408,9 @@ void native_publish(bool at_prompt)
 	if (visible && target_okay(0)) target_get(&target);
 	meta[NB_META_TARGET_X] = target.x;
 	meta[NB_META_TARGET_Y] = target.y;
+	if (feel_pending) { feel_bits = feel_pending; feel_pending = 0; feel_seq++; }
+	meta[NB_META_FEEL_SEQ] = feel_seq;
+	meta[NB_META_FEEL_BITS] = feel_bits;
 	meta[NB_META_HP_WARN] = player ? player->opts.hitpoint_warn : 0;
 	meta[NB_META_AUTO_MORE] = player && OPT(player, auto_more) ? 1 : 0;
 	meta[NB_META_TILE_ALERT] = meta[NB_META_TILE_GLOW] = -1;
@@ -492,15 +510,9 @@ static void info_add(const char *fmt, ...)
 
 static void info_add_textblock(textblock *tb)
 {
-	for (const wchar_t *w = textblock_text(tb); w && *w; w++) {
-		char mb[8];
-		const int n = text_wctomb(mb, *w);
-		if (n > 0 && info_len + (size_t)n < sizeof(info_buf) - 1) {
-			memcpy(info_buf + info_len, mb, (size_t)n);
-			info_len += (size_t)n;
-			info_buf[info_len] = '\0';
-		}
-	}
+	char *const text = native_textblock_marked(tb);
+	info_add("%s", text);
+	mem_free(text);
 }
 
 static void flatten(char *s)
@@ -818,6 +830,7 @@ bool native_service(bool at_prompt)
 		case REQ_REST:
 		case REQ_USE_KIND:
 		case REQ_TEST_DIE:
+		case REQ_TEST_MSG:
 		case REQ_TEST_DEPTH: game.stashed = r; return true;
 		case REQ_TEST_CHEST:
 		case REQ_INSPECT:
@@ -979,6 +992,8 @@ void native_run_stashed(void)
 		if (obj) native_use_object(obj);
 	} else if (r.kind == REQ_TEST_DIE) {
 		take_hit(player, player->chp + 100, "the test harness");
+	} else if (r.kind == REQ_TEST_MSG) {
+		msgt(r.dir, "Test message.");
 	} else if (r.kind == REQ_TEST_DEPTH) {
 		dungeon_change_level(player, r.dir);
 	} else if (r.kind == REQ_MOVE) {
@@ -1039,6 +1054,11 @@ void nb_test_die(void)
 void nb_test_game_seed(uint32_t seed)
 {
 	seed_game_requested = seed;
+}
+
+void nb_test_message(int type)
+{
+	post((request){ .kind = REQ_TEST_MSG, .dir = type });
 }
 
 void nb_test_depth(int level)

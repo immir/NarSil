@@ -25,7 +25,7 @@ struct InspectSheet: View {
                             if isTarget { Button("◎ Clear target") { Native.requestTarget(x: -1, y: -1); dismiss() }.tint(Color(rgb: 0xFF8A80)) }
                             else if targetable { Button("Target") { Native.requestTarget(x: x, y: y) }.buttonStyle(.bordered) }
                         }
-                        if !m.recall.isEmpty { Text(m.recall).scaledFont(14).foregroundColor(Color(rgb: 0xC8C8CC)) }
+                        if !m.recall.isEmpty { Text(colouredText(m.recall, colour: game.colour)).scaledFont(14).foregroundColor(Color(rgb: 0xC8C8CC)) }
                     }
                     ForEach(Array(objects.enumerated()), id: \.offset) { _, o in Text(o).scaledFont(16).foregroundColor(.white) }
                     if let t = terrain { Text(t).scaledFont(14).foregroundColor(Palette.sub) }
