@@ -1,4 +1,4 @@
-# NarSil for iPhone: beta 0.3
+# NarSil for iPhone: beta 0.4
 
 Thanks for trying it. This build isn't on the App Store. You install it yourself with **Sideloadly**, signing it
 with your own Apple ID. It's free, but iOS only trusts the install for **7 days** at a time.
@@ -41,10 +41,26 @@ is on. See its settings.
   songs (Delvings, Challenge, Thresholds), Impale, the horns, betrayal items and thralls. If something behaves
   differently from Sil-Q, that's worth reporting too.
 
+## New in 0.4
+
+- **Seeds:** every game has a seed, shown on the Character tab and the death screen. Tick "Choose the dungeon's
+  seed" in the birth options to enter one; the same seed gives the same levels, items and chest contents.
+- **Death screen:** "Share dump" sends the character dump (with the seed and your last messages).
+- **Random names:** the name defaults to the last one you used, and Random gives names that fit your race.
+- **Items underfoot:** the message marks items with properties still to find ({??}), and Pick up shows a ✦ when
+  something underfoot is special. Long-press Pick up to see what is on the floor; long-press Fire to choose a
+  target. A double border marks any button that does more when held.
+- **Feedback:** the phone buzzes when your blow lands, more strongly on a kill, faintly on a miss (Options →
+  Buzz in combat). Monster and item descriptions keep the game's colours.
+- **Usage trace (off by default):** Options → "Record usage trace" keeps a log on the phone of which buttons and
+  panels you use, never what you type or the game's text. It leaves the phone only if you choose Send logs. If
+  you're willing, turn it on and send the logs after a play session: it shows which parts of the interface need
+  work.
+
 ## Reporting problems
 
 Please send:
-1. the version, shown on the welcome screen as "Version 0.3 (engine …)";
+1. the version, shown on the welcome screen as "Version 0.4 (engine …)";
 2. what you did and what happened, plus a screenshot if you can;
 3. the save file, if a character is affected.
    - Files app → On My iPhone → NarSil → `data` (NarSil) or `data-silq` (NarSil-Q) → `save`.
