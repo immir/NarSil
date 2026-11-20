@@ -30,8 +30,10 @@
 #include "init.h"
 #include "mon-util.h"
 #include "monster.h"
+#include "obj-chest.h"
 #include "obj-desc.h"
 #include "obj-pile.h"
+#include "obj-tval.h"
 #include "obj-util.h"
 #include "player.h"
 #include "wizard.h"
@@ -102,6 +104,41 @@ static void put_monster_items(ang_file *f, struct chunk *c, const struct monster
 	cave_free(scratch);
 }
 
+/**
+ * What a chest would hold if it were opened: made on a scratch floor from the chest's contents seed, which is the
+ * same whenever it is opened.  Listed under the chest if anything inside is notable.
+ */
+static void put_chest_contents(ang_file *f, const struct object *chest, struct loc grid, int depth, int visit, bool shown, int *listed)
+{
+	struct object copy = *chest;
+	struct object *known = object_new();
+	struct chunk *scratch = cave_new(DROP_SIZE, DROP_SIZE);
+	const struct loc centre = loc(DROP_SIZE / 2, DROP_SIZE / 2);
+	int notable = 0;
+
+	object_copy(known, chest);
+	copy.known = known;
+	scratch->depth = depth;
+	for (int y = 0; y < DROP_SIZE; y++)
+		for (int x = 0; x < DROP_SIZE; x++)
+			square_set_feat(scratch, loc(x, y), FEAT_FLOOR);
+	chest_make_contents(scratch, centre, &copy, chest_contents_seed(depth, visit, grid));
+	for (int y = 0; y < DROP_SIZE; y++)
+		for (int x = 0; x < DROP_SIZE; x++)
+			for (const struct object *obj = square_object(scratch, loc(x, y)); obj; obj = obj->next) {
+				if (!notable_object(obj, depth)) continue;
+				if (!notable++ && !shown) {
+					if (!(*listed)++) file_putf(f, "  Items\n");
+					file_putf(f, "    (%d,%d) ", grid.x, grid.y);
+					put_object(f, "", chest);
+				}
+				file_putf(f, "      holds ");
+				put_object(f, "", obj);
+			}
+	object_delete(NULL, NULL, &known);
+	cave_free(scratch);
+}
+
 static void put_level(ang_file *f, struct chunk *c, int depth, int visit)
 {
 	int items = 0, listed = 0, forges = 0;
@@ -112,6 +149,14 @@ static void put_level(ang_file *f, struct chunk *c, int depth, int visit)
 		for (int x = 0; x < c->width; x++)
 			for (const struct object *obj = square_object(c, loc(x, y)); obj; obj = obj->next) {
 				items++;
+				if (tval_is_chest(obj) && obj->pval != 0) {
+					/* what is inside counts, whether or not the chest is itself notable */
+					const bool shown = notable_object(obj, depth);
+					if (shown && !listed++) file_putf(f, "  Items\n");
+					if (shown) { file_putf(f, "    (%d,%d) ", x, y); put_object(f, "", obj); }
+					put_chest_contents(f, obj, loc(x, y), depth, visit, shown, &listed);
+					continue;
+				}
 				if (!notable_object(obj, depth)) continue;
 				if (!listed++) file_putf(f, "  Items\n");
 				file_putf(f, "    (%d,%d) ", x, y);

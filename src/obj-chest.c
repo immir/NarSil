@@ -22,6 +22,7 @@
 #include "combat.h"
 #include "effects.h"
 #include "game-input.h"
+#include "gen-seed.h"
 #include "init.h"
 #include "mon-lore.h"
 #include "obj-chest.h"
@@ -421,10 +422,13 @@ static struct drop *choose_chest_contents(void)
  *
  * Judgment of size and construction of chests is currently made from the name.
  */
-static void chest_death(struct loc grid, struct object *chest)
+void chest_make_contents(struct chunk *c, struct loc grid, struct object *chest, uint32_t seed)
 {
 	int number = 1, level;
 	struct drop *theme;
+
+	/* The contents follow the seed, not whatever the game's RNG is doing when the chest is opened */
+	if (seed) rng_push_seed(seed);
 
 	/* Zero pval means empty chest */
 	if (!chest->pval)
@@ -469,23 +473,47 @@ static void chest_death(struct loc grid, struct object *chest)
 		}
 
 		/* Sil sets a limit on number of tries; hoping that's not needed NRM */
-		treasure = make_object(cave, level, good, great, theme);
+		treasure = make_object(c, level, good, great, theme);
 		if (!treasure)
 			continue;
 		if (tval_is_chest(treasure)) {
-			object_delete(cave, player->cave, &treasure);
+			object_delete(c, c == cave ? player->cave : NULL, &treasure);
 			continue;
 		}
 
 		treasure->origin = ORIGIN_CHEST;
 		treasure->origin_depth = chest->origin_depth;
-		drop_near(cave, &treasure, 0, grid, true, false);
+		drop_near(c, &treasure, 0, grid, true, false);
 		number--;
 	}
 
+	if (seed) rng_pop_seed();
+
 	/* Chest is now empty */
 	chest->pval = 0;
-	chest->known->pval = 0;
+	if (chest->known) chest->known->pval = 0;
+}
+
+/**
+ * The seed of the contents of a chest lying at grid on the visit to a depth: from the level's seed and where the chest
+ * is, so it is the same whenever the chest is opened.  0 (the contents are not seeded) if the game has no seed.
+ */
+uint32_t chest_contents_seed(int depth, int visit, struct loc grid)
+{
+	uint32_t seed;
+
+	if (!seed_game || depth <= 0 || depth >= SEED_DEPTHS || visit < 0) return 0;
+	seed = Rand_mix(Rand_mix(level_seed(seed_game, depth, visit), (uint32_t)grid.x), (uint32_t)grid.y);
+	return seed ? seed : 1;
+}
+
+static void chest_death(struct loc grid, struct object *chest)
+{
+	/* The current level's visit has been counted once it is made */
+	const int visits = player->depth > 0 && player->depth < SEED_DEPTHS ? level_visit(player, player->depth) : 0;
+	const uint32_t seed = visits > 0 ? chest_contents_seed(player->depth, visits - 1, grid) : 0;
+
+	chest_make_contents(cave, grid, chest, seed);
 }
 
 

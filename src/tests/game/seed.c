@@ -11,6 +11,9 @@
 #include "init.h"
 #include "mon-make.h"
 #include "mon-util.h"
+#include "obj-chest.h"
+#include "obj-make.h"
+#include "obj-tval.h"
 #include "obj-pile.h"
 #include "savefile.h"
 #include "wizard.h"
@@ -215,6 +218,65 @@ static int test_drop_follows_seed(void *state) {
 	ok;
 }
 
+/* What a small chest holds when opened with the game's RNG at some state, from the chest's contents seed. */
+static uint32_t chest_sig(uint32_t seed, uint32_t scramble) {
+	struct chunk *c = cave_new(21, 21);
+	struct object *chest = object_new();
+	const struct loc centre = loc(10, 10);
+	uint32_t h = 2166136261U;
+	int n = 0;
+
+	for (int y = 0; y < 21; y++)
+		for (int x = 0; x < 21; x++) square_set_feat(c, loc(x, y), FEAT_FLOOR);
+	c->depth = 12;
+	object_prep(chest, lookup_kind(TV_CHEST, lookup_sval(TV_CHEST, "Small wooden chest")), 12, RANDOMISE);
+	chest->pval = 12;
+	chest->known = object_new();
+	Rand_state_seed(scramble);
+	chest_make_contents(c, centre, chest, seed);
+	for (int y = 0; y < 21; y++)
+		for (int x = 0; x < 21; x++)
+			for (const struct object *obj = square_object(c, loc(x, y)); obj; obj = obj->next) {
+				h = fnv(h, obj->kind->kidx);
+				h = fnv(h, obj->ego ? obj->ego->eidx + 1 : 0);
+				h = fnv(h, obj->number);
+				n++;
+			}
+	require(n >= 2);
+	object_delete(NULL, NULL, &chest->known);
+	object_delete(NULL, NULL, &chest);
+	cave_free(c);
+	return h;
+}
+
+/* A chest's contents are fixed by its seed, not by what the game's RNG is doing when it is opened. */
+static int test_chest_follows_seed(void *state) {
+	int differs = 0;
+
+	for (uint32_t seed = 1; seed <= 24; seed++) {
+		const uint32_t first = chest_sig(seed, 1);
+		eq(chest_sig(seed, 4242), first);
+		differs += first != chest_sig(seed + 100, 1);
+	}
+	require(differs > 0);
+	ok;
+}
+
+/* Where a chest lies, which visit it is on and the game's seed each give it a seed of its own. */
+static int test_chest_seed_inputs(void *state) {
+	const uint32_t seed = chest_contents_seed(5, 0, loc(3, 4));
+
+	require(seed != 0);
+	eq(chest_contents_seed(5, 0, loc(3, 4)), seed);
+	require(chest_contents_seed(5, 0, loc(4, 3)) != seed);
+	require(chest_contents_seed(5, 1, loc(3, 4)) != seed);
+	require(chest_contents_seed(6, 0, loc(3, 4)) != seed);
+	seed_game = 7;
+	require(chest_contents_seed(5, 0, loc(3, 4)) != seed);
+	seed_game = 20261119;
+	ok;
+}
+
 static int test_new_monsters_get_seeds(void *state) {
 	generate(6, 0, 1);
 	int n = 0, distinct = 0;
@@ -361,6 +423,8 @@ struct test tests[] = {
 	{ "generation leaves the game's RNG untouched", test_game_rng_untouched },
 	{ "a change in the game's state stays local", test_state_changes_stay_local },
 	{ "a monster drop follows its seed", test_drop_follows_seed },
+	{ "a chest's contents follow its seed", test_chest_follows_seed },
+	{ "a chest's seed depends on the game, depth, visit and place", test_chest_seed_inputs },
 	{ "new monsters get drop seeds, fixed by the level seed", test_new_monsters_get_seeds },
 	{ "the seed, visits and drop seeds survive a save and load", test_save_load_keeps_seeds },
 	{ "reading a typed seed", test_seed_parse },
