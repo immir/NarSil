@@ -34,8 +34,9 @@ Reloading a save and taking the same staircase again gives the same level.  What
 can change what a later level holds.  Artefacts that already exist are never made twice and uniques that are
 dead are never made again, but each object and monster is generated on its own, so such a change only removes
 that one thing: it does not shuffle the rest of the level.  A monster's drop is fixed by the seed too, so the
-unique on 350 feet carries the same thing whenever you meet it.  So is what a chest holds: it is made from the
-level's seed and the chest's place, so the chest opens onto the same things whenever you open it.
+unique on 350 feet carries the same thing whenever you meet it.  So is what a chest holds: the chest is given a seed
+when it is made and keeps it, so it opens onto the same things whenever you open it, even if you carry it
+somewhere else first.
 
 The seed catalog
 ================

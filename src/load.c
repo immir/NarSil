@@ -1569,6 +1569,32 @@ int rd_seeds(void)
 	return 0;
 }
 
+int rd_chest_seeds(void)
+{
+	uint16_t n;
+
+	rd_u16b(&n);
+	for (int i = 0; i < n; i++) {
+		uint16_t at;
+		uint32_t seed;
+		rd_u16b(&at);
+		rd_u32b(&seed);
+		uint16_t k = 0;
+		for (struct object *obj = player->gear; obj; obj = obj->next, k++)
+			if (k == at && tval_is_chest(obj)) obj->contents_seed = seed;
+	}
+	rd_u16b(&n);
+	for (int i = 0; i < n; i++) {
+		uint16_t oidx;
+		uint32_t seed;
+		rd_u16b(&oidx);
+		rd_u32b(&seed);
+		if (oidx > 0 && oidx < cave->obj_max && cave->objects[oidx] && tval_is_chest(cave->objects[oidx]))
+			cave->objects[oidx]->contents_seed = seed;
+	}
+	return 0;
+}
+
 int rd_silq(void)
 {
 	rd_byte(&player->fixed_forge_count);

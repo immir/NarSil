@@ -12,6 +12,7 @@
 #include "mon-make.h"
 #include "mon-util.h"
 #include "obj-chest.h"
+#include "obj-gear.h"
 #include "obj-make.h"
 #include "obj-tval.h"
 #include "obj-pile.h"
@@ -262,18 +263,69 @@ static int test_chest_follows_seed(void *state) {
 	ok;
 }
 
-/* Where a chest lies, which visit it is on and the game's seed each give it a seed of its own. */
-static int test_chest_seed_inputs(void *state) {
-	const uint32_t seed = chest_contents_seed(5, 0, loc(3, 4));
+/* The chests on the level, in grid order: their seeds (and how many). */
+static int chest_seeds(uint32_t *seeds, int max) {
+	int n = 0;
+	for (int y = 0; y < cave->height; y++)
+		for (int x = 0; x < cave->width; x++)
+			for (const struct object *obj = square_object(cave, loc(x, y)); obj; obj = obj->next)
+				if (tval_is_chest(obj) && n < max) seeds[n++] = obj->contents_seed;
+	return n;
+}
 
-	require(seed != 0);
-	eq(chest_contents_seed(5, 0, loc(3, 4)), seed);
-	require(chest_contents_seed(5, 0, loc(4, 3)) != seed);
-	require(chest_contents_seed(5, 1, loc(3, 4)) != seed);
-	require(chest_contents_seed(6, 0, loc(3, 4)) != seed);
-	seed_game = 7;
-	require(chest_contents_seed(5, 0, loc(3, 4)) != seed);
-	seed_game = 20261119;
+/* A level with chests on it (the depth), generated as the first visit. */
+static int level_with_chests(uint32_t *seeds, int max) {
+	for (int depth = 4; depth < 16; depth++) {
+		generate(depth, 0, 1);
+		if (chest_seeds(seeds, max) > 0) return depth;
+	}
+	return 0;
+}
+
+/* A chest gets its seed when it is made, so what it holds does not depend on where it is put down. */
+static int test_chests_carry_their_seeds(void *state) {
+	uint32_t seeds[32], again[32];
+	const int depth = level_with_chests(seeds, 32);
+	require(depth > 0);
+	const int n = chest_seeds(seeds, 32);
+	for (int i = 0; i < n; i++) require(seeds[i] != 0);
+	generate(depth, 0, 9);
+	eq(chest_seeds(again, 32), n);
+	for (int i = 0; i < n; i++) eq(again[i], seeds[i]);
+	ok;
+}
+
+/* The seeds of the chests on the level (and in the pack) survive a save and a load. */
+static int test_save_load_keeps_chest_seeds(void *state) {
+	uint32_t seeds[32];
+	const int depth = level_with_chests(seeds, 32);
+	require(depth > 0);
+	on_new_level();
+	const int n = chest_seeds(seeds, 32);
+	struct object *carried = object_new();
+	object_prep(carried, lookup_kind(TV_CHEST, lookup_sval(TV_CHEST, "Small wooden chest")), 5, RANDOMISE);
+	carried->contents_seed = 424242;
+	carried->known = object_new();
+	carried->known->kind = carried->kind;
+	carried->known->tval = carried->tval;
+	carried->known->sval = carried->sval;
+	carried->known->number = carried->number;
+	inven_carry(player, carried, false, false);
+
+	eq(savefile_save("ChestSeedTest"), true);
+	for (struct object *obj = player->gear; obj; obj = obj->next) if (tval_is_chest(obj)) obj->contents_seed = 0;
+	for (int y = 0; y < cave->height; y++)
+		for (int x = 0; x < cave->width; x++)
+			for (struct object *obj = square_object(cave, loc(x, y)); obj; obj = obj->next) if (tval_is_chest(obj)) obj->contents_seed = 0;
+	eq(savefile_load("ChestSeedTest", false), true);
+
+	uint32_t loaded[32];
+	eq(chest_seeds(loaded, 32), n);
+	for (int i = 0; i < n; i++) eq(loaded[i], seeds[i]);
+	uint32_t found = 0;
+	for (const struct object *obj = player->gear; obj; obj = obj->next) if (tval_is_chest(obj)) found = obj->contents_seed;
+	eq(found, 424242);
+	file_delete("ChestSeedTest");
 	ok;
 }
 
@@ -424,7 +476,8 @@ struct test tests[] = {
 	{ "a change in the game's state stays local", test_state_changes_stay_local },
 	{ "a monster drop follows its seed", test_drop_follows_seed },
 	{ "a chest's contents follow its seed", test_chest_follows_seed },
-	{ "a chest's seed depends on the game, depth, visit and place", test_chest_seed_inputs },
+	{ "chests carry the seeds they were made with", test_chests_carry_their_seeds },
+	{ "the seeds of chests survive a save and a load", test_save_load_keeps_chest_seeds },
 	{ "new monsters get drop seeds, fixed by the level seed", test_new_monsters_get_seeds },
 	{ "the seed, visits and drop seeds survive a save and load", test_save_load_keeps_seeds },
 	{ "reading a typed seed", test_seed_parse },

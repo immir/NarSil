@@ -494,26 +494,9 @@ void chest_make_contents(struct chunk *c, struct loc grid, struct object *chest,
 	if (chest->known) chest->known->pval = 0;
 }
 
-/**
- * The seed of the contents of a chest lying at grid on the visit to a depth: from the level's seed and where the chest
- * is, so it is the same whenever the chest is opened.  0 (the contents are not seeded) if the game has no seed.
- */
-uint32_t chest_contents_seed(int depth, int visit, struct loc grid)
-{
-	uint32_t seed;
-
-	if (!seed_game || depth <= 0 || depth >= SEED_DEPTHS || visit < 0) return 0;
-	seed = Rand_mix(Rand_mix(level_seed(seed_game, depth, visit), (uint32_t)grid.x), (uint32_t)grid.y);
-	return seed ? seed : 1;
-}
-
 static void chest_death(struct loc grid, struct object *chest)
 {
-	/* The current level's visit has been counted once it is made */
-	const int visits = player->depth > 0 && player->depth < SEED_DEPTHS ? level_visit(player, player->depth) : 0;
-	const uint32_t seed = visits > 0 ? chest_contents_seed(player->depth, visits - 1, grid) : 0;
-
-	chest_make_contents(cave, grid, chest, seed);
+	chest_make_contents(cave, grid, chest, chest->contents_seed);
 }
 
 

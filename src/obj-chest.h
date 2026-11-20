@@ -53,7 +53,6 @@ struct object *chest_check(const struct player *p, struct loc grid,
 int count_chests(struct loc *grid, enum chest_query check_type);
 bool do_cmd_open_chest(struct loc grid, struct object *obj);
 struct chunk;
-uint32_t chest_contents_seed(int depth, int visit, struct loc grid);
 void chest_make_contents(struct chunk *c, struct loc grid, struct object *chest, uint32_t seed);
 bool do_cmd_disarm_chest(struct object *obj);
 

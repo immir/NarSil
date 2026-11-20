@@ -108,7 +108,7 @@ static void put_monster_items(ang_file *f, struct chunk *c, const struct monster
  * What a chest would hold if it were opened: made on a scratch floor from the chest's contents seed, which is the
  * same whenever it is opened.  Listed under the chest if anything inside is notable.
  */
-static void put_chest_contents(ang_file *f, const struct object *chest, struct loc grid, int depth, int visit, bool shown, int *listed)
+static void put_chest_contents(ang_file *f, const struct object *chest, struct loc grid, int depth, bool shown, int *listed)
 {
 	struct object copy = *chest;
 	struct object *known = object_new();
@@ -122,7 +122,7 @@ static void put_chest_contents(ang_file *f, const struct object *chest, struct l
 	for (int y = 0; y < DROP_SIZE; y++)
 		for (int x = 0; x < DROP_SIZE; x++)
 			square_set_feat(scratch, loc(x, y), FEAT_FLOOR);
-	chest_make_contents(scratch, centre, &copy, chest_contents_seed(depth, visit, grid));
+	chest_make_contents(scratch, centre, &copy, chest->contents_seed);
 	for (int y = 0; y < DROP_SIZE; y++)
 		for (int x = 0; x < DROP_SIZE; x++)
 			for (const struct object *obj = square_object(scratch, loc(x, y)); obj; obj = obj->next) {
@@ -154,7 +154,7 @@ static void put_level(ang_file *f, struct chunk *c, int depth, int visit)
 					const bool shown = notable_object(obj, depth);
 					if (shown && !listed++) file_putf(f, "  Items\n");
 					if (shown) { file_putf(f, "    (%d,%d) ", x, y); put_object(f, "", obj); }
-					put_chest_contents(f, obj, loc(x, y), depth, visit, shown, &listed);
+					put_chest_contents(f, obj, loc(x, y), depth, shown, &listed);
 					continue;
 				}
 				if (!notable_object(obj, depth)) continue;
