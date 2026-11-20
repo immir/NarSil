@@ -29,6 +29,10 @@
 #include "player-timed.h"
 #include "randname.h"
 
+/* The length of a random name, in letters. */
+#define MIN_RANDOM_NAME 4
+#define MAX_RANDOM_NAME 9
+
 /**
  * Pointer to the player struct
  */
@@ -298,8 +302,30 @@ bool player_restore_mana(struct player *p, int amt) {
  */
 size_t player_random_name(char *buf, size_t buflen)
 {
-	size_t result = randname_make(RANDNAME_TOLKIEN, 4, 8, buf, buflen,
-		name_sections);
+	static const struct { const char *race; randname_type type; } by_race[] = {
+		{ "Noldor", RANDNAME_NOLDOR }, { "Sindar", RANDNAME_SINDAR },
+		{ "Naugrim", RANDNAME_NAUGRIM }, { "Edain", RANDNAME_EDAIN },
+	};
+	randname_type type = RANDNAME_TOLKIEN;
+	size_t result = 0;
+	int tries;
+
+	for (size_t i = 0; player && player->race && i < N_ELEMENTS(by_race); i++) {
+		if (streq(player->race->name, by_race[i].race)) type = by_race[i].type;
+	}
+	/* A race with no names listed uses the general list. */
+	if (!name_sections[type][0]) type = RANDNAME_TOLKIEN;
+
+	/* A name from the lists themselves is not a new one: try again (a few times, in case a list is tiny). */
+	for (tries = 0; tries < 20; tries++) {
+		bool listed = false;
+
+		result = randname_make(type, MIN_RANDOM_NAME, MAX_RANDOM_NAME, buf, buflen, name_sections);
+		for (const char **w = name_sections[type]; *w; w++) {
+			if (my_stricmp(*w, buf) == 0) listed = true;
+		}
+		if (!listed) break;
+	}
 
 	my_strcap(buf);
 	return result;
