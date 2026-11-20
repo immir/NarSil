@@ -299,12 +299,12 @@ static bool ask_text(const char *title, char *buf, size_t cap, bool random_allow
 	}
 }
 
-/* get_seed_command(): the dungeon's seed, a number (blank: a random one); skipped if one was already given. */
+/* get_seed_command(): the dungeon's seed, a number (blank: a random one); only if the birth option is on, and not if one was already given. */
 static void seed_stage(void)
 {
 	char text[16] = "";
 
-	if (seed_game_requested) return;
+	if (seed_game_requested || !OPT(player, birth_choose_seed)) return;
 	while (ask_text("Dungeon seed (blank for a random one)", text, sizeof(text), false)) {
 		if (seed_parse(text, &seed_game_requested)) return;
 		seed_game_requested = 0;

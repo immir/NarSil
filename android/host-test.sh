@@ -26,7 +26,7 @@ esac
 run() { NARSIL_SEED=${NARSIL_SEED:-7} timeout 120 "$build/narsil_host" "$lib" "$work/data" "$@"; }
 # The native birth screens: race, house, sex (first of each), accept stats and
 # skills, keep the name, accept history, begin; dismiss the opening text.
-birth=(@answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @text= @answer=0 @answer=0 @esc)
+birth=(@answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc)
 # Quit from the command prompt; the Escs first dismiss any -more- left on screen.
 quit=(@esc @esc ^x @enter @esc)
 
@@ -115,10 +115,14 @@ grep -qx "        versionName = \"$appver\"" "$here/app/build.gradle.kts"
 grep -q "<key>CFBundleShortVersionString</key><string>$appver</string>" "$root/ios/xtool-Info.plist"
 grep -qx "        CFBundleShortVersionString: \"$appver\"" "$root/ios/project.yml"
 
+# The birth option "Choose the dungeon's seed" is toggled from the first birth screen's options (its answer is 1000 + the option's index).
+seed_opt=$((1000 + $(awk 'index($0, "OP(birth_choose_seed,") == 1 {print n; exit} /^OP\(/ {n++}' "$root/src/list-options.h")))
+choose_seed=(@answer=0 @answer=1001 @answer=$seed_opt @answer=-1)
+
 echo "== seeded levels: the seed typed at birth, not the harness's own randomness, fixes the first level"
 seeded_map() {
     rm -rf "$work/data"
-    NARSIL_SEED=$1 run @answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= "@text=$2" @answer=0 @answer=0 @esc @map 2>/dev/null
+    NARSIL_SEED=$1 run "${choose_seed[@]}" @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= "@text=$2" @answer=0 @answer=0 @esc @map 2>/dev/null
 }
 map_a=$(seeded_map 7 424242); map_b=$(seeded_map 99 424242); map_c=$(seeded_map 7 424243)
 echo "$map_a" | grep -q '^map '
@@ -258,7 +262,7 @@ echo "$out" | tail -1 | grep -qx 'state=2 exit="" saves=0'
 echo "== native birth: random house, buy a stat, back from skills to stats, then on"
 rm -rf "$work/data"
 out=$(run @answer=0 @answer=0 @answer=1000 @prompt @answer=0 @answer=100 @prompt @answer=2 @answer=-1 @prompt \
-      @answer=2 @answer=2 @text= @text= @answer=0 @answer=0 @esc "${quit[@]}")
+      @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc "${quit[@]}")
 echo "$out" | grep -qP '^Screen\tsex\tSex$'
 echo "$out" | grep -qP '^#S\tStrength\t1\t1\t'
 echo "$out" | grep -qP '^#P\t12\t13$'
@@ -287,7 +291,7 @@ echo "$out" | grep -qP '^#O\t1007\t1\t0\tAudible beep'
 echo "$out" | grep -qP '^#N\t10000\tHitpoint warning\t5\t'
 echo "$out" | grep -qP '^#O\t1046\t0\t1\tDisconnected stairs'
 rm -rf "$work/data"
-out=$(run @answer=0 @answer=1001 @prompt @answer=1046 @prompt @answer=-1 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @text= @answer=0 @answer=0 @esc "${quit[@]}")
+out=$(run @answer=0 @answer=1001 @prompt @answer=1046 @prompt @answer=-1 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc "${quit[@]}")
 echo "$out" | grep -qP '^#O\t1046\t1\t0\tDisconnected stairs'
 
 echo "== native pack: expand an item, act on it, the pack reopens with the result"
@@ -371,6 +375,14 @@ run @answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @prompt @text=Bi
 out=$(run @answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @prompt @answer=2 @prompt)
 [ "$(echo "$out" | grep -cx 'Bilbo')" -eq 1 ]
 [ "$(echo "$out" | grep -A1 -x 'Your character.s name' | grep -vcxe 'Your character.s name' -e '--' -e Bilbo)" -ge 1 ]
+
+echo "== the seed is asked for only when the birth option is on"
+rm -rf "$work/data"
+out=$(run @answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @prompt @text=Bilbo @prompt)
+[ "$(echo "$out" | grep -c 'Dungeon seed')" -eq 0 ]
+rm -rf "$work/data"
+out=$(run "${choose_seed[@]}" @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @prompt @text=Bilbo @prompt)
+[ "$(echo "$out" | grep -c 'Dungeon seed')" -eq 1 ]
 
 echo "== panel: pack, character, skills (bought points kept across tabs), abilities; smithing design kept across tabs"
 rm -rf "$work/data"

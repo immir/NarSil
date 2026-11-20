@@ -22,12 +22,15 @@ quit=(@esc @esc ^x @enter @esc)
 
 rm -rf "$out"; mkdir -p "$out"
 
+# The birth option "Choose the dungeon's seed" is toggled from the first birth screen (answer 1000 + its index).
+seed_opt=$((1000 + $(awk 'index($0, "OP(birth_choose_seed,") == 1 {print n; exit} /^OP\(/ {n++}' "$here/../src/list-options.h")))
+
 # Welcome, then every birth stage; the character is left at the map.
-run $(P welcome) @answer=0 $(P birth_race) @answer=0 $(P birth_house) @answer=0 $(P birth_sex) @answer=0 \
+run $(P welcome) @answer=0 $(P birth_race) @answer=1001 @answer=$seed_opt @answer=-1 @answer=0 $(P birth_house) @answer=0 $(P birth_sex) @answer=0 \
     $(P birth_stats) @answer=2 $(P birth_skills) @answer=2 $(P birth_name) @text= $(P birth_seed) @text= $(P birth_ahw) @answer=0 \
     $(P birth_history) @answer=0 @esc "${quit[@]}"
 
-birth=(@answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @text= @answer=0 @answer=0 @esc)
+birth=(@answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc)
 
 # The panel's tabs, the pack expanded, and what Pack's actions lead to.
 run "${birth[@]}" @act=15 $(P pack) @answer=1000 $(P pack_expanded) @answer=$((T+1)) $(P character) \
