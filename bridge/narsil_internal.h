@@ -81,6 +81,8 @@ bool native_pack_pending(void);
 
 /* Implemented by narsil_prompt.c (game thread): the character panel; true if a command was queued. */
 bool native_panel(int tab_or_last, int pack_focus);
+/* Implemented by narsil_birth.c: the name a character was last given, offered as the next one's default. */
+void native_remember_name(const char *name);
 /* A panel tab switch or close is unwinding the open screens. */
 bool native_panel_leaving(void);
 /* Implemented by narsil_native.c: the character sheet, info format. */

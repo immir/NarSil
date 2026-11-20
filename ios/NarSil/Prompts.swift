@@ -137,6 +137,8 @@ struct TextPromptView: View {
         }
         .preferredColorScheme(.dark)
         .onAppear { text = prompt.initial }
+        /* Asked again with another default (the Random button's name): the field follows. */
+        .onChange(of: prompt.initial) { text = $0 }
     }
 }
 

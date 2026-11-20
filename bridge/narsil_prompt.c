@@ -1033,7 +1033,7 @@ static void rename_character(void)
 		if (a == NB_TEXT_RANDOM) { player_random_name(name, sizeof(name)); continue; }
 		if (a != 1) return;
 		native_answer_text(name, sizeof(name));
-		if (name[0]) my_strcpy(player->full_name, name, sizeof(player->full_name));
+		if (name[0]) { my_strcpy(player->full_name, name, sizeof(player->full_name)); native_remember_name(name); }
 		return;
 	}
 }

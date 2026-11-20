@@ -365,6 +365,13 @@ out=$(run "${birth[@]}" @act=27 @prompt @answer=4 @prompt @answer=0 @prompt @ans
 echo "$out" | grep -qP '^#E\t[0-9]+\t[0-9]+\tTunneling\t\{dig\}$'
 echo "$out" | grep -qP '^#A\t100001\tRemove inscription$'
 
+echo "== the name last given is the next character's default (and Random still offers others)"
+rm -rf "$work/data"
+run @answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @prompt @text=Bilbo >/dev/null
+out=$(run @answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @prompt @answer=2 @prompt)
+[ "$(echo "$out" | grep -cx 'Bilbo')" -eq 1 ]
+[ "$(echo "$out" | grep -A1 -x 'Your character.s name' | grep -vcxe 'Your character.s name' -e '--' -e Bilbo)" -ge 1 ]
+
 echo "== panel: pack, character, skills (bought points kept across tabs), abilities; smithing design kept across tabs"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=15 @prompt @answer=16777217 @prompt @answer=16777218 @prompt @answer=100 @prompt @answer=16777219 @prompt @answer=16777218 @prompt @answer=16777223 "${quit[@]}")

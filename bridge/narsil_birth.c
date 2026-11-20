@@ -313,18 +313,48 @@ static void seed_stage(void)
 	}
 }
 
+static void last_name_path(char *path, size_t cap)
+{
+	path_build(path, cap, ANGBAND_DIR_USER, "last-name.txt");
+}
+
+/* The name last given to a character, if there is one: `name` is left alone otherwise. */
+static void last_name(char *name, size_t cap)
+{
+	char path[1024], line[PLAYER_NAME_LEN];
+	last_name_path(path, sizeof(path));
+	ang_file *const fp = file_open(path, MODE_READ, FTYPE_TEXT);
+	if (!fp) return;
+	if (file_getl(fp, line, sizeof(line)) && line[0]) my_strcpy(name, line, cap);
+	file_close(fp);
+}
+
+void native_remember_name(const char *name)
+{
+	char path[1024];
+	if (!name[0]) return;
+	last_name_path(path, sizeof(path));
+	ang_file *const fp = file_open(path, MODE_WRITE, FTYPE_TEXT);
+	if (!fp) return;
+	file_putf(fp, "%s\n", name);
+	file_close(fp);
+}
+
 /* get_name_command(). */
 static enum birth_stage name_stage(void)
 {
 	if (arg_name[0]) my_strcpy(player->full_name, arg_name, sizeof(player->full_name));
 	if (arg_force_name) { seed_stage(); return BIRTH_HISTORY_CHOICE; }
-	char name[PLAYER_NAME_LEN];
-	my_strcpy(name, player->full_name, sizeof(name));
+	char name[PLAYER_NAME_LEN], initial[PLAYER_NAME_LEN];
+	my_strcpy(initial, player->full_name, sizeof(initial));
+	last_name(initial, sizeof(initial));
+	my_strcpy(name, initial, sizeof(name));
 	if (!ask_text("Your character's name", name, sizeof(name), true)) return BIRTH_BACK;
-	if (!name[0]) my_strcpy(name, player->full_name, sizeof(name));
+	if (!name[0]) my_strcpy(name, initial, sizeof(name));
 	if (!savefile[0] && savefile_name_already_used(name, true, true)
 			&& !get_check("A savefile for that name exists.  Overwrite it? "))
 		return BIRTH_BACK;
+	native_remember_name(name);
 	cmdq_push(CMD_NAME_CHOICE);
 	cmd_set_arg_string(cmdq_peek(), "name", name);
 	seed_stage();
