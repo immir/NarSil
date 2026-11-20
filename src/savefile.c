@@ -129,6 +129,7 @@ static const struct {
 	{ "history", wr_history, 1 },
 	{ "monster groups", wr_monster_groups, 1 },
 	{ "seeds", wr_seeds, 1 },
+	{ "chest seeds", wr_chest_seeds, 1 },
 	{ "narsil-q", wr_silq, 1 },	/* NarSil-Q only (see savefile_save) */
 };
 
@@ -154,6 +155,7 @@ static const struct blockinfo loaders[] = {
 	{ "history", rd_history, 1 },
 	{ "monster groups", rd_monster_groups, 1 },
 	{ "seeds", rd_seeds, 1 },
+	{ "chest seeds", rd_chest_seeds, 1 },
 	{ "narsil-q", rd_silq, 1 },
 };
 

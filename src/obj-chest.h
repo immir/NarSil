@@ -52,6 +52,8 @@ struct object *chest_check(const struct player *p, struct loc grid,
 	enum chest_query check_type);
 int count_chests(struct loc *grid, enum chest_query check_type);
 bool do_cmd_open_chest(struct loc grid, struct object *obj);
+struct chunk;
+void chest_make_contents(struct chunk *c, struct loc grid, struct object *chest, uint32_t seed);
 bool do_cmd_disarm_chest(struct object *obj);
 
 #endif /* OBJECT_CHEST_H */

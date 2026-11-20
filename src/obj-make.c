@@ -1385,6 +1385,8 @@ struct object *make_object(struct chunk *c, int lev, bool good, bool great,
 {
 	gen_entity_push(GEN_OBJECT);
 	struct object *const result = make_object_body(c, lev, good, great, drop);
+	/* A chest's contents are fixed by a seed made with it, so they do not depend on where it is opened */
+	if (result && tval_is_chest(result)) result->contents_seed = gen_drop_seed();
 	gen_entity_pop();
 	return result;
 }

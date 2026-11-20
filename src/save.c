@@ -29,9 +29,9 @@
 #include "obj-desc.h"
 #include "obj-knowledge.h"
 #include "obj-pile.h"
+#include "obj-tval.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
-#include "obj-tval.h"
 #include "obj-util.h"
 #include "option.h"
 #include "player-abilities.h"
@@ -997,6 +997,36 @@ void wr_seeds(void)
 	const int n = player->is_dead ? 0 : cave_monster_max(cave);
 	wr_u16b(n);
 	for (int i = 1; i < n; i++) wr_u32b(cave_monster(cave, i)->drop_seed);
+}
+
+/**
+ * The seeds of the contents of the chests the player carries (by place in the pack) and of those on the current
+ * level (by object index), so a chest opens onto the same things wherever it is put down.
+ */
+void wr_chest_seeds(void)
+{
+	uint16_t n = 0;
+
+	for (const struct object *obj = player->gear; obj; obj = obj->next) n += tval_is_chest(obj) && obj->contents_seed;
+	wr_u16b(n);
+	uint16_t at = 0;
+	for (const struct object *obj = player->gear; obj; obj = obj->next, at++) {
+		if (!tval_is_chest(obj) || !obj->contents_seed) continue;
+		wr_u16b(at);
+		wr_u32b(obj->contents_seed);
+	}
+	n = 0;
+	if (!player->is_dead)
+		for (int i = 1; i < cave->obj_max; i++)
+			n += cave->objects[i] && tval_is_chest(cave->objects[i]) && cave->objects[i]->contents_seed;
+	wr_u16b(n);
+	if (player->is_dead) return;
+	for (int i = 1; i < cave->obj_max; i++) {
+		const struct object *obj = cave->objects[i];
+		if (!obj || !tval_is_chest(obj) || !obj->contents_seed) continue;
+		wr_u16b(i);
+		wr_u32b(obj->contents_seed);
+	}
 }
 
 void wr_silq(void)

@@ -11,6 +11,10 @@
 #include "init.h"
 #include "mon-make.h"
 #include "mon-util.h"
+#include "obj-chest.h"
+#include "obj-gear.h"
+#include "obj-make.h"
+#include "obj-tval.h"
 #include "obj-pile.h"
 #include "savefile.h"
 #include "wizard.h"
@@ -215,6 +219,116 @@ static int test_drop_follows_seed(void *state) {
 	ok;
 }
 
+/* What a small chest holds when opened with the game's RNG at some state, from the chest's contents seed. */
+static uint32_t chest_sig(uint32_t seed, uint32_t scramble) {
+	struct chunk *c = cave_new(21, 21);
+	struct object *chest = object_new();
+	const struct loc centre = loc(10, 10);
+	uint32_t h = 2166136261U;
+	int n = 0;
+
+	for (int y = 0; y < 21; y++)
+		for (int x = 0; x < 21; x++) square_set_feat(c, loc(x, y), FEAT_FLOOR);
+	c->depth = 12;
+	object_prep(chest, lookup_kind(TV_CHEST, lookup_sval(TV_CHEST, "Small wooden chest")), 12, RANDOMISE);
+	chest->pval = 12;
+	chest->known = object_new();
+	Rand_state_seed(scramble);
+	chest_make_contents(c, centre, chest, seed);
+	for (int y = 0; y < 21; y++)
+		for (int x = 0; x < 21; x++)
+			for (const struct object *obj = square_object(c, loc(x, y)); obj; obj = obj->next) {
+				h = fnv(h, obj->kind->kidx);
+				h = fnv(h, obj->ego ? obj->ego->eidx + 1 : 0);
+				h = fnv(h, obj->number);
+				n++;
+			}
+	require(n >= 2);
+	object_delete(NULL, NULL, &chest->known);
+	object_delete(NULL, NULL, &chest);
+	cave_free(c);
+	return h;
+}
+
+/* A chest's contents are fixed by its seed, not by what the game's RNG is doing when it is opened. */
+static int test_chest_follows_seed(void *state) {
+	int differs = 0;
+
+	for (uint32_t seed = 1; seed <= 24; seed++) {
+		const uint32_t first = chest_sig(seed, 1);
+		eq(chest_sig(seed, 4242), first);
+		differs += first != chest_sig(seed + 100, 1);
+	}
+	require(differs > 0);
+	ok;
+}
+
+/* The chests on the level, in grid order: their seeds (and how many). */
+static int chest_seeds(uint32_t *seeds, int max) {
+	int n = 0;
+	for (int y = 0; y < cave->height; y++)
+		for (int x = 0; x < cave->width; x++)
+			for (const struct object *obj = square_object(cave, loc(x, y)); obj; obj = obj->next)
+				if (tval_is_chest(obj) && n < max) seeds[n++] = obj->contents_seed;
+	return n;
+}
+
+/* A level with chests on it (the depth), generated as the first visit. */
+static int level_with_chests(uint32_t *seeds, int max) {
+	for (int depth = 4; depth < 16; depth++) {
+		generate(depth, 0, 1);
+		if (chest_seeds(seeds, max) > 0) return depth;
+	}
+	return 0;
+}
+
+/* A chest gets its seed when it is made, so what it holds does not depend on where it is put down. */
+static int test_chests_carry_their_seeds(void *state) {
+	uint32_t seeds[32], again[32];
+	const int depth = level_with_chests(seeds, 32);
+	require(depth > 0);
+	const int n = chest_seeds(seeds, 32);
+	for (int i = 0; i < n; i++) require(seeds[i] != 0);
+	generate(depth, 0, 9);
+	eq(chest_seeds(again, 32), n);
+	for (int i = 0; i < n; i++) eq(again[i], seeds[i]);
+	ok;
+}
+
+/* The seeds of the chests on the level (and in the pack) survive a save and a load. */
+static int test_save_load_keeps_chest_seeds(void *state) {
+	uint32_t seeds[32];
+	const int depth = level_with_chests(seeds, 32);
+	require(depth > 0);
+	on_new_level();
+	const int n = chest_seeds(seeds, 32);
+	struct object *carried = object_new();
+	object_prep(carried, lookup_kind(TV_CHEST, lookup_sval(TV_CHEST, "Small wooden chest")), 5, RANDOMISE);
+	carried->contents_seed = 424242;
+	carried->known = object_new();
+	carried->known->kind = carried->kind;
+	carried->known->tval = carried->tval;
+	carried->known->sval = carried->sval;
+	carried->known->number = carried->number;
+	inven_carry(player, carried, false, false);
+
+	eq(savefile_save("ChestSeedTest"), true);
+	for (struct object *obj = player->gear; obj; obj = obj->next) if (tval_is_chest(obj)) obj->contents_seed = 0;
+	for (int y = 0; y < cave->height; y++)
+		for (int x = 0; x < cave->width; x++)
+			for (struct object *obj = square_object(cave, loc(x, y)); obj; obj = obj->next) if (tval_is_chest(obj)) obj->contents_seed = 0;
+	eq(savefile_load("ChestSeedTest", false), true);
+
+	uint32_t loaded[32];
+	eq(chest_seeds(loaded, 32), n);
+	for (int i = 0; i < n; i++) eq(loaded[i], seeds[i]);
+	uint32_t found = 0;
+	for (const struct object *obj = player->gear; obj; obj = obj->next) if (tval_is_chest(obj)) found = obj->contents_seed;
+	eq(found, 424242);
+	file_delete("ChestSeedTest");
+	ok;
+}
+
 static int test_new_monsters_get_seeds(void *state) {
 	generate(6, 0, 1);
 	int n = 0, distinct = 0;
@@ -361,6 +475,9 @@ struct test tests[] = {
 	{ "generation leaves the game's RNG untouched", test_game_rng_untouched },
 	{ "a change in the game's state stays local", test_state_changes_stay_local },
 	{ "a monster drop follows its seed", test_drop_follows_seed },
+	{ "a chest's contents follow its seed", test_chest_follows_seed },
+	{ "chests carry the seeds they were made with", test_chests_carry_their_seeds },
+	{ "the seeds of chests survive a save and a load", test_save_load_keeps_chest_seeds },
 	{ "new monsters get drop seeds, fixed by the level seed", test_new_monsters_get_seeds },
 	{ "the seed, visits and drop seeds survive a save and load", test_save_load_keeps_seeds },
 	{ "reading a typed seed", test_seed_parse },

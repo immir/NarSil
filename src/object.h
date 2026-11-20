@@ -476,6 +476,7 @@ struct object {
 	uint8_t origin;			/**< How this item was found */
 	uint8_t origin_depth;		/**< What depth the item was found at */
 	struct monster_race *origin_race;	/**< Monster race that dropped it */
+	uint32_t contents_seed;		/**< A chest: the seed of what it holds (0: none), fixed when it was made */
 
 	quark_t note; 			/**< Inscription index */
 
@@ -519,6 +520,7 @@ static struct object const OBJECT_NULL = {
 	.origin = 0,
 	.origin_depth = 0,
 	.origin_race = NULL,
+	.contents_seed = 0,
 	.note = 0,
 	.abilities = NULL,
 };
