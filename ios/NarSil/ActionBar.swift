@@ -72,6 +72,7 @@ func quickActions(_ slots: [QuickSlot], unpin: @escaping (Int) -> Void) -> [BarA
 func coreActions(_ s: Status, restOptions: @escaping () -> Void) -> [BarAction] {
     var out = [
         BarAction(label: "Rest", longPress: restOptions, run: act(NB.ACT_REST)),
+        BarAction(label: "Explore", longPress: act(NB.ACT_EXPLORE_STEP), run: act(NB.ACT_EXPLORE)),
         BarAction(label: "Wait", run: act(NB.ACT_HOLD)),
         BarAction(label: s.has(NB.CTX_STEALTH) ? "Stealth ●" : "Stealth", active: s.has(NB.CTX_STEALTH), run: act(NB.ACT_STEALTH)),
         BarAction(label: s.has(NB.CTX_SINGING) ? "Song ♪" : "Song", active: s.has(NB.CTX_SINGING), run: act(NB.ACT_SONG)),

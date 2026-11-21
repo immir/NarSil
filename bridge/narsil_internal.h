@@ -158,6 +158,12 @@ bool native_service(bool at_prompt);
 /* After textui_get_cmd returns: queue the stashed command, if any. */
 void native_run_stashed(void);
 void native_travel_report(void);
+/* Between commands, while exploring: queue the next leg.  False if nothing was queued (not exploring, or it just ended). */
+bool native_explore_step(void);
+/* A key or a command from the player ends an exploration. */
+void native_explore_cancel(void);
+/* The terminal's delay for a spell or missile step was already spent showing it (see native_animate). */
+bool native_absorb_delay(void);
 
 /* Signal handler that records a crash in <data_dir>/NB_CRASH_FILE (narsil_crash.c). */
 void bridge_install_crash_handler(const char *data_dir);

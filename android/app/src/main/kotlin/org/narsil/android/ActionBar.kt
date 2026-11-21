@@ -104,6 +104,7 @@ fun contextActions(s: GameState.Status): List<BarAction> = buildList {
 /** [restOptions] opens the rest choices (long press on Rest). */
 fun coreActions(s: GameState.Status, restOptions: () -> Unit): List<BarAction> = listOfNotNull(
     BarAction("Rest", longPress = restOptions, run = act(N.ACT_REST)),
+    BarAction("Explore", longPress = act(N.ACT_EXPLORE_STEP), run = act(N.ACT_EXPLORE)),
     BarAction("Wait", run = act(N.ACT_HOLD)),
     BarAction(if (s.has(N.CTX_STEALTH)) "Stealth ●" else "Stealth", active = s.has(N.CTX_STEALTH), run = act(N.ACT_STEALTH)),
     BarAction(if (s.has(N.CTX_SINGING)) "Song ♪" else "Song", active = s.has(N.CTX_SINGING), run = act(N.ACT_SONG)),

@@ -96,7 +96,9 @@ enum NB {
     static let ACT_TRAVEL_UP = 31
     static let ACT_FLETCH = 32
     static let ACT_FLOOR = 33
-    static let ACT_COUNT = 34
+    static let ACT_EXPLORE = 34
+    static let ACT_EXPLORE_STEP = 35
+    static let ACT_COUNT = 36
     static let REST_HP_AND_VOICE = -1
     static let REST_AS_NEEDED = -2
     static let REST_HP_OR_VOICE = -3
@@ -105,6 +107,9 @@ enum NB {
     static let CELL_MONSTER = 4
     static let CELL_OBJECT = 8
     static let CELL_KNOWN = 16
+    static let CELL_ANIM = 32
+    static let CELL_TRAIL = 64
+    static let CELL_MARK = 128
     static let MAP_CELL_INTS = 5
     static let TILE_ALERT = 1
     static let TILE_GLOW = 2

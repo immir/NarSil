@@ -208,6 +208,25 @@ rm -rf "$work/data"
 out=$(run "${birth[@]}" @specials @act=1 @esc @esc @act=33 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qP '^Pack\t-1\t2\t'
 
+echo "== explore goes to the nearest seen item and stops on it; later it stops for a monster in view (not for one already seen); one step stops after one leg"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @depth=2 @act=1 @esc @act=34 @esc @messages "${quit[@]}" 2>/dev/null)
+echo "$out" | grep -q 'You stop: there is something here\.'
+rm -rf "$work/data"
+explore_runs=(); for _ in $(seq 1 14); do explore_runs+=(@act=34 @esc); done
+out=$(run "${birth[@]}" @depth=1 @act=1 @esc "${explore_runs[@]}" @messages "${quit[@]}" 2>/dev/null)
+echo "$out" | grep -qE 'You stop: you see an? '
+! echo "$out" | grep -q 'something disturbed' || true
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @depth=2 @act=1 @esc @act=35 @esc @messages "${quit[@]}" 2>/dev/null)
+echo "$out" | grep -q 'You stop: there is something here\.'
+
+echo "== bolts, missiles, blasts and hits are laid over the published map step by step (the engine's terminal drawing never reaches the apps)"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @depth=1 @act=1 @esc @anim "${quit[@]}" 2>/dev/null)
+frames=$(echo "$out" | sed -n 's/^animframes=//p')
+[ "$frames" -ge 8 ]
+
 echo "== the status area's data: a lit torch has turns left; the monsters-only look list has its own header"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @ctx @lookm "${quit[@]}")

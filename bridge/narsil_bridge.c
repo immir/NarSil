@@ -221,6 +221,7 @@ static errr term_event(bool wait)
 	}
 	pthread_mutex_unlock(&shared.lock);
 
+	if (n > 0) native_explore_cancel();
 	for (size_t i = 0; i < n; i++) {
 		const queued_key *const k = &batch[i];
 		/* Term_mousepress packs the modifiers into the button's high nibble. */
@@ -252,7 +253,7 @@ static errr term_xtra(int n, int v)
 		case TERM_XTRA_CLEAR: wipe_cells(game.work, n_cells()); return 0;
 		case TERM_XTRA_SHAPE: game.cur_visible = v != 0; return 0;
 		case TERM_XTRA_FRESH: publish_frame(); native_publish(at_map_prompt()); return 0;
-		case TERM_XTRA_DELAY: sleep_ms(v); return 0;
+		case TERM_XTRA_DELAY: if (!native_absorb_delay()) sleep_ms(v); return 0;
 		default: return 0;
 	}
 }
@@ -313,7 +314,12 @@ static errr get_cmd(cmd_context ctx)
 	if (ctx == CTX_GAME) {
 		game.between_commands = true;
 		native_travel_report();
+		const bool exploring = native_explore_step();
 		game.between_commands = false;
+		if (exploring) {
+			game.at_command_prompt = false;
+			return 0;
+		}
 	}
 	const errr r = textui_get_cmd(ctx);
 	game.at_command_prompt = false;

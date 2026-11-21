@@ -11,6 +11,7 @@
  *   ^x                                            control-x
  *   @tap=X,Y @hold=X,Y                            left / right mouse press on a cell
  *   @tap@DX,DY                                    tap relative to the player's '@'
+ *   @anim                                         play a test bolt, hit and blast; print how many animation frames were published
  *   @where                                        print the player's screen position
  *   @prompt                                       print the open native prompt
  *   @act=N                                        native action (enum nb_action)
@@ -290,6 +291,12 @@ static int run_token(const char *tok)
 	if (strncmp(tok, "@gameseed=", 10) == 0) {
 		nb_test_game_seed((uint32_t)strtoul(tok + 10, NULL, 10));
 		return 0;
+	}
+	if (strcmp(tok, "@anim") == 0) {
+		nb_test_anim();
+		const bool ok = settle();
+		printf("animframes=%d\n", nb_test_anim_frames());
+		return ok ? 0 : 1;
 	}
 	if (strncmp(tok, "@depth=", 7) == 0) {
 		nb_test_depth(atoi(tok + 7));

@@ -58,6 +58,8 @@
 #include <pthread.h>
 #include <stdarg.h>
 #include <string.h>
+#include <time.h>
+#include "ui-object.h"
 
 enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MAX = 40 };
 
@@ -65,7 +67,7 @@ enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MA
  * overlay bits: NB_TILE_ALERT, NB_TILE_GLOW. */
 typedef struct { int32_t cp, attr_flags, tile, tile_bg, tile_flags; } map_cell;
 
-enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_TEST_MSG, REQ_TEST_DEPTH, REQ_TEST_CHEST, REQ_REST, REQ_AUTO_MORE, REQ_USE_KIND };
+enum request_kind { REQ_NONE, REQ_PREVIEW, REQ_CLEAR_PREVIEW, REQ_TRAVEL, REQ_ACTION, REQ_MOVE, REQ_INSPECT, REQ_TARGET, REQ_LOOK_LIST, REQ_TEST_DIE, REQ_TEST_MSG, REQ_TEST_DEPTH, REQ_TEST_CHEST, REQ_REST, REQ_AUTO_MORE, REQ_USE_KIND, REQ_TEST_ANIM };
 typedef struct { enum request_kind kind; struct loc grid; enum nb_action action; int dir; bool run; } request;
 
 /* Game thread only. */
@@ -79,8 +81,25 @@ static struct {
 	request stashed;
 	/* A walk to a distant grid (CMD_PATHFIND): who was in view when it began, so a stop can say why. */
 	struct { bool active, hit_wall; struct loc target; int n_seen; int16_t seen[64]; } travel;
+	/* Exploring: legs of CMD_PATHFIND to the nearest unexplored grid, queued between commands (native_explore_step). */
+	struct {
+		bool active, single, opening;
+		struct loc target, from;   /* this leg's goal and where it began */
+		int hp, legs, depth;
+		int level;                 /* level_serial when it began: a different level ends it */
+		bool *skip;                /* grids not to go to again (reached, or unreachable) on skip_level, one per grid; kept between explorations */
+		int skip_level;
+		size_t skip_cap;
+	} explore;
 } game;
 
+static int level_serial;  /* counts the levels entered, so that a level is told from the next at the same depth */
+static void count_level(game_event_type type, game_event_data *data, void *user) { (void)type; (void)data; (void)user; level_serial++; }
+
+static void animate_bolt(game_event_type type, game_event_data *data, void *user);
+static void animate_missile(game_event_type type, game_event_data *data, void *user);
+static void animate_explosion(game_event_type type, game_event_data *data, void *user);
+static void animate_hit(game_event_type type, game_event_data *data, void *user);
 static bool tiles_on(void);
 static void threat_counts(int32_t *count, int32_t *alert, int32_t *nearest);
 static int32_t light_turns_left(void);
@@ -106,6 +125,7 @@ static struct {
 	int32_t quick_kinds[NB_QUICK_MAX]; /* nb_set_quick_kinds() */
 	int quick_n;
 	char quick[NB_QUICK_MAX * 96];     /* nb_quick_slots() */
+	int anim_frames;                   /* frames built with an animation laid over the map, for the tests */
 } shared = { .lock = PTHREAD_MUTEX_INITIALIZER };
 
 /* ------------------------------------------------------------------------
@@ -230,6 +250,12 @@ void native_init(void)
 		EVENT_MAP, EVENT_PLAYERMOVED, EVENT_NEW_LEVEL_DISPLAY,
 	};
 	event_add_handler_set(dirtying, N_ELEMENTS(dirtying), mark_dirty, NULL);
+	event_add_handler(EVENT_NEW_LEVEL_DISPLAY, count_level, NULL);
+	/* After the terminal's own handlers, so that these run first (handlers are called latest first). */
+	event_add_handler(EVENT_BOLT, animate_bolt, NULL);
+	event_add_handler(EVENT_MISSILE, animate_missile, NULL);
+	event_add_handler(EVENT_EXPLOSION, animate_explosion, NULL);
+	event_add_handler(EVENT_HIT, animate_hit, NULL);
 	game.dirty = true;
 }
 
@@ -246,6 +272,169 @@ static int32_t cell_flags(const struct grid_data *g, struct loc grid)
 		| (g->m_idx > 0 ? NB_CELL_MONSTER : 0)
 		| (g->first_kind ? NB_CELL_OBJECT : 0)
 		| (square_isknown(cave, grid) ? NB_CELL_KNOWN : 0);
+}
+
+
+/* ------------------------------------------------------------------------
+ * Spell, missile and hit animation (game thread)
+ *
+ * The engine draws these on its terminal, which the apps never see (they draw the map from the level's state), so
+ * each step is also laid over the published map, shown for a moment, then taken off again.  The engine's own
+ * delay for the step is then skipped (native_absorb_delay) so that each step is waited for once.
+ * ------------------------------------------------------------------------ */
+
+enum { ANIM_MAX = 256, ANIM_MIN_MS = 35, ANIM_ABSORB_MAX = 8 };
+enum { ANIM_HEAD, ANIM_TRAIL, ANIM_MARK };
+
+static struct {
+	struct { struct loc grid; int32_t cp; int attr; int kind; } cell[ANIM_MAX];
+	int n, absorb;
+	struct loc last;
+} anim;
+
+static int anim_ms(void)
+{
+	const int d = player ? player->opts.delay_factor : 0;
+	return d <= 0 ? 0 : MAX(d, ANIM_MIN_MS);
+}
+
+static void anim_clear(void)
+{
+	if (anim.n) game.dirty = true;
+	anim.n = 0;
+}
+
+static void anim_add(const struct loc grid, const wchar_t cp, const int attr, const int kind)
+{
+	if (anim.n >= ANIM_MAX || !square_in_bounds(cave, grid)) return;
+	anim.cell[anim.n++] = (typeof(anim.cell[0])){ grid, (int32_t)cp, attr, kind };
+}
+
+static void nap_ms(const int ms)
+{
+	const struct timespec ts = { .tv_sec = ms / 1000, .tv_nsec = (long)(ms % 1000) * 1000000L };
+	nanosleep(&ts, NULL);
+}
+
+/* Shows the overlay as it now stands for `ms`; the engine's own delay for this step is not waited for as well. */
+static void anim_frame(const int ms, const int absorbs)
+{
+	game.dirty = true;
+	native_publish(false);
+	nap_ms(ms);
+	anim.absorb = MIN(anim.absorb + absorbs, ANIM_ABSORB_MAX);
+}
+
+bool native_absorb_delay(void)
+{
+	if (anim.absorb <= 0) return false;
+	anim.absorb--;
+	return true;
+}
+
+/* Mirrors bolt_pict() in ui-display.c for text: * | / - \ by the way it is moving. */
+static wchar_t bolt_glyph(const struct loc from, const struct loc to)
+{
+	static const wchar_t glyphs[] = L"*|/-\\";
+	int motion = 0;
+	if (loc_eq(from, to)) motion = 0;
+	else if (to.x == from.x) motion = 1;
+	else if (to.y - from.y == from.x - to.x) motion = 2;
+	else if (to.y == from.y) motion = 3;
+	else if (to.y - from.y == to.x - from.x) motion = 4;
+	return glyphs[motion];
+}
+
+/* A head moves on a step: the old head fades to a trail (a beam keeps its whole trail, a bolt only the last grid). */
+static void anim_step(const struct loc from, const struct loc to, const wchar_t cp, const int attr, const bool beam)
+{
+	if (anim.n && distance(anim.last, from) > 1) anim_clear();  /* a new projection */
+	int kept = 0;
+	for (int i = 0; i < anim.n; i++) {
+		if (anim.cell[i].kind == ANIM_HEAD) anim.cell[i].kind = ANIM_TRAIL;
+		else if (!beam) continue;
+		anim.cell[kept++] = anim.cell[i];
+	}
+	anim.n = kept;
+	anim_add(to, cp, attr, ANIM_HEAD);
+	anim.last = to;
+}
+
+static void animate_bolt(game_event_type type, game_event_data *data, void *user)
+{
+	(void)type; (void)user;
+	const int ms = anim_ms();
+	if (!ms || !data->bolt.seen || !map_visible()) return;
+	const struct loc from = loc(data->bolt.ox, data->bolt.oy), to = loc(data->bolt.x, data->bolt.y);
+	anim_step(from, to, bolt_glyph(from, to), projections[data->bolt.proj_type].color, data->bolt.beam);
+	anim_frame(ms, 1);
+}
+
+static void animate_missile(game_event_type type, game_event_data *data, void *user)
+{
+	(void)type; (void)user;
+	const int ms = anim_ms();
+	if (!ms || !data->missile.seen || !map_visible()) return;
+	const struct loc to = loc(data->missile.x, data->missile.y);
+	anim_step(anim.n ? anim.last : to, to, object_char(data->missile.obj), object_attr(data->missile.obj), false);
+	anim_frame(ms, 1);
+}
+
+static void animate_explosion(game_event_type type, game_event_data *data, void *user)
+{
+	(void)type; (void)user;
+	const int ms = anim_ms();
+	if (!ms || !map_visible()) return;
+	anim_clear();
+	const int colour = projections[data->explosion.proj_type].color;
+	int frames = 0;
+	for (int i = 0; i < data->explosion.num_grids; i++) {
+		if (data->explosion.player_sees_grid[i]) anim_add(data->explosion.blast_grid[i], L'*', colour, ANIM_TRAIL);
+		const bool ring_done = i == data->explosion.num_grids - 1
+			|| data->explosion.distance_to_grid[i + 1] > data->explosion.distance_to_grid[i];
+		if (ring_done && anim.n) { anim_frame(ms, 1); frames++; }
+	}
+	(void)frames;
+	anim_clear();
+	anim.last = loc(-100, -100);
+}
+
+/* Mirrors hit_pict() in ui-display.c. */
+static int hit_attr(const int dam, const int type, const bool fatal)
+{
+	if (fatal) return COLOUR_RED;
+	if (!dam) return type == PROJ_SOUND ? COLOUR_L_UMBER : COLOUR_L_WHITE;
+	if (type == PROJ_POIS) return COLOUR_GREEN;
+	return type == PROJ_SOUND ? COLOUR_L_UMBER : COLOUR_L_RED;
+}
+
+static void animate_hit(game_event_type type, game_event_data *data, void *user)
+{
+	(void)type; (void)user;
+	const int ms = anim_ms();
+	if (!ms || !map_visible() || !OPT(player, display_hits)) return;
+	const int dam = MIN(MAX(data->hit.dam, 0), 99);
+	const int attr = hit_attr(data->hit.dam, data->hit.dam_type, data->hit.fatal);
+	anim_clear();
+	anim_add(data->hit.grid, (wchar_t)(L'0' + dam % 10), attr, ANIM_MARK);
+	if (dam >= 10) anim_add(loc(data->hit.grid.x - 1, data->hit.grid.y), (wchar_t)(L'0' + dam / 10), attr, ANIM_MARK);
+	anim_frame(3 * ms, 1);
+	anim_clear();
+}
+
+static size_t grid_cell(const struct loc grid) { return (size_t)grid.y * (size_t)cave->width + (size_t)grid.x; }
+
+static void apply_animation(void)
+{
+	if (anim.n) { pthread_mutex_lock(&shared.lock); shared.anim_frames++; pthread_mutex_unlock(&shared.lock); }
+	static const int32_t kind_flag[] = { NB_CELL_ANIM, NB_CELL_TRAIL, NB_CELL_MARK };
+	for (int i = 0; i < anim.n; i++) {
+		map_cell *const c = &game.work[grid_cell(anim.cell[i].grid)];
+		c->cp = anim.cell[i].cp;
+		c->attr_flags = (anim.cell[i].attr & 0xFFFF) | ((((c->attr_flags >> 16) & ~(NB_CELL_MONSTER | NB_CELL_OBJECT | NB_CELL_PLAYER)) | kind_flag[anim.cell[i].kind]) << 16);
+		c->tile = -1;
+		c->tile_flags = 0;
+	}
 }
 
 static void build_map(void)
@@ -283,6 +472,7 @@ static void build_map(void)
 			};
 		}
 	}
+	apply_animation();
 }
 
 /* What is around the player, for context actions.  Only what the player knows. */
@@ -398,6 +588,7 @@ void native_publish(bool at_prompt)
 	const bool tiles = shared.tiles;
 	pthread_mutex_unlock(&shared.lock);
 	if (tiles != game.built_tiles) game.dirty = true;
+	if (at_prompt) { anim_clear(); anim.absorb = 0; }
 	const bool rebuild = visible && game.dirty;
 	if (rebuild) build_map();
 
@@ -862,6 +1053,7 @@ bool native_service(bool at_prompt)
 		native_publish(at_prompt);
 		return false;
 	}
+	if (!at_prompt && (r.kind == REQ_TRAVEL || r.kind == REQ_ACTION || r.kind == REQ_MOVE || r.kind == REQ_REST || r.kind == REQ_USE_KIND)) native_explore_cancel();
 	if (!at_prompt) return false;
 	switch (r.kind) {
 		case REQ_PREVIEW: preview_path(r.grid); return false;
@@ -873,7 +1065,8 @@ bool native_service(bool at_prompt)
 		case REQ_USE_KIND:
 		case REQ_TEST_DIE:
 		case REQ_TEST_MSG:
-		case REQ_TEST_DEPTH: game.stashed = r; return true;
+		case REQ_TEST_DEPTH:
+		case REQ_TEST_ANIM: game.stashed = r; return true;
 		case REQ_TEST_CHEST:
 		case REQ_INSPECT:
 		case REQ_TARGET:
@@ -918,6 +1111,7 @@ void native_travel_report(void)
 {
 	if (!game.travel.active) return;
 	game.travel.active = false;
+	if (game.explore.active) return;  /* native_explore_step says why */
 	if (!map_visible() || loc_eq(player->grid, game.travel.target) || game.travel.hit_wall) return;
 	const struct monster *const at_goal = square_monster(cave, game.travel.target);
 	if (at_goal && monster_is_visible(at_goal)) return;  /* walking up to a monster ends in an attack, not a stop */
@@ -957,6 +1151,203 @@ static void push_travel(struct loc target)
 	}
 }
 
+
+/* ------------------------------------------------------------------------
+ * Exploring (game thread)
+ * ------------------------------------------------------------------------ */
+
+enum { EXPLORE_REACH = 45, EXPLORE_MAX_LEGS = 600 };
+
+static size_t grid_index(const struct loc grid) { return (size_t)grid.y * (size_t)cave->width + (size_t)grid.x; }
+
+/* Mirrors is_valid_pf() in player-path.c for known grids: what the game's pathfinder will walk through. */
+static bool explore_walkable(const struct loc grid)
+{
+	if (!square_isknown(player->cave, grid) || square_isvisibletrap(player->cave, grid) || square_ischasm(player->cave, grid)) return false;
+	return square_ispassable(player->cave, grid);
+}
+
+static bool explore_has_unseen_item(const struct loc grid)
+{
+	for (const struct object *o = square_object(player->cave, grid); o; o = o->next)
+		if (!ignore_item_ok(player, o)) return true;
+	return false;
+}
+
+static bool explore_next_to_unknown(const struct loc grid)
+{
+	for (int d = 0; d < 8; d++) {
+		const struct loc n = loc_sum(grid, ddgrid_ddd[d]);
+		if (square_in_bounds(cave, n) && !square_isknown(player->cave, n)) return true;
+	}
+	return false;
+}
+
+/* Items first: what has been seen on the floor is fetched before the unknown is entered. */
+static bool explore_is_goal(const struct loc grid, const bool items_only)
+{
+	if (game.explore.skip[grid_index(grid)]) return false;
+	if (items_only) return explore_walkable(grid) && explore_has_unseen_item(grid);
+	if (square_iscloseddoor(player->cave, grid)) return true;
+	return explore_walkable(grid) && explore_next_to_unknown(grid);
+}
+
+/*
+ * Breadth-first over the grids the player knows; the first goal found is the nearest by steps.  Returns the grid to
+ * walk to next: the goal itself, or the last grid of the way there within the pathfinder's reach.
+ */
+static bool explore_choose(const bool items_only, struct loc *const next, struct loc *const goal)
+{
+	const size_t n = (size_t)cave->width * (size_t)cave->height;
+	int32_t *const parent = mem_alloc(n * sizeof(*parent));
+	int32_t *const queue = mem_alloc(n * sizeof(*queue));
+	for (size_t i = 0; i < n; i++) parent[i] = -2;
+	size_t head = 0, tail = 0;
+	const size_t start = grid_index(player->grid);
+	parent[start] = -1;
+	queue[tail++] = (int32_t)start;
+	bool found = false;
+	size_t at = 0;
+	while (head < tail && !found) {
+		const size_t cur = (size_t)queue[head++];
+		const struct loc here = loc((int)(cur % (size_t)cave->width), (int)(cur / (size_t)cave->width));
+		if (cur != start && explore_is_goal(here, items_only)) { found = true; at = cur; break; }
+		if (cur != start && square_iscloseddoor(player->cave, here)) continue;
+		for (int d = 0; d < 8; d++) {
+			const struct loc to = loc_sum(here, ddgrid_ddd[d]);
+			if (!square_in_bounds_fully(cave, to)) continue;
+			const size_t t = grid_index(to);
+			if (parent[t] != -2) continue;
+			if (!explore_walkable(to) && !square_iscloseddoor(player->cave, to)) continue;
+			parent[t] = (int32_t)cur;
+			queue[tail++] = (int32_t)t;
+		}
+	}
+	if (found) {
+		/* Walk the way back, then forward again to the last grid still within reach of the pathfinder. */
+		size_t depth = 0;
+		for (size_t g = at; g != start; g = (size_t)parent[g]) queue[depth++] = (int32_t)g;
+		struct loc step = loc((int)(at % (size_t)cave->width), (int)(at / (size_t)cave->width));
+		*goal = step;
+		const size_t last = square_iscloseddoor(player->cave, *goal) ? 1 : 0;  /* a shut door is opened, not walked into */
+		for (size_t k = depth; k-- > last;) {
+			const size_t g = (size_t)queue[k];
+			const struct loc here = loc((int)(g % (size_t)cave->width), (int)(g / (size_t)cave->width));
+			if (distance(here, player->grid) > EXPLORE_REACH) break;
+			step = here;
+		}
+		*next = step;
+	}
+	mem_free(parent);
+	mem_free(queue);
+	return found;
+}
+
+static const struct monster *explore_visible_monster(void)
+{
+	const struct monster *nearest = NULL;
+	for (int i = 1; i < cave_monster_max(cave); i++) {
+		const struct monster *const mon = cave_monster(cave, i);
+		if (!mon || !mon->race || !monster_is_visible(mon)) continue;
+		if (!nearest || distance(player->grid, mon->grid) < distance(player->grid, nearest->grid)) nearest = mon;
+	}
+	return nearest;
+}
+
+static void explore_end(const char *why)
+{
+	if (!game.explore.active) return;
+	game.explore.active = false;
+	if (why) msg("%s", why);
+}
+
+void native_explore_cancel(void)
+{
+	explore_end(NULL);
+}
+
+static void explore_begin(const bool single)
+{
+	explore_end(NULL);
+	if (!map_visible()) return;
+	game.explore.active = true;
+	game.explore.single = single;
+	game.explore.opening = false;
+	game.explore.legs = 0;
+	game.explore.depth = player->depth;
+	game.explore.level = level_serial;
+	game.explore.hp = player->chp;
+	if (!game.explore.skip || game.explore.skip_level != level_serial) {
+		mem_free(game.explore.skip);
+		game.explore.skip_cap = (size_t)cave->width * (size_t)cave->height;
+		game.explore.skip = mem_zalloc(game.explore.skip_cap * sizeof(bool));
+		game.explore.skip_level = level_serial;
+	}
+	game.explore.skip[grid_index(player->grid)] = true; /* what lies underfoot has been seen */
+	game.explore.from = game.explore.target = player->grid;
+}
+
+bool native_explore_step(void)
+{
+	if (!game.explore.active) return false;
+	if (!map_visible() || game.explore.level != level_serial || player->depth != game.explore.depth) { explore_end(NULL); return false; }
+
+	const struct monster *const foe = explore_visible_monster();
+	if (foe) {
+		char name[80];
+		monster_desc(name, sizeof(name), foe, MDESC_IND_VIS);
+		health_track(player->upkeep, (struct monster *)foe);
+		char why[120];
+		strnfmt(why, sizeof(why), "You stop: you see %s.", name);
+		explore_end(why);
+		return false;
+	}
+	if (game.explore.legs > 0 && !game.explore.opening) {
+		const bool arrived = loc_eq(player->grid, game.explore.target);
+		const bool moved = !loc_eq(player->grid, game.explore.from);
+		if (arrived) game.explore.skip[grid_index(player->grid)] = true;
+		else if (!moved) game.explore.skip[grid_index(game.explore.target)] = true;  /* no way there after all */
+		if (arrived && square_object(player->cave, player->grid)) { explore_end("You stop: there is something here."); return false; }
+		if (moved && !arrived && !game.travel.hit_wall) { explore_end("You stop: something disturbed you."); return false; }
+	}
+	game.explore.opening = false;
+
+	if (player->chp < game.explore.hp) { explore_end("You stop: you are hurt."); return false; }
+	if (player->chp * 2 < player->mhp) { explore_end("You stop: rest first, you are too hurt."); return false; }
+	if (game.explore.legs >= EXPLORE_MAX_LEGS) { explore_end("You stop: that is enough for now."); return false; }
+	if (game.explore.single && game.explore.legs > 0) { explore_end(NULL); return false; }
+
+	struct loc next, goal;
+	int tries = 0;
+	for (;;) {
+		if (!explore_choose(true, &next, &goal) && !explore_choose(false, &next, &goal)) {
+			const bool stairs = game.stairs_down.x >= 0;
+			explore_end(game.explore.legs == 0 ? "Nothing left to explore here."
+				: stairs ? "Explored: nothing more to find (the way down is known)." : "Explored: nothing more to find.");
+			return false;
+		}
+		/* A shut door: open it from the next grid along rather than walking into it. */
+		if (square_iscloseddoor(player->cave, goal) && distance(player->grid, goal) <= 1) {
+			game.explore.skip[grid_index(goal)] = true;
+			game.explore.opening = true;
+			game.explore.legs++;
+			game.explore.hp = player->chp;
+			cmdq_push(CMD_OPEN);
+			cmd_set_arg_direction(cmdq_peek(), "direction", motion_dir(player->grid, goal));
+			return true;
+		}
+		if (!loc_eq(next, player->grid)) break;
+		game.explore.skip[grid_index(goal)] = true;  /* cannot be approached */
+		if (++tries > 64) { explore_end("Explored: the rest cannot be reached."); return false; }
+	}
+	game.explore.from = player->grid;
+	game.explore.target = next;
+	game.explore.hp = player->chp;
+	game.explore.legs++;
+	push_travel(next);
+	return true;
+}
+
 static void push_choice(cmd_code cmd, int choice)
 {
 	cmdq_push(cmd);
@@ -992,6 +1383,11 @@ static void run_action(enum nb_action a)
 		case NB_ACT_EXCHANGE: cmdq_push(CMD_EXCHANGE); break;
 		case NB_ACT_INVENTORY: (void)native_panel(NB_TAB_PACK, NB_ITEM_INVENTORY); break;
 		case NB_ACT_FLOOR: (void)native_panel(NB_TAB_PACK, NB_ITEM_FLOOR); break;
+		case NB_ACT_EXPLORE:
+		case NB_ACT_EXPLORE_STEP:
+			explore_begin(a == NB_ACT_EXPLORE_STEP);
+			(void)native_explore_step();
+			break;
 		case NB_ACT_EQUIPMENT: (void)native_panel(NB_TAB_PACK, NB_ITEM_EQUIPMENT); break;
 		case NB_ACT_PANEL: (void)native_panel(-1, NB_ITEM_INVENTORY); break;
 		case NB_ACT_MAP: do_cmd_view_map(); break;
@@ -1037,6 +1433,16 @@ void native_run_stashed(void)
 		take_hit(player, player->chp + 100, "the test harness");
 	} else if (r.kind == REQ_TEST_MSG) {
 		msgt(r.dir, "Test message.");
+	} else if (r.kind == REQ_TEST_ANIM) {
+		/* A bolt along the row to the east, a hit on its last grid, and a blast of three grids there. */
+		const struct loc at = player->grid;
+		for (int i = 1; i <= 5; i++)
+			event_signal_bolt(EVENT_BOLT, PROJ_FIRE, true, true, false, at.y, at.x + i - 1, at.y, at.x + i);
+		event_signal_hit(EVENT_HIT, 12, PROJ_HURT, false, loc(at.x + 5, at.y));
+		int dist[3] = { 0, 1, 1 };
+		bool sees[3] = { true, true, true };
+		struct loc grids[3] = { loc(at.x + 5, at.y), loc(at.x + 6, at.y), loc(at.x + 4, at.y) };
+		event_signal_blast(EVENT_EXPLOSION, PROJ_FIRE, 3, dist, true, sees, grids, grids[0]);
 	} else if (r.kind == REQ_TEST_DEPTH) {
 		dungeon_change_level(player, r.dir);
 	} else if (r.kind == REQ_MOVE) {
@@ -1102,6 +1508,19 @@ void nb_test_game_seed(uint32_t seed)
 void nb_test_message(int type)
 {
 	post((request){ .kind = REQ_TEST_MSG, .dir = type });
+}
+
+int nb_test_anim_frames(void)
+{
+	pthread_mutex_lock(&shared.lock);
+	const int n = shared.anim_frames;
+	pthread_mutex_unlock(&shared.lock);
+	return n;
+}
+
+void nb_test_anim(void)
+{
+	post((request){ .kind = REQ_TEST_ANIM });
 }
 
 void nb_test_depth(int level)

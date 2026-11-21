@@ -184,6 +184,8 @@ enum nb_action {
 	NB_ACT_TRAVEL_DOWN, NB_ACT_TRAVEL_UP, /* walk to the nearest known staircase */
 	NB_ACT_FLETCH,        /* Fletchery: improve ordinary arrows */
 	NB_ACT_FLOOR,         /* the pack, scrolled to what is on the floor */
+	NB_ACT_EXPLORE,       /* walk on to the nearest unexplored grid or unseen item, again and again, until something calls for attention */
+	NB_ACT_EXPLORE_STEP,  /* the same, one stop at a time */
 	NB_ACT_COUNT
 };
 
@@ -224,6 +226,9 @@ enum nb_cell_flag {
 	NB_CELL_MONSTER = 1 << 2,
 	NB_CELL_OBJECT  = 1 << 3,
 	NB_CELL_KNOWN   = 1 << 4,
+	NB_CELL_ANIM    = 1 << 5,  /* the head of a bolt, missile or blast ring in flight: draw it prominently (the glyph and attr are the effect's) */
+	NB_CELL_TRAIL   = 1 << 6,  /* where it just was, or the rest of a beam or blast: draw it fainter */
+	NB_CELL_MARK    = 1 << 7,  /* a hit's damage digit */
 };
 
 uint64_t nb_map_generation(void);
@@ -267,6 +272,8 @@ void nb_request_move(int dir, bool run);
 void nb_test_die(void);
 void nb_test_game_seed(uint32_t seed); /* before the character is accepted: the game seed to use (0: random); the birth question is skipped */
 void nb_test_message(int type); /* at the command prompt, send a game message of this MSG_ type (see the feel bits in the meta) */
+void nb_test_anim(void); /* at the command prompt, play a bolt, a hit and a blast along the row east of the player */
+int nb_test_anim_frames(void); /* how many published maps have had an animation laid over them */
 void nb_test_depth(int level); /* at the command prompt, go straight to dungeon level `level` (50' each) */
 /* Forges on the current level, and (NarSil-Q) the guaranteed forges made so far; only while the game waits for input. */
 int nb_test_forges(int *fixed_made, int *depth);

@@ -198,7 +198,11 @@ class MapView(context: Context, private val state: GameState, private val router
                 val flags = map[i + 4]
                 if (flags and N.TILE_ALERT != 0) drawTile(canvas, sheet, state.meta[N.META_TILE_ALERT])
                 if (flags and N.TILE_GLOW != 0) drawTile(canvas, sheet, state.meta[N.META_TILE_GLOW])
-            } else painter.drawCell(canvas, ox + x * cw, oy + y * ch, map[i], map[i + 1] and 0xFFFF)
+            } else {
+                val effect = (map[i + 1] ushr 16) and (N.CELL_ANIM or N.CELL_TRAIL or N.CELL_MARK)
+                if (effect != 0) drawEffect(canvas, sheet, map[i + 3], ox + x * cw, oy + y * ch, cw, ch, effect, map[i + 1] and 0xFF)
+                painter.drawCell(canvas, ox + x * cw, oy + y * ch, map[i], map[i + 1] and 0xFFFF)
+            }
         }
         drawPath(canvas, ox, oy, cw, ch)
         /* The current target, between shots (aiming draws its own). */
@@ -208,6 +212,20 @@ class MapView(context: Context, private val state: GameState, private val router
         flash?.let { (fx, fy) -> canvas.drawRect(ox + fx * cw, oy + fy * ch, ox + (fx + 1) * cw, oy + (fy + 1) * ch, flashPaint) }
         val (px, py) = player
         canvas.drawRect(ox + px * cw, oy + py * ch, ox + (px + 1) * cw, oy + (py + 1) * ch, playerPaint)
+    }
+
+    private val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    /** A spell, missile or hit mark in flight: the terrain beneath (tile mode), and a soft glow in the effect's colour behind its glyph. */
+    private fun drawEffect(canvas: Canvas, sheet: Bitmap?, bgTile: Int, left: Float, top: Float, cw: Float, ch: Float, effect: Int, attr: Int) {
+        if (sheet != null && bgTile >= 0) {
+            tileDst.set(left, top, left + cw, top + ch)
+            drawTile(canvas, sheet, bgTile)
+        }
+        if (effect and N.CELL_MARK != 0) return
+        val head = effect and N.CELL_ANIM != 0
+        glowPaint.color = (state.colour(attr % 32) and 0xFFFFFF) or ((if (head) 150 else 60) shl 24)
+        canvas.drawCircle(left + cw / 2f, top + ch / 2f, minOf(cw, ch) * (if (head) 0.6f else 0.4f), glowPaint)
     }
 
     /** Draws tile [t] ((row << 8) | column) of [sheet] into [tileDst]. */

@@ -125,6 +125,8 @@ object NarSilNative {
     const val ACT_TRAVEL_UP = 31
     const val ACT_FLETCH = 32
     const val ACT_FLOOR = 33
+    const val ACT_EXPLORE = 34
+    const val ACT_EXPLORE_STEP = 35
 
     /** Only honoured at the command prompt. */
     @JvmStatic external fun nativeRequestAction(action: Int)
@@ -160,6 +162,9 @@ object NarSilNative {
     const val CELL_MONSTER = 1 shl 2
     const val CELL_OBJECT = 1 shl 3
     const val CELL_KNOWN = 1 shl 4
+    const val CELL_ANIM = 1 shl 5
+    const val CELL_TRAIL = 1 shl 6
+    const val CELL_MARK = 1 shl 7
 
     @JvmStatic external fun nativeMapGeneration(): Long
     /** [cells] may be null (meta only); returns 0 if [cells] is too small for the level. */

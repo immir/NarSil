@@ -197,11 +197,24 @@ final class MapUIView: UIView {
                     if flags & NB.TILE_ALERT != 0 { drawTile(Int(meta[NB.META_TILE_ALERT]), in: r) }
                     if flags & NB.TILE_GLOW != 0 { drawTile(Int(meta[NB.META_TILE_GLOW]), in: r) }
                 } else {
+                    let effect = (Int(map[i + 1]) >> 16) & (NB.CELL_ANIM | NB.CELL_TRAIL | NB.CELL_MARK)
+                    if effect != 0 { drawEffect(ctx, effect: effect, attr: Int(map[i + 1]) & 0xFF, bgTile: Int(map[i + 3]), sheet: sheet, in: cellRect(x, y, ox: ox, oy: oy)) }
                     painter.drawCell(ctx, x: ox + CGFloat(x) * cw, y: oy + CGFloat(y) * ch, glyph: Int(map[i]), attr: Int(map[i + 1]) & 0xFFFF)
                 }
             }
         }
         drawOverlays(ctx, ox: ox, oy: oy)
+    }
+
+    /// A spell, missile or hit mark in flight: the terrain beneath (tile mode), and a soft glow in the effect's colour behind its glyph.
+    private func drawEffect(_ ctx: CGContext, effect: Int, attr: Int, bgTile: Int, sheet: Bool, in r: CGRect) {
+        if sheet && bgTile >= 0 { drawTile(bgTile, in: r) }
+        if effect & NB.CELL_MARK != 0 { return }
+        let head = effect & NB.CELL_ANIM != 0
+        let rgb = game.colour(attr % 32)
+        ctx.setFillColor(UIColor(red: CGFloat((rgb >> 16) & 0xFF) / 255, green: CGFloat((rgb >> 8) & 0xFF) / 255, blue: CGFloat(rgb & 0xFF) / 255, alpha: head ? 0.59 : 0.24).cgColor)
+        let d = min(r.width, r.height) * (head ? 1.2 : 0.8)
+        ctx.fillEllipse(in: CGRect(x: r.midX - d / 2, y: r.midY - d / 2, width: d, height: d))
     }
 
     /// Tile `t` is (row << 8) | column on the sheet.
