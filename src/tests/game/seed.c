@@ -414,28 +414,44 @@ static char *slurp(const char *path) {
 	return text;
 }
 
+/* What a monster carries is made from the monster's own stream, so it does not move the seeds of the level's other objects. */
+static int test_carried_objects_leave_the_sequence(void *state) {
+	uint32_t next[2];
+
+	for (int k = 0; k < 2; k++) {
+		gen_rng_begin(777);
+		gen_entity_push(GEN_MONSTER);
+		for (int i = 0; i < (k ? 4 : 1); i++) {
+			gen_entity_push(GEN_OBJECT);
+			(void)Rand_div(100);
+			gen_entity_pop();
+		}
+		gen_entity_pop();
+		gen_entity_push(GEN_OBJECT);
+		next[k] = Rand_div(1000000);
+		gen_entity_pop();
+		gen_rng_end();
+	}
+	eq(next[0], next[1]);
+	ok;
+}
+
 /* The seed catalog is the same every time, names what the levels hold, and changes with the seed. */
 static int test_catalog_is_reproducible(void *state) {
-	spoil_seeds("SeedCat1", 5150, 5150, 8, 2);
+	spoil_seeds("SeedCat1", 5150, 5150, 8, 2, false);
 	Rand_state_seed(1);
-	spoil_seeds("SeedCat2", 5150, 5150, 8, 2);
-	spoil_seeds("SeedCat3", 5151, 5151, 8, 2);
+	spoil_seeds("SeedCat2", 5150, 5150, 8, 2, false);
+	spoil_seeds("SeedCat3", 5151, 5151, 8, 2, false);
 	char *one = slurp("SeedCat1"), *two = slurp("SeedCat2"), *three = slurp("SeedCat3");
 
-	require(strlen(one) > 500);
+	require(strlen(one) > 300);
 	require(strstr(one, "seed catalog") != NULL);
-	require(strstr(one, "== 400 ft (level 8), visit 2 ==") != NULL);
+	require(strstr(one, "######## Seed 5150\n") != NULL);
+	require(strstr(one, "item (") != NULL || strstr(one, "boss ") != NULL);
 	require(strstr(one, "(nothing)") == NULL);
+	require(strstr(one, "If a boss is killed earlier\n") == NULL);
 	require(streq(one, two));
 	require(!streq(one, three));
-
-	/* In each level, the items come before the features, so no item line follows "Features" */
-	bool in_features = false;
-	for (const char *line = one; *line; line = strchr(line, '\n') ? strchr(line, '\n') + 1 : line + strlen(line)) {
-		if (strncmp(line, "== ", 3) == 0) in_features = false;
-		else if (strncmp(line, "  Features", 10) == 0) in_features = true;
-		else if (in_features) require(strncmp(line, "    (", 5) != 0);
-	}
 	mem_free(one);
 	mem_free(two);
 	mem_free(three);
@@ -447,23 +463,49 @@ static int test_catalog_is_reproducible(void *state) {
 
 /* A range of seeds is each seed's catalog in turn, under a heading of its own. */
 static int test_catalog_range(void *state) {
-	spoil_seeds("SeedRange", 5150, 5152, 6, 2);
+	spoil_seeds("SeedRange", 5150, 5152, 6, 2, false);
 	char *range = slurp("SeedRange");
 
 	require(strstr(range, "Seeds 5150 to 5152") != NULL);
 	for (uint32_t seed = 5150; seed <= 5152; seed++) {
-		spoil_seeds("SeedOne", seed, seed, 6, 2);
+		spoil_seeds("SeedOne", seed, seed, 6, 2, false);
 		char *one = slurp("SeedOne");
-		const char *levels = strstr(one, "== 50 ft");
+		const char *levels = strstr(one, format("######## Seed %u\n", seed));
 
 		require(levels != NULL);
-		require(strstr(range, format("######## Seed %u ########", seed)) != NULL);
 		require(strstr(range, levels) != NULL);
 		mem_free(one);
 	}
 	mem_free(range);
 	file_delete("SeedRange");
 	file_delete("SeedOne");
+	ok;
+}
+
+/* The provisos add to a seed's catalog without changing what it lists, and are the same every time. */
+static int test_catalog_provisos(void *state) {
+	spoil_seeds("SeedPlain", 5150, 5158, 12, 3, false);
+	spoil_seeds("SeedProv", 5150, 5158, 12, 3, true);
+	spoil_seeds("SeedProv2", 5150, 5158, 12, 3, true);
+	char *plain = slurp("SeedPlain"), *prov = slurp("SeedProv"), *prov2 = slurp("SeedProv2");
+
+	require(streq(prov, prov2));
+	require(strstr(prov, "  If a boss is killed earlier") != NULL);
+	require(strstr(plain, "  If a boss is killed earlier") == NULL);
+	/* every level line of the plain catalog (they begin "NN ft v" and are indented) is in the one with provisos */
+	for (const char *line = strstr(plain, "######## Seed"); *line; line = strchr(line, '\n') ? strchr(line, '\n') + 1 : line + strlen(line)) {
+		if (strncmp(line, "  item (", 8) && strncmp(line, "  boss ", 7) && strncmp(line, "  chest (", 9)) continue;
+		char text[600];
+		my_strcpy(text, line, sizeof(text));
+		if (strchr(text, '\n')) *strchr(text, '\n') = '\0';
+		require(strstr(prov, text) != NULL);
+	}
+	mem_free(plain);
+	mem_free(prov);
+	mem_free(prov2);
+	file_delete("SeedPlain");
+	file_delete("SeedProv");
+	file_delete("SeedProv2");
 	ok;
 }
 
@@ -481,7 +523,9 @@ struct test tests[] = {
 	{ "new monsters get drop seeds, fixed by the level seed", test_new_monsters_get_seeds },
 	{ "the seed, visits and drop seeds survive a save and load", test_save_load_keeps_seeds },
 	{ "reading a typed seed", test_seed_parse },
+	{ "objects a monster carries leave the level's sequence alone", test_carried_objects_leave_the_sequence },
 	{ "the seed catalog is reproducible", test_catalog_is_reproducible },
 	{ "a range of seeds is each seed in turn", test_catalog_range },
+	{ "the provisos add to the catalog without changing it", test_catalog_provisos },
 	{ NULL, NULL }
 };

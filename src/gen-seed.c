@@ -152,6 +152,17 @@ void gen_entity_push(enum gen_entity kind)
 		rng_push(false, 0);
 		return;
 	}
+	if (rng_stack_depth > 0 && rng_stack_saved[rng_stack_depth - 1]) {
+		/*
+		 * Made inside another object or monster (what a monster carries): its seed comes from that one's own
+		 * stream.  Taking the next number of the level's sequence instead would move every later object of the
+		 * level whenever a monster is replaced, as when a unique that was killed is not made again.
+		 */
+		const uint32_t from_parent = (Rand_div(0x10000) << 16) | Rand_div(0x10000);
+
+		rng_push(true, Rand_mix(from_parent, kind));
+		return;
+	}
 	rng_push(true, Rand_mix(Rand_mix(gen.seed, kind), gen.count[kind]++));
 }
 

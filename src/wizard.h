@@ -77,6 +77,6 @@ void spoil_artifact(const char *fname);
 void spoil_mon_desc(const char *fname);
 void spoil_mon_info(const char *fname);
 void spoil_obj_desc(const char *fname);
-void spoil_seeds(const char *fname, uint32_t first_seed, uint32_t last_seed, int max_depth, int visits);
+void spoil_seeds(const char *fname, uint32_t first_seed, uint32_t last_seed, int max_depth, int visits, bool provisos);
 
 #endif /* !INCLUDED_WIZARD_H */
