@@ -58,6 +58,12 @@ is a heading ("250 ft v2" is the second level made at 250 feet) over one line fo
 * ``boss NAME (x,y)``: a unique, with what it carries and what it will drop; ``mon NAME (x,y)`` is an
   out-of-depth monster, with the same.
 
+Items have random properties in Sil, so after an item's name comes ``= `` and a summary of what it gives you:
+modifiers (``+2 stealth``), sustains and protections, resists, slays and brands, abilities and the like, and then
+``bad:`` and its drawbacks (a curse, a vulnerability, a negative modifier).  Whatever the plain kind has anyway,
+such as a lantern's light, is left out.  For example ``a Set of Gauntlets of Treachery (-1) [+0,1d1] <-1> {cursed} =
+Opportunist; bad: -1 strength, cursed``.
+
 Each level is shown as for a character diving straight down, one after the other, with nothing yet found and no
 unique yet dead.  The same command with the same seed always writes the same catalog.
 
