@@ -35,6 +35,10 @@
 #include "monster.h"
 #include "obj-chest.h"
 #include "obj-desc.h"
+#include "obj-properties.h"
+#include "obj-slays.h"
+#include "project.h"
+#include "player-abilities.h"
 #include "obj-pile.h"
 #include "obj-tval.h"
 #include "obj-util.h"
@@ -155,6 +159,89 @@ static void object_name(char *name, size_t size, const struct object *obj)
 	object_delete(NULL, NULL, &known);
 }
 
+
+/* Adds ", " and a trait to a list */
+static void add_trait(char *buf, size_t size, const char *fmt, ...)
+{
+	char one[96];
+	va_list vp;
+
+	va_start(vp, fmt);
+	(void)vstrnfmt(one, sizeof(one), fmt, vp);
+	va_end(vp);
+	if (buf[0]) my_strcat(buf, ", ", size);
+	my_strcat(buf, one, size);
+}
+
+/**
+ * What an object has that makes it better or worse than its plain kind: the modifiers it gives, flags (a sustain, free
+ * action, a curse), resists and vulnerabilities, slays, brands and abilities, split into the good and the bad.
+ * What the base kind has anyway (a lantern's light) is not repeated.
+ */
+static void object_traits(const struct object *obj, char *pros, char *cons, size_t size)
+{
+	pros[0] = cons[0] = '\0';
+	for (int i = 0; i < OBJ_MOD_MAX; i++) {
+		const struct obj_property *prop = lookup_obj_property(OBJ_PROPERTY_MOD, i);
+		const random_value *base = &obj->kind->modifiers[i];
+		const bool fixed = !base->dice && !base->sides && !base->m_bonus;
+		const int v = obj->modifiers[i] - (fixed ? base->base : 0);
+
+		if (!v || !prop || !prop->name || i == OBJ_MOD_DAMAGE_SIDES) continue;
+		add_trait(v > 0 ? pros : cons, size, "%+d %s", v, prop->name);
+	}
+	for (int f = of_next(obj->flags, FLAG_START); f != FLAG_END; f = of_next(obj->flags, f + 1)) {
+		const struct obj_property *prop = lookup_obj_property(OBJ_PROPERTY_FLAG, f);
+
+		if (!prop || !prop->name || !prop->name[0] || of_has(obj->kind->flags, f)) continue;
+		if (prop->subtype == OFT_BAD) add_trait(cons, size, "%s", prop->name);
+		else if (prop->subtype != OFT_BASIC && prop->subtype != OFT_NONE) add_trait(pros, size, "%s", prop->name);
+	}
+	for (int i = 0; i < ELEM_MAX; i++) {
+		const int level = obj->el_info[i].res_level, kind_level = obj->kind->el_info[i].res_level;
+
+		if (level == kind_level) continue;
+		if (level >= 3) add_trait(pros, size, "immune %s", projections[i].name);
+		else if (level > 0) add_trait(pros, size, "resist %s", projections[i].name);
+		else if (level < 0) add_trait(cons, size, "vulnerable to %s", projections[i].name);
+	}
+	char slaying[160] = "", branding[160] = "";
+	for (int i = 1; i < z_info->slay_max; i++)
+		if (obj->slays && obj->slays[i] && !(obj->kind->slays && obj->kind->slays[i])) {
+			if (slaying[0]) my_strcat(slaying, "/", sizeof(slaying));
+			my_strcat(slaying, slays[i].name, sizeof(slaying));
+		}
+	for (int i = 1; i < z_info->brand_max; i++)
+		if (obj->brands && obj->brands[i] && !(obj->kind->brands && obj->kind->brands[i])) {
+			if (branding[0]) my_strcat(branding, "/", sizeof(branding));
+			my_strcat(branding, brands[i].name, sizeof(branding));
+		}
+	if (slaying[0]) add_trait(pros, size, "slays %s", slaying);
+	if (branding[0]) add_trait(pros, size, "brand: %s", branding);
+	for (const struct ability *a = obj->abilities; a; a = a->next)
+		if (!obj->kind->abilities || !locate_ability(obj->kind->abilities, (struct ability *)a)) add_trait(pros, size, "%s", a->name);
+}
+
+/**
+ * An object's full name, then what is good and bad about it: "a Hauberk of Blight (-2) [-4,2d5] <+2> = +2 stealth;
+ * bad: hunger".
+ */
+static void object_line(char *line, size_t size, const struct object *obj)
+{
+	char pros[256], cons[256];
+
+	object_name(line, size, obj);
+	object_traits(obj, pros, cons, sizeof(pros));
+	if (!pros[0] && !cons[0]) return;
+	my_strcat(line, " = ", size);
+	my_strcat(line, pros, size);
+	if (pros[0] && cons[0]) my_strcat(line, "; ", size);
+	if (cons[0]) {
+		my_strcat(line, "bad: ", size);
+		my_strcat(line, cons, size);
+	}
+}
+
 /* A scratch floor to make drops on */
 static struct chunk *scratch_floor(int depth)
 {
@@ -199,7 +286,7 @@ static void monster_loot(struct chunk *c, const struct monster *mon, struct name
 
 	for (const struct object *obj = mon->held_obj; obj; obj = obj->next) {
 		if (!obj->kind) continue;
-		object_name(name, sizeof(name), obj);
+		object_line(name, sizeof(name), obj);
 		names_add(carries, name);
 		note_artefact(site, obj);
 	}
@@ -209,7 +296,7 @@ static void monster_loot(struct chunk *c, const struct monster *mon, struct name
 	for (int y = 0; y < DROP_SIZE; y++)
 		for (int x = 0; x < DROP_SIZE; x++)
 			for (const struct object *obj = square_object(scratch, loc(x, y)); obj; obj = obj->next) {
-				object_name(name, sizeof(name), obj);
+				object_line(name, sizeof(name), obj);
 				names_add(loot, name);
 				note_artefact(site, obj);
 			}
@@ -235,7 +322,7 @@ static void chest_notables(const struct object *chest, int depth, struct names *
 		for (int x = 0; x < DROP_SIZE; x++)
 			for (const struct object *obj = square_object(scratch, loc(x, y)); obj; obj = obj->next) {
 				if (!notable_object(obj, depth)) continue;
-				object_name(name, sizeof(name), obj);
+				object_line(name, sizeof(name), obj);
 				names_add(held, name);
 			}
 	object_delete(NULL, NULL, &known);
@@ -266,14 +353,14 @@ static void level_text(struct chunk *c, int depth, int visit, struct text *t, st
 						join_names(&held, dropped, sizeof(dropped));
 						text_add(t, "chest (%d,%d): %s", x, y, dropped);
 					} else if (notable_object(obj, depth)) {
-						object_name(name, sizeof(name), obj);
+						object_line(name, sizeof(name), obj);
 						text_add(t, "item (%d,%d) %s", x, y, name);
 					}
 					names_free(&held);
 					continue;
 				}
 				if (!notable_object(obj, depth)) continue;
-				object_name(name, sizeof(name), obj);
+				object_line(name, sizeof(name), obj);
 				text_add(t, "item (%d,%d) %s", x, y, name);
 			}
 	for (int y = 0; y < c->height; y++)
@@ -528,7 +615,8 @@ void spoil_seeds(const char *fname, uint32_t first_seed, uint32_t last_seed, int
 				 "notable are left out.  An artefact can exist once per game, so the first one you see is the real one.\n"
 				 "  item (x,y)   an artefact, ego item or out-of-depth item      forge (x,y)   a forge\n"
 				 "  chest (x,y)  what is in a chest (only the notable things)    vault NAME    a greater vault\n"
-				 "  boss NAME    a unique, with what it carries and drops          mon NAME      an out-of-depth monster\n");
+				 "  boss NAME    a unique, with what it carries and drops          mon NAME      an out-of-depth monster\n"
+				 "After \" = \": what the item gives you (modifiers, sustains, resists, slays, abilities); \"bad:\" its drawbacks.\n");
 	if (provisos)
 		file_putf(f, "Under \"If a boss is killed earlier\": the other levels of that seed generated again with that unique dead\n"
 					 "and its loot (artefacts included) already made; - is what is gone, + what is new.\n");
