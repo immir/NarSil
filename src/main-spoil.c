@@ -49,6 +49,7 @@ static const char *catalog_path;
 static uint32_t catalog_seed, catalog_seed_last;
 static int catalog_depth = 127;
 static int catalog_visits = 3;
+static bool catalog_provisos = true;
 
 const char help_spoil[] =
 	"Spoiler generation mode, subopts\n"
@@ -61,7 +62,8 @@ const char help_spoil[] =
 	"              -l fname    Write a seed catalog to fname: what the seed -S gives on each level\n"
 	"              -S seed     The seed for -l (a number, 1 to 4294967295), or a range such as 1-100\n"
 	"              -D depth    Deepest level for -l (default: all)\n"
-	"              -V visits   Visits to each depth for -l (default 3)\n";
+	"              -V visits   Visits to each depth for -l (default 3)\n"
+	"              -P 0|1      With -l, add the provisos for killed uniques (default 1; 0 is faster)\n";
 
 /**
  * Usage:
@@ -100,7 +102,7 @@ errr init_spoil(int argc, char *argv[]) {
 			break;
 		}
 
-		if (argv[i][0] == '-' && argv[i][1] && !argv[i][2] && strchr("lSDV", argv[i][1])) {
+		if (argv[i][0] == '-' && argv[i][1] && !argv[i][2] && strchr("lSDVP", argv[i][1])) {
 			const char letter = argv[i][1];
 			uint32_t value = 0;
 
@@ -122,6 +124,8 @@ errr init_spoil(int argc, char *argv[]) {
 					result = 1;
 				}
 				if (!dash) catalog_seed_last = catalog_seed;
+			} else if (letter == 'P') {
+				catalog_provisos = atoi(argv[i + 1]) != 0;
 			} else if (!seed_parse(argv[i + 1], &value) || !value) {
 				printf("init-spoil: '%s' needs a positive number\n", argv[i]);
 				result = 1;
@@ -198,7 +202,7 @@ errr init_spoil(int argc, char *argv[]) {
 				printf("init-spoil: -l needs a seed: -S <number>\n");
 				result = 1;
 			} else {
-				spoil_seeds(catalog_path, catalog_seed, catalog_seed_last, catalog_depth, catalog_visits);
+				spoil_seeds(catalog_path, catalog_seed, catalog_seed_last, catalog_depth, catalog_visits, catalog_provisos);
 			}
 		}
 	}
