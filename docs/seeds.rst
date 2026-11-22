@@ -64,6 +64,10 @@ modifiers (``+2 stealth``), sustains and protections, resists, slays and brands,
 such as a lantern's light, is left out.  For example ``a Set of Gauntlets of Treachery (-1) [+0,1d1] <-1> {cursed} =
 Opportunist; bad: -1 strength, cursed``.
 
+A weapon or bow also shows its weight, as in ``the Greatsword 'Glend' (-1,3d6) [+1] <+1> 12.0 lb``.  Ordinary and
+ego weapons have their weight rolled around the base, and the weight matters: Strength adds damage sides only up
+to the weight in pounds, and a lighter weapon (or bow) scores critical hits more often.
+
 Each level is shown as for a character diving straight down, one after the other, with nothing yet found and no
 unique yet dead.  The same command with the same seed always writes the same catalog.
 
