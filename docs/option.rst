@@ -143,6 +143,13 @@ Choose the dungeon's seed (otherwise a random one) ``birth_choose_seed``
   character, so that you can play a seed someone has shared.  With it off, the
   game picks a random seed.  See :ref:`Seeds`.
 
+Fixed experience: gain 50,000 at the start and nothing after ``birth_fixed_exp``
+  From Sil-Q. The character starts with 50,000 experience to spend on skills
+  and abilities, and never gains any more: descending, meeting and killing
+  monsters and learning about objects give nothing. Experience spent on
+  smithing is still spent. The amount is ``player:fixed-exp`` in
+  ``constants.txt``.
+
 
 Cheating options
 ================

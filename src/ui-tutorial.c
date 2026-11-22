@@ -205,6 +205,8 @@ void start_tutorial(void)
 		int i, exp;
 
 		character_generated = false;
+		/* The archetype sets the character's experience itself. */
+		player->opts.opt[OPT_birth_fixed_exp] = false;
 		cmdq_push(CMD_BIRTH_INIT);
 		cmdq_push(CMD_BIRTH_RESET);
 		if (!races) {

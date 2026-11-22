@@ -148,6 +148,10 @@ player:max-range:20
 # Amount of experience the player starts with
 player:start-exp:5000
 
+# Experience the player starts with, and never adds to, under the fixed
+# experience birth option
+player:fixed-exp:50000
+
 # Base experience cost per ability
 player:ability-cost:500
 

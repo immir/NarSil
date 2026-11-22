@@ -106,6 +106,7 @@ struct angband_constants
 	uint16_t max_sight;	/* Maximum visual range */
 	uint16_t max_range;	/* Maximum missile and spell range */
 	uint16_t start_exp;	/* Amount of experience the player starts with */
+	int32_t fixed_exp;	/* Experience a fixed-experience character starts with and keeps */
 	uint16_t ability_cost;	/* Base experience cost of an ability */
 	uint16_t stealth_bonus;	/* Bonus to stealth in stealth mode */
 	uint16_t player_regen_period;	/* Player turns for complete regeneration */
