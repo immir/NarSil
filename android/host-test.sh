@@ -246,16 +246,18 @@ out=$(run "${birth[@]}" @specials @act=1 @esc @esc @act=33 @prompt @answer=-1 "$
 echo "$out" | grep -qP '^Pack\t-1\t2\t'
 
 echo "== explore goes to the nearest seen item and stops on it; later it stops for a monster in view (not for one already seen); one step stops after one leg"
+# which level has what is up to the game's generation: NarSil-Q's differs, so its seed 7 has no item in view at 100 ft
+explore_seed=$([ "$game" = silq ] && echo 9 || echo 7)
 rm -rf "$work/data"
-out=$(run "${birth[@]}" @depth=2 @act=1 @esc @act=34 @esc @messages "${quit[@]}" 2>/dev/null)
+out=$(NARSIL_SEED=$explore_seed run "${birth[@]}" @depth=2 @act=1 @esc @act=34 @esc @messages "${quit[@]}" 2>/dev/null)
 echo "$out" | grep -q 'You stop: there is something here\.'
 rm -rf "$work/data"
 explore_runs=(); for _ in $(seq 1 14); do explore_runs+=(@act=34 @esc); done
-out=$(run "${birth[@]}" @depth=1 @act=1 @esc "${explore_runs[@]}" @messages "${quit[@]}" 2>/dev/null)
+out=$(NARSIL_SEED=$explore_seed run "${birth[@]}" @depth=1 @act=1 @esc "${explore_runs[@]}" @messages "${quit[@]}" 2>/dev/null)
 echo "$out" | grep -qE 'You stop: you see an? '
 ! echo "$out" | grep -q 'something disturbed' || true
 rm -rf "$work/data"
-out=$(run "${birth[@]}" @depth=2 @act=1 @esc @act=35 @esc @messages "${quit[@]}" 2>/dev/null)
+out=$(NARSIL_SEED=$explore_seed run "${birth[@]}" @depth=2 @act=1 @esc @act=35 @esc @messages "${quit[@]}" 2>/dev/null)
 echo "$out" | grep -q 'You stop: there is something here\.'
 
 echo "== bolts, missiles, blasts and hits are laid over the published map step by step (the engine's terminal drawing never reaches the apps)"
@@ -457,7 +459,9 @@ rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=15 @prompt @answer=16777217 @prompt @answer=16777218 @prompt @answer=100 @prompt @answer=16777219 @prompt @answer=16777218 @prompt @answer=16777223 "${quit[@]}")
 echo "$out" | grep -qx 'panel tab=1'
 echo "$out" | grep -qP '^Skills\t4900$'
-[ "$(echo "$out" | grep -cP '^Melee\t1\t3\t')" -ge 2 ]
+# every NarSil-Q character starts with a curved sword (-1 melee)
+melee_after=$([ "$game" = silq ] && echo 2 || echo 3)
+[ "$(echo "$out" | grep -cP "^Melee\t1\t$melee_after\t")" -ge 2 ]
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=25 @prompt @answer=0 @prompt @answer=0 @prompt @answer=0 @prompt @answer=16777216 @prompt @answer=16777221 @prompt @answer=16777223 "${quit[@]}")
 [ "$(echo "$out" | grep -cP '^#I\t24 Arrows')" -ge 2 ]
