@@ -1,4 +1,4 @@
-NarSil-Q 1.4.0-245-g81e9f6fd1 seed catalog
+NarSil-Q 1.4.0-247-g4d571cd5b seed catalog
 Seeds 301 to 400, levels at 50 ft to 600 ft, 3 visits each (v1 is the first level made at a depth, v2 the second, ...)
 A seed gives the same levels only on the same game, version and data.  Each level is listed as for
 a character diving straight down, with nothing found yet and no unique dead; levels with nothing
@@ -469,7 +469,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
 500 ft v2
   item (65,15) a Bastard Sword of Fury (-2,3d4) [+1] = Whirlwind Attack; bad: wrath
   item (53,17) 6 Arrows of Piercing = sharpness
-  boss Balcmeg, the Relentless (36,35): drops a Ring of Ered Luin <+1> = bad: -98 will
+  boss Balcmeg, the Relentless (36,35): drops a Ring of Ered Luin <+1> = +1 will
   boss Lug, the Grotesque (37,34): drops a Great Spear of Doriath (+1,1d14) [+1] = slays spiders/wolves
 500 ft v3
   chest (16,10): a Pair of Boots of Brethil [+0,1d2] = free action; the Pair of Greaves of Orodreth [-1,1d2] <+1> = +1 dexterity, resist fire; a Pair of Greaves of Ladros [+0,1d3] = resist cold
@@ -601,7 +601,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           - boss Balcmeg, the Relentless (112,23): drops a Flask of oil
           + boss Balcmeg, the Relentless (113,22): drops a Shortbow of Radiance (+0,1d7) = radiance
         500 ft v2
-          - boss Balcmeg, the Relentless (36,35): drops a Ring of Ered Luin <+1> = bad: -98 will
+          - boss Balcmeg, the Relentless (36,35): drops a Ring of Ered Luin <+1> = +1 will
       killed at 450 ft v1:
         300 ft v1
           - boss Balcmeg, the Relentless (34,17): drops a Longsword of Final Rest (+0,2d5) [+1] = free action, slays undead
@@ -611,7 +611,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           - boss Balcmeg, the Relentless (112,23): drops a Flask of oil
           + boss Balcmeg, the Relentless (113,22): drops a Shortbow of Radiance (+0,1d7) = radiance
         500 ft v2
-          - boss Balcmeg, the Relentless (36,35): drops a Ring of Ered Luin <+1> = bad: -98 will
+          - boss Balcmeg, the Relentless (36,35): drops a Ring of Ered Luin <+1> = +1 will
       killed at 450 ft v2:
         300 ft v1
           - boss Balcmeg, the Relentless (34,17): drops a Longsword of Final Rest (+0,2d5) [+1] = free action, slays undead
@@ -629,7 +629,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           - boss Balcmeg, the Relentless (112,23): drops a Flask of oil
           + boss Balcmeg, the Relentless (113,22): drops a Shortbow of Radiance (+0,1d7) = radiance
         500 ft v2
-          - boss Balcmeg, the Relentless (36,35): drops a Ring of Ered Luin <+1> = bad: -98 will
+          - boss Balcmeg, the Relentless (36,35): drops a Ring of Ered Luin <+1> = +1 will
       killed at 450 ft v3:
         300 ft v1
           - boss Balcmeg, the Relentless (34,17): drops a Longsword of Final Rest (+0,2d5) [+1] = free action, slays undead
@@ -646,7 +646,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
         450 ft v2
           - boss Balcmeg, the Relentless (98,35): drops a Ring of Frost
         500 ft v2
-          - boss Balcmeg, the Relentless (36,35): drops a Ring of Ered Luin <+1> = bad: -98 will
+          - boss Balcmeg, the Relentless (36,35): drops a Ring of Ered Luin <+1> = +1 will
         550 ft v2
           - item (79,21) the Shortbow of Celegorm (+1,1d9) <-1> = Puncture; bad: -1 grace
           + item (79,21) the Shortbow 'Death's Sting' (+1,1d8) = Crippling Shot
@@ -2108,7 +2108,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
 50 ft v1
   item (11,28) a Brass Lantern (3000 turns)
 50 ft v2
-  item (10,27) an Amulet of the Vigilant Eye <+1> = bad: -98 perception
+  item (10,27) an Amulet of the Vigilant Eye <+1> = +1 perception
 50 ft v3
   item (26,11) an Amulet of Grace <-1> {cursed} = bad: -1 grace, cursed
 100 ft v1
@@ -5471,7 +5471,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
   chest (48,11): the Pair of Greaves of Orodreth [-1,1d2] <+1> = +1 dexterity, resist fire; a Pair of Greaves of Nogrod [+0,1d2] = sustain strength, sustain dexterity, sustain constitution, sustain grace; a Pair of Boots of Brethil [+0,1d2] = free action; a Pair of Mithril Greaves of Nogrod [+0,1d2] = sustain strength, sustain dexterity, sustain constitution, sustain grace
   item (17,34) Studded Leather of Brethil [-2,1d6] = free action
   boss Duruin, Least of the Balrogs (89,34): drops a Shadow Cloak of Warmth [+4] <+2> = resist cold; a Potion of Strength
-  boss Othrod, the Orc Lord (30,38): drops a Ring of the Laiquendi <+3, +2> = bad: -96 archery, -97 stealth; 18 Arrows of Piercing = sharpness
+  boss Othrod, the Orc Lord (30,38): drops a Ring of the Laiquendi <+3, +2> = +3 archery, +2 stealth; 18 Arrows of Piercing = sharpness
 550 ft v1
   item (83,16) a Set of Gauntlets of Treachery (-1) [+0,1d1] <+1> = +1 strength, Opportunist
   item (30,28) the Bastard Sword 'Anguirel' (+1,3d4) [+1] = sharpness, betrayal
@@ -5516,9 +5516,9 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           + boss Duruin, Least of the Balrogs (14,12): drops a Great Axe (Vampiric) (-3,4d4) = vampiric; bad: hunger; a Potion of Strength; a Mattock of the Firebeards (-5,5d3) <+2> = regeneration, resist fire
         500 ft v3
           - chest (48,11): the Pair of Greaves of Orodreth [-1,1d2] <+1> = +1 dexterity, resist fire; a Pair of Greaves of Nogrod [+0,1d2] = sustain strength, sustain dexterity, sustain constitution, sustain grace; a Pair of Boots of Brethil [+0,1d2] = free action; a Pair of Mithril Greaves of Nogrod [+0,1d2] = sustain strength, sustain dexterity, sustain constitution, sustain grace
-          - boss Othrod, the Orc Lord (30,38): drops a Ring of the Laiquendi <+3, +2> = bad: -96 archery, -97 stealth; 18 Arrows of Piercing = sharpness
+          - boss Othrod, the Orc Lord (30,38): drops a Ring of the Laiquendi <+3, +2> = +3 archery, +2 stealth; 18 Arrows of Piercing = sharpness
           + chest (48,11): the Pair of Greaves of the Helcaraxe [+0,1d3] = sustain strength, sustain dexterity, sustain constitution, sustain grace, regeneration, resist cold; a Pair of Greaves of Nogrod [+0,1d2] = sustain strength, sustain dexterity, sustain constitution, sustain grace; a Pair of Boots of Brethil [+0,1d1] = free action
-          + boss Othrod, the Orc Lord (30,38): drops a Ring of the Laiquendi <+3, +2> = bad: -96 archery, -97 stealth; a Piece of Dark Bread
+          + boss Othrod, the Orc Lord (30,38): drops a Ring of the Laiquendi <+3, +2> = +3 archery, +2 stealth; a Piece of Dark Bread
     Boldog, the Merciless, met at 300 ft v3, 350 ft v3; it is then gone from the others
       killed at 300 ft v3:
         500 ft v1
@@ -5567,10 +5567,10 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           + boss Gorgol, the Butcher (79,29): drops a Greatsword (Defender) (-2,3d5) [+2]
         500 ft v3
           - chest (48,11): the Pair of Greaves of Orodreth [-1,1d2] <+1> = +1 dexterity, resist fire; a Pair of Greaves of Nogrod [+0,1d2] = sustain strength, sustain dexterity, sustain constitution, sustain grace; a Pair of Boots of Brethil [+0,1d2] = free action; a Pair of Mithril Greaves of Nogrod [+0,1d2] = sustain strength, sustain dexterity, sustain constitution, sustain grace
-          - boss Othrod, the Orc Lord (30,38): drops a Ring of the Laiquendi <+3, +2> = bad: -96 archery, -97 stealth; 18 Arrows of Piercing = sharpness
+          - boss Othrod, the Orc Lord (30,38): drops a Ring of the Laiquendi <+3, +2> = +3 archery, +2 stealth; 18 Arrows of Piercing = sharpness
           + chest (48,11): the Pair of Greaves of the Helcaraxe [+0,1d3] = sustain strength, sustain dexterity, sustain constitution, sustain grace, regeneration, resist cold; a Pair of Greaves of Nogrod [+0,1d2] = sustain strength, sustain dexterity, sustain constitution, sustain grace; a Pair of Boots of Brethil [+0,1d1] = free action
           + boss Ulfang the Black (89,34): drops the Arrow 'Dailir' (+11); a Set of Gauntlets of Ladros [+0,1d1] = resist cold; a Ring of Sustenance
-          + boss Othrod, the Orc Lord (30,38): drops a Piece of Dark Bread; a Ring of the Laiquendi <+3, +2> = bad: -96 archery, -97 stealth
+          + boss Othrod, the Orc Lord (30,38): drops a Piece of Dark Bread; a Ring of the Laiquendi <+3, +2> = +3 archery, +2 stealth
         550 ft v1
           - boss Ulfang the Black (81,11): drops a Potion of Dexterity; a Great Helm of Terror [-2,1d3] = bad: cowardice; 3 Daggers (+1,1d5)
           + boss Ulfang the Black (61,15): drops the Greatsword 'Glend' (-1,3d6) [+1] <+1> = +1 strength, sustain strength; a Herb of Visions; a Potion of Clarity; a Battle Axe of Fury (-3,3d5) = Whirlwind Attack; bad: wrath
@@ -5600,9 +5600,9 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
         500 ft v1
           + boss Ulfang the Black (14,12): drops a Hauberk of Protection (-2) [-4,2d6]; a Potion of Poison; a Staff of Majesty (6 charges)
         500 ft v3
-          - boss Othrod, the Orc Lord (30,38): drops a Ring of the Laiquendi <+3, +2> = bad: -96 archery, -97 stealth; 18 Arrows of Piercing = sharpness
+          - boss Othrod, the Orc Lord (30,38): drops a Ring of the Laiquendi <+3, +2> = +3 archery, +2 stealth; 18 Arrows of Piercing = sharpness
           + boss Ulfang the Black (89,34): drops the Arrow 'Dailir' (+11); a Set of Gauntlets of Ladros [+0,1d1] = resist cold; a Ring of Sustenance
-          + boss Othrod, the Orc Lord (30,38): drops 18 Arrows of Gondolin = slays trolls/orcs; a Ring of the Laiquendi <+3, +2> = bad: -96 archery, -97 stealth
+          + boss Othrod, the Orc Lord (30,38): drops 18 Arrows of Gondolin = slays trolls/orcs; a Ring of the Laiquendi <+3, +2> = +3 archery, +2 stealth
         550 ft v1
           - boss Ulfang the Black (81,11): drops a Potion of Dexterity; a Great Helm of Terror [-2,1d3] = bad: cowardice; 3 Daggers (+1,1d5)
           + boss Ulfang the Black (61,15): drops the Greatsword 'Glend' (-1,3d6) [+1] <+1> = +1 strength, sustain strength; a Brass Lantern (3000 turns); a Herb of Visions; an Amulet of Constitution <+1> = +1 constitution
@@ -5615,9 +5615,9 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
         500 ft v1
           + boss Ulfang the Black (14,12): drops a Hauberk of Protection (-2) [-4,2d6]; a Potion of Poison; a Staff of Majesty (6 charges)
         500 ft v3
-          - boss Othrod, the Orc Lord (30,38): drops a Ring of the Laiquendi <+3, +2> = bad: -96 archery, -97 stealth; 18 Arrows of Piercing = sharpness
+          - boss Othrod, the Orc Lord (30,38): drops a Ring of the Laiquendi <+3, +2> = +3 archery, +2 stealth; 18 Arrows of Piercing = sharpness
           + boss Ulfang the Black (89,34): drops the Arrow 'Dailir' (+11); a Set of Gauntlets of Ladros [+0,1d1] = resist cold; a Ring of Sustenance
-          + boss Othrod, the Orc Lord (30,38): drops 18 Arrows of Gondolin = slays trolls/orcs; a Ring of the Laiquendi <+3, +2> = bad: -96 archery, -97 stealth
+          + boss Othrod, the Orc Lord (30,38): drops 18 Arrows of Gondolin = slays trolls/orcs; a Ring of the Laiquendi <+3, +2> = +3 archery, +2 stealth
         550 ft v1
           - boss Ulfang the Black (81,11): drops a Potion of Dexterity; a Great Helm of Terror [-2,1d3] = bad: cowardice; 3 Daggers (+1,1d5)
           + boss Ulfang the Black (61,15): drops the Greatsword 'Glend' (-1,3d6) [+1] <+1> = +1 strength, sustain strength; a Brass Lantern (3000 turns); a Herb of Visions; an Amulet of Constitution <+1> = +1 constitution
@@ -6233,7 +6233,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
   item (118,30) a Great Spear of Nargothrond (+1,1d13) [+1] = slays dragons/raukar
   item (41,35) the Jewel 'Elessar' <+1> = +1 constitution, regeneration, Strength in Adversity
   item (43,35) a Great Spear of Nargothrond (+1,1d13) [+1] = slays dragons/raukar
-  boss Ulfang the Black (40,34): drops a Ring of Venom's End; a Potion of True Sight; a Ring of Ered Luin <+2> = bad: -97 will
+  boss Ulfang the Black (40,34): drops a Ring of Venom's End; a Potion of True Sight; a Ring of Ered Luin <+2> = +2 will
   boss Othrod, the Orc Lord (66,29): drops a Staff of Dismay (4 charges)
 500 ft v1
   item (121,14) 18 Arrows of Doriath = slays spiders/wolves
@@ -7481,7 +7481,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
   item (56,18) a Shovel (-3,2d2) <+1>
 150 ft v1
   item (41,19) a Flask of oil
-  item (54,21) a Ring of Ered Luin <+1> = bad: -98 will
+  item (54,21) a Ring of Ered Luin <+1> = +1 will
   item (69,21) a Potion of Healing
   forge (83,11)
   boss Gorgol, the Butcher (67,16): drops a Shortsword (+0,1d8) [+1]
@@ -7692,7 +7692,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           + boss Ulfang the Black (61,37): drops a Potion of Clarity; a Wooden Torch (2000 turns)
       killed at 550 ft v3:
         500 ft v1
-          + boss Ulfang the Black (25,17): drops a Ring of Secrets <+2> = bad: -97 perception; a Wooden Torch (2000 turns); a Piece of Dark Bread
+          + boss Ulfang the Black (25,17): drops a Ring of Secrets <+2> = +2 perception; a Wooden Torch (2000 turns); a Piece of Dark Bread
     Orcobal, Champion of the Orcs, met at 500 ft v2, 550 ft v3; it is then gone from the others
       killed at 500 ft v2 or 550 ft v3:
         400 ft v1
@@ -8614,7 +8614,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
   boss Ulfang the Black (33,36): drops a Pair of Greaves of the Iron Hills [-1,1d2] = protection from fear, stand fast; a Shortbow of Falas (+0,1d8) <+3> = +3 perception, resist cold; a Brass Lantern of Brightness (3000 turns) = light
 600 ft v3
   boss Gilim, the Giant of Eruman (15,12): drops a Brass Lantern of True Sight (3000 turns) = protection from blindness, protection from hallucination, see invisible
-  boss Ulfang the Black (14,12): drops a Dragon-horn Bow of the Falmari (+0,4d2) = accurate; a Longbow (+1,2d4); a Ring of the Laiquendi <+1> = bad: -98 archery, -98 stealth
+  boss Ulfang the Black (14,12): drops a Dragon-horn Bow of the Falmari (+0,4d2) = accurate; a Longbow (+1,2d4); a Ring of the Laiquendi <+1> = +1 archery, +1 stealth
   If a boss is killed earlier (what it carries and drops made too), other levels change:
     Boldog, the Merciless, met at 250 ft v2, 350 ft v2; it is then gone from the others
       killed at 250 ft v2 or 350 ft v2:
@@ -11719,7 +11719,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
   item (112,24) a Glaive of Final Rest (-1,2d10) [+1] = free action, slays undead
   item (37,25) a Great Spear of Doriath (+1,1d13) [+1] = slays spiders/wolves
   item (35,36) a Brass Lantern of Brightness (1332 turns) = light
-  boss Othrod, the Orc Lord (96,32): drops a Ring of Ered Luin <+1> = bad: -98 will
+  boss Othrod, the Orc Lord (96,32): drops a Ring of Ered Luin <+1> = +1 will
   boss Lug, the Grotesque (120,34): drops a Potion of Strength
   boss Balcmeg, the Relentless (121,34): drops an Amulet of Haunted Dreams
 400 ft v2
@@ -17776,7 +17776,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           item (9,32) a Brass Lantern of True Sight (2709 turns) = protection from blindness, protection from hallucination, see invisible
           item (8,33) a Staff of Dismay (4 charges)
           forge (96,35)
-          boss Duruin, Least of the Balrogs (87,23): drops a Set of Gauntlets of Ladros (-1) [+0,1d2] = resist cold; an Amulet of the Vigilant Eye <+2> = bad: -97 perception
+          boss Duruin, Least of the Balrogs (87,23): drops a Set of Gauntlets of Ladros (-1) [+0,1d2] = resist cold; an Amulet of the Vigilant Eye <+2> = +2 perception
           boss Ulfang the Black (84,36): drops a Potion of Quickness; a Potion of Elemental Resistance; a Round Shield [+0,1d4]
           boss Uldor, the Accursed (51,14): drops a Wooden Torch (2000 turns)
     Ulfang the Black, met at 500 ft v1, 550 ft v1, 550 ft v2, 600 ft v2; it is then gone from the others
@@ -18120,7 +18120,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           item (45,20) a Set of Gauntlets of Ladros (-1) [+0,1d1] = resist cold
           item (44,32) a Great Axe of Udun (-4,4d4) = cumbersome, brand: fire
           item (56,36) a Mattock of the Firebeards (-5,5d2) <+2> = regeneration, resist fire
-          boss Gilim, the Giant of Eruman (39,34): drops a Ring of Ered Luin <+1> = bad: -98 will
+          boss Gilim, the Giant of Eruman (39,34): drops a Ring of Ered Luin <+1> = +1 will
     Gilim, the Giant of Eruman, met at 600 ft v1, 600 ft v3; it is then gone from the others
       killed at 600 ft v1:
         600 ft v3: different terrain, now
@@ -21052,7 +21052,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
   forge (98,9)
   boss Orcobal, Champion of the Orcs (24,16): drops an Amulet of Haunted Dreams; a Fragment of Lembas
   boss Lug, the Grotesque (98,18): drops a Staff of Treasures (3 charges)
-  boss Balcmeg, the Relentless (98,19): drops a Ring of the Laiquendi <+2> = bad: -97 archery, -97 stealth
+  boss Balcmeg, the Relentless (98,19): drops a Ring of the Laiquendi <+2> = +2 archery, +2 stealth
 400 ft v2
   item (64,10) a Longbow of the Marchwardens (+0,2d4) = protection from fear, see invisible
   boss Balcmeg, the Relentless (39,21): drops a Great Helm of True Sight [-1,1d4] = protection from blindness, protection from hallucination, see invisible
@@ -21146,7 +21146,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
         350 ft v3
           - boss Balcmeg, the Relentless (91,29): drops a Potion of Constitution
         400 ft v1
-          - boss Balcmeg, the Relentless (98,19): drops a Ring of the Laiquendi <+2> = bad: -97 archery, -97 stealth
+          - boss Balcmeg, the Relentless (98,19): drops a Ring of the Laiquendi <+2> = +2 archery, +2 stealth
           + boss Balcmeg, the Relentless (98,18): drops a Staff of Treasures (3 charges)
         400 ft v2
           - boss Balcmeg, the Relentless (39,21): drops a Great Helm of True Sight [-1,1d4] = protection from blindness, protection from hallucination, see invisible
@@ -21175,7 +21175,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
         350 ft v3
           - boss Balcmeg, the Relentless (91,29): drops a Potion of Constitution
         400 ft v1
-          - boss Balcmeg, the Relentless (98,19): drops a Ring of the Laiquendi <+2> = bad: -97 archery, -97 stealth
+          - boss Balcmeg, the Relentless (98,19): drops a Ring of the Laiquendi <+2> = +2 archery, +2 stealth
           + boss Balcmeg, the Relentless (98,18): drops a Staff of Treasures (3 charges)
         400 ft v3
           - boss Balcmeg, the Relentless (72,30): drops a Great Spear (+1,1d14) [+1]
@@ -21189,7 +21189,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
         350 ft v3
           - boss Balcmeg, the Relentless (91,29): drops a Potion of Constitution
         400 ft v1
-          - boss Balcmeg, the Relentless (98,19): drops a Ring of the Laiquendi <+2> = bad: -97 archery, -97 stealth
+          - boss Balcmeg, the Relentless (98,19): drops a Ring of the Laiquendi <+2> = +2 archery, +2 stealth
           + boss Balcmeg, the Relentless (98,18): drops a Staff of Treasures (3 charges)
         400 ft v2
           - boss Balcmeg, the Relentless (39,21): drops a Great Helm of True Sight [-1,1d4] = protection from blindness, protection from hallucination, see invisible
@@ -21203,7 +21203,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
         350 ft v3
           - boss Balcmeg, the Relentless (91,29): drops a Potion of Constitution
         400 ft v1
-          - boss Balcmeg, the Relentless (98,19): drops a Ring of the Laiquendi <+2> = bad: -97 archery, -97 stealth
+          - boss Balcmeg, the Relentless (98,19): drops a Ring of the Laiquendi <+2> = +2 archery, +2 stealth
           + boss Balcmeg, the Relentless (98,18): drops a Staff of Treasures (3 charges)
         400 ft v2
           - boss Balcmeg, the Relentless (39,21): drops a Great Helm of True Sight [-1,1d4] = protection from blindness, protection from hallucination, see invisible
@@ -22155,7 +22155,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           item (79,31) the Pair of Boots of the Mole [+0,1d2] = Vanish, Dodging
           boss Ulfang the Black (43,29): drops a Potion of Dexterity; a Potion of True Sight; a Herb of Sustenance
           boss Uldor, the Accursed (47,27): drops a Potion of Esgalduin
-          boss Othrod, the Orc Lord (39,27): drops a Ring of the Laiquendi <+2, +1> = bad: -97 archery, -98 stealth; a Hauberk of Nogrod (-2) [-3,2d5] = sustain strength, sustain dexterity, sustain constitution, sustain grace
+          boss Othrod, the Orc Lord (39,27): drops a Ring of the Laiquendi <+2, +1> = +2 archery, +1 stealth; a Hauberk of Nogrod (-2) [-3,2d5] = sustain strength, sustain dexterity, sustain constitution, sustain grace
           boss Orcobal, Champion of the Orcs (39,25): drops the Helm of Angrod [+0,1d3] = protection from fear, regeneration, resist cold
           boss Balcmeg, the Relentless (47,23): drops the Set of Gloves of the Swallow [+0,1d1] <+2> = +2 archery, Fletchery
           boss Lug, the Grotesque (39,23): drops a Herb of Terror
@@ -26013,7 +26013,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
   item (125,5) a Great Axe (Vampiric) (-4,4d4) = vampiric; bad: hunger
 500 ft v3
   item (23,5) a Staff of Revelations (6 charges)
-  item (103,12) a Ring of Secrets <+2> = bad: -97 perception
+  item (103,12) a Ring of Secrets <+2> = +2 perception
   item (56,14) the Mail Corslet of Gundor (-1) [-1,2d4] <+1> = +1 strength, Crowd Fighting
   item (52,39) a Set of Gauntlets of Ladros (-1) [+0,1d1] = resist cold
 550 ft v1
@@ -26617,7 +26617,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
   item (38,29) a Pair of Greaves of Treacherous Paths [-1,1d2] = bad: danger
   item (37,36) a Potion of Voice
 550 ft v1
-  item (120,13) a Ring of Secrets <+2> = bad: -97 perception
+  item (120,13) a Ring of Secrets <+2> = +2 perception
   item (6,23) the Set of Gloves of the Swallow [+0,1d1] <+2> = +2 archery, Fletchery
   item (8,24) 2 Daggers of Cuivienen (+0,1d5) <+1> = +1 song, sustain dexterity, sustain grace, light
   item (109,26) a Quarterstaff of the Helcaraxe (+0,2d5) [+2] <+1> = +1 constitution, resist cold
@@ -26693,7 +26693,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
       killed at 450 ft v2:
         550 ft v1: different terrain, now
           item (7,6) a Pair of Boots of Brethil [+0,1d1] = free action
-          item (120,13) a Ring of Secrets <+2> = bad: -97 perception
+          item (120,13) a Ring of Secrets <+2> = +2 perception
           item (26,21) a Quarterstaff of the Helcaraxe (+0,2d5) [+2] <+1> = +1 constitution, resist cold
           item (81,22) a Dagger of Cuivienen (+0,1d5) <+1> = +1 song, sustain dexterity, sustain grace, light
           item (82,23) the Set of Gloves of the Swallow [+0,1d1] <+2> = +2 archery, Fletchery
@@ -26712,7 +26712,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           + item (114,11) 12 Arrows (Poisoned) = brand: poison
         550 ft v1: different terrain, now
           item (7,6) a Pair of Boots of Brethil [+0,1d1] = free action
-          item (120,13) a Ring of Secrets <+2> = bad: -97 perception
+          item (120,13) a Ring of Secrets <+2> = +2 perception
           item (26,21) a Quarterstaff of the Helcaraxe (+0,2d5) [+2] <+1> = +1 constitution, resist cold
           item (81,22) a Dagger of Cuivienen (+0,1d5) <+1> = +1 song, sustain dexterity, sustain grace, light
           item (82,23) the Set of Gloves of the Swallow [+0,1d1] <+2> = +2 archery, Fletchery
@@ -27713,7 +27713,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
   item (74,13) a Set of Gauntlets of Swordplay (-1) [+0,1d1] = Parry
   item (124,22) a Feanorian Lamp
   item (72,23) 12 Arrows of Doriath = slays spiders/wolves
-  item (102,25) a Ring of Secrets <+2> = bad: -97 perception
+  item (102,25) a Ring of Secrets <+2> = +2 perception
   item (124,29) a Mail Corslet of Nogrod [-3,2d4] = sustain strength, sustain dexterity, sustain constitution, sustain grace
   boss Othrod, the Orc Lord (67,34): drops a Pair of Boots of Brethil [+0,1d2] = free action; a Great Helm of Brilliance [-2,1d4] = light
 500 ft v1
@@ -27963,7 +27963,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
   item (41,26) a Human Skeleton
 250 ft v2
   item (113,17) a Great Helm of Defiance [-2,1d3] <+2> = +2 will, protection from fear
-  item (13,26) a Ring of Ered Luin <+1> = bad: -98 will
+  item (13,26) a Ring of Ered Luin <+1> = +1 will
   item (35,36) a Staff of Majesty (7 charges)
   forge (44,14)
   boss Boldog, the Merciless (34,36): drops the Spear of Boldog (+0,1d12) = protection from fear, slays wolves
@@ -30261,7 +30261,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
 600 ft v2
   item (120,18) the Pair of Boots of the Mole [+0,1d2] = Vanish, Dodging
   item (17,22) a Shortbow of Falas (+0,1d7) <+3> = +3 perception, resist cold
-  boss Ulfang the Black (81,40): drops an Amulet of Grace; a Wooden Torch (1599 turns); a Ring of the Laiquendi <+1, +2> = bad: -98 archery, -97 stealth
+  boss Ulfang the Black (81,40): drops an Amulet of Grace; a Wooden Torch (1599 turns); a Ring of the Laiquendi <+1, +2> = +1 archery, +2 stealth
 600 ft v3
   item (38,7) a Dragon-horn Bow (+0,4d2)
   item (78,27) the Spear of Boldog (+0,1d12) = protection from fear, slays wolves
@@ -33782,7 +33782,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           item (42,30) a Battle Axe of Udun (-3,3d4) = cumbersome, brand: fire
           vault the Tomb of the King
           boss Delthaur, Balrog of Terror (25,31): drops a Great Axe of Final Rest (-4,4d5) = free action, slays undead; the Spear of Boldog (+0,1d12) = protection from fear, slays wolves; a Potion of Clarity
-          boss Gilim, the Giant of Eruman (72,32): drops a Ring of the Laiquendi <+2, +3> = bad: -97 archery, -96 stealth; a Potion of Voice
+          boss Gilim, the Giant of Eruman (72,32): drops a Ring of the Laiquendi <+2, +3> = +2 archery, +3 stealth; a Potion of Voice
           boss Ulfang the Black (73,11): drops a Ring of Evasion; a Wooden Torch (2000 turns); a Robe of Venom's End [+2] = resist poison
     Gilim, the Giant of Eruman, met at 600 ft v2; it is then gone from the others
       killed at 600 ft v2:

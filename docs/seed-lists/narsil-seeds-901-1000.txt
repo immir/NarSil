@@ -1,4 +1,4 @@
-NarSil 1.4.0-245-g81e9f6fd1 seed catalog
+NarSil 1.4.0-247-g4d571cd5b seed catalog
 Seeds 901 to 1000, levels at 50 ft to 600 ft, 3 visits each (v1 is the first level made at a depth, v2 the second, ...)
 A seed gives the same levels only on the same game, version and data.  Each level is listed as for
 a character diving straight down, with nothing found yet and no unique dead; levels with nothing
@@ -1427,7 +1427,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
   boss Ulfang the Black (36,16): drops a Pair of Greaves of Free Action [-1,1d3] = free action; the Pair of Boots of Taur-nu-Fuin [+1,1d1] <+2> = +2 stealth, +2 perception, Master Hunter; a Staff of Warding (2 charges)
   boss Duruin, Least of the Balrogs (35,16): drops a Ring of Accuracy (+2); a Potion of Healing
   boss Uldor, the Accursed (33,16): drops a Wooden Torch (922 turns); 12 Arrows
-  boss Othrod, the Orc Lord (37,22): drops a Robe of Permanence [+1] = sustain strength, sustain dexterity, sustain constitution, sustain grace; a Ring of Perception <+2> = bad: -97 perception
+  boss Othrod, the Orc Lord (37,22): drops a Robe of Permanence [+1] = sustain strength, sustain dexterity, sustain constitution, sustain grace; a Ring of Perception <+2> = +2 perception
   boss Orcobal, Champion of the Orcs (32,22): drops a Helm of Brilliance [+0,1d2] = light; a Shortsword (+1,1d8) [+1]
   boss Boldog, the Merciless (31,22): drops the Spear of Boldog (+0,1d10) = protection from fear, slays wolves; a Staff of Imprisonment (6 charges)
 550 ft v3
@@ -1494,7 +1494,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           boss Ulfang the Black (36,16): drops a Pair of Greaves of Free Action [-1,1d3] = free action; the Pair of Boots of Taur-nu-Fuin [+1,1d1] <+2> = +2 stealth, +2 perception, Master Hunter; a Staff of Warding (2 charges)
           boss Duruin, Least of the Balrogs (35,16): drops a Ring of Accuracy (+2); a Potion of Healing
           boss Uldor, the Accursed (33,16): drops a Wooden Torch (922 turns); 12 Arrows
-          boss Othrod, the Orc Lord (37,22): drops a Robe of Permanence [+1] = sustain strength, sustain dexterity, sustain constitution, sustain grace; a Ring of Perception <+2> = bad: -97 perception
+          boss Othrod, the Orc Lord (37,22): drops a Robe of Permanence [+1] = sustain strength, sustain dexterity, sustain constitution, sustain grace; a Ring of Perception <+2> = +2 perception
           boss Gorgol, the Butcher (32,22): drops a Throwing Axe of Doriath (+0,2d4) = slays spiders/wolves
       killed at 450 ft v3:
         400 ft v2: different terrain, now
@@ -1508,7 +1508,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           boss Ulfang the Black (36,16): drops a Pair of Greaves of Free Action [-1,1d3] = free action; the Pair of Boots of Taur-nu-Fuin [+1,1d1] <+2> = +2 stealth, +2 perception, Master Hunter; a Staff of Warding (2 charges)
           boss Duruin, Least of the Balrogs (35,16): drops a Ring of Accuracy (+2); a Potion of Healing
           boss Uldor, the Accursed (33,16): drops a Wooden Torch (922 turns); 12 Arrows
-          boss Othrod, the Orc Lord (37,22): drops a Robe of Permanence [+1] = sustain strength, sustain dexterity, sustain constitution, sustain grace; a Ring of Perception <+2> = bad: -97 perception
+          boss Othrod, the Orc Lord (37,22): drops a Robe of Permanence [+1] = sustain strength, sustain dexterity, sustain constitution, sustain grace; a Ring of Perception <+2> = +2 perception
           boss Gorgol, the Butcher (32,22): drops a Throwing Axe of Doriath (+0,2d4) = slays spiders/wolves
       killed at 550 ft v2:
         400 ft v2: different terrain, now
@@ -1525,7 +1525,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           boss Ulfang the Black (36,16): drops a Pair of Greaves of Free Action [-1,1d3] = free action; the Pair of Boots of Taur-nu-Fuin [+1,1d1] <+2> = +2 stealth, +2 perception, Master Hunter; a Staff of Warding (2 charges)
           boss Duruin, Least of the Balrogs (35,16): drops a Ring of Accuracy (+2); a Potion of Healing
           boss Uldor, the Accursed (33,16): drops a Wooden Torch (922 turns); 12 Arrows
-          boss Othrod, the Orc Lord (37,22): drops a Robe of Permanence [+1] = sustain strength, sustain dexterity, sustain constitution, sustain grace; a Ring of Perception <+2> = bad: -97 perception
+          boss Othrod, the Orc Lord (37,22): drops a Robe of Permanence [+1] = sustain strength, sustain dexterity, sustain constitution, sustain grace; a Ring of Perception <+2> = +2 perception
           boss Orcobal, Champion of the Orcs (32,22): drops a Helm of Brilliance [+0,1d2] = light; a Shortsword (+1,1d8) [+1]
           boss Gorgol, the Butcher (31,22): drops a Ring of Hunger
       killed at 550 ft v2:
@@ -3636,7 +3636,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
   item (94,12) a Shortsword (Vampiric) (+0,1d7) [+1] {cursed} = vampiric; bad: hunger, cursed
   item (92,14) Studded Leather of Blight [-2,1d6] = bad: vulnerable to poison
   forge (84,13)
-  boss Othrod, the Orc Lord (50,25): drops a Ring of Perception <+2> = bad: -97 perception; a Potion of Voice
+  boss Othrod, the Orc Lord (50,25): drops a Ring of Perception <+2> = +2 perception; a Potion of Voice
 500 ft v1
   item (41,28) a Pair of Greaves of Treacherous Paths [-1,1d2] = bad: danger
   item (77,36) a Bastard Sword of Nargothrond (-2,3d3) [+1] = slays dragons/raukar
@@ -3917,7 +3917,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
         550 ft v2
           - boss Ulfang the Black (34,26): drops a Throwing Axe of Doriath (+0,2d4) = slays spiders/wolves; a Wooden Torch (2000 turns); a Mail Corslet (-1) [-2,2d4]
         600 ft v2
-          + boss Ulfang the Black (103,27): drops a Potion of Constitution; a Potion of Orcish Liquor; a Ring of Perception <+1> = bad: -98 perception
+          + boss Ulfang the Black (103,27): drops a Potion of Constitution; a Potion of Orcish Liquor; a Ring of Perception <+1> = +1 perception
       killed at 600 ft v2:
         550 ft v2
           - boss Ulfang the Black (34,26): drops a Throwing Axe of Doriath (+0,2d4) = slays spiders/wolves; a Wooden Torch (2000 turns); a Mail Corslet (-1) [-2,2d4]
@@ -8403,7 +8403,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
   item (66,14) a Ring of Accuracy (+1)
   item (49,26) a Staff of Foes (6 charges)
   item (79,35) a Helm of Terror [-1,1d2] = bad: cowardice
-  boss Boldog, the Merciless (64,14): drops the Spear of Boldog (+0,1d10) = protection from fear, slays wolves; a Ring of Perception <+2> = bad: -97 perception
+  boss Boldog, the Merciless (64,14): drops the Spear of Boldog (+0,1d10) = protection from fear, slays wolves; a Ring of Perception <+2> = +2 perception
   boss Gorgol, the Butcher (65,14): drops a Potion of Blindness
 350 ft v2
   item (67,30) a Longsword of Doriath (+0,2d5) [+1] = slays spiders/wolves
@@ -8509,7 +8509,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           item (48,9) a Staff of Foes (6 charges)
           item (109,11) a Helm of Terror [-1,1d2] = bad: cowardice
           item (66,14) a Ring of Accuracy (+1)
-          boss Boldog, the Merciless (64,14): drops the Spear of Boldog (+0,1d10) = protection from fear, slays wolves; a Ring of Perception <+2> = bad: -97 perception
+          boss Boldog, the Merciless (64,14): drops the Spear of Boldog (+0,1d10) = protection from fear, slays wolves; a Ring of Perception <+2> = +2 perception
     Ulfang the Black, met at 500 ft v3, 550 ft v2, 600 ft v1; it is then gone from the others
       killed at 500 ft v3:
         500 ft v2
@@ -10386,7 +10386,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
 100 ft v1
   item (74,9) 3 Spears of Gondolin (-1,1d9) = slays trolls/orcs
 100 ft v3
-  item (10,5) a Ring of Perception <+1> = bad: -98 perception
+  item (10,5) a Ring of Perception <+1> = +1 perception
 150 ft v1
   item (24,15) a Staff of Slumber (5 charges)
 200 ft v1
@@ -10799,7 +10799,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
         500 ft v2: different terrain, now
           item (36,22) a Pair of Boots of Leaping [+0,1d2] = Leaping
           item (74,24) a Pair of Boots of Leaping [+0,1d2] = Leaping
-          boss Othrod, the Orc Lord (115,19): drops a Ring of Perception <+2> = bad: -97 perception
+          boss Othrod, the Orc Lord (115,19): drops a Ring of Perception <+2> = +2 perception
           boss Boldog, the Merciless (117,20): drops the Spear of Boldog (+0,1d10) = protection from fear, slays wolves; a Greatsword (-1,3d5) [+1]
           boss Orcobal, Champion of the Orcs (118,21): drops a Set of Gauntlets of Strength (-1) [+0,1d2] <+1> = +1 strength
         600 ft v2: different terrain, now
@@ -10825,7 +10825,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
         500 ft v2: different terrain, now
           item (36,22) a Pair of Boots of Leaping [+0,1d2] = Leaping
           item (74,24) a Pair of Boots of Leaping [+0,1d2] = Leaping
-          boss Othrod, the Orc Lord (115,19): drops a Ring of Perception <+2> = bad: -97 perception
+          boss Othrod, the Orc Lord (115,19): drops a Ring of Perception <+2> = +2 perception
           boss Boldog, the Merciless (117,20): drops the Spear of Boldog (+0,1d10) = protection from fear, slays wolves; a Greatsword (-1,3d5) [+1]
           boss Orcobal, Champion of the Orcs (118,21): drops a Set of Gauntlets of Strength (-1) [+0,1d2] <+1> = +1 strength
     Ulfang the Black, met at 600 ft v1, 600 ft v3; it is then gone from the others
@@ -12142,7 +12142,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           boss Othrod, the Orc Lord (62,17): drops a Helm of Defiance [+0,1d3] <+2> = +2 will, protection from fear; a Longbow of Radiance (+1,2d5) = radiance
           boss Orcobal, Champion of the Orcs (54,19): drops a Ring of Hunger
           boss Boldog, the Merciless (54,18): drops the Spear of Boldog (+0,1d10) = protection from fear, slays wolves; a Great Spear (+0,1d13) [+1]
-          boss Gorgol, the Butcher (77,18): drops a Ring of Perception <+1> = bad: -98 perception
+          boss Gorgol, the Butcher (77,18): drops a Ring of Perception <+1> = +1 perception
       killed at 500 ft v1:
         550 ft v2: different terrain, now
           item (60,16) 6 Arrows of Piercing = sharpness
@@ -12154,7 +12154,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
           boss Othrod, the Orc Lord (62,17): drops a Helm of Defiance [+0,1d3] <+2> = +2 will, protection from fear; a Longbow of Radiance (+1,2d5) = radiance
           boss Orcobal, Champion of the Orcs (54,19): drops a Ring of Hunger
           boss Boldog, the Merciless (54,18): drops the Spear of Boldog (+0,1d10) = protection from fear, slays wolves; a Great Spear (+0,1d13) [+1]
-          boss Gorgol, the Butcher (77,18): drops a Ring of Perception <+1> = bad: -98 perception
+          boss Gorgol, the Butcher (77,18): drops a Ring of Perception <+1> = +1 perception
       killed at 550 ft v2:
         500 ft v1: different terrain, now
           item (19,12) a War Hammer of Fury (-2,4d2) {cursed} = Whirlwind Attack; bad: wrath, cursed
@@ -20352,7 +20352,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
 200 ft v3
   item (70,20) a Pair of Greaves of Treacherous Paths [-1,1d2] = bad: danger
 250 ft v2
-  boss Gorgol, the Butcher (84,20): drops a Ring of Perception <+1> = bad: -98 perception
+  boss Gorgol, the Butcher (84,20): drops a Ring of Perception <+1> = +1 perception
 300 ft v1
   chest (64,16): a Longsword of Gondolin (+1,2d5) [+1] = slays trolls/orcs; a Glaive of Doriath (-2,2d9) [+1] = slays spiders/wolves
   item (67,20) a Potion of Grace
@@ -23775,7 +23775,7 @@ and its loot (artefacts included) already made; - is what is gone, + what is new
   item (27,24) a Broken Sword of Gondolin (-2,1d5) = slays trolls/orcs
 100 ft v2
   item (43,12) a Potion of Quickness
-  item (39,16) a Ring of Perception <+1> = bad: -98 perception
+  item (39,16) a Ring of Perception <+1> = +1 perception
   item (8,23) a Jewelled Crown
 150 ft v1
   item (40,11) a Round Shield of Deflection [+2,1d3]
