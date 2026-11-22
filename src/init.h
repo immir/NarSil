@@ -120,6 +120,9 @@ struct angband_constants
 	uint8_t rule_morgoth_anger;	/**< Morgoth grows angrier (and stronger) as he is hurt or loses his crown (default 0) */
 	uint8_t rule_depth_clock;	/**< The minimum-depth clock adapts to the player: laggards get time, divers less (default 0) */
 	uint8_t rule_forge_depths;	/**< Guaranteed forges at 100', 300', 500' instead of the drought timer (default 0) */
+	uint8_t rule_gorged;	/**< Being gorged stops you eating or drinking more (default 1) */
+	uint8_t rule_escape_stairs;	/**< On the escape every stair is a shaft, and none crumble (default 0) */
+	uint8_t rule_wide_drops;	/**< Dropped objects can land up to four grids away, not three (default 0) */
 };
 
 struct init_module {

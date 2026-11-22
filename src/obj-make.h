@@ -39,6 +39,7 @@ bool make_fake_artifact(struct object *obj, const struct artifact *artifact);
 void object_prep(struct object *obj, struct object_kind *kind, int lev,
 				 aspect rand_aspect);
 struct drop *lookup_drop(const char *name);
+struct object_kind *get_obj_num_from_drop(int level, struct drop *drop);
 void apply_magic(struct object *obj, int lev, bool allow_artifacts, bool good,
 				 bool great);
 bool kind_is_good(const struct object_kind *kind);

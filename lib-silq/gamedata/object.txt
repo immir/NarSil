@@ -2614,6 +2614,7 @@ cost:0
 attack:0:0d0
 defence:0:0d0
 alloc:1:1
+pval:1
 
 
 # Index 441
@@ -2627,6 +2628,7 @@ attack:0:0d0
 defence:0:0d0
 alloc:3:3
 alloc:6:3
+pval:1
 
 
 # Index 442
@@ -2640,6 +2642,7 @@ attack:0:0d0
 defence:0:0d0
 alloc:9:3
 alloc:12:3
+pval:1
 
 
 ##### Notes #####
@@ -2678,7 +2681,47 @@ cost:50
 attack:-1:0d0
 defence:0:1d2
 alloc:1:1
-flags:NO_SMITHING
+flags:NO_SMITHING | DAMAGED
+
+name:& Rusty Helm~
+graphics:]:s
+type:helm
+depth:1
+weight:50
+cost:15
+attack:0:0d0
+defence:-1:1d1
+alloc:1:1
+flags:NO_SMITHING | DAMAGED
+
+name:& Pair~ of Shabby Boots
+graphics:]:U
+type:boots
+depth:1
+weight:20
+cost:7
+attack:0:0d0
+defence:-1:1d1
+alloc:1:1
+flags:NO_SMITHING | DAMAGED
+
+name:& Mallorn Torch~
+graphics:~:U
+type:light
+depth:1
+weight:10
+cost:2
+attack:0:0d0
+defence:0:0d0
+alloc:3:4
+alloc:6:2
+pval:3
+fuel:20:50:100
+flags:NO_SMITHING | EASY_KNOW | BURNS_OUT
+desc:The wood of the mallorn burns bright but briefly.
+desc: You can equip it as a light source with a radius of 3 squares.
+desc: It may also be used to fuel another mallorn torch, up to a
+desc: maximum of 100 turns of light.
 
 name:Antidote
 graphics:!:d

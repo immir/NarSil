@@ -581,6 +581,12 @@ static enum parser_error parse_constants_rules(struct parser *p) {
 		z->rule_depth_clock = value;
 	else if (streq(label, "forge-depths"))
 		z->rule_forge_depths = value;
+	else if (streq(label, "gorged"))
+		z->rule_gorged = value;
+	else if (streq(label, "escape-stairs"))
+		z->rule_escape_stairs = value;
+	else if (streq(label, "wide-drops"))
+		z->rule_wide_drops = value;
 	else
 		return PARSE_ERROR_UNDEFINED_DIRECTIVE;
 
@@ -613,6 +619,7 @@ static struct parser *init_parse_constants(void) {
 	/* Rules a constants file leaves out are NarSil's own */
 	z->rule_floor_light = 1;
 	z->rule_staff_will_check = 1;
+	z->rule_gorged = 1;
 
 	parser_setpriv(p, z);
 	parser_reg(p, "level-max sym label int value", parse_constants_level_max);

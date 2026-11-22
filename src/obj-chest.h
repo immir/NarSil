@@ -55,5 +55,7 @@ bool do_cmd_open_chest(struct loc grid, struct object *obj);
 struct chunk;
 void chest_make_contents(struct chunk *c, struct loc grid, struct object *chest, uint32_t seed);
 bool do_cmd_disarm_chest(struct object *obj);
+struct object *skeleton_check(struct loc grid);
+void do_cmd_search_skeleton(struct object *skeleton);
 
 #endif /* OBJECT_CHEST_H */

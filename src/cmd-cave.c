@@ -72,6 +72,7 @@ static bool trapped_stairs(void)
 	chance = player->staircasiness / 100;
 	chance = chance * chance * chance;	
 	chance = chance / 10000;
+	if (z_info->rule_escape_stairs && player->on_the_run) chance = 0;
 	
 	if (percent_chance(chance))	{
 		msg("The stairs crumble beneath you!");
@@ -1498,6 +1499,9 @@ static void do_cmd_alter_aux(int dir)
 	} else if (o_chest_closed) {
 		/* Open chest */
 		more = do_cmd_open_chest(grid, o_chest_closed);
+	} else if (skeleton_check(grid)) {
+		/* Search a skeleton */
+		do_cmd_search_skeleton(skeleton_check(grid));
 	} else if (square_isopendoor(cave, grid)) {
 		/* Close door */
 		more = do_cmd_close_aux(grid);

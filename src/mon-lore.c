@@ -174,6 +174,19 @@ void lore_do_probe(struct monster *mon)
 /**
  * Determine whether the monster is fully known
  */
+/**
+ * Whether the player is shown everything about a monster: it has been probed,
+ * or the "Know all monster info" option (or its debug twin) is on.  The option
+ * covers only monsters that can be generated, as in Sil-Q.
+ */
+bool lore_shown_in_full(const struct monster_race *race,
+		const struct monster_lore *lore)
+{
+	return lore->all_known
+		|| ((OPT(player, know_monster_info) || OPT(player, cheat_know))
+			&& race->level <= 25);
+}
+
 bool lore_is_fully_known(const struct monster_race *race)
 {
 	unsigned i;

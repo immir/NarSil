@@ -26,6 +26,7 @@
 #include "init.h"
 #include "mon-lore.h"
 #include "obj-chest.h"
+#include "obj-gear.h"
 #include "obj-ignore.h"
 #include "obj-knowledge.h"
 #include "obj-make.h"
@@ -33,6 +34,7 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "player-calcs.h"
+#include "player-quest.h"
 #include "player-timed.h"
 #include "player-util.h"
 
@@ -693,4 +695,137 @@ bool do_cmd_disarm_chest(struct object *obj)
 
 	/* Result */
 	return more;
+}
+
+
+/**
+ * ------------------------------------------------------------------------
+ * Skeletons (Sil-Q): searched with the alter command, once each
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The searchable skeleton on a grid, if there is one.
+ */
+struct object *skeleton_check(struct loc grid)
+{
+	for (struct object *obj = square_object(cave, grid); obj; obj = obj->next) {
+		if (tval_is_skeleton(obj) && obj->kind->pval > 0) return obj;
+	}
+	return NULL;
+}
+
+/**
+ * A plain object of the named kind.
+ */
+static struct object *skeleton_plain(const char *tval_name, const char *name,
+		int level)
+{
+	const int tval = tval_find_idx(tval_name);
+	struct object *const obj = object_new();
+	object_prep(obj, lookup_kind(tval, lookup_sval(tval, name)), level,
+		RANDOMISE);
+	return obj;
+}
+
+/**
+ * Something poor: an arrow, a part-burnt torch, a cloak, some meat, or a
+ * damaged piece of armour.
+ */
+static struct object *skeleton_poor_find(int level)
+{
+	struct object *obj = NULL;
+
+	switch (randint1(5)) {
+		case 1: obj = skeleton_plain("arrow", "Arrow", level); break;
+		case 2:
+			obj = skeleton_plain("light", "Wooden Torch", level);
+			obj->timeout = rand_range(400, 800);
+			break;
+		case 3: obj = skeleton_plain("cloak", "Cloak", level); break;
+		case 4: obj = skeleton_plain("food", "Strip of Dried Meat", level); break;
+		default: {
+			struct object_kind *const kind =
+				get_obj_num_from_drop(level, lookup_drop("damaged"));
+			if (kind) {
+				obj = object_new();
+				object_prep(obj, kind, level, RANDOMISE);
+			}
+		}
+	}
+	return obj;
+}
+
+/**
+ * What a skeleton yields: elves carry the best, orcs the worst.
+ */
+static struct object *skeleton_find(const struct object *skeleton, int level)
+{
+	const char *const name = skeleton->kind->name;
+	const int roll = strstr(name, "Elf") ? randint1(10)
+		: strstr(name, "Human") ? randint1(10) + 5 : 10;
+	struct object *obj = NULL;
+	bool plain = false;
+
+	switch (roll) {
+		case 1: case 2: case 3: case 4:
+			obj = skeleton_plain("light", "Mallorn Torch", level);
+			obj->timeout = rand_range(20, 50);
+			plain = true;
+			break;
+		case 5: obj = make_object(cave, level, false, false, lookup_drop("bow")); break;
+		case 6: obj = make_object(cave, level, false, false, lookup_drop("cloak")); break;
+		case 7: obj = make_object(cave, level, false, false, lookup_drop("boots")); break;
+		case 8: obj = make_object(cave, level, false, false, lookup_drop("weapon")); break;
+		case 9: obj = make_object(cave, level, false, false, lookup_drop("gloves")); break;
+		default:
+			obj = skeleton_poor_find(level);
+			plain = true;
+	}
+	if (!obj) return NULL;
+
+	obj->number = tval_is_ammo(obj) ? randint1(4) + 2 : 1;
+	obj->origin = ORIGIN_SKELETON;
+	obj->origin_depth = player->depth;
+	object_touch(player, obj);
+	if (plain) {
+		object_flavor_aware(player, obj);
+		while (!object_runes_known(obj)) {
+			object_learn_unknown_rune(player, obj);
+		}
+	}
+	return obj;
+}
+
+/**
+ * Search a skeleton, taking whatever is found.
+ */
+void do_cmd_search_skeleton(struct object *skeleton)
+{
+	if (skeleton->pval == 0) {
+		msg("There is nothing more to find among these bones.");
+		player->upkeep->energy_use = 0;
+		return;
+	}
+
+	struct object *found = skeleton_find(skeleton, player->depth);
+	skeleton->pval = 0;
+	if (skeleton->known) skeleton->known->pval = 0;
+
+	if (!found) {
+		msg("You failed to find anything among the bones.");
+		return;
+	}
+
+	msg("You find something among the bones!");
+	if (tval_is_ammo(found)) {
+		msg("You gather up %d arrows.", found->number);
+	}
+	if (inven_carry_okay(found)) {
+		inven_carry(player, found, true, true);
+	} else {
+		drop_near(cave, &found, 0, player->grid, true, false);
+	}
+
+	/* Creatures that see it break the truce */
+	break_truce(player, false);
 }

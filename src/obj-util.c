@@ -558,6 +558,13 @@ bool obj_has_charges(const struct object *obj)
 /**
  * Check if an object can be used to refuel other objects.
  */
+int light_fuel_max(const struct object *light)
+{
+	assert(tval_is_light(light));
+	if (light->kind->fuel_max) return light->kind->fuel_max;
+	return of_has(light->flags, OF_TAKES_FUEL) ? z_info->fuel_lamp : z_info->fuel_torch;
+}
+
 bool obj_can_refuel(const struct object *obj)
 {
 	const struct object *light = equipped_item_by_slot_name(player, "light");
@@ -575,9 +582,9 @@ bool obj_can_refuel(const struct object *obj)
 		}
 	}
 
-	/* A torch can be refueled from another torch */
+	/* A torch can be refueled from another torch of its kind */
 	if (of_has(light->flags, OF_BURNS_OUT)) {
-		if (tval_is_light(obj) && of_has(obj->flags, OF_BURNS_OUT) &&
+		if (tval_is_light(obj) && obj->kind == light->kind &&
 				   obj->timeout > 0) {
 			return true;
 		}

@@ -1067,24 +1067,19 @@ void object_prep(struct object *obj, struct object_kind *k, int lev,
 
 	/* Default fuel, light */
 	if (tval_is_light(obj)) {
-		if (of_has(obj->flags, OF_BURNS_OUT)) {
-			if (one_in_(3) && character_generated) {
-				obj->timeout = rand_range(500, z_info->default_torch);
-			} else {
-				obj->timeout = z_info->default_torch;
-			}
-		} else if (of_has(obj->flags, OF_TAKES_FUEL)) {
-			if (one_in_(3)) {
-				obj->timeout = rand_range(500, z_info->default_lamp);
-			} else {
-				obj->timeout = z_info->default_lamp;
-			}
+		const bool lamp = of_has(obj->flags, OF_TAKES_FUEL);
+		if (lamp || of_has(obj->flags, OF_BURNS_OUT)) {
+			const int full = k->fuel_default ? k->fuel_default
+				: lamp ? z_info->default_lamp : z_info->default_torch;
+			const int least = k->fuel_min ? k->fuel_min : 500;
+			obj->timeout = (one_in_(3) && (lamp || character_generated))
+				? rand_range(least, full) : full;
 		}
 		obj->pval = k->pval;
 	}
 
-	/* Assign pval for oil */
-	if (tval_is_fuel(obj))
+	/* Assign pval for oil, and for skeletons (1 if they can be searched) */
+	if (tval_is_fuel(obj) || tval_is_skeleton(obj))
 		obj->pval = k->pval;
 
 	/* Assign modifiers */
@@ -1189,7 +1184,26 @@ static void get_obj_num_prep(struct drop *drop)
 			/* Accept this object */
 			entry->prob2 = entry->prob1;
 		}
+
+		/* Damaged kinds (from skeletons) come only from drops that name them */
+		if (kf_has(k_info[entry->index].kind_flags, KF_DAMAGED)
+				&& !(drop && drop->poss)) {
+			entry->prob2 = 0;
+		}
 	}
+}
+
+/**
+ * Choose an object kind of a drop type for a dungeon level, or NULL if none
+ * can be chosen.
+ */
+struct object_kind *get_obj_num_from_drop(int level, struct drop *drop)
+{
+	assert(drop);
+	get_obj_num_prep(drop);
+	struct object_kind *const kind = get_obj_num(level);
+	get_obj_num_prep(NULL);
+	return kind;
 }
 
 /**

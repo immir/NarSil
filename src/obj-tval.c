@@ -76,6 +76,11 @@ bool tval_is_ring(const struct object *obj)
 	return obj->tval == TV_RING;
 }
 
+bool tval_is_skeleton(const struct object *obj)
+{
+	return obj->tval == TV_USELESS;
+}
+
 bool tval_is_chest(const struct object *obj)
 {
 	return obj->tval == TV_CHEST;

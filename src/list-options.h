@@ -111,4 +111,6 @@ OP(birth_choose_seed,     "Choose the dungeon's seed (otherwise a random one)",
 BIRTH, false)
 OP(birth_fixed_exp,       "Fixed experience: gain 50,000 at the start and nothing after",
 BIRTH, false)
+OP(know_monster_info,     "Know all monster info",
+INTERFACE, false)
 

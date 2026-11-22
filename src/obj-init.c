@@ -1090,6 +1090,22 @@ static enum parser_error parse_object_pval(struct parser *p) {
 	return PARSE_ERROR_NONE;
 }
 
+static enum parser_error parse_object_fuel(struct parser *p) {
+	struct object_kind *k = parser_priv(p);
+
+	if (!k) {
+		return PARSE_ERROR_MISSING_RECORD_HEADER;
+	}
+	k->fuel_min = parser_getint(p, "min");
+	k->fuel_default = parser_getint(p, "default");
+	k->fuel_max = parser_getint(p, "max");
+	if (k->fuel_min <= 0 || k->fuel_min > k->fuel_default
+			|| k->fuel_default > k->fuel_max) {
+		return PARSE_ERROR_INVALID_VALUE;
+	}
+	return PARSE_ERROR_NONE;
+}
+
 static enum parser_error parse_object_level(struct parser *p) {
 	struct object_kind *k = parser_priv(p);
 
@@ -1527,6 +1543,7 @@ struct parser *init_parse_object(void) {
 	parser_reg(p, "name str name", parse_object_name);
 	parser_reg(p, "type sym tval", parse_object_type);
 	parser_reg(p, "pval int pval", parse_object_pval);
+	parser_reg(p, "fuel int min int default int max", parse_object_fuel);
 	parser_reg(p, "graphics char glyph sym color", parse_object_graphics);
 	parser_reg(p, "depth int level", parse_object_level);
 	parser_reg(p, "weight int weight", parse_object_weight);
@@ -1705,7 +1722,9 @@ static enum parser_error parse_drop_base(struct parser *p) {
 	}
 	/* Find all the right object kinds */
 	for (i = 0; i < z_info->k_max; i++) {
-		if (k_info[i].tval != tval) continue;
+		/* Damaged kinds come only from drops that name them */
+		if (k_info[i].tval != tval
+				|| kf_has(k_info[i].kind_flags, KF_DAMAGED)) continue;
 		poss = mem_zalloc(sizeof(struct poss_item));
 		poss->kidx = i;
 		poss->next = d->poss;

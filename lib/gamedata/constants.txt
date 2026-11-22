@@ -190,3 +190,14 @@ rules:depth-clock:0
 # Morgoth grows angrier as he is hurt or loses his crown (his skills improve in
 # stages)
 rules:morgoth-anger:0
+
+# Being gorged stops you eating or drinking anything nourishing until you
+# recover (0: you can always eat more, and digest fast while replete)
+rules:gorged:1
+
+# During the escape with a Silmaril every stair is a shaft, and no stair
+# crumbles beneath you
+rules:escape-stairs:0
+
+# Dropped objects can land up to four grids away (otherwise three)
+rules:wide-drops:0

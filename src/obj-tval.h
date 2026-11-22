@@ -42,6 +42,7 @@ bool tval_is_shield(const struct object *obj);
 bool tval_is_body_armor(const struct object *obj);
 bool tval_is_book_k(const struct object_kind *kind);
 bool tval_is_chest(const struct object *obj);
+bool tval_is_skeleton(const struct object *obj);
 bool tval_is_metal(const struct object *obj);
 bool tval_is_food(const struct object *obj);
 bool tval_is_food_k(const struct object_kind *kind);

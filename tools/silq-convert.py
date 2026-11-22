@@ -191,6 +191,8 @@ def patch_objects(silq_path, narsil_path, extra_path):
             body[at:at] = [f"{k}:{v}" for k, v in nums]
         elif name is not None:
             body = [l for l in body if not l.startswith("alloc:")]
+        if "type:skeleton" in body:  # Sil-Q's skeletons can be searched once (pval 1 until then)
+            body.append("pval:1")
         if "type:horn" in body:     # Sil-Q's horns sound in a 90 degree cone reaching three grids, not a line
             body = [re.sub(r"^effect:BEAM:(\w+)$", r"effect:ARC:\1:3:90", l) for l in body]
             text = "\n".join(body)
@@ -207,7 +209,23 @@ def patch_objects(silq_path, narsil_path, extra_path):
             entry, name = [], line[5:].strip()
         entry.append(line)
     flush()
-    return "\n".join(out).rstrip() + "\n\n" + open(extra_path).read()
+    extra = open(extra_path).read()
+    have = {l[5:].strip() for l in out + extra.split("\n") if l.startswith("name:")}
+    for n in sorted(set(sq) - have - set(OBJECTS_NOT_PORTED)):
+        print(f"silq-convert: Sil-Q object '{n}' is not in NarSil-Q (add it to {extra_path})", file=sys.stderr)
+    return "\n".join(out).rstrip() + "\n\n" + extra
+
+
+# Sil-Q objects that have no entry of their own in NarSil-Q's object.txt, and why.
+OBJECTS_NOT_PORTED = {
+    "& Pearl~": "special artefact base, NarSil's 'Pearl'",
+    "& Jewel~": "special artefact base, NarSil's 'Jewel'",
+    "& Necklace~": "special artefact base, NarSil's 'Necklace'",
+    "& Mighty Hammer~": "Grond's base, in artefact.txt",
+    "& Massive Iron Crown~": "the Iron Crown's base, in artefact.txt",
+    "& Note~": "Sil-Q's tutorial notes; NarSil has its Tutorial Note",
+    "Self Knowledge": "not ported: the abilities screen lists everything it would",
+}
 
 
 SKILLS = ["Melee", "Archery", "Evasion", "Stealth", "Perception", "Will", "Smithing", "Song"]
