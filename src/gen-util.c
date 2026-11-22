@@ -296,7 +296,8 @@ static void place_rubble(struct chunk *c, struct loc grid)
 static int choose_up_stairs(struct chunk *c)
 {
 	if (c->depth >= 2) {
-		if (one_in_(2)) return FEAT_LESS_SHAFT;
+		if (one_in_(2) || (z_info->rule_escape_stairs && player->on_the_run))
+			return FEAT_LESS_SHAFT;
 	}
 	return FEAT_LESS;
 }
@@ -307,7 +308,8 @@ static int choose_up_stairs(struct chunk *c)
 static int choose_down_stairs(struct chunk *c)
 {
 	if (c->depth < z_info->dun_depth - 2) {
-		if (one_in_(2)) return FEAT_MORE_SHAFT;
+		if (one_in_(2) || (z_info->rule_escape_stairs && player->on_the_run))
+			return FEAT_MORE_SHAFT;
 	}
 	return FEAT_MORE;
 }

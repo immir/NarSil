@@ -848,7 +848,8 @@ void do_cmd_eat_food(struct command *cmd)
 			USE_INVEN | USE_FLOOR) != CMD_OK) return;
 
 	/* If gorged, you cannot eat food */
-	if ((player->timed[TMD_FOOD] >= PY_FOOD_MAX) && obj_nourishes(obj)) {
+	if (z_info->rule_gorged && (player->timed[TMD_FOOD] >= PY_FOOD_MAX)
+			&& obj_nourishes(obj)) {
 		msg("You are too full to eat it.");
 		return;
 	}
@@ -871,7 +872,8 @@ void do_cmd_quaff_potion(struct command *cmd)
 			USE_INVEN | USE_FLOOR) != CMD_OK) return;
 
 	/* If gorged, you cannot quaff nourishing potions */
-	if ((player->timed[TMD_FOOD] >= PY_FOOD_MAX) && obj_nourishes(obj)) {
+	if (z_info->rule_gorged && (player->timed[TMD_FOOD] >= PY_FOOD_MAX)
+			&& obj_nourishes(obj)) {
 		msg("You are too full to drink it.");
 		return;
 	}
@@ -992,7 +994,8 @@ static void combine_torches(struct object *torch, struct object *obj)
 	int timeout = torch->timeout + obj->timeout + 5;
 
 	/* Message */
-	if ((timeout > z_info->fuel_torch) && !get_check("Refueling from this torch will waste some fuel. Proceed? ")) {
+	const int max_fuel = light_fuel_max(torch);
+	if ((timeout > max_fuel) && !get_check("Refueling from this torch will waste some fuel. Proceed? ")) {
 		return;
 	}
 
@@ -1003,8 +1006,8 @@ static void combine_torches(struct object *torch, struct object *obj)
 	msg("You combine the torches.");
 
 	/* Comment */
-	if (torch->timeout >= z_info->fuel_torch) {
-		torch->timeout = z_info->fuel_torch;
+	if (torch->timeout >= max_fuel) {
+		torch->timeout = max_fuel;
 		msg("Your torch is fully fueled.");
 	} else {
 		msg("Your torch glows more brightly.");

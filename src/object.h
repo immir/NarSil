@@ -185,6 +185,9 @@ struct object_kind {
 	int sval;					/**< Object sub-type  */
 
 	int pval;					/* Item extra-parameter */
+	int fuel_min;				/* Least fuel a found light can have (0: the game's constants) */
+	int fuel_default;			/* Fuel a new light has */
+	int fuel_max;				/* Most fuel the light can hold */
 	random_value special1;		/* Special parameter 1 */
 	int special2;				/* Special parameter 1 */
 

@@ -1363,7 +1363,7 @@ static int count_known_monsters(void)
 		bool classified = false;
 		int j;
 
-		if (!l_list[i].all_known && !l_list[i].tsights) {
+		if (!lore_shown_in_full(race, &l_list[i]) && !l_list[i].tsights) {
 			continue;
 		}
 		if (!race->name) continue;
@@ -1432,7 +1432,7 @@ static void do_cmd_knowledge_monsters(const char *name, int row)
 		bool classified = false;
 		int j;
 
-		if (!l_list[i].all_known && !l_list[i].tsights) {
+		if (!lore_shown_in_full(race, &l_list[i]) && !l_list[i].tsights) {
 			continue;
 		}
 		if (!race->name) continue;
@@ -3635,7 +3635,7 @@ void do_cmd_query_symbol(void)
 		struct monster_lore *lore = &l_list[idx];
 
 		/* Nothing to recall */
-		if (!lore->all_known && !lore->psights)
+		if (!lore_shown_in_full(race, lore) && !lore->psights)
 			continue;
 
 		/* Require non-unique monsters if needed */

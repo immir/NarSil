@@ -53,5 +53,7 @@ struct object *chest_check(const struct player *p, struct loc grid,
 int count_chests(struct loc *grid, enum chest_query check_type);
 bool do_cmd_open_chest(struct loc grid, struct object *obj);
 bool do_cmd_disarm_chest(struct object *obj);
+struct object *skeleton_check(struct loc grid);
+void do_cmd_search_skeleton(struct object *skeleton);
 
 #endif /* OBJECT_CHEST_H */

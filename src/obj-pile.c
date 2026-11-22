@@ -983,9 +983,12 @@ static void drop_find_grid(const struct player *p, struct chunk *c,
 	int i, dy, dx;
 	struct object *obj;
 
+	const int reach = z_info->rule_wide_drops ? 4 : 3;
+	const int max_dist = z_info->rule_wide_drops ? 17 : 10;
+
 	/* Scan local grids */
-	for (dy = -3; dy <= 3; dy++) {
-		for (dx = -3; dx <= 3; dx++) {
+	for (dy = -reach; dy <= reach; dy++) {
+		for (dx = -reach; dx <= reach; dx++) {
 			bool combine = false;
 			int dist = (dy * dy) + (dx * dx);
 			struct loc try = loc_sum(start, loc(dx, dy));
@@ -994,7 +997,7 @@ static void drop_find_grid(const struct player *p, struct chunk *c,
 			int score;
 
 			/* Lots of reasons to say no */
-			if ((dist > 10) ||
+			if ((dist > max_dist) ||
 				!square_in_bounds_fully(c, try) ||
 				!los(c, start, try) ||
 				!square_isfloor(c, try) ||

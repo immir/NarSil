@@ -649,8 +649,8 @@ void player_digest(struct player *p)
 		i *= int_exp(3, p->state.flags[OF_HUNGER]);
 	}
 
-	/* Digest quickly when gorged */
-	if (p->timed[TMD_FOOD] >= PY_FOOD_MAX) i *= 9;
+	/* Digest quickly when gorged (very quickly when replete, as in Sil-Q) */
+	if (p->timed[TMD_FOOD] >= PY_FOOD_MAX) i *= z_info->rule_gorged ? 9 : 50;
 
 	/* Digest some food */
 	(void)player_dec_timed(p, TMD_FOOD, i, false, true);

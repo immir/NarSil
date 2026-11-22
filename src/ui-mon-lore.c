@@ -102,7 +102,8 @@ void lore_description(textblock *tb, const struct monster_race *race,
 	memcpy(lore, original_lore, sizeof(struct monster_lore));
 
 	/* Spoilers -- know everything */
-	if (spoilers || player_active_ability(player, "Lore-Master"))
+	if (spoilers || player_active_ability(player, "Lore-Master")
+			|| lore_shown_in_full(race, original_lore))
 		cheat_monster_lore(race, lore);
 
 	/* Now get the known monster flags */

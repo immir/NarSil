@@ -183,3 +183,9 @@ rules:staff-will-check:0
 rules:forge-depths:1
 rules:depth-clock:1
 rules:morgoth-anger:1
+
+# Sil-Q: you can always eat more (you digest fast while replete); every stair is
+# a shaft on the escape, and none crumble; dropped objects can land further away
+rules:gorged:0
+rules:escape-stairs:1
+rules:wide-drops:1

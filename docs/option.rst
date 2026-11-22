@@ -107,7 +107,13 @@ Always pickup items matching inventory ``pickup_inven``
 
 Show flavors in object descriptions ``show_flavors``
   Display "flavors" (color or variety) in object descriptions, even for
-  objects whose type is known. This does not affect objects in stores.  
+  objects whose type is known. This does not affect objects in stores.
+
+Know all monster info ``know_monster_info``
+  From Sil-Q. Monster recall and the monster knowledge menu show everything
+  about every monster that can be generated, as if you had studied it, without
+  counting as a cheat. (The debug option "Know complete monster info" does the
+  same, and marks the character as a cheater.)
 
 
 

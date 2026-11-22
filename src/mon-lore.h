@@ -112,6 +112,8 @@ void wipe_monster_lore(const struct monster_race *race,
 					   struct monster_lore *lore);
 void lore_do_probe(struct monster *m);
 bool lore_is_fully_known(const struct monster_race *race);
+bool lore_shown_in_full(const struct monster_race *race,
+		const struct monster_lore *lore);
 void monster_flags_known(const struct monster_race *race,
 						 const struct monster_lore *lore,
 						 bitflag flags[RF_SIZE]);
