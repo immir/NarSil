@@ -35,6 +35,7 @@
 #include "monster.h"
 #include "obj-chest.h"
 #include "obj-desc.h"
+#include "obj-make.h"
 #include "obj-properties.h"
 #include "obj-slays.h"
 #include "project.h"
@@ -184,7 +185,7 @@ static void object_traits(const struct object *obj, char *pros, char *cons, size
 	for (int i = 0; i < OBJ_MOD_MAX; i++) {
 		const struct obj_property *prop = lookup_obj_property(OBJ_PROPERTY_MOD, i);
 		const random_value *base = &obj->kind->modifiers[i];
-		const bool fixed = !base->dice && !base->sides && !base->m_bonus;
+		const bool fixed = !base->dice && !base->sides && !base->m_bonus && base->base != SPECIAL_VALUE;
 		const int v = obj->modifiers[i] - (fixed ? base->base : 0);
 
 		if (!v || !prop || !prop->name || i == OBJ_MOD_DAMAGE_SIDES) continue;
