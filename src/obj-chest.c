@@ -775,6 +775,8 @@ static struct object *skeleton_find(const struct object *skeleton, int level)
 	obj->number = tval_is_ammo(obj) ? randint1(4) + 2 : 1;
 	obj->origin = ORIGIN_SKELETON;
 	obj->origin_depth = player->depth;
+	obj->known = object_new();
+	object_set_base_known(player, obj);
 	object_touch(player, obj);
 	if (plain) {
 		object_flavor_aware(player, obj);
