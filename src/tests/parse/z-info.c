@@ -136,6 +136,7 @@ TEST_CONSTANT(self_arts_max, "self-arts", "obj-make")
 TEST_CONSTANT(max_sight, "max-sight", "player")
 TEST_CONSTANT(max_range, "max-range", "player")
 TEST_CONSTANT(start_exp, "start-exp", "player")
+TEST_CONSTANT(fixed_exp, "fixed-exp", "player")
 TEST_CONSTANT(ability_cost, "ability-cost", "player")
 TEST_CONSTANT(stealth_bonus, "stealth-bonus", "player")
 TEST_CONSTANT(player_regen_period, "regen-period", "player")
@@ -181,6 +182,7 @@ struct test tests[] = {
 	{ "max_sight", test_max_sight },
 	{ "max_range", test_max_range },
 	{ "start_exp", test_start_exp },
+	{ "fixed_exp", test_fixed_exp },
 	{ "ability_cost", test_ability_cost },
 	{ "stealth_bonus", test_stealth_bonus },
 	{ "player_regen_period", test_player_regen_period },

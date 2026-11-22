@@ -107,4 +107,6 @@ OP(birth_force_descend,   "Force player descent (never make up stairs)",
 BIRTH, false)
 OP(birth_no_artifacts,    "Restrict creation of artifacts",
 BIRTH, false)
+OP(birth_fixed_exp,       "Fixed experience: gain 50,000 at the start and nothing after",
+BIRTH, false)
 

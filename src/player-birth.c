@@ -680,6 +680,36 @@ static void finalise_stats(struct player *p)
  * This fleshes out a full player based on the choices currently made,
  * and so is called whenever things like race or house are chosen.
  */
+/**
+ * The experience a new character starts with: a fixed-experience character
+ * starts with all it will ever have.
+ */
+static int32_t birth_start_exp(const struct player *p)
+{
+	return OPT(p, birth_fixed_exp) ? z_info->fixed_exp : z_info->start_exp;
+}
+
+/**
+ * Bring the starting experience into line with the fixed-experience option,
+ * which can be changed after the last race, house or sex choice set it (for
+ * instance from the quickstart screen).  Experience already spent on skills
+ * stays spent; if the new total cannot cover it, the skills are cleared.
+ */
+static void birth_sync_exp(struct player *p)
+{
+	const int32_t delta = birth_start_exp(p) - p->exp;
+	if (!delta) return;
+
+	p->exp += delta;
+	p->new_exp += delta;
+	if (p->new_exp < 0) {
+		memset(p->skill_base, 0, sizeof(p->skill_base));
+		p->new_exp = p->exp;
+		p->upkeep->update |= (PU_BONUS);
+	}
+	assert(p->new_exp >= 0 && p->new_exp <= p->exp);
+}
+
 void player_generate(struct player *p, const struct player_race *r,
 					 const struct player_house *h, const struct player_sex *s,
 					 bool old_history)
@@ -699,7 +729,7 @@ void player_generate(struct player *p, const struct player_race *r,
 	}
 
 	/* Initial experience */
-	p->exp = p->new_exp = z_info->start_exp;
+	p->exp = p->new_exp = birth_start_exp(p);
 
 	/* Initial hitpoints etc */
 	get_bonuses(p);
@@ -887,6 +917,8 @@ void do_cmd_choose_history(struct command *cmd)
 
 void do_cmd_accept_character(struct command *cmd)
 {
+	birth_sync_exp(player);
+
 	options_init_cheat();
 
 	ignore_birth_init();

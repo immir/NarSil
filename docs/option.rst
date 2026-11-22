@@ -138,6 +138,13 @@ Force player descent (never make up stairs) ``birth_force_descend``
 Restrict creation of artifacts ``birth_no_artifacts``
   No artifacts will be created. Ever. Just *how* masochistic are you?
 
+Fixed experience: gain 50,000 at the start and nothing after ``birth_fixed_exp``
+  From Sil-Q. The character starts with 50,000 experience to spend on skills
+  and abilities, and never gains any more: descending, meeting and killing
+  monsters and learning about objects give nothing. Experience spent on
+  smithing is still spent. The amount is ``player:fixed-exp`` in
+  ``constants.txt``.
+
 
 Cheating options
 ================
