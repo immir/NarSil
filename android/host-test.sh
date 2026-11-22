@@ -130,6 +130,17 @@ echo "$map_a" | grep -q '^map '
 [ "$map_a" != "$map_c" ]
 rm -rf "$work/data"
 
+echo "== fixed experience (Sil-Q's birth option): 50,000 to spend at birth, and descending adds none"
+fixed_opt=$((1000 + $(awk 'index($0, "OP(birth_fixed_exp,") == 1 {print n; exit} /^OP\(/ {n++}' "$root/src/list-options.h")))
+spend=(@act=23 @prompt @answer=-1)
+out=$(run @answer=0 @answer=1001 @answer=$fixed_opt @answer=-1 "${birth[@]:1}" "${spend[@]}" @depth=4 @act=1 @esc "${spend[@]}" "${quit[@]}" 2>/dev/null)
+[ "$(echo "$out" | grep -cP '^Skills\t50000$')" = 2 ]
+rm -rf "$work/data"
+out=$(run "${birth[@]}" "${spend[@]}" @depth=4 @act=1 @esc "${spend[@]}" "${quit[@]}" 2>/dev/null)
+[ "$(echo "$out" | grep -P '^Skills\t' | sed -n 1p)" = "$(printf 'Skills\t5000')" ]
+[ "$(echo "$out" | grep -P '^Skills\t' | sed -n 2p | cut -f2)" -gt 5000 ]
+rm -rf "$work/data"
+
 echo "== new game; save requested during birth is deferred to first command prompt"
 run @answer=0 @save-async "${birth[@]:1}" @expect=Harness 6 4 @save ^x @enter @esc | tail -1 \
     | grep -qx 'state=2 exit="" saves=2'
