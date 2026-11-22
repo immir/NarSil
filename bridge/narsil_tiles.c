@@ -175,5 +175,6 @@ bool native_tile(const struct grid_data *grid, struct native_tile_cell *out)
 	out->bg = tile_of(ta, tc);
 	out->alert = (a & GRAPHICS_ALERT_MASK) != 0;
 	out->glow = (a & GRAPHICS_GLOW_MASK) != 0;
+	out->rage = ((a | ta) & GRAPHICS_RAGE_MASK) != 0;
 	return true;
 }

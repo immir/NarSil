@@ -462,13 +462,13 @@ static void build_map(void)
 				if (square_isupstairs(player->cave, grid) && d < best_up) { best_up = d; game.stairs_up = grid; }
 			}
 			map_info(grid, &g);
-			struct native_tile_cell t = { -1, -1, false, false };
+			struct native_tile_cell t = { -1, -1, false, false, false };
 			if (tiles) (void)native_tile(&g, &t);
 			grid_data_as_text(&g, &a, &c, &ta, &tc);
 			assert(a >= 0 && a < 0x10000);
 			game.work[(size_t)y * (size_t)cave->width + (size_t)x] = (map_cell){
 				.cp = (int32_t)c, .attr_flags = a | (cell_flags(&g, grid) << 16), .tile = t.fg, .tile_bg = t.bg,
-				.tile_flags = (t.alert ? NB_TILE_ALERT : 0) | (t.glow ? NB_TILE_GLOW : 0),
+				.tile_flags = (t.alert ? NB_TILE_ALERT : 0) | (t.glow ? NB_TILE_GLOW : 0) | (t.rage ? NB_TILE_RAGE : 0),
 			};
 		}
 	}
@@ -1038,6 +1038,11 @@ bool native_service(bool at_prompt)
 			else if (o->known) o->known->notice |= OBJ_NOTICE_ASSESSED;
 		}
 		event_signal(EVENT_SEEFLOOR);
+		native_publish(at_prompt);
+		return false;
+	}
+	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 6) {
+		(void)player_inc_timed(player, TMD_RAGE, 20, false, false, false);
 		native_publish(at_prompt);
 		return false;
 	}

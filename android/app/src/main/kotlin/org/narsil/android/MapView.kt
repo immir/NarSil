@@ -9,6 +9,8 @@ import android.graphics.Rect
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.view.GestureDetector
 import android.view.HapticFeedbackConstants
@@ -35,10 +37,20 @@ class MapView(context: Context, private val state: GameState, private val router
               private val swipeRuns: () -> Boolean, private val tiles: () -> Boolean) : View(context) {
     init { contentDescription = "Dungeon map. Tap a square to preview the path, tap it again to walk there. Long-press to describe what is there." }
     private val painter = GlyphPainter(context, state::colour)
-    /** MicroChasm's 16x16 tile sheet (lib/tiles/microchasm), drawn unsmoothed. */
+    /** MicroChasm's 16x16 tile sheet (lib/tiles/microchasm; NarSil-Q's overlay has Sil-Q's), drawn unsmoothed. */
     private val tileSheet: Bitmap? = runCatching {
-        context.assets.open("lib/tiles/microchasm/16x16.png").use { BitmapFactory.decodeStream(it) }
+        val lib = if (GameLauncher.game(context) == GameLauncher.Game.SILQ) "lib-silq" else "lib"
+        context.assets.open("$lib/tiles/microchasm/16x16.png").use { BitmapFactory.decodeStream(it) }
     }.getOrNull()
+    /** The sheet tinted as Sil-Q tints it while the player rages: each pixel's luma becomes (1, 0.3, 0.3) of it. */
+    private val rageSheet: Bitmap? by lazy {
+        tileSheet?.let { src ->
+            val luma = floatArrayOf(0.299f, 0.587f, 0.114f, 0f, 0f)
+            val dim = luma.map { it * 0.3f }.toFloatArray()
+            val tint = Paint().apply { colorFilter = ColorMatrixColorFilter(ColorMatrix(luma + dim + dim + floatArrayOf(0f, 0f, 0f, 1f, 0f))) }
+            Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888).also { Canvas(it).drawBitmap(src, 0f, 0f, tint) }
+        }
+    }
     private val tilePaint = Paint().apply { isFilterBitmap = false }
     private val tileSrc = Rect()
     private val tileDst = RectF()
@@ -193,11 +205,12 @@ class MapView(context: Context, private val state: GameState, private val router
                 tileDst.set(ox + x * cw, oy + y * ch, ox + (x + 1) * cw, oy + (y + 1) * ch)
                 /* Tiles are transparent: the terrain goes beneath, the alert / glow marker on top. */
                 val bg = map[i + 3]
-                if (bg >= 0 && bg != tile) drawTile(canvas, sheet, bg)
-                drawTile(canvas, sheet, tile)
                 val flags = map[i + 4]
-                if (flags and N.TILE_ALERT != 0) drawTile(canvas, sheet, state.meta[N.META_TILE_ALERT])
-                if (flags and N.TILE_GLOW != 0) drawTile(canvas, sheet, state.meta[N.META_TILE_GLOW])
+                val cellSheet = if (flags and N.TILE_RAGE != 0) rageSheet ?: sheet else sheet
+                if (bg >= 0 && bg != tile) drawTile(canvas, cellSheet, bg)
+                drawTile(canvas, cellSheet, tile)
+                if (flags and N.TILE_ALERT != 0) drawTile(canvas, cellSheet, state.meta[N.META_TILE_ALERT])
+                if (flags and N.TILE_GLOW != 0) drawTile(canvas, cellSheet, state.meta[N.META_TILE_GLOW])
             } else {
                 val effect = (map[i + 1] ushr 16) and (N.CELL_ANIM or N.CELL_TRAIL or N.CELL_MARK)
                 if (effect != 0) drawEffect(canvas, sheet, map[i + 3], ox + x * cw, oy + y * ch, cw, ch, effect, map[i + 1] and 0xFF)

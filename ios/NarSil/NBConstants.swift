@@ -115,6 +115,7 @@ enum NB {
     static let MAP_CELL_INTS = 5
     static let TILE_ALERT = 1
     static let TILE_GLOW = 2
+    static let TILE_RAGE = 4
     static let PROMPT_NONE = 0
     static let PROMPT_ITEM = 1
     static let PROMPT_CHECK = 3

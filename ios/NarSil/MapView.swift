@@ -41,6 +41,23 @@ final class MapUIView: UIView {
 
     private let tileSheet: UIImage? = UIImage(contentsOfFile: GameLauncher.libDir.appendingPathComponent("tiles/microchasm/16x16.png").path)
     private var tileCache = [Int: UIImage]()
+    /// The sheet tinted as Sil-Q tints it while the player rages: each pixel's luma becomes (1, 0.3, 0.3) of it.
+    private lazy var rageSheet: CGImage? = {
+        guard let src = tileSheet?.cgImage else { return nil }
+        let w = src.width, h = src.height
+        guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 4 * w,
+                                  space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue),
+              let data = ctx.data else { return nil }
+        ctx.draw(src, in: CGRect(x: 0, y: 0, width: w, height: h))
+        let px = data.bindMemory(to: UInt8.self, capacity: 4 * w * h)
+        for i in stride(from: 0, to: 4 * w * h, by: 4) {
+            let luma = min(255, (299 * Int(px[i]) + 587 * Int(px[i + 1]) + 114 * Int(px[i + 2])) / 1000)
+            px[i] = UInt8(luma)
+            px[i + 1] = UInt8(luma * 3 / 10)
+            px[i + 2] = UInt8(luma * 3 / 10)
+        }
+        return ctx.makeImage()
+    }()
     private let tilePx: CGFloat = 16
     private var tilesOn: Bool { tilesWanted && tileSheet != nil }
     private var cellW: CGFloat { tilesOn ? painter.cellH : painter.cellW }
@@ -191,11 +208,12 @@ final class MapUIView: UIView {
                     let r = cellRect(x, y, ox: ox, oy: oy)
                     /* Tiles are transparent: the terrain goes beneath, the alert / glow marker on top. */
                     let bg = Int(map[i + 3])
-                    if bg >= 0 && bg != tile { drawTile(bg, in: r) }
-                    drawTile(tile, in: r)
                     let flags = Int(map[i + 4])
-                    if flags & NB.TILE_ALERT != 0 { drawTile(Int(meta[NB.META_TILE_ALERT]), in: r) }
-                    if flags & NB.TILE_GLOW != 0 { drawTile(Int(meta[NB.META_TILE_GLOW]), in: r) }
+                    let rage = flags & NB.TILE_RAGE != 0
+                    if bg >= 0 && bg != tile { drawTile(bg, in: r, rage: rage) }
+                    drawTile(tile, in: r, rage: rage)
+                    if flags & NB.TILE_ALERT != 0 { drawTile(Int(meta[NB.META_TILE_ALERT]), in: r, rage: rage) }
+                    if flags & NB.TILE_GLOW != 0 { drawTile(Int(meta[NB.META_TILE_GLOW]), in: r, rage: rage) }
                 } else {
                     let effect = (Int(map[i + 1]) >> 16) & (NB.CELL_ANIM | NB.CELL_TRAIL | NB.CELL_MARK)
                     if effect != 0 { drawEffect(ctx, effect: effect, attr: Int(map[i + 1]) & 0xFF, bgTile: Int(map[i + 3]), sheet: sheet, in: cellRect(x, y, ox: ox, oy: oy)) }
@@ -217,15 +235,16 @@ final class MapUIView: UIView {
         ctx.fillEllipse(in: CGRect(x: r.midX - d / 2, y: r.midY - d / 2, width: d, height: d))
     }
 
-    /// Tile `t` is (row << 8) | column on the sheet.
-    private func drawTile(_ t: Int, in r: CGRect) {
-        guard t >= 0, let sheet = tileSheet?.cgImage else { return }
+    /// Tile `t` is (row << 8) | column on the sheet; `rage` draws it from the red-tinted sheet.
+    private func drawTile(_ t: Int, in r: CGRect, rage: Bool = false) {
+        guard t >= 0, let sheet = rage ? (rageSheet ?? tileSheet?.cgImage) : tileSheet?.cgImage else { return }
+        let key = rage ? t | (1 << 20) : t
         let image: UIImage
-        if let cached = tileCache[t] { image = cached } else {
+        if let cached = tileCache[key] { image = cached } else {
             let src = CGRect(x: CGFloat(t & 0xFF) * tilePx, y: CGFloat(t >> 8) * tilePx, width: tilePx, height: tilePx)
             guard let part = sheet.cropping(to: src) else { return }
             image = UIImage(cgImage: part)
-            tileCache[t] = image
+            tileCache[key] = image
         }
         image.draw(in: r)
     }

@@ -506,6 +506,12 @@ echo "$out" | grep -qP '^player tile [0-9]+,[0-9]+$'
 echo "$out" | grep -qP '^player terrain tile [0-9]+,[0-9]+ overlays 3083,3086$'
 echo "$out" | grep -qP '^#I\t0\ta\t44\t'
 
+echo "== tiles while raging: every tile is drawn tinted (NB_TILE_RAGE), as in Sil-Q"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @tiles @map @rage @map "${quit[@]}" 2>/dev/null)
+[ "$(echo "$out" | grep -c '^player tile flags')" = 1 ]  # none before the rage
+(( $(echo "$out" | grep '^player tile flags' | cut -d' ' -f4) & 4 ))
+
 echo "== tutorial from the welcome screen; it never saves over the player's own save"
 rm -rf "$work/data"
 run "${birth[@]}" "${quit[@]}" >/dev/null

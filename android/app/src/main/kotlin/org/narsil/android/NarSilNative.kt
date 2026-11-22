@@ -142,6 +142,7 @@ object NarSilNative {
     const val MAP_CELL_INTS = 5
     const val TILE_ALERT = 1
     const val TILE_GLOW = 2
+    const val TILE_RAGE = 4
     /** Rest: a number of turns, or REST_*. */
     @JvmStatic external fun nativeRequestRest(turnsOrMode: Int)
     const val REST_HP_AND_VOICE = -1

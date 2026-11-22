@@ -99,7 +99,7 @@ bool native_smith_tab(void);
  * grid, (row << 8) | column in 16x16.png, or -1 (no tiles installed).
  */
 struct grid_data;
-struct native_tile_cell { int32_t fg, bg; bool alert, glow; };   /* each (row << 8) | column, or -1 */
+struct native_tile_cell { int32_t fg, bg; bool alert, glow, rage; };   /* each (row << 8) | column, or -1; rage: draw tinted */
 bool native_tile(const struct grid_data *g, struct native_tile_cell *out);
 /* The overlay tile for alert monsters (glow = false) or glowing objects, or -1. */
 int32_t native_tile_overlay(bool glow);

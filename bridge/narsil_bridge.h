@@ -241,7 +241,7 @@ uint64_t nb_map_generation(void);
  * when tiles are off (nb_set_tiles), the terrain tile beneath it (tiles are transparent), and
  * NB_TILE_* bits: draw the alert / glow overlay tile (NB_META_TILE_*) on top.
  */
-enum { NB_MAP_CELL_INTS = 5, NB_TILE_ALERT = 1, NB_TILE_GLOW = 2 };
+enum { NB_MAP_CELL_INTS = 5, NB_TILE_ALERT = 1, NB_TILE_GLOW = 2, NB_TILE_RAGE = 4 /* the player rages: draw the cell's tiles tinted red, as Sil-Q does */ };
 
 /* Draw the map with tiles as well (any thread); the next map snapshot has them. */
 void nb_set_tiles(bool on);
@@ -279,7 +279,7 @@ int nb_test_anim_frames(void); /* how many published maps have had an animation 
 void nb_test_depth(int level); /* at the command prompt, go straight to dungeon level `level` (50' each) */
 /* Forges on the current level, and (NarSil-Q) the guaranteed forges made so far; only while the game waits for input. */
 int nb_test_forges(int *fixed_made, int *depth);
-void nb_test_chest(int kind); /* 5: an unsearched orc skeleton under the player (NarSil-Q); 0: a locked small chest under the player; 1: a trapped one; 2: a pile of four, reported as stepping on it would be; 3: a known short sword of Hador's House into the pack; 4: under the player, a known Hador's House sword and a plain one with a property still to find */
+void nb_test_chest(int kind); /* 6: the player rages; 5: an unsearched orc skeleton under the player (NarSil-Q); 0: a locked small chest under the player; 1: a trapped one; 2: a pile of four, reported as stepping on it would be; 3: a known short sword of Hador's House into the pack; 4: under the player, a known Hador's House sword and a plain one with a property still to find */
 #endif
 
 /* Path as (x, y) pairs: the target first, then each step; 0 = no path. */

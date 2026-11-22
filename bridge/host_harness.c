@@ -21,6 +21,7 @@
  *   @details=0|1                                  the extra item details option
  *   @ego                                          a known short sword of Hador's House into the pack
  *   @chest, @trapchest, @pile                     drop a locked chest, a trapped one, or a pile of four under the player
+ *   @skeleton @rage                               an unsearched orc skeleton underfoot / the player rages
  *   @ctx                                          print the context flags
  *   @answer=N                                     answer any native prompt (see nb_answer)
  *   @aim@DX,DY                                    answer an aim prompt with a grid relative to the player
@@ -363,8 +364,9 @@ static int run_token(const char *tok)
 		return 0;
 	}
 	if (strcmp(tok, "@chest") == 0 || strcmp(tok, "@trapchest") == 0 || strcmp(tok, "@pile") == 0
-		|| strcmp(tok, "@ego") == 0 || strcmp(tok, "@specials") == 0 || strcmp(tok, "@skeleton") == 0) {
-		nb_test_chest(strcmp(tok, "@skeleton") == 0 ? 5 : strcmp(tok, "@specials") == 0 ? 4 : strcmp(tok, "@ego") == 0 ? 3 : tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
+		|| strcmp(tok, "@ego") == 0 || strcmp(tok, "@specials") == 0 || strcmp(tok, "@skeleton") == 0
+		|| strcmp(tok, "@rage") == 0) {
+		nb_test_chest(strcmp(tok, "@rage") == 0 ? 6 : strcmp(tok, "@skeleton") == 0 ? 5 : strcmp(tok, "@specials") == 0 ? 4 : strcmp(tok, "@ego") == 0 ? 3 : tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
 		return settle() ? 0 : 1;
 	}
 	if (sscanf(tok, "@details=%d%c", &mx, &tail) == 1) {
@@ -418,6 +420,8 @@ static int run_token(const char *tok)
 		printf("player tile %d,%d\n", tile < 0 ? -1 : tile >> 8, tile < 0 ? -1 : tile & 0xFF);
 		printf("player terrain tile %d,%d overlays %d,%d\n", bg < 0 ? -1 : bg >> 8, bg < 0 ? -1 : bg & 0xFF,
 			meta[NB_META_TILE_ALERT], meta[NB_META_TILE_GLOW]);
+		const int32_t tile_flags = on_map ? cells[NB_MAP_CELL_INTS * ((size_t)py * w + (size_t)px) + 4] : 0;
+		if (tile_flags) printf("player tile flags %d\n", tile_flags);  /* only when set: the NarSil baseline predates it */
 		free(cells);
 		return 0;
 	}
