@@ -13,6 +13,7 @@ max-pval:0
 type:shield
 item:boots:Pair of Greaves
 item:boots:Pair of Mithril Greaves
+item:boots:Pair of Shabby Boots
 type:soft armor
 type:mail
 flags:IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
@@ -87,6 +88,7 @@ prot-sides:0
 max-pval:0
 item:boots:Pair of Greaves
 item:boots:Pair of Mithril Greaves
+item:boots:Pair of Shabby Boots
 type:shield
 type:mail
 flags:SUST_STR | SUST_DEX | SUST_CON | SUST_GRA | IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE
@@ -342,7 +344,7 @@ item:polearm:Battle Axe
 item:polearm:Great Axe
 item:sword:Bastard Sword
 item:sword:Greatsword
-flags:AGGRAVATE
+flags:AGGRAVATE | CURSED
 ability:Melee:Whirlwind Attack
 
 name:of the Feanorians
@@ -594,7 +596,7 @@ item:polearm:Glaive
 item:polearm:Great Axe
 item:sword:Curved Sword
 item:sword:Bastard Sword
-flags:VAMPIRIC | HUNGER
+flags:VAMPIRIC | HUNGER | CURSED
 
 name:of Belegost
 alloc:1:0 to 0
@@ -662,6 +664,7 @@ max-pval:0
 type:helm
 item:light:Brass Lantern
 item:light:Lesser Jewel
+item:light:Mallorn Torch
 item:light:Feanorian Lamp
 flags:PROT_BLIND | SEE_INVIS | PROT_HALLU
 
@@ -702,6 +705,7 @@ max-evasion:0
 prot-dice:0
 prot-sides:0
 max-pval:0
+item:helm:Rusty Helm
 item:helm:Helm
 item:helm:Great Helm
 item:helm:Dwarf Mask
@@ -1008,6 +1012,7 @@ prot-sides:0
 max-pval:1
 item:gloves:Set of Gloves
 item:gloves:Set of Gauntlets
+flags:CURSED
 values:STR[1]
 ability:Stealth:Opportunist
 
@@ -1037,5 +1042,5 @@ prot-dice:0
 prot-sides:0
 max-pval:0
 item:light:Brass Lantern
-flags:DARKNESS
+flags:DARKNESS | CURSED
 

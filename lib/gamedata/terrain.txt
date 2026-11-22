@@ -340,3 +340,14 @@ info:0:0:15
 walk-msg:Are you sure you want to step in the spiked pit? 
 run-msg:A spiked pit blocks your path.  Step into it? 
 
+# # patch of sunlight (Sil-Q): only NarSil-Q's levels have it
+
+code:SUNLIGHT
+name:patch of sunlight
+graphics:.:y
+priority:5
+flags:LOS | PROJECT | PASSABLE | FLOOR | OBJECT | EASY | TRAP | TORCH
+desc:A patch of sunlight falling from far above.  Standing in it lights up
+desc: more around you, and creatures that shun the light, or the undead,
+desc: will not enter it.
+look-prefix:a

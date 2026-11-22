@@ -624,7 +624,12 @@ static void add_light(struct chunk *c, struct player *p, struct loc sgrid,
 
 	/* Handle Inner Light */
 	if (loc_eq(sgrid, p->grid) && player_active_ability(p, "Inner Light")) {
-		bonus_light = 1;
+		bonus_light = z_info->game_silq ? 2 : 1;	/* Sil-Q doubled it */
+	}
+
+	/* Standing in sunlight (Sil-Q) */
+	if (loc_eq(sgrid, p->grid) && square(c, p->grid)->feat == FEAT_SUNLIGHT) {
+		bonus_light += 3;
 	}
 
 	for (y = -radius; y <= radius; y++) {

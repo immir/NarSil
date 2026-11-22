@@ -32,6 +32,20 @@ UNSUPPORTED_SPELLS = set()
 KEEP_FROM_NARSIL = ("drop:", "drop-artifact:", "song:", "message-vis:", "message-invis:", "message-miss:")
 
 
+def read_entries_all(path, start):
+    """Every entry, duplicates included: [((index, name), lines)] for a start pattern with groups index, name."""
+    out, cur = [], None
+    for line in open(path, errors="replace"):
+        line = line.rstrip("\n")
+        m = re.match(start, line)
+        if m:
+            cur = []
+            out.append(((int(m.group(1)), m.group(2).strip()), cur))
+        elif cur is not None and line and not line.startswith("#"):
+            cur.append(line)
+    return out
+
+
 def read_entries(path, start):
     """Entries as an ordered dict: name -> list of lines (without the start line)."""
     out, cur = OrderedDict(), None
@@ -168,7 +182,7 @@ def silq_tiles(silq_lib):
     """Sil-Q's tile lines: {("K" | "R" | "S", index): (attr, char)}, and the rage tiles {monster index: (attr, char)}."""
     tiles, rage = {}, {}
     for line in open(f"{silq_lib}/pref/graf-tiles.prf"):
-        m = re.match(r"^([KRS]):(0x[0-9A-Fa-f]+|\d+):(?:(rage):)?(0x[0-9A-Fa-f]+)/(0x[0-9A-Fa-f]+)", line)
+        m = re.match(r"^([KRSF]):(0x[0-9A-Fa-f]+|\d+):(?:(rage):)?(0x[0-9A-Fa-f]+)/(0x[0-9A-Fa-f]+)", line)
         if m:
             at = (int(m.group(4), 16), int(m.group(5), 16))
             if m.group(3):
@@ -230,7 +244,9 @@ def tiles(prf, gamedata, silq_lib):
                     if n in monsters and n not in have_monster and n not in monster_at and b in monster_at])
     insert_after("object:", [f"object:{t}:{n}:{hexes(object_at[n])}" for n, t in objects.items()
                              if n not in have_object and n in object_at])
-    out += ["", "##### Sil-Q: a spent light, a monster without its crown, and monsters as a raging player sees them #####", ""]
+    out += ["", "##### Sil-Q: sunlight, a spent light, a monster without its crown, and monsters as a raging player sees them #####", ""]
+    if ("F", 9) in sq:  # Sil-Q's patch of sunlight (terrain 0x09)
+        out += [f"feat:SUNLIGHT:*:{hexes(sq[('F', 9)])}"]
     out += [f"object-depleted:{objects[n]}:{n}:{hexes(sq[('S', i)])}" for i, n in TILE_DEPLETED.items()
             if n in objects and ("S", i) in sq]
     out += [f"monster-uncrowned:{sq_monsters[i][:-len(' (without crown)')]}:{hexes(at)}" for (k, i), at in sq.items()
@@ -302,8 +318,23 @@ def patch_objects(silq_path, narsil_path, extra_path):
         if name in sq:
             nums = [(k, v) for k, v in silq_object_numbers(sq[name])
                     if k == "alloc" or any(l.startswith(k + ":") for l in body)]
-            have = {k for k, _ in nums}
+            have = {k for k, _ in nums} | {"alloc"}  # no A: line in Sil-Q: never generated (its crowns)
+            jewellery = any(l in ("type:ring", "type:amulet") for l in body)
+            if jewellery:  # NarSil's 99s mark bonuses rolled at creation (Sil-Q rolls them in code too)
+                have -= {"attack", "defence"}
+                nums = [(k, v) for k, v in nums if k not in ("attack", "defence")]
+            sq_flags = {x.strip() for l in sq[name] if l.startswith("F:") for x in l[2:].split("|") if x.strip()}
+            extra = [OBJECT_FLAGS_FROM_SILQ[x] for x in sorted(sq_flags) if x in OBJECT_FLAGS_FROM_SILQ]
+            if not any(l.startswith("type:") for l in body):  # an entry NarSil keeps commented out
+                extra = []
             body = [l for l in body if l.partition(":")[0] not in have]
+            if extra:
+                at_flags = next((i for i, l in enumerate(body) if l.startswith("flags:")), None)
+                if at_flags is None:
+                    body.append("flags:" + " | ".join(extra))
+                else:
+                    have_flags = [x.strip() for x in body[at_flags][6:].split("|")]
+                    body[at_flags] = "flags:" + " | ".join(have_flags + [x for x in extra if x not in have_flags])
             at = next((i for i, l in enumerate(body) if l.partition(":")[0] in ("effect", "charges", "flags", "values", "brand", "slay", "special", "msg", "desc", "pval", "time", "dice", "expr", "thrown-effect")), len(body))
             body[at:at] = [f"{k}:{v}" for k, v in nums]
         elif name is not None:
@@ -333,6 +364,12 @@ def patch_objects(silq_path, narsil_path, extra_path):
     return "\n".join(out).rstrip() + "\n\n" + extra
 
 
+# Sil-Q object flags NarSil-Q's objects take (the rest stay NarSil's, which Sil-Q hard-codes in C):
+# MORE_SPECIAL (an extra 50% chance of a special), ENCHANTABLE, the light curse, and INSTA_ART on a base made
+# only as an artefact (Sil-Q's crowns).
+OBJECT_FLAGS_FROM_SILQ = {"MORE_SPECIAL": "MORE_SPECIAL", "ENCHANTABLE": "ENCHANTABLE", "LIGHT_CURSE": "CURSED",
+                          "INSTA_ART": "INSTA_ART"}
+
 # Sil-Q objects that have no entry of their own in NarSil-Q's object.txt, and why.
 OBJECTS_NOT_PORTED = {
     "& Pearl~": "special artefact base, NarSil's 'Pearl'",
@@ -351,7 +388,8 @@ NEG_FLAGS = {"NEG_STR": "STR", "NEG_DEX": "DEX", "NEG_CON": "CON", "NEG_GRA": "G
 FLAG_TO_VALUES = {"VUL_FIRE": "RES_FIRE[-1]", "VUL_COLD": "RES_COLD[-1]", "VUL_POIS": "RES_POIS[-1]", "RES_FIRE": "RES_FIRE[1]", "RES_COLD": "RES_COLD[1]", "RES_POIS": "RES_POIS[1]", "RES_DARK": "RES_DARK[1]"}
 FLAG_TO_FLAGS = {"RES_STUN": "PROT_STUN", "RES_BLIND": "PROT_BLIND", "RES_CONFU": "PROT_CONF", "RES_FEAR": "PROT_FEAR",
                  "RES_HALLU": "PROT_HALLU", "FEAR": "COWARDICE",
-                 "IGNORE_ALL": "IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE"}
+                 "IGNORE_ALL": "IGNORE_ACID | IGNORE_COLD | IGNORE_FIRE",
+                 "LIGHT_CURSE": "CURSED"}  # Sil-Q's light curse: cursed (can't be taken off), kept out of good rolls
 FLAG_TO_SLAY = {"SLAY_ORC": "ORC_1", "SLAY_TROLL": "TROLL_1", "SLAY_WOLF": "WOLF_1", "SLAY_SPIDER": "SPIDER_1",
                 "SLAY_UNDEAD": "UNDEAD_1", "SLAY_RAUKO": "RAUKO_1", "SLAY_DRAGON": "DRAGON_1", "SLAY_MAN_OR_ELF": "MAN_1 ELF_1"}
 FLAG_TO_BRAND = {"BRAND_FIRE": "FIRE_1", "BRAND_COLD": "COLD_1", "BRAND_ELEC": "ELEC_1", "BRAND_POIS": "POIS_1"}
@@ -472,13 +510,28 @@ def convert_special(tb, name, lines):
     return out + abilities_of(tb, name, lines)
 
 
-def convert_artefact(tb, name, lines):
+# Sil-Q's first artefacts are its "special" ones (limits.txt M:A), made only by the special-artefact roll; NarSil-Q
+# marks them by an INSTA_ART base kind. A later artefact with INSTA_ART is never made at random: NO_RANDOM.
+SILQ_SPECIAL_ARTEFACTS = 20
+
+# Bases Sil-Q's object.txt gives no name NarSil-Q has: the Ring of Mairon is on a plain ring.
+ARTEFACT_BASE = {"of Mairon": ("ring", "Ring")}
+
+# Artefacts the converter once lost (a base it couldn't name, or a name Sil-Q uses twice): they follow the others,
+# so that the artefacts NarSil-Q's savefiles already count keep their places.
+ARTEFACTS_APPENDED = {"of Mairon"}
+
+
+def convert_artefact(tb, name, lines, index=None):
     i = next((l[2:].split(":") for l in lines if l.startswith("I:")), None)
     w = next(l[2:].split(":") for l in lines if l.startswith("W:"))
     p = next((l[2:].split(":") for l in lines if l.startswith("P:")), ["0", "0d0", "0", "0d0"])
     g = next((l[2:].split(":") for l in lines if l.startswith("G:")), None)
     base = tb.by_tval_sval.get((int(i[0]), int(i[1]))) if i else None
     ty = tb.type_of_tval.get(int(i[0])) if i else None
+    if name in ARTEFACT_BASE:
+        ty, base = ARTEFACT_BASE[name]
+        base = "& " + base + "~"
     if not base or not ty or base not in tb.narsil_objects:
         tb.drop(name, f"base object {base or i}")
         return None
@@ -487,7 +540,12 @@ def convert_artefact(tb, name, lines):
         out.append(f"color:{COLOR_MAP.get(g[1], g[1])}")
     out += [f"base-object:{ty}:{bare(base)}", f"depth:{w[0]}", f"rarity:{w[1]}", f"weight:{w[2]}", f"cost:{w[3]}",
             f"attack:{int(p[0])}:{p[1]}", f"defence:{int(p[2])}:{p[3]}"]
-    f = tb.flags(name, all_flags(lines), int(i[2]) if len(i) > 2 else 0)
+    flags = all_flags(lines)
+    if "INSTA_ART" in flags:
+        flags = [x for x in flags if x != "INSTA_ART"]
+        if index is not None and index >= SILQ_SPECIAL_ARTEFACTS:
+            flags.append("NO_RANDOM")
+    f = tb.flags(name, flags, int(i[2]) if len(i) > 2 else 0)
     for k in ("flags", "values", "slay", "brand"):
         if f[k]:
             out += [f"{k}:{' | '.join(f[k])}"] if k in ("flags", "values") else [f"{k}:{x}" for x in f[k]]
@@ -503,14 +561,37 @@ def convert_items(kind, silq, gamedata, new_objects):
     keep_from = next((i for i in range(first - 1, -1, -1) if not head[i].startswith("#") and head[i].strip()), -1) + 1
     print("\n".join(head[:keep_from]).rstrip() + "\n")
     narsil = read_entries(f"{gamedata}/{kind}.txt", r"^name:(.*)")
-    for n, lines in entries.items():
-        if not any(l.startswith("W:") for l in lines):
-            continue
-        res = conv(tb, n, lines)
+    index = {n: [] for n in entries}  # every Sil-Q index for a name (Sil-Q has two "of Maedhros")
+    every = []
+    for m in re.finditer(r"^N:(\d+):(.*)$", open(f"{silq}/{kind}.txt", errors="replace").read(), re.M):
+        index.setdefault(m.group(2).strip(), []).append(int(m.group(1)))
+    for n, lines in read_entries_all(f"{silq}/{kind}.txt", r"^N:(\d+):(.*)"):
+        every.append((n, lines))
+    appended = []
+
+    def one(n, lines, idx):
+        res = conv(tb, n, lines) if kind == "special" else conv(tb, n, lines, idx)
         if not res and n in narsil:     # Sil-Q's base object is one NarSil-Q lacks: keep NarSil's own entry
             res = [f"name:{n}"] + [l for l in narsil[n]]
             print(f"{kind}: {n} kept as NarSil has it", file=sys.stderr)
-        if res:
+        return res
+
+    for n, lines in entries.items():
+        if not any(l.startswith("W:") for l in lines):
+            continue
+        res = one(n, lines, index[n][-1])
+        if res and n in ARTEFACTS_APPENDED and kind == "artefact":
+            appended.append(res)
+        elif res:
+            print("\n".join(res) + "\n")
+    if kind == "artefact":
+        # A name Sil-Q gives two artefacts: the one entries kept above is the last; the earlier ones follow here
+        for (idx, n), lines in every:
+            if len(index[n]) > 1 and idx != index[n][-1] and any(l.startswith("W:") for l in lines):
+                res = conv(tb, n, lines, idx)  # only what converts: Morgoth's crowns are NarSil-Q's own
+                if res:
+                    appended.append(res)
+        for res in appended:
             print("\n".join(res) + "\n")
     for flag, owners in sorted(tb.dropped.items()):
         print(f"{kind}: dropped {flag}: {', '.join(owners[:6])}{' ...' if len(owners) > 6 else ''} ({len(owners)})", file=sys.stderr)
@@ -570,7 +651,7 @@ def convert_vault(silq, gamedata):
         elif cur and line.startswith("X:"):
             rows[cur]["X"] = line[2:].split(":")
         elif cur and line.startswith("F:"):
-            rows[cur]["F"] += [f.strip() for f in line[2:].split("|") if f.strip() and f.strip() != "SURFACE"]
+            rows[cur]["F"] += [f.strip() for f in line[2:].split("|") if f.strip()]
         elif cur and line.startswith("D:"):
             rows[cur]["D"].append(line[2:])
     for name, v in rows.items():

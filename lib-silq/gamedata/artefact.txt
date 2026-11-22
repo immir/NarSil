@@ -254,7 +254,7 @@ weight:70
 cost:45000
 attack:0:0d0
 defence:1:1d8
-flags:HUNGER
+flags:HUNGER | NO_RANDOM
 values:DEX[1] | RES_POIS[1]
 desc:Supple but harder than serpent-scale, this shining black
 desc: armour was wrought years ago by the master smith Eol,
@@ -501,7 +501,7 @@ weight:60
 cost:30000
 attack:-1:2d5
 defence:1:0d0
-flags:VAMPIRIC | HUNGER
+flags:VAMPIRIC | CURSED | HUNGER
 values:WILL[-2] | PERCEPTION[-2] | CON[2]
 desc:A blood-red blade, slick to the touch. Gripping its haft dulls the
 desc: wielder's senses and causes strange hungers to waken in them.
@@ -640,7 +640,7 @@ weight:120
 cost:100000
 attack:-1:3d6
 defence:1:0d0
-flags:SUST_STR
+flags:SUST_STR | NO_RANDOM
 values:STR[1]
 desc:The long deadly blade of Nan, the Giant.
 
@@ -665,7 +665,7 @@ weight:110
 cost:100000
 attack:-5:3d7
 defence:1:0d0
-flags:LIGHT
+flags:LIGHT | CURSED
 values:CON[1] | RES_COLD[-1]
 brand:FIRE_1
 desc:A cruel and heavy blade, wreathed in undying flames. It was originally
@@ -742,7 +742,7 @@ weight:50
 cost:30000
 attack:0:1d12
 defence:0:0d0
-flags:PROT_FEAR | THROWING
+flags:PROT_FEAR | THROWING | NO_RANDOM
 slay:WOLF_1
 desc:The iron spear of Boldog, a fierce captain of the orcs.
 
@@ -780,7 +780,7 @@ weight:80
 cost:100000
 attack:1:1d15
 defence:1:0d0
-flags:FREE_ACT
+flags:FREE_ACT | CURSED
 values:GRA[-1] | RES_POIS[-1]
 brand:POIS_1
 desc:A mighty black spear, once wielded by the Lord of Darkness
@@ -992,7 +992,7 @@ weight:15
 cost:45000
 attack:0:0d0
 defence:0:1d3
-flags:TRAITOR
+flags:TRAITOR | CURSED
 ability:Will:Vengeance
 desc:A helm wrought of grey metal and the dull bones of some forgotten
 desc: orc who once raised his blade against his master.
@@ -1019,6 +1019,7 @@ weight:100
 cost:10000
 attack:0:0d0
 defence:-2:1d4
+flags:CURSED
 values:CON[2] | GRA[-2] | RES_FIRE[-1]
 desc:A great black helm, wrought in years
 desc: forgotten in Morgoth's first stronghold.
@@ -1104,6 +1105,7 @@ weight:130
 cost:500000
 attack:-3:0d0
 defence:-3:1d4
+flags:NO_RANDOM
 values:STEALTH[2]
 ability:Stealth:Disguise
 desc:The coat of Draugluin, sire of werewolves. If you cast this
@@ -1117,6 +1119,7 @@ weight:50
 cost:500000
 attack:-1:0d0
 defence:2:0d0
+flags:NO_RANDOM
 values:STEALTH[2]
 ability:Stealth:Disguise
 desc:With its great black wings, might this remnant of the vampire
@@ -1388,4 +1391,34 @@ values:TUNNEL[3]
 desc:The mighty Hammer of the Underworld, blackened by dark sorceries,
 desc: whose wielder holds the lives of all Morgoth's servants
 desc: in his hand.
+
+name:of Mairon
+base-object:ring:Ring
+depth:12
+rarity:18
+weight:1
+cost:10000
+attack:0:0d0
+defence:0:0d0
+flags:DARKNESS | TRAITOR | SEE_INVIS
+values:STEALTH[3] | SONG[3]
+ability:Stealth:Vanish
+desc:This ring was wrought by Mairon under Melkor's tuition, while Mairon
+desc: pretended still to be faithful to the Valar. Shadows twist and weave about
+desc: its surface, and it is deathly cold.
+
+name:of Maedhros
+base-object:crown:Crown
+depth:8
+rarity:20
+weight:30
+cost:30000
+attack:0:0d0
+defence:0:1d1
+flags:PROT_FEAR | DANGER
+values:WILL[3]
+ability:Will:Majesty
+desc:The crown of Maedhros, High King of the Noldor, who was captured by Morgoth
+desc: when he went to parley with him and hung by his right hand from Thangorodrim
+desc: for thirty years.
 

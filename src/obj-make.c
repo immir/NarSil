@@ -608,6 +608,15 @@ static struct object *make_artifact_special(int level)
 		/* Artifact "rarity roll" */
 		if (!one_in_(art->rarity)) continue;
 
+		/* Enforce minimum "object" level (loosely), as Sil does */
+		if (z_info->rule_silq_items && (kind->level > level)) {
+			/* Get the "out-of-depth factor" */
+			int d = (kind->level - level) * 5;
+
+			/* Roll for out-of-depth creation */
+			if (randint0(d) != 0) continue;
+		}
+
 		/* Assign the template */
 		new_obj = object_new();
 		object_prep(new_obj, kind, art->level, RANDOMISE);
@@ -845,6 +854,47 @@ static void apply_magic_armour(struct object *obj, int level)
  * that these are now independent: you can have ego items that don't have
  * extra mundane bonuses (+att, +evn, +sides...)
  */
+/**
+ * Sil-Q's bonuses for rings and amulets, which are never negative (Sil-Q took
+ * out cursed stat jewellery): the kind's bonuses (its 99s and dice in
+ * object.txt) take the value rolled here.
+ */
+static void silq_jewellery_magic(struct object *obj, int lev)
+{
+	const char *const name = obj->kind->name;
+	const bool ring = tval_is_ring(obj);
+	int value = -1;
+
+	if (ring && (strstr(name, "Strength") || strstr(name, "Dexterity"))) {
+		value = (lev + randint1(15)) / 20;
+	} else if (!ring && (strstr(name, "Constitution") || strstr(name, "Grace"))) {
+		value = (lev + randint1(15)) / 20;
+	} else if (ring && strstr(name, "Accuracy")) {
+		obj->att = MAX(1, (lev + randint1(10)) / 9);
+	} else if (ring && strstr(name, "Protection")) {
+		obj->pd = 1;
+		obj->ps = (lev + randint1(10)) / 14 + 1;
+	} else if (ring && strstr(name, "Evasion")) {
+		obj->evn = MAX(1, (lev + randint1(10)) / 9);
+	} else if (ring && strstr(name, "Secrets")) {
+		value = MAX(1, (lev + randint1(10)) / 9);
+	} else if (ring && strstr(name, "Ered Luin")) {
+		value = (lev + randint1(10)) / 20 + 1;
+	} else if (ring && strstr(name, "Laiquendi")) {
+		value = 1;
+	} else if (!ring && strstr(name, "Blessed Realm")) {
+		value = 1;
+	} else if (!ring && strstr(name, "Vigilant Eye")) {
+		value = (lev + randint1(10)) / 10 + 1;
+	}
+	if (value < 0) return;
+
+	for (int i = 0; i < OBJ_MOD_MAX; i++) {
+		const random_value m = obj->kind->modifiers[i];
+		if (m.base || m.dice || m.sides || m.m_bonus) obj->modifiers[i] = value;
+	}
+}
+
 void apply_magic(struct object *obj, int lev, bool allow_artifacts, bool good,
 				 bool great)
 {
@@ -858,8 +908,8 @@ void apply_magic(struct object *obj, int lev, bool allow_artifacts, bool good,
 	/* Roll for "fine" */
 	if (percent_chance(lev * 2)) fine = true;
 
-	/* Roll for "special" */
-	if (percent_chance(lev * 2)) special = true;
+	/* Roll for "special" (Sil-Q halved the chance) */
+	if (percent_chance(z_info->rule_silq_items ? lev : lev * 2)) special = true;
 
 	/* Guarantee "fine" or "special" for "good" drops */
 	if (good) {
@@ -880,8 +930,9 @@ void apply_magic(struct object *obj, int lev, bool allow_artifacts, bool good,
 	if (allow_artifacts) {
 		int rolls = 0;
 
-		/* Get 2 rolls if special */
-		if (special) rolls = 2;
+		/* Get 2 rolls if special (Sil-Q: 1, and 3 if great) */
+		if (special) rolls = z_info->rule_silq_items ? 1 : 2;
+		if (great && z_info->rule_silq_items) rolls = 3;
 
 		/* Get 8 rolls if good and great are both set */
 		if (good && great) rolls = 8;
@@ -890,6 +941,11 @@ void apply_magic(struct object *obj, int lev, bool allow_artifacts, bool good,
 		for (i = 0; i < rolls; i++) {
 			if (make_artifact(obj, lev)) return;
 		}
+	}
+
+	/* Some kinds are more often special (Sil-Q's daggers and quarterstaffs) */
+	if (kf_has(obj->kind->kind_flags, KF_MORE_SPECIAL) && percent_chance(50)) {
+		special = true;
 	}
 
 	/* Apply magic */
@@ -940,6 +996,8 @@ void apply_magic(struct object *obj, int lev, bool allow_artifacts, bool good,
 			apply_magic_armour(obj, lev);
 		}
 	} else if (tval_is_jewelry(obj)) {
+		if (z_info->rule_silq_items) silq_jewellery_magic(obj, lev);
+
 		/* For jewellery, some negative values mean cursed and broken */
 		if ((obj->att < 0) || (obj->evn < 0)) {
 			of_on(obj->flags, OF_CURSED);
@@ -1062,8 +1120,11 @@ void object_prep(struct object *obj, struct object_kind *k, int lev,
 	of_copy(obj->flags, k->flags);
 
 	/* Assign charges (staves only) */
-	if (tval_can_have_charges(obj))
+	if (tval_can_have_charges(obj)) {
 		obj->pval = randcalc(k->charge, lev, rand_aspect);
+		/* Sil-Q: staffs hold twice the charges they show */
+		if (z_info->game_silq && tval_is_staff(obj)) obj->pval *= 2;
+	}
 
 	/* Default fuel, light */
 	if (tval_is_light(obj)) {
@@ -1218,9 +1279,13 @@ struct object_kind *get_obj_num(int level)
 	/* Occasional level boost */
 	if ((level > 0) && one_in_(z_info->great_obj)) {
 		/* Mostly choose a deeper depth, weighted towards the current depth */
-		if (level < z_info->max_depth) {
-			int x = rand_range(level + 1, z_info->max_depth);
-			int y = rand_range(level + 1, z_info->max_depth);
+		/* Sil boosts to at most Morgoth's depth (NarSil's own rule, the
+		 * deepest level of all, lets a boosted find be anything at all) */
+		const int deepest = z_info->rule_silq_items ? z_info->dun_depth
+			: z_info->max_depth;
+		if (level < deepest) {
+			int x = rand_range(level + 1, deepest);
+			int y = rand_range(level + 1, deepest);
 			level = MIN(x, y);
 		} else {
 			/* But if it was already very deep, just increment it */
@@ -1370,7 +1435,12 @@ static struct object *make_object_body(struct chunk *c, int lev, bool good, bool
 	object_prep(new_obj, kind, lev, RANDOMISE);
 
 	/* Generate multiple items */
-	if (tval_is_ammo(new_obj)) {
+	if (tval_is_ammo(new_obj) && z_info->rule_silq_items) {
+		/* Sil-Q: more arrows nearer the surface, twice as many for an
+		 * archer short of them */
+		new_obj->number = 20 + damroll(1, 10 + z_info->dun_depth - player->depth);
+		if (quiver_arrow_count(player) < 20) new_obj->number *= 2;
+	} else if (tval_is_ammo(new_obj)) {
 		if (one_in_(3)) {
 			new_obj->number = damroll(4, 6);
 		} else {

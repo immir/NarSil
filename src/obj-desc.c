@@ -432,8 +432,8 @@ static size_t obj_desc_charges(const struct object *obj, char *buf, size_t max,
 
 	/* Wands and staffs have charges, others may be charging */
 	if (aware || player_active_ability(player, "Channeling")) {
-		strnfcat(buf, max, &end, " (%d charge%s)", obj->pval,
-				 PLURAL(obj->pval));
+		const int charges = staff_visible_charges(obj);
+		strnfcat(buf, max, &end, " (%d charge%s)", charges, PLURAL(charges));
 	} else if ((obj->used > 0) && !(obj->notice & OBJ_NOTICE_EMPTY)) {
 		strnfcat(buf, max, &end, " (used %d time%s)", obj->used,
 				 PLURAL(obj->used));

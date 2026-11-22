@@ -568,7 +568,9 @@ void alloc_stairs(struct chunk *c, int feat, int num)
 		/* Find a suitable grid */
 		cave_find(c, &grid, square_suits_stairs);
 		place_stairs(c, grid, first, feat);
-		assert(square_isstairs(c, grid) || (!first && square_isshaft(c, grid)));
+		assert(square_isstairs(c, grid)
+			|| ((!first || feat == FEAT_MORE_SHAFT || feat == FEAT_LESS_SHAFT)
+				&& square_isshaft(c, grid)));
 		++i;
 	}
 }

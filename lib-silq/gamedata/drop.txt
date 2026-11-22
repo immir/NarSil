@@ -126,14 +126,23 @@ base:crown
 name:jewellery
 chest:1
 base:crown
-item:hafted:Sceptre
 item:ring:Serpentine Ring
 item:ring:Filigree Ring
+item:ring:Strength
+item:ring:Dexterity
+item:ring:Evasion
+item:ring:Protection
+item:ring:Ered Luin
+item:ring:Accuracy
 item:amulet:the Blessed Realm
 item:amulet:Pendant
 item:amulet:Pearl
 item:amulet:Jewel
 item:amulet:Necklace
+item:amulet:Constitution
+item:amulet:Grace
+item:amulet:the Vigilant Eye
+item:amulet:Last Chances
 
 name:chest
 base:chest

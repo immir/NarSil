@@ -48,6 +48,8 @@ int obj_digging_score(const struct object *obj);
 bool obj_can_dig(const struct object *obj);
 bool obj_has_charges(const struct object *obj);
 int light_fuel_max(const struct object *light);
+int staff_charge_cost(const struct object *obj);
+int staff_visible_charges(const struct object *obj);
 bool obj_is_depleted_light(const struct object *obj);
 bool obj_can_refuel(const struct object *obj);
 bool obj_can_takeoff(const struct object *obj);

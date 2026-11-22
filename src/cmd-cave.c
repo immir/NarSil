@@ -1840,7 +1840,14 @@ void move_player(int dir, bool disarm)
 			player_flanking_or_retreat(player, grid);
 
 			/* Move player */
+			const bool was_sunlit = square(cave, player->grid)->feat == FEAT_SUNLIGHT;
+			const bool sunlit = square(cave, grid)->feat == FEAT_SUNLIGHT;
 			monster_swap(player->grid, grid);
+			if (sunlit && !was_sunlit) {
+				msg("You step into a patch of sunlight.");
+			} else if (was_sunlit && !sunlit) {
+				msg("You step out of the sunlight.");
+			}
 			player_handle_post_move(player, true, false);
 
 			/* Spontaneous Searching */

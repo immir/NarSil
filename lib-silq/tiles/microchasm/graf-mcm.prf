@@ -582,8 +582,9 @@ monster:Aule, the Smith:0x8A:0x93
 %:flvr-mcm.prf
 
 
-##### Sil-Q: a spent light, a monster without its crown, and monsters as a raging player sees them #####
+##### Sil-Q: sunlight, a spent light, a monster without its crown, and monsters as a raging player sees them #####
 
+feat:SUNLIGHT:*:0x80:0x90
 object-depleted:light:Brass Lantern:0x8F:0x98
 object-depleted:light:Wooden Torch:0x8F:0x99
 object-depleted:light:Mallorn Torch:0x8F:0x9A

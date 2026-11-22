@@ -587,6 +587,10 @@ static enum parser_error parse_constants_rules(struct parser *p) {
 		z->rule_escape_stairs = value;
 	else if (streq(label, "wide-drops"))
 		z->rule_wide_drops = value;
+	else if (streq(label, "silq-items"))
+		z->rule_silq_items = value;
+	else if (streq(label, "silq-levels"))
+		z->rule_silq_levels = value;
 	else
 		return PARSE_ERROR_UNDEFINED_DIRECTIVE;
 

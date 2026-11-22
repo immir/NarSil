@@ -546,11 +546,30 @@ bool obj_can_dig(const struct object *obj)
 /**
  * Determine if an object has charges
  */
+/**
+ * What one use of a staff takes from its charges.  NarSil-Q follows Sil-Q:
+ * staffs hold twice as many charges as they show, and Channeling halves the
+ * cost of a use (NarSil: one charge a use).
+ */
+int staff_charge_cost(const struct object *obj)
+{
+	if (!z_info->game_silq || !tval_is_staff(obj)) return 1;
+	return player_active_ability(player, "Channeling") ? 1 : 2;
+}
+
+/**
+ * The charges a staff shows: whole uses left.
+ */
+int staff_visible_charges(const struct object *obj)
+{
+	return obj->pval / staff_charge_cost(obj);
+}
+
 bool obj_has_charges(const struct object *obj)
 {
 	if (!tval_can_have_charges(obj)) return false;
 
-	if (obj->pval <= 0) return false;
+	if (obj->pval < staff_charge_cost(obj)) return false;
 
 	return true;
 }

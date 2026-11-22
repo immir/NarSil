@@ -117,6 +117,12 @@ static bool monster_can_exist(struct chunk *c, struct monster *mon,
 	/* Glyphs -- must break first */
 	if (square_iswarded(c, grid)) return false;
 
+    /* Light-shunning creatures and the undead keep out of sunlight (Sil-Q) */
+    if (square(c, grid)->feat == FEAT_SUNLIGHT
+			&& (rf_has(race->flags, RF_HURT_LIGHT) || rf_has(race->flags, RF_UNDEAD))) {
+		return false;
+	}
+
     /* Only flying creatures can pass chasms */
     if (square_ischasm(c, grid)) {
         if (rf_has(race->flags, RF_FLYING)) {
@@ -256,6 +262,13 @@ int monster_entry_chance(struct chunk *c, struct monster *mon, struct loc grid,
         if (!rf_has(mon->race->flags, RF_FLYING)) {
 			return 0;
 		}
+	}
+
+    /* Light-shunning creatures and the undead keep out of sunlight (Sil-Q) */
+    if (square(c, grid)->feat == FEAT_SUNLIGHT
+			&& (rf_has(mon->race->flags, RF_HURT_LIGHT)
+				|| rf_has(mon->race->flags, RF_UNDEAD))) {
+		return 0;
 	}
 
 	/* Feature is passable */

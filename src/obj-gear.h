@@ -41,6 +41,7 @@ int object_slot(struct player_body body, const struct object *obj);
 bool object_is_equipped(struct player_body body, const struct object *obj);
 bool object_is_carried(struct player *p, const struct object *obj);
 bool object_is_in_quiver(const struct player *p, const struct object *obj);
+int quiver_arrow_count(struct player *p);
 uint16_t object_pack_total(struct player *p, const struct object *obj,
 	bool ignore_inscrip, struct object **first);
 int pack_slots_used(const struct player *p);

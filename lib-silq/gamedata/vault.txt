@@ -305,7 +305,7 @@ name:Sunlit shaft
 type:Interesting room
 depth:1
 rarity:1
-flags:LIGHT
+flags:SURFACE | LIGHT
 D:  #$$#  
 D: ##..## 
 D:##.b..##
@@ -319,7 +319,7 @@ name:Golden door
 type:Interesting room
 depth:1
 rarity:1
-flags:LIGHT
+flags:SURFACE | LIGHT
 D:$$$$$$$$$
 D:$.......$
 D:$.##+##.$
@@ -334,7 +334,7 @@ name:Small sunlit shaft
 type:Interesting room
 depth:1
 rarity:1
-flags:LIGHT
+flags:SURFACE | LIGHT
 D:###$###
 D:#.....#
 D:#.:,:.#
@@ -345,7 +345,7 @@ name:Fallen treasure
 type:Interesting room
 depth:1
 rarity:5
-flags:LIGHT
+flags:SURFACE | LIGHT
 D:$$$$$
 D:$:.:$
 D:$,*,$
@@ -356,7 +356,7 @@ name:Collapsed corner
 type:Interesting room
 depth:1
 rarity:2
-flags:LIGHT
+flags:SURFACE | LIGHT
 D:$$$$#####
 D:$....:,,#
 D:$.....S,#
@@ -371,7 +371,7 @@ name:Sunlight with chasm
 type:Interesting room
 depth:1
 rarity:3
-flags:LIGHT
+flags:SURFACE | LIGHT
 D:$$$$#####
 D:$...:,77#
 D:$....,,7#
@@ -386,7 +386,7 @@ name:Thrall pit 1
 type:Interesting room
 depth:2
 rarity:1
-flags:LIGHT
+flags:SURFACE | LIGHT
 D:#####$$$#####
 D:#z.z#...#z.z#
 D:#.....Z.....#
@@ -405,7 +405,7 @@ name:Thrall pit 2
 type:Interesting room
 depth:2
 rarity:1
-flags:LIGHT
+flags:SURFACE | LIGHT
 D:#####$$$#####
 D:#z.7.....7.z#
 D:##.........##
@@ -424,7 +424,7 @@ name:Thrall pit 3
 type:Interesting room
 depth:2
 rarity:1
-flags:LIGHT
+flags:SURFACE | LIGHT
 D:$$#########$$
 D:$.#zz.7.zz#.$
 D:$.#z..Z..z#.$
@@ -439,6 +439,7 @@ name:Slave mine
 type:Interesting room
 depth:2
 rarity:1
+flags:SURFACE
 D:#######$$$$$
 D:#:::##%....$
 D:#:z.%%:z.#.$

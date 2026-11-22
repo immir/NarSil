@@ -58,6 +58,26 @@
  * \param forge whether we are forcing a forge
  * \return a pointer to the vault template
  */
+/**
+ * A vault's weight in random_vault().  Sil-Q's surface rooms (SURFACE) are the
+ * common interesting rooms above 300' (a quarter of the chance for the others)
+ * and get much rarer below: one in (rarity + 2^depth).
+ */
+static uint32_t vault_weight(const struct vault *v, int depth)
+{
+	if (!z_info->rule_silq_levels || !streq(v->typ, "Interesting room")) {
+		return v->rarity;
+	}
+	/* Weights only shrink here: their sum must stay within 32 bits (see
+	 * finish_parse_vault()) */
+	const bool surface = roomf_has(v->flags, ROOMF_SURFACE);
+	if (depth < 6) return surface ? v->rarity : MAX(v->rarity / 4, 1);
+	if (!surface) return v->rarity;
+	const uint64_t denom = (uint64_t)v->rarity * v->rarity_one_in;
+	const uint64_t weight = denom / (v->rarity_one_in + ((uint64_t)1 << depth));
+	return (uint32_t)MAX(weight, 1);
+}
+
 struct vault *random_vault(int depth, const char *typ, bool forge)
 {
 	struct vault *v = vaults;
@@ -77,8 +97,9 @@ struct vault *random_vault(int depth, const char *typ, bool forge)
 			}
 
 			if (valid) {
-				rarity_sum += v->rarity;
-				if (Rand_div(rarity_sum) < v->rarity) r = v;
+				const uint32_t weight = vault_weight(v, depth);
+				rarity_sum += weight;
+				if (Rand_div(rarity_sum) < weight) r = v;
 			}
 		}
 		v = v->next;
@@ -534,7 +555,8 @@ bool build_vault(struct chunk *c, struct loc centre, struct vault *v, bool flip)
 				
 				/* sunlight: a lit floor */
 				case ',': {
-					square_set_feat(c, grid, FEAT_FLOOR);
+					square_set_feat(c, grid, z_info->rule_silq_levels
+						? FEAT_SUNLIGHT : FEAT_FLOOR);
 					sqinfo_on(square(c, grid)->info, SQUARE_GLOW);
 					break;
 				}
@@ -776,7 +798,16 @@ bool build_vault(struct chunk *c, struct loc centre, struct vault *v, bool flip)
 			/* Another chance to place traps, with 4 times the normal chance
 			 * so traps in interesting rooms and vaults are a total of 5 times
 			 * more likely */
-			if (randint1(1000) <= trap_placement_chance(c, grid) * (mult - 1)) {
+			if (z_info->rule_silq_levels && roomf_has(v->flags, ROOMF_WEBS)) {
+				/* Sil-Q: webbed vaults get webs (on bare floor) instead */
+				if (square_isempty(c, grid) && one_in_(20)) {
+					square_add_web(c, grid);
+					if (one_in_(2)) {
+						struct trap *trap = square_trap(c, grid);
+						trf_on(trap->flags, TRF_INVISIBLE);
+					}
+				}
+			} else if (randint1(1000) <= trap_placement_chance(c, grid) * (mult - 1)) {
 				square_add_trap(c, grid);
 			} else if (roomf_has(v->flags, ROOMF_WEBS) && one_in_(20)) {
 				/* Webbed vaults also have a large chance of receiving webs */
