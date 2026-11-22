@@ -33,6 +33,7 @@
 #include "obj-make.h"
 #include "obj-pile.h"
 #include "obj-tval.h"
+#include "grafmode.h"
 #include "obj-util.h"
 #include "player-attack.h"
 #include "player-calcs.h"
@@ -112,8 +113,18 @@ wchar_t object_kind_char(const struct object_kind *kind)
  * Use "flavor" if available.
  * Default to user definitions.
  */
+/**
+ * Whether a light is shown with its spent tile (graphics with one for its kind).
+ */
+static bool object_shows_depleted(const struct object *obj)
+{
+	return use_graphics != GRAPHICS_NONE && obj_is_depleted_light(obj)
+		&& (kind_depleted_attr[obj->kind->kidx] & 0x80);
+}
+
 uint8_t object_attr(const struct object *obj)
 {
+	if (object_shows_depleted(obj)) return kind_depleted_attr[obj->kind->kidx];
 	return obj->artifact ?
 		obj->artifact->d_attr : object_kind_attr(obj->kind);
 }
@@ -125,6 +136,7 @@ uint8_t object_attr(const struct object *obj)
  */
 wchar_t object_char(const struct object *obj)
 {
+	if (object_shows_depleted(obj)) return kind_depleted_char[obj->kind->kidx];
 	return object_kind_char(obj->kind);
 }
 
