@@ -509,6 +509,8 @@ static int32_t context_flags(void)
 		if (!square_in_bounds(cave, n) || !square_isknown(cave, n)) continue;
 		if (chest_check(player, n, CHEST_OPENABLE)) f |= NB_CTX_ADJ_CHEST;
 		if (chest_check(player, n, CHEST_TRAPPED)) f |= NB_CTX_ADJ_TRAP;
+		const struct object *const skeleton = skeleton_check(n);
+		if (skeleton && skeleton->pval > 0 && skeleton->known) f |= NB_CTX_ADJ_SKELETON;
 	}
 	return f;
 }
@@ -1039,6 +1041,14 @@ bool native_service(bool at_prompt)
 		native_publish(at_prompt);
 		return false;
 	}
+	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 5) {
+		struct object *bones = object_new(); /* mutable: drop_near() takes the pointer and clears it */
+		object_prep(bones, lookup_kind(TV_USELESS, lookup_sval(TV_USELESS, "Orc Skeleton")), 5, RANDOMISE);
+		drop_near(cave, &bones, 0, player->grid, false, true);
+		square_know_pile(cave, player->grid);
+		native_publish(at_prompt);
+		return false;
+	}
 	if (r.kind == REQ_TEST_CHEST && at_prompt) {
 		const int count = r.dir == 2 ? 4 : 1; /* 2: a pile, as stepping on one reports it */
 		for (int i = 0; i < count; i++) {
@@ -1376,6 +1386,9 @@ static void run_action(enum nb_action a)
 		case NB_ACT_FIRE_NEAREST: if (player_can_fire_quiver1(player, true)) fire_at_target_or_nearest(); break;
 		case NB_ACT_THROW_NEAREST: if (player_has_throwable(player, true)) do_cmd_automatic_throw(); break;
 		case NB_ACT_OPEN: cmdq_push(CMD_OPEN); break;
+		case NB_ACT_SEARCH:  /* the direction prompt picks the skeleton */
+			if (context_flags() & NB_CTX_ADJ_SKELETON) cmdq_push(CMD_ALTER);
+			break;
 		case NB_ACT_CLOSE: cmdq_push(CMD_CLOSE); break;
 		case NB_ACT_DISARM: cmdq_push(CMD_DISARM); break;
 		case NB_ACT_TUNNEL: cmdq_push(CMD_TUNNEL); break;

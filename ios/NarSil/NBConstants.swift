@@ -62,6 +62,7 @@ enum NB {
     static let CTX_CAN_FLETCH = 32768
     static let CTX_FLOOR_SPECIAL = 65536
     static let CTX_ADJ_CHEST = 16384
+    static let CTX_ADJ_SKELETON = 131072
     static let ACT_REST = 0
     static let ACT_HOLD = 1
     static let ACT_GO_DOWN = 2
@@ -98,7 +99,8 @@ enum NB {
     static let ACT_FLOOR = 33
     static let ACT_EXPLORE = 34
     static let ACT_EXPLORE_STEP = 35
-    static let ACT_COUNT = 36
+    static let ACT_SEARCH = 36
+    static let ACT_COUNT = 37
     static let REST_HP_AND_VOICE = -1
     static let REST_AS_NEEDED = -2
     static let REST_HP_OR_VOICE = -3

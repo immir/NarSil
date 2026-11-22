@@ -55,6 +55,7 @@ func contextActions(_ s: Status) -> [BarAction] {
     if s.has(NB.CTX_CAN_FLETCH) { out.append(BarAction(label: "Fletch", run: act(NB.ACT_FLETCH))) }
     if s.has(NB.CTX_CAN_THROW) { out.append(BarAction(label: "Throw", emphasised: true, run: act(NB.ACT_THROW_NEAREST))) }
     if s.has(NB.CTX_ADJ_CLOSED_DOOR) || s.has(NB.CTX_ADJ_CHEST) { out.append(BarAction(label: "Open", emphasised: true, run: act(NB.ACT_OPEN))) }
+    if s.has(NB.CTX_ADJ_SKELETON) { out.append(BarAction(label: "Search", emphasised: true, run: act(NB.ACT_SEARCH))) }
     if s.has(NB.CTX_ADJ_OPEN_DOOR) { out.append(BarAction(label: "Close", emphasised: true, run: act(NB.ACT_CLOSE))) }
     if s.has(NB.CTX_ADJ_TRAP) { out.append(BarAction(label: "Disarm", emphasised: true, run: act(NB.ACT_DISARM))) }
     if s.has(NB.CTX_ADJ_RUBBLE) { out.append(BarAction(label: "Tunnel", emphasised: true, run: act(NB.ACT_TUNNEL))) }

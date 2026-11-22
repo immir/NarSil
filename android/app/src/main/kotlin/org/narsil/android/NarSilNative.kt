@@ -88,6 +88,7 @@ object NarSilNative {
     const val CTX_DOWN_KNOWN = 1 shl 12
     const val CTX_UP_KNOWN = 1 shl 13
     const val CTX_ADJ_CHEST = 1 shl 14
+    const val CTX_ADJ_SKELETON = 1 shl 17
     const val CTX_CAN_FLETCH = 1 shl 15
 
     // enum nb_action (order matters)
@@ -127,6 +128,7 @@ object NarSilNative {
     const val ACT_FLOOR = 33
     const val ACT_EXPLORE = 34
     const val ACT_EXPLORE_STEP = 35
+    const val ACT_SEARCH = 36
 
     /** Only honoured at the command prompt. */
     @JvmStatic external fun nativeRequestAction(action: Int)

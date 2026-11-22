@@ -111,7 +111,7 @@ static int collect_creatures(entry *e, int cap)
 	int n = 0;
 	for (int i = 0; i < z_info->r_max && n < cap; i++) {
 		const struct monster_race *race = &r_info[i];
-		if (!race->name || (!l_list[i].all_known && !l_list[i].tsights)) continue;
+		if (!race->name || (!lore_shown_in_full(race, &l_list[i]) && !l_list[i].tsights)) continue;
 		e[n++] = (entry){ i, race->base && race->base->text ? race->base->text : "Other", race->level };
 	}
 	qsort(e, (size_t)n, sizeof(*e), by_group_then_order);

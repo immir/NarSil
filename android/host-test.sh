@@ -24,6 +24,10 @@ case "$game" in
     *) echo "GAME is narsil or silq" >&2; exit 2 ;;
 esac
 run() { NARSIL_SEED=${NARSIL_SEED:-7} timeout 120 "$build/narsil_host" "$lib" "$work/data" "$@"; }
+# Fails the test if the command succeeds ("! cmd" would not: set -e ignores it).
+refute() { if "$@"; then echo "unexpectedly true: $*" >&2; exit 1; fi; }
+# Whether the nth "context=" flags in $out include the mask.
+ctx_has() { (( $(echo "$out" | grep -o 'context=0x[0-9a-f]*' | sed -n "$1p" | cut -d= -f2) & $2 )); }
 # The native birth screens: race, house, sex (first of each), accept stats and
 # skills, keep the name, accept history, begin; dismiss the opening text.
 birth=(@answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @answer=0 @answer=0 @esc)
@@ -50,7 +54,7 @@ echo "== fuzz: random keys, taps, actions and answers (two seeds) never hang or 
 for seed in 1 2; do
     rm -rf "$work/data"
     run "${birth[@]}" "@fuzz=$seed,${FUZZ_STEPS:-1500}" >/dev/null 2>"$work/fuzz.err" || { tail -30 "$work/fuzz.err"; exit 1; }
-    ! grep -qE 'runtime error|AddressSanitizer|hung at' "$work/fuzz.err"
+    refute grep -qE 'runtime error|AddressSanitizer|hung at' "$work/fuzz.err"
 done
 
 echo "== data: every monster has a base template, every artefact drop and engine-named monster exists"
@@ -76,7 +80,7 @@ echo "== fuzz at depth: the deeper monsters (spells, breaths, rallies, webs) nev
 for depth in 6 14; do
     rm -rf "$work/data"
     run "${birth[@]}" "@depth=$depth" @act=1 @esc "@fuzz=$depth,${FUZZ_STEPS:-1500}" >/dev/null 2>"$work/fuzz.err" || { tail -30 "$work/fuzz.err"; exit 1; }
-    ! grep -qE 'runtime error|AddressSanitizer|hung at' "$work/fuzz.err"
+    refute grep -qE 'runtime error|AddressSanitizer|hung at' "$work/fuzz.err"
 done
 
 if [ "$game" = narsil ]; then
@@ -139,6 +143,28 @@ rm -rf "$work/data"
 out=$(run "${birth[@]}" "${spend[@]}" @depth=4 @act=1 @esc "${spend[@]}" "${quit[@]}" 2>/dev/null)
 [ "$(echo "$out" | grep -P '^Skills\t' | sed -n 1p)" = "$(printf 'Skills\t5000')" ]
 [ "$(echo "$out" | grep -P '^Skills\t' | sed -n 2p | cut -f2)" -gt 5000 ]
+rm -rf "$work/data"
+
+eat=(); for _ in 1 2 3 4 5; do eat+=(E @prompt @pick=0); done
+out=$(run "${birth[@]}" "${eat[@]}" @messages "${quit[@]}" 2>/dev/null)
+if [ "$game" = silq ]; then
+    echo "== NarSil-Q: an unsearched skeleton offers Search (0x20000); searching it finds something, once; full, you can still eat"
+    echo "$out" | grep -q 'You are as full as you can be.'
+    refute grep -q 'too full' <<<"$out"
+    rm -rf "$work/data"
+    out=$(run "${birth[@]}" @skeleton @ctx @act=36 @ctx @act=36 @prompt @messages "${quit[@]}" 2>/dev/null)
+    ctx_has 1 0x20000
+    refute ctx_has 2 0x20000
+    [ "$(echo "$out" | grep -c 'You find something among the bones!')" = 1 ]
+    echo "$out" | grep -qP '^1\t1\tYou have (a|an|\d+) .*\([a-z]\)\.$'
+    echo "$out" | grep -qx 'prompt kind=0'
+else
+    echo "== NarSil: gorged, you cannot eat more; a skeleton is junk"
+    echo "$out" | grep -q 'You are too full to eat it.'
+    rm -rf "$work/data"
+    out=$(run "${birth[@]}" @skeleton @ctx "${quit[@]}" 2>/dev/null)
+    refute ctx_has 1 0x20000
+fi
 rm -rf "$work/data"
 
 echo "== new game; save requested during birth is deferred to first command prompt"
@@ -358,7 +384,7 @@ echo "$out" | grep -qP "You have .*\x011of Hador's House\x02"
 echo "== a known ego says in general what it gives, only with the option on"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @ego @act=15 @answer=1002 @prompt @answer=-1 "${quit[@]}")
-! echo "$out" | grep -q 'In general, items'
+refute grep -q 'In general, items' <<<"$out"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @details=1 @ego @act=15 @answer=1002 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qP "^#D\tIn general, items of Hador's House have:"

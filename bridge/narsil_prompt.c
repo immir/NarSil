@@ -21,6 +21,7 @@
 #include "mon-desc.h"
 #include "monster.h"
 #include "mon-predicate.h"
+#include "obj-chest.h"
 #include "obj-desc.h"
 #include "obj-gear.h"
 #include "obj-ignore.h"
@@ -657,6 +658,13 @@ static bool native_get_aim_dir(int *dp, int range)
  * Adjacent direction (open, close, disarm, tunnel, bash, exchange, walk...)
  * ------------------------------------------------------------------------ */
 
+/* A skeleton the player knows of and has not searched (NarSil-Q). */
+static bool unsearched_skeleton(struct loc n)
+{
+	const struct object *const s = square_in_bounds(cave, n) ? skeleton_check(n) : NULL;
+	return s && s->pval > 0 && s->known;
+}
+
 static const char *neighbour_kind(struct loc n)
 {
 	if (!square_in_bounds(cave, n) || !square_isknown(cave, n)) return NULL;
@@ -665,6 +673,7 @@ static const char *neighbour_kind(struct loc n)
 	if (square_isopendoor(cave, n)) return "open door";
 	if (square_isrubble(cave, n)) return "rubble";
 	if (square_isdisarmabletrap(cave, n) && square_isvisibletrap(cave, n)) return "trap";
+	if (unsearched_skeleton(n)) return "skeleton";
 	return NULL;
 }
 
@@ -685,12 +694,15 @@ static bool fits_intent(int intent, struct loc n)
 		case NB_ACT_BASH: return square_iscloseddoor(cave, n);
 		case NB_ACT_TUNNEL: return square_isrubble(cave, n);
 		case NB_ACT_DISARM: return square_isdisarmabletrap(cave, n) && square_isvisibletrap(cave, n);
+		case NB_ACT_SEARCH: return unsearched_skeleton(n);
 		default: return false;
 	}
 }
 
 static int sole_fitting_dir(int intent)
 {
+	/* A skeleton underfoot is searched before any beside the player */
+	if (intent == NB_ACT_SEARCH && fits_intent(intent, player->grid)) return DIR_NONE;
 	int found = 0;
 	for (int dir = 1; dir <= 9; dir++) {
 		if (dir == 5 || !fits_intent(intent, loc_sum(player->grid, ddgrid[dir]))) continue;
