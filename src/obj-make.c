@@ -908,8 +908,10 @@ void apply_magic(struct object *obj, int lev, bool allow_artifacts, bool good,
 	/* Roll for "fine" */
 	if (percent_chance(lev * 2)) fine = true;
 
-	/* Roll for "special" (Sil-Q halved the chance) */
-	if (percent_chance(z_info->rule_silq_items ? lev : lev * 2)) special = true;
+	/* Roll for "special" (Sil-Q halved the chance).  percent_chance() is a
+	 * macro that does not bracket its argument, hence the variable. */
+	const int special_chance = z_info->rule_silq_items ? lev : lev * 2;
+	if (percent_chance(special_chance)) special = true;
 
 	/* Guarantee "fine" or "special" for "good" drops */
 	if (good) {
