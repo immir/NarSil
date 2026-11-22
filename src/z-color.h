@@ -96,6 +96,7 @@
  */
 #define GRAPHICS_ALERT_MASK 0x100	/* used for alert monsters if the tiles
 						have an alert indicator */
+#define GRAPHICS_RAGE_MASK 0x400	/* tiles the player sees while raging: drawn tinted red */
 #define GRAPHICS_GLOW_MASK 0x200	/* used for glowing objects if the tiles
 						have a glow indicator */
 

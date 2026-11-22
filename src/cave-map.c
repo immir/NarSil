@@ -96,6 +96,7 @@ void map_info(struct loc grid, struct grid_data *g)
 	g->trap = NULL;
 	g->multiple_objects = false;
 	g->glow = false;
+	g->depleted = false;
 	g->lighting = LIGHTING_LIT;
 
 	/* Use known feature */
@@ -173,6 +174,7 @@ void map_info(struct loc grid, struct grid_data *g)
 			assert(base_obj);
 			g->glow = loc_eq(obj->grid, base_obj->grid)
 				&& weapon_glows(base_obj, 0);
+			g->depleted = obj_is_depleted_light(base_obj);
 		} else {
 			g->multiple_objects = true;
 			break;

@@ -205,7 +205,7 @@ object:crown:Massive Iron Crown:0x85:0x9C
 
 ##### Armor #####
 
-object:soft armor:Filthy Rag:0x90:0x82
+object:soft armor:Filthy Rag:0x91:0x82
 object:soft armor:Robe:0x85:0x84
 object:soft armor:Leather Armour:0x85:0x8C
 object:soft armor:Studded Leather:0x85:0x8D
@@ -228,11 +228,11 @@ object:shield:Mithril Shield:0x85:0x93
 
 ##### Edged Weapons #####
 
-object:sword:Broken Sword:0x90:0x83
+object:sword:Broken Sword:0x91:0x83
 object:sword:Dagger:0x86:0x80
 object:sword:Curved Sword:0x86:0x81
 object:sword:Shortsword:0x86:0x82
-object:sword:Deathblade:0x90:0x84
+object:sword:Deathblade:0x91:0x84
 object:sword:Longsword:0x86:0x83
 object:sword:Bastard Sword:0x86:0x87
 object:sword:Greatsword:0x86:0x85
@@ -258,7 +258,7 @@ object:polearm:Great Axe:0x86:0x8F
 
 object:hafted:Quarterstaff:0x86:0x88
 object:hafted:War Hammer:0x86:0x8C
-object:hafted:Sceptre:0x90:0x85
+object:hafted:Sceptre:0x91:0x85
 
 
 
@@ -277,7 +277,7 @@ object:helm:Great Helm:0x85:0x98
 object:helm:Dwarf Mask:0x85:0x9A
 object:helm:Mithril Helm:0x85:0x99
 object:crown:Crown:0x81:0x89
-object:crown:Jewelled Crown:0x90:0x81
+object:crown:Jewelled Crown:0x91:0x81
 
 
 
@@ -402,6 +402,11 @@ object:skeleton:Orc Skeleton:0x83:0x9C
 object:skeleton:Human Skeleton:0x83:0x9D
 object:skeleton:Elf Skeleton:0x83:0x9E
 object:note:Tutorial Note:0x80:0x9F
+object:polearm:Hand Axe:0x86:0x8D
+object:shield:Broken Shield:0x8B:0x9C
+object:helm:Rusty Helm:0x82:0x94
+object:boots:Pair of Shabby Boots:0x82:0x95
+object:light:Mallorn Torch:0x8B:0x9F
 
 
 
@@ -438,7 +443,7 @@ monster:Hummerhorn:0x88:0x89
 monster:Orc captain:0x87:0x9F
 monster:Warg:0x88:0x93
 monster:Grave wight:0x87:0x8C
-monster:Dark serpent:0x88:0x98
+monster:Dark serpent:0x88:0x9B
 monster:Orcobal, Champion of the Orcs:0x88:0x87
 monster:Whispering shadow:0x87:0x95
 monster:Distended spider:0x87:0x84
@@ -530,7 +535,7 @@ monster:Carcharoth:0x88:0x97
 ##### Hallucinatory #####
 
 monster:Feanor, High King of the Noldor:0x8A:0x93
-monster:Luthien Tinuviel:0x88:0x88
+monster:Luthien Tinuviel:0x8B:0x88
 monster:Thingol, the Hidden King:0x8A:0x93
 monster:Beren, Son of Barahir:0x8A:0x93
 monster:Huan, Hound of Valinor:0x8B:0x8C
@@ -552,19 +557,19 @@ monster:Nessa, the Dancer:0x8B:0x88
 monster:Orome, Lord of Forests:0x8A:0x93
 monster:Vana, the Ever Young:0x8B:0x88
 monster:Melkor, Rightful Lord of Arda:0x8B:0x84
-monster:Orc skirmisher:0x87:0x99
-monster:Orc thrallmaster:0x87:0x9F
-monster:Attercop:0x87:0x83
-monster:Brood spider:0x87:0x84
-monster:Alert human thrall:0x89:0x88
-monster:Dejected human thrall:0x89:0x88
-monster:Alert elven thrall:0x89:0x88
-monster:Dejected elven thrall:0x89:0x88
-monster:Phantom:0x87:0x97
-monster:Spectre:0x87:0x8C
-monster:Wraith:0x87:0x8D
-monster:Lug, the Grotesque:0x89:0x92
-monster:Balcmeg, the Relentless:0x89:0x92
+monster:Dejected human thrall:0x88:0x81
+monster:Dejected elven thrall:0x88:0x82
+monster:Orc thrallmaster:0x88:0x80
+monster:Alert human thrall:0x8C:0x9A
+monster:Alert elven thrall:0x8C:0x9B
+monster:Orc skirmisher:0x87:0x9B
+monster:Brood spider:0x87:0x82
+monster:Phantom:0x87:0x98
+monster:Attercop:0x87:0x88
+monster:Balcmeg, the Relentless:0x88:0x85
+monster:Lug, the Grotesque:0x88:0x86
+monster:Spectre:0x87:0x96
+monster:Wraith:0x87:0x8A
 monster:Aule, the Smith:0x8A:0x93
 
 
@@ -575,3 +580,134 @@ monster:Aule, the Smith:0x8A:0x93
 
 # Load the flavored objects
 %:flvr-mcm.prf
+
+
+##### Sil-Q: a spent light, a monster without its crown, and monsters as a raging player sees them #####
+
+object-depleted:light:Brass Lantern:0x8F:0x98
+object-depleted:light:Wooden Torch:0x8F:0x99
+object-depleted:light:Mallorn Torch:0x8F:0x9A
+monster-uncrowned:Morgoth, Lord of Darkness:0x8C:0x91
+monster-rage:Wolf:0x90:0x85
+monster-rage:Tanglethorn:0x8F:0x9B
+monster-rage:Dejected human thrall:0x90:0x88
+monster-rage:Dejected elven thrall:0x90:0x88
+monster-rage:Orc thrallmaster:0x90:0x83
+monster-rage:Alert human thrall:0x90:0x88
+monster-rage:Alert elven thrall:0x90:0x88
+monster-rage:Orc skirmisher:0x90:0x83
+monster-rage:Grimhawk:0x8F:0x9C
+monster-rage:Mewlip:0x90:0x84
+monster-rage:Orc scout:0x90:0x83
+monster-rage:Spider hatchling:0x8F:0x9E
+monster-rage:Blue serpent:0x90:0x86
+monster-rage:Orc soldier:0x90:0x83
+monster-rage:Madthorn:0x8F:0x9B
+monster-rage:Gorcrow:0x8F:0x9C
+monster-rage:Brood spider:0x8F:0x9F
+monster-rage:Orc archer:0x90:0x83
+monster-rage:White wolf:0x90:0x85
+monster-rage:Red serpent:0x90:0x86
+monster-rage:Gorgol, the Butcher:0x90:0x83
+monster-rage:Orc warrior:0x90:0x83
+monster-rage:Sword spider:0x8F:0x9F
+monster-rage:Crebain:0x8F:0x9C
+monster-rage:Phantom:0x90:0x80
+monster-rage:Attercop:0x8F:0x9E
+monster-rage:Nightthorn:0x8F:0x9B
+monster-rage:Green serpent:0x90:0x86
+monster-rage:Mountain troll:0x90:0x89
+monster-rage:Tattered wight:0x90:0x81
+monster-rage:Boldog, the Merciless:0x90:0x83
+monster-rage:Orc champion:0x90:0x83
+monster-rage:Easterling warrior:0x90:0x88
+monster-rage:Hummerhorn:0x8F:0x9D
+monster-rage:Balcmeg, the Relentless:0x90:0x83
+monster-rage:Lug, the Grotesque:0x90:0x83
+monster-rage:Orc captain:0x90:0x83
+monster-rage:Warg:0x90:0x85
+monster-rage:Grave wight:0x90:0x81
+monster-rage:Dark serpent:0x90:0x86
+monster-rage:Orcobal, Champion of the Orcs:0x90:0x83
+monster-rage:Whispering shadow:0x90:0x80
+monster-rage:Distended spider:0x8F:0x9F
+monster-rage:Easterling archer:0x90:0x88
+monster-rage:Twisted bat:0x8F:0x9C
+monster-rage:Othrod, the Orc Lord:0x90:0x83
+monster-rage:Snow troll:0x90:0x89
+monster-rage:Barrow wight:0x90:0x81
+monster-rage:Lurking horror:0x90:0x84
+monster-rage:Giant:0x90:0x8A
+monster-rage:Uldor, the Accursed:0x90:0x88
+monster-rage:Aldor, the Risen King:0x90:0x81
+monster-rage:Easterling spy:0x90:0x88
+monster-rage:Shadow bat:0x8F:0x9C
+monster-rage:Sulrauko:0x90:0x8E
+monster-rage:Fire-drake hatchling:0x90:0x8C
+monster-rage:Ulfang the Black:0x90:0x88
+monster-rage:Duruin, Least of the Balrogs:0x90:0x8E
+monster-rage:Werewolf:0x90:0x85
+monster-rage:Shadow spider:0x8F:0x9F
+monster-rage:Shadow:0x90:0x80
+monster-rage:Sapphire serpent:0x90:0x86
+monster-rage:Gilim, the Giant of Eruman:0x90:0x8A
+monster-rage:Ruby serpent:0x90:0x86
+monster-rage:Creeping horror:0x90:0x84
+monster-rage:Ringrauko:0x90:0x8E
+monster-rage:Delthaur, Balrog of Terror:0x90:0x8E
+monster-rage:Nan, the Giant:0x90:0x8A
+monster-rage:Cave troll:0x90:0x89
+monster-rage:Emerald serpent:0x90:0x86
+monster-rage:Oathwraith:0x90:0x81
+monster-rage:Cat warrior:0x90:0x8B
+monster-rage:Amethyst serpent:0x90:0x86
+monster-rage:Kemenrauko:0x90:0x8E
+monster-rage:Grotesque:0x90:0x8F
+monster-rage:Young cold-drake:0x90:0x8C
+monster-rage:Umuiyan, the Doorkeeper:0x90:0x8B
+monster-rage:Belegwath, Balrog of Shadow:0x90:0x8E
+monster-rage:Spectre:0x90:0x80
+monster-rage:Spider of Gorgoroth:0x8F:0x9F
+monster-rage:Greater werewolf:0x90:0x85
+monster-rage:Adamant serpent:0x90:0x86
+monster-rage:Lesser vampire:0x90:0x82
+monster-rage:Cat assassin:0x90:0x8B
+monster-rage:Scatha the Worm:0x90:0x8C
+monster-rage:Oikeroi, Guard of Tevildo:0x90:0x8B
+monster-rage:Young fire-drake:0x90:0x8C
+monster-rage:Darting horror:0x90:0x84
+monster-rage:Wraith:0x90:0x81
+monster-rage:Ururauko:0x90:0x8E
+monster-rage:Tevildo, Prince of Cats:0x90:0x8B
+monster-rage:Turkano, Balrog of the Hosts:0x90:0x8E
+monster-rage:Ancient sapphire serpent:0x90:0x87
+monster-rage:Troll guard:0x90:0x89
+monster-rage:Vampire:0x90:0x82
+monster-rage:Nameless thing:0x90:0x90
+monster-rage:Smaug the Golden:0x90:0x8C
+monster-rage:Maeglin, Betrayer of Gondolin:0x90:0x88
+monster-rage:Ancient ruby serpent:0x90:0x87
+monster-rage:Great cold-drake:0x90:0x8D
+monster-rage:Silent watcher:0x90:0x84
+monster-rage:Gwathrauko:0x90:0x8E
+monster-rage:Draugluin, Sire of Werewolves:0x90:0x85
+monster-rage:Vallach, Balrog of Sudden Flame:0x90:0x8E
+monster-rage:Ancient spider:0x8F:0x9F
+monster-rage:Ancient emerald serpent:0x90:0x87
+monster-rage:Vampire lord:0x90:0x82
+monster-rage:Dagorhir, the Elfbane:0x90:0x89
+monster-rage:Gostir, the Dread Glance:0x90:0x8D
+monster-rage:Ancient amethyst serpent:0x90:0x87
+monster-rage:Great fire-drake:0x90:0x8D
+monster-rage:Hithrauko:0x90:0x8E
+monster-rage:Shelob, Spider of Darkness:0x8F:0x9F
+monster-rage:Lungorthin, Lord of Balrogs:0x90:0x8E
+monster-rage:Ancient adamant serpent:0x90:0x87
+monster-rage:Unrelenting horror:0x90:0x84
+monster-rage:Ancalagon the Black:0x90:0x8C
+monster-rage:Thuringwethil, the Vampire Messenger:0x90:0x82
+monster-rage:Gothmog, High Captain of Balrogs:0x90:0x8E
+monster-rage:Ungoliant, the Gloomweaver:0x8F:0x9F
+monster-rage:Glaurung, the Deceiver:0x90:0x8D
+monster-rage:Gorthaur, Servant of Morgoth:0x90:0x85
+monster-rage:Carcharoth, the Jaws of Thirst:0x90:0x85

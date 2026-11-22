@@ -164,6 +164,7 @@ struct grid_data {
 	bool hallucinate;
 	bool rage;
 	bool glow;
+	bool depleted;			/* the first item is a light with no fuel left */
 };
 
 struct square {

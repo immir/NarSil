@@ -35,6 +35,14 @@ extern bool arg_graphics_nice;
 
 extern uint8_t *monster_x_attr;
 extern wchar_t *monster_x_char;
+/* Alternative tiles (graphics only; 0 where unset): a monster while the player
+ * rages, a monster that has lost its crown, a light with no fuel left */
+extern uint8_t *monster_rage_attr;
+extern wchar_t *monster_rage_char;
+extern uint8_t *monster_uncrowned_attr;
+extern wchar_t *monster_uncrowned_char;
+extern uint8_t *kind_depleted_attr;
+extern wchar_t *kind_depleted_char;
 extern uint8_t *kind_x_attr;
 extern wchar_t *kind_x_char;
 extern uint8_t *feat_x_attr[LIGHTING_MAX];

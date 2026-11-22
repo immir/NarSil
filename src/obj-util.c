@@ -565,6 +565,15 @@ int light_fuel_max(const struct object *light)
 	return of_has(light->flags, OF_TAKES_FUEL) ? z_info->fuel_lamp : z_info->fuel_torch;
 }
 
+/**
+ * A torch or lantern with no fuel left.
+ */
+bool obj_is_depleted_light(const struct object *obj)
+{
+	return tval_is_light(obj) && obj->timeout == 0 && !obj->artifact
+		&& (of_has(obj->flags, OF_TAKES_FUEL) || of_has(obj->flags, OF_BURNS_OUT));
+}
+
 bool obj_can_refuel(const struct object *obj)
 {
 	const struct object *light = equipped_item_by_slot_name(player, "light");
