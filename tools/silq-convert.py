@@ -182,7 +182,7 @@ def silq_tiles(silq_lib):
     """Sil-Q's tile lines: {("K" | "R" | "S", index): (attr, char)}, and the rage tiles {monster index: (attr, char)}."""
     tiles, rage = {}, {}
     for line in open(f"{silq_lib}/pref/graf-tiles.prf"):
-        m = re.match(r"^([KRS]):(0x[0-9A-Fa-f]+|\d+):(?:(rage):)?(0x[0-9A-Fa-f]+)/(0x[0-9A-Fa-f]+)", line)
+        m = re.match(r"^([KRSF]):(0x[0-9A-Fa-f]+|\d+):(?:(rage):)?(0x[0-9A-Fa-f]+)/(0x[0-9A-Fa-f]+)", line)
         if m:
             at = (int(m.group(4), 16), int(m.group(5), 16))
             if m.group(3):
@@ -244,7 +244,9 @@ def tiles(prf, gamedata, silq_lib):
                     if n in monsters and n not in have_monster and n not in monster_at and b in monster_at])
     insert_after("object:", [f"object:{t}:{n}:{hexes(object_at[n])}" for n, t in objects.items()
                              if n not in have_object and n in object_at])
-    out += ["", "##### Sil-Q: a spent light, a monster without its crown, and monsters as a raging player sees them #####", ""]
+    out += ["", "##### Sil-Q: sunlight, a spent light, a monster without its crown, and monsters as a raging player sees them #####", ""]
+    if ("F", 9) in sq:  # Sil-Q's patch of sunlight (terrain 0x09)
+        out += [f"feat:SUNLIGHT:*:{hexes(sq[('F', 9)])}"]
     out += [f"object-depleted:{objects[n]}:{n}:{hexes(sq[('S', i)])}" for i, n in TILE_DEPLETED.items()
             if n in objects and ("S", i) in sq]
     out += [f"monster-uncrowned:{sq_monsters[i][:-len(' (without crown)')]}:{hexes(at)}" for (k, i), at in sq.items()

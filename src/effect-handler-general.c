@@ -42,6 +42,7 @@
 #include "obj-pile.h"
 #include "obj-tval.h"
 #include "obj-util.h"
+#include "player-abilities.h"
 #include "player-calcs.h"
 #include "player-history.h"
 #include "player-quest.h"
@@ -772,7 +773,12 @@ bool effect_handler_RECHARGE(effect_handler_context_t *context)
 		return (used);
 	}
 
-	obj->pval += num;
+	/* Sil-Q: a staff of Recharging recharges only half as much for a channeler */
+	if (z_info->game_silq && tval_is_staff(obj) && streq(obj->kind->name, "Recharging")
+			&& player_active_ability(player, "Channeling")) {
+		num /= 2;
+	}
+	obj->pval += num * (z_info->game_silq && tval_is_staff(obj) ? 2 : 1);
 	obj->notice &= ~(OBJ_NOTICE_EMPTY);
 
 	/* Combine the pack (later) */

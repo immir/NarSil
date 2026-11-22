@@ -1119,8 +1119,11 @@ void object_prep(struct object *obj, struct object_kind *k, int lev,
 	of_copy(obj->flags, k->flags);
 
 	/* Assign charges (staves only) */
-	if (tval_can_have_charges(obj))
+	if (tval_can_have_charges(obj)) {
 		obj->pval = randcalc(k->charge, lev, rand_aspect);
+		/* Sil-Q: staffs hold twice the charges they show */
+		if (z_info->game_silq && tval_is_staff(obj)) obj->pval *= 2;
+	}
 
 	/* Default fuel, light */
 	if (tval_is_light(obj)) {

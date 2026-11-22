@@ -616,7 +616,7 @@ static void use_aux(struct command *cmd, struct object *obj, enum use use,
 				if (use == USE_CHARGE) {
 					deduct_before = true;
 					/* Use a single charge */
-					obj->pval--;
+					obj->pval -= staff_charge_cost(obj);
 					obj->used++;
 				} else {
 					deduct_before = false;
@@ -725,9 +725,9 @@ static void use_aux(struct command *cmd, struct object *obj, enum use use,
 		if (used && !deduct_before) {
 			assert(!from_floor);
 			if (use == USE_CHARGE) {
-				obj->pval--;
+				obj->pval -= staff_charge_cost(obj);
 				obj->used++;
-				work_obj->pval--;
+				work_obj->pval -= staff_charge_cost(work_obj);
 				work_obj->used++;
 			} else if (use == USE_SINGLE) {
 				struct object *used_obj = gear_object_for_use(
