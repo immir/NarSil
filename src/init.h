@@ -123,6 +123,8 @@ struct angband_constants
 	uint8_t rule_gorged;	/**< Being gorged stops you eating or drinking more (default 1) */
 	uint8_t rule_escape_stairs;	/**< On the escape every stair is a shaft, and none crumble (default 0) */
 	uint8_t rule_wide_drops;	/**< Dropped objects can land up to four grids away, not three (default 0) */
+	uint8_t rule_silq_items;	/**< Sil-Q's object generation: specials, artefacts, arrows, jewellery (default 0) */
+	uint8_t rule_silq_levels;	/**< Sil-Q's level generation: stairs, rubble, chasms, connectivity, webs, sunlight (default 0) */
 };
 
 struct init_module {

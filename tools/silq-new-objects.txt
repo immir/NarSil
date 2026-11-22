@@ -98,7 +98,7 @@ cost:0
 attack:0:0d0
 defence:0:0d0
 alloc:7:6
-flags:COWARDICE | EASY_KNOW
+flags:COWARDICE | EASY_KNOW | CURSED
 
 name:Ered Luin
 graphics:=:d

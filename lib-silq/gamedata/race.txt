@@ -55,7 +55,8 @@ height:76:3
 weight:159:10
 player-flags:BOW_PROFICIENCY
 equip:food:Fragment of Lembas:3:3
-equip:light:Wooden Torch:3:4
+equip:light:Wooden Torch:3:3
+equip:sword:Curved Sword:1:1
 desc:The Noldor are known as the 'Deep-elves', for they are the
 desc: most learned and inventive of the elven kindreds. They saw
 desc: the light of the Two Trees in Valinor and gained much in
@@ -72,7 +73,8 @@ height:72:3
 weight:156:10
 player-flags:BOW_PROFICIENCY
 equip:food:Fragment of Lembas:3:3
-equip:light:Wooden Torch:3:4
+equip:light:Wooden Torch:3:3
+equip:sword:Curved Sword:1:1
 desc:The Sindar are the 'Grey-elves' who never saw the blessed light of
 desc: the Two Trees, but who found an echo of it in their queen,
 desc: Melian the Maiar. They are less learned and powerful than the
@@ -87,7 +89,8 @@ height:50:3
 weight:155:10
 player-flags:AXE_PROFICIENCY
 equip:food:Piece of Dark Bread:5:5
-equip:light:Wooden Torch:3:4
+equip:light:Wooden Torch:3:3
+equip:sword:Curved Sword:1:1
 desc:The dwarves are stone-hard and stubborn, fast in friendship
 desc: and in enmity. They live long, far beyond the span of Men
 desc: but not for ever. They are short in stature, deep-breasted
@@ -102,7 +105,7 @@ age:15:45
 height:72:3
 weight:166:14
 equip:food:Piece of Dark Bread:5:5
-equip:light:Wooden Torch:3:4
+equip:light:Wooden Torch:3:3
 equip:sword:Curved Sword:1:1
 desc:The Edain are the Men of Beleriand. They gained much from
 desc: dealings with the Noldor, and grew more long lived than their

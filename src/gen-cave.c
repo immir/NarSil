@@ -88,9 +88,58 @@ static bool player_pass(struct chunk *c, struct loc grid, bool ignore_rubble)
 		square_isvault(c, loc(grid.x + 1, grid.y)) &&
 		square_isvault(c, loc(grid.x, grid.y - 1)) &&
 		square_isvault(c, loc(grid.x, grid.y + 1));
+	/* Sil-Q: a chasm blocks the way like rubble does */
+	if (z_info->rule_silq_levels && square_ischasm(c, grid)) return ignore_rubble;
 	return square_ispassable(c, grid) || square_issecretdoor(c, grid) ||
 		square_iscloseddoor(c, grid) ||
 		(square_isrubble(c, grid) && ignore_rubble) || vault_interior;
+}
+
+/**
+ * Sil-Q's patch of sunlight around a lit grid in open floor: rubble at the
+ * centre, sunlight on some of the floor around it.
+ */
+static void make_patch_of_sunlight(struct chunk *c, struct loc grid)
+{
+	int floor = 0;
+
+	if (!square_isglow(c, grid)) return;
+	for (int y = grid.y - 1; y <= grid.y + 1; y++) {
+		for (int x = grid.x - 1; x <= grid.x + 1; x++) {
+			if (square(c, loc(x, y))->feat == FEAT_FLOOR) floor++;
+		}
+	}
+	if (floor <= 6) return;
+
+	/* Not under the player or anything lying there */
+	if (square_isempty(c, grid)) square_set_feat(c, grid, FEAT_RUBBLE);
+	for (int y = grid.y - 1; y <= grid.y + 1; y++) {
+		for (int x = grid.x - 1; x <= grid.x + 1; x++) {
+			const struct loc n = loc(x, y);
+			if (square_isglow(c, n) && square(c, n)->feat == FEAT_FLOOR
+					&& one_in_(4)) {
+				square_set_feat(c, n, FEAT_SUNLIGHT);
+			}
+		}
+	}
+}
+
+/**
+ * Sunlight at the start of the game: patches near the player and a few more
+ * over the level.
+ */
+static void make_patches_of_sunlight(struct chunk *c, struct player *p)
+{
+	for (int i = 0; i < 40; i++) {
+		const int y = rand_range(MAX(p->grid.y - 5, 1), MIN(p->grid.y + 5, c->height - 2));
+		const int x = rand_range(MAX(p->grid.x - 5, 1), MIN(p->grid.x + 5, c->width - 2));
+		make_patch_of_sunlight(c, loc(x, y));
+	}
+	for (int i = 0; i < 20; i++) {
+		const int y = rand_range(10, c->height - 10);
+		const int x = rand_range(10, c->width - 10);
+		make_patch_of_sunlight(c, loc(x, y));
+	}
 }
 
 /**
@@ -149,11 +198,24 @@ static bool check_connectivity(struct chunk *c)
 		}
 	}
 	
-	/* Make sure player can reach stairs without going through rubble */
+	/* Sil-Q: arriving on a way down is enough */
+	if (z_info->rule_silq_levels
+			&& (player->upkeep->create_stair == FEAT_MORE
+				|| player->upkeep->create_stair == FEAT_MORE_SHAFT)) {
+		result = true;
+		goto CLEANUP;
+	}
+
+	/* Make sure player can reach stairs without going through rubble (Sil-Q:
+	 * a way down, without crossing rubble or chasms) */
 	flood_access(c, player->grid, access, false);
 	for (grid.y = 0; grid.y < c->height; grid.y++) {
 		for (grid.x = 0; grid.x < c->width; grid.x++) {
-			if (access[grid.y][grid.x] && square_isstairs(c, grid)) {
+			const int feat = square(c, grid)->feat;
+			const bool way = z_info->rule_silq_levels
+				? (feat == FEAT_MORE || feat == FEAT_MORE_SHAFT)
+				: square_isstairs(c, grid);
+			if (access[grid.y][grid.x] && way) {
 				result = true;
 				goto CLEANUP;
 			}
@@ -419,6 +481,9 @@ static void build_chasms(struct chunk *c)
             chasms += damroll(1, blocks / 3);
         }
     }
+
+    /* Sil-Q: at most a dozen */
+    if (z_info->rule_silq_levels) chasms = MIN(chasms, 12);
 
     /* Build them */
     for (i = 0; i < chasms; i++) {
@@ -973,11 +1038,14 @@ static bool connect_rooms_stairs(struct chunk *c)
     } else {
 		stairs = 4;
     }
+	/* Sil-Q: on the escape, twice the stairs, all shafts */
+	const bool escape = z_info->rule_silq_levels && player->on_the_run;
+	if (escape) stairs *= 2;
 	if ((player->upkeep->create_stair == FEAT_MORE) ||
 		(player->upkeep->create_stair == FEAT_MORE_SHAFT)) {
 		stairs--;
 	}
-	alloc_stairs(c, FEAT_MORE, stairs);
+	alloc_stairs(c, escape ? FEAT_MORE_SHAFT : FEAT_MORE, stairs);
 
 	/* Place up stairs */
     width = c->width / z_info->block_wid;
@@ -988,10 +1056,12 @@ static bool connect_rooms_stairs(struct chunk *c)
     } else {
 		stairs = 4;
     }
+	const bool escape_up = escape && c->depth >= 2;
+	if (escape_up) stairs *= 2;
     if ((player->upkeep->create_stair == FEAT_LESS) ||
 		(player->upkeep->create_stair == FEAT_LESS_SHAFT))
 		stairs--;
-	alloc_stairs(c, FEAT_LESS, stairs);
+	alloc_stairs(c, escape_up ? FEAT_LESS_SHAFT : FEAT_LESS, stairs);
 
 	/* Add some quartz streamers */
 	for (i = 0; i < dun->profile->str.qua; i++) {
@@ -1140,6 +1210,11 @@ struct chunk *cave_gen(struct player *p)
 	/* Place the player */
 	new_player_spot(c, p);
 
+	/* Sil-Q: sunlight falls on the first level, mostly around the player */
+	if (z_info->rule_silq_levels && c->depth == 1 && p->stairs_taken == 0) {
+		make_patches_of_sunlight(c, p);
+	}
+
 	/* Check dungeon connectivity */
 	if (!check_connectivity(c)) {
 		if (OPT(p, cheat_room)) msg("Failed connectivity.");
@@ -1200,8 +1275,9 @@ struct chunk *cave_gen(struct player *p)
 		}
 	}
 
-	/* Add a curved sword near the player if this is the start of the game */
-	if (p->turn == 0) {
+	/* Add a curved sword near the player if this is the start of the game
+	 * (Sil-Q starts every character with one instead) */
+	if (p->turn == 0 && !z_info->rule_silq_levels) {
 		place_item_near_player(c, p, TV_SWORD, "Curved Sword");
 	}
 

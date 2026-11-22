@@ -30,3 +30,4 @@ FEAT(FORGE_GOOD)
 FEAT(FORGE_UNIQUE)
 FEAT(PIT)
 FEAT(SPIKED_PIT)
+FEAT(SUNLIGHT) /* patch of sunlight (Sil-Q; only NarSil-Q makes it) */

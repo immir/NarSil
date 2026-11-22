@@ -1004,6 +1004,11 @@ static void drop_find_grid(const struct player *p, struct chunk *c,
 				square_istrap(c, try))
 				continue;
 
+			/* Sil-Q: not where a peaceful creature stands */
+			if (z_info->rule_wide_drops && square(c, try)->mon > 0
+					&& rf_has(square_monster(c, try)->race->flags, RF_PEACEFUL))
+				continue;
+
 			/* Analyse the grid for carrying the new object */
 			for (obj = square_object(c, try); obj; obj = obj->next){
 				/* Check for possible combination */

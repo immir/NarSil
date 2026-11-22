@@ -162,6 +162,16 @@ bool object_is_carried(struct player *p, const struct object *obj)
 /**
  * Check if an object is in the quiver
  */
+/**
+ * How many arrows the player has in both quivers.
+ */
+int quiver_arrow_count(struct player *p)
+{
+	const struct object *const first = equipped_item_by_slot_name(p, "first quiver");
+	const struct object *const second = equipped_item_by_slot_name(p, "second quiver");
+	return (first ? first->number : 0) + (second ? second->number : 0);
+}
+
 bool object_is_in_quiver(const struct player *p, const struct object *obj)
 {
 	struct player_body body = p->body;

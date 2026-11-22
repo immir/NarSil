@@ -201,3 +201,13 @@ rules:escape-stairs:0
 
 # Dropped objects can land up to four grids away (otherwise three)
 rules:wide-drops:0
+
+# Sil-Q's object generation: specials at (not twice) the level, its artefact
+# rolls, its arrow stacks and jewellery bonuses, deeper finds boosted only to
+# the bottom of the dungeon, special artefacts checked against their base's depth
+rules:silq-items:0
+
+# Sil-Q's level generation: no rubble on stairs or under the player, at most 12
+# chasms, the way down reachable without crossing chasms, twice the stairs (all
+# shafts) on the escape, webbed vaults webbed not trapped, sunlight
+rules:silq-levels:0

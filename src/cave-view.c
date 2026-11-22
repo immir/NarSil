@@ -627,6 +627,11 @@ static void add_light(struct chunk *c, struct player *p, struct loc sgrid,
 		bonus_light = 1;
 	}
 
+	/* Standing in sunlight (Sil-Q) */
+	if (loc_eq(sgrid, p->grid) && square(c, p->grid)->feat == FEAT_SUNLIGHT) {
+		bonus_light += 3;
+	}
+
 	for (y = -radius; y <= radius; y++) {
 		int x;
 

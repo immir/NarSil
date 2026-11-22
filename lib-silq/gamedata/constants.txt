@@ -189,3 +189,7 @@ rules:morgoth-anger:1
 rules:gorged:0
 rules:escape-stairs:1
 rules:wide-drops:1
+
+# Sil-Q's object and level generation (see ../lib's constants.txt)
+rules:silq-items:1
+rules:silq-levels:1
