@@ -192,6 +192,26 @@ static void grid_get_attr(struct grid_data *g, int *a)
  * This will probably be done outside of the current text->graphics mappings
  * though.
  */
+/**
+ * A monster's alternative tile, if the graphics give one: its rage tile while
+ * the player rages (which hides what it is), else, for a monster whose crown
+ * has been taken, the tile without it.
+ */
+static void monster_alt_tile(const struct monster_race *race, bool rage,
+		uint8_t *a, wchar_t *c)
+{
+	if (use_graphics == GRAPHICS_NONE) return;
+	if (rage && (monster_rage_attr[race->ridx] & 0x80)) {
+		*a = monster_rage_attr[race->ridx];
+		*c = monster_rage_char[race->ridx];
+	} else if (monster_uncrowned_attr[race->ridx] & 0x80) {
+		const struct artifact *const crown = lookup_artifact_name("of Morgoth");
+		if (!crown || !is_artifact_created(crown)) return;
+		*a = monster_uncrowned_attr[race->ridx];
+		*c = monster_uncrowned_char[race->ridx];
+	}
+}
+
 void grid_data_as_text(struct grid_data *g, int *ap, wchar_t *cp, int *tap,
 					   wchar_t *tcp)
 {
@@ -238,6 +258,13 @@ void grid_data_as_text(struct grid_data *g, int *ap, wchar_t *cp, int *tap,
 				}
 			}
 			c = object_kind_char(g->first_kind);
+
+			/* A spent light has its own tile */
+			if (g->depleted && use_graphics != GRAPHICS_NONE
+					&& (kind_depleted_attr[g->first_kind->kidx] & 0x80)) {
+				a = kind_depleted_attr[g->first_kind->kidx];
+				c = kind_depleted_char[g->first_kind->kidx];
+			}
 		}
 		if (g->rage && (use_graphics == GRAPHICS_NONE
 				|| !(a & 0x80))) a = COLOUR_RED;
@@ -266,6 +293,7 @@ void grid_data_as_text(struct grid_data *g, int *ap, wchar_t *cp, int *tap,
 			/* Desired attr & char */
 			da = monster_x_attr[mon->race->ridx];
 			dc = monster_x_char[mon->race->ridx];
+			monster_alt_tile(mon->race, g->rage, &da, &dc);
 
 			/* Special handling of attrs and/or chars */
 			if (da & 0x80) {
@@ -281,9 +309,6 @@ void grid_data_as_text(struct grid_data *g, int *ap, wchar_t *cp, int *tap,
 								   FLAG_END)) {
 				/* Normal monster (not "clear" in any way) */
 				a = da;
-				/* Desired attr & char. da is not used, should a be set to it?*/
-				/*da = monster_x_attr[mon->race->ridx];*/
-				dc = monster_x_char[mon->race->ridx];
 				c = dc;
 			} else if (a & 0x80) {
 				/* Bizarre grid under monster */
@@ -321,6 +346,12 @@ void grid_data_as_text(struct grid_data *g, int *ap, wchar_t *cp, int *tap,
 
 		/* Get the "player" char */
 		c = monster_x_char[race->ridx];
+	}
+
+	/* While raging, every tile is drawn tinted red (Sil-Q) */
+	if (g->rage && use_graphics != GRAPHICS_NONE) {
+		if (a & 0x80) a |= GRAPHICS_RAGE_MASK;
+		if ((*tap) & 0x80) (*tap) |= GRAPHICS_RAGE_MASK;
 	}
 
 	/* Result */

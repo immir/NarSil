@@ -469,6 +469,7 @@ struct status_bar {
 
 struct graphics {
 	SDL_Texture *texture;
+	SDL_Texture *texture_rage;	/* the same tiles tinted red, for GRAPHICS_RAGE_MASK */
 	int id;
 	int tile_pixel_w;
 	int tile_pixel_h;
@@ -1045,7 +1046,9 @@ static void render_tile_rect_scaled(const struct subwindow *subwindow,
 	}
 
 	SDL_RenderCopy(subwindow->window->renderer,
-			graphics->texture, &src, &dst);
+			((a & GRAPHICS_RAGE_MASK) && graphics->texture_rage)
+				? graphics->texture_rage : graphics->texture,
+			&src, &dst);
 }
 
 static void render_tile_font_scaled(const struct subwindow *subwindow,
@@ -1072,6 +1075,8 @@ static void render_tile_font_scaled(const struct subwindow *subwindow,
 	int src_col = c & 0x7f;
 	bool alert = (a & GRAPHICS_ALERT_MASK);
 	bool glow = (a & GRAPHICS_GLOW_MASK);
+	SDL_Texture *const sheet = ((a & GRAPHICS_RAGE_MASK) && graphics->texture_rage)
+		? graphics->texture_rage : graphics->texture;
 
 	src.x = src_col * src.w;
 	src.y = src_row * src.h;
@@ -1088,7 +1093,7 @@ static void render_tile_font_scaled(const struct subwindow *subwindow,
 
 		/* For now, do not deal with glow for double-height tiles. */
 		SDL_RenderCopy(subwindow->window->renderer,
-				graphics->texture, &src, &dst);
+				sheet, &src, &dst);
 		if (alert) {
 			/*
 			 * The alert indicator is not double height; render
@@ -1098,7 +1103,7 @@ static void render_tile_font_scaled(const struct subwindow *subwindow,
 			src.x = (alert_x_char & 0x7f) * src.w;
 			src.y = (alert_x_attr & 0x7f) * src.h;
 			SDL_RenderCopy(subwindow->window->renderer,
-				graphics->texture, &src, &dst);
+				sheet, &src, &dst);
 		}
 	} else {
 		if (glow) {
@@ -1109,15 +1114,15 @@ static void render_tile_font_scaled(const struct subwindow *subwindow,
 			glow_src.w = src.w;
 			glow_src.h = src.h;
 			SDL_RenderCopy(subwindow->window->renderer,
-				graphics->texture, &glow_src, &dst);
+				sheet, &glow_src, &dst);
 		}
 		SDL_RenderCopy(subwindow->window->renderer,
-				graphics->texture, &src, &dst);
+				sheet, &src, &dst);
 		if (alert) {
 			src.x = (alert_x_char & 0x7f) * src.w;
 			src.y = (alert_x_attr & 0x7f) * src.h;
 			SDL_RenderCopy(subwindow->window->renderer,
-				graphics->texture, &src, &dst);
+				sheet, &src, &dst);
 		}
 	}
 }
@@ -4444,6 +4449,42 @@ static int term_wcsz_sdl2_msys2(void)
 
 #endif /* MSYS2_ENCODING_WORKAROUND */
 
+/**
+ * The tile sheet at path tinted as Sil-Q tints it while the player rages:
+ * each pixel's luma becomes (luma, 0.3 luma, 0.3 luma); transparency is kept.
+ */
+static SDL_Texture *load_rage_image(const struct window *window, const char *path)
+{
+	SDL_Surface *const loaded = IMG_Load(path);
+	if (loaded == NULL) {
+		quit_fmt("cannot load image '%s': %s", path, IMG_GetError());
+	}
+	SDL_Surface *const surface =
+		SDL_ConvertSurfaceFormat(loaded, SDL_PIXELFORMAT_RGBA32, 0);
+	SDL_FreeSurface(loaded);
+	assert(surface != NULL);
+
+	SDL_LockSurface(surface);
+	for (int y = 0; y < surface->h; y++) {
+		uint8_t *const row = (uint8_t *)surface->pixels + y * surface->pitch;
+		for (int x = 0; x < surface->w; x++) {
+			uint8_t *const px = row + 4 * x;
+			const int luma = MIN(255, (299 * px[0] + 587 * px[1] + 114 * px[2]) / 1000);
+			px[0] = (uint8_t)luma;
+			px[1] = px[2] = (uint8_t)(luma * 3 / 10);
+		}
+	}
+	SDL_UnlockSurface(surface);
+
+	SDL_Texture *const texture =
+		SDL_CreateTextureFromSurface(window->renderer, surface);
+	SDL_FreeSurface(surface);
+	if (texture == NULL) {
+		quit_fmt("cannot create texture from image '%s': %s", path, SDL_GetError());
+	}
+	return texture;
+}
+
 static SDL_Texture *load_image(const struct window *window, const char *path)
 {
 	SDL_Surface *surface = IMG_Load(path);
@@ -4610,6 +4651,7 @@ static void load_graphics(struct window *window, graphics_mode *mode)
 
 		window->graphics.texture = load_image(window, path);
 		assert(window->graphics.texture != NULL);
+		window->graphics.texture_rage = load_rage_image(window, path);
 
 		window->graphics.tile_pixel_w = mode->cell_width;
 		window->graphics.tile_pixel_h = mode->cell_height;
@@ -6004,6 +6046,10 @@ static void free_graphics(struct graphics *graphics)
 	if (graphics->texture != NULL) {
 		SDL_DestroyTexture(graphics->texture);
 		graphics->texture = NULL;
+	}
+	if (graphics->texture_rage != NULL) {
+		SDL_DestroyTexture(graphics->texture_rage);
+		graphics->texture_rage = NULL;
 	}
 }
 

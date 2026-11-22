@@ -7,7 +7,12 @@
   silq-convert.py object SILQ_EDIT_DIR NARSIL_GAMEDATA_DIR tools/silq-new-objects.txt > object.txt
   silq-convert.py special|artefact SILQ_EDIT_DIR NARSIL_GAMEDATA_DIR tools/silq-new-objects.txt > special.txt
   silq-convert.py vault SILQ_EDIT_DIR NARSIL_GAMEDATA_DIR > vault.txt
-  silq-convert.py tiles NARSIL_GRAF_PREF LIB_SILQ_MONSTER_TXT > graf-mcm.prf   (monster tile lines for NarSil-Q's monsters)
+  silq-convert.py tiles NARSIL_GRAF_PREF LIB_SILQ_GAMEDATA_DIR SILQ_LIB_DIR > graf-mcm.prf
+      (NarSil's tile lines for what NarSil-Q has, at Sil-Q's positions where Sil-Q has them, plus Sil-Q's depleted
+      lights, rage tiles and crownless Morgoth)
+  silq-convert.py flavours NARSIL_FLVR_PREF SILQ_LIB_DIR > flvr-mcm.prf
+  silq-convert.py sheet SILQ_LIB_DIR NARSIL_TILE_PNG OUT_PNG
+      (Sil-Q's tile sheet, with NarSil's own bottom row moved one row down: NarSil-Q's 16x16.png)
 
 Lines NarSil has and Sil-Q's format cannot express (drop:, drop-artifact:, song:, message-*:) are kept from
 the NarSil entry of the same name. The output is committed; the build never reads Sil-Q's files.
@@ -135,7 +140,7 @@ def narsil_fields(lines):
 RACE_BASE = [("SPIDER", "spider"), ("WOLF", "wolf"), ("ORC", "orc"), ("TROLL", "troll"), ("RAUKO", "rauko"),
              ("SERPENT", "serpent"), ("DRAGON", "dragon"), ("UNDEAD", "wraith")]
 
-# Tiles for monsters NarSil's tileset lacks: they borrow a look-alike's tile until they get their own.
+# Tiles for monsters with none of their own in Sil-Q's prefs either: they borrow a look-alike's.
 TILE_BORROW = {"Orc skirmisher": "Orc scout", "Orc thrallmaster": "Orc captain", "Attercop": "Sword spider",
                "Brood spider": "Distended spider", "Alert human thrall": "Easterling spy",
                "Dejected human thrall": "Easterling spy", "Alert elven thrall": "Easterling spy",
@@ -145,15 +150,127 @@ TILE_BORROW = {"Orc skirmisher": "Orc scout", "Orc thrallmaster": "Orc captain",
                "Morgoth, Lord of Darkness (without crown)": "Morgoth, Lord of Darkness"}
 
 
-def tiles(prf, names):
-    """A NarSil graphics pref with monster lines kept only for monsters that exist, plus borrowed tiles."""
-    names = names | {n.split(",")[0] for n in names}  # the game looks up "Gothmog" for "Gothmog, High Captain..."
-    lines = open(prf).read().split("\n")
-    kept = [l for l in lines if not l.startswith("monster:") or l.split(":")[1] in names]
-    have = {l.split(":")[1]: l for l in lines if l.startswith("monster:")}
-    extra = [f"monster:{n}:" + have[b].split(":", 2)[2] for n, b in TILE_BORROW.items() if n in names and b in have]
-    at = max(i for i, l in enumerate(kept) if l.startswith("monster:")) + 1
-    return "\n".join(kept[:at] + extra + kept[at:])
+# NarSil's tile sheet is an older Sil-Q sheet: the same layout, with NarSil's own tiles in row 0x90, where Sil-Q
+# now keeps its rage tiles. NarSil-Q uses Sil-Q's sheet with that NarSil row moved to TILE_NARSIL_ROW.
+TILE_SHEET_ROW = 0x90
+TILE_NARSIL_ROW = 0x91
+
+# Sil-Q's special tiles for spent lights (its "S:" lines) and the objects they belong to.
+TILE_DEPLETED = {0x0D: "Brass Lantern", 0x0E: "Wooden Torch", 0x0F: "Mallorn Torch"}
+
+
+def plain_name(name):
+    """An object name as pref files write it: "& Pair~ of Shabby Boots" -> "Pair of Shabby Boots"."""
+    return re.sub(r"^& ", "", name).replace("~", "")
+
+
+def silq_tiles(silq_lib):
+    """Sil-Q's tile lines: {("K" | "R" | "S", index): (attr, char)}, and the rage tiles {monster index: (attr, char)}."""
+    tiles, rage = {}, {}
+    for line in open(f"{silq_lib}/pref/graf-tiles.prf"):
+        m = re.match(r"^([KRS]):(0x[0-9A-Fa-f]+|\d+):(?:(rage):)?(0x[0-9A-Fa-f]+)/(0x[0-9A-Fa-f]+)", line)
+        if m:
+            at = (int(m.group(4), 16), int(m.group(5), 16))
+            if m.group(3):
+                rage[int(m.group(2), 0)] = at
+            else:
+                tiles[(m.group(1), int(m.group(2), 0))] = at
+    return tiles, rage
+
+
+def silq_names(path):
+    """Sil-Q's index -> name for an edit file."""
+    return {int(m.group(1)): m.group(2).strip() for m in re.finditer(r"^N:(\d+):(.*)$", open(path, errors="replace").read(), re.M)}
+
+
+def tiles(prf, gamedata, silq_lib):
+    """NarSil-Q's graphics pref: NarSil's lines for what NarSil-Q has, at Sil-Q's positions where Sil-Q has them,
+    plus Sil-Q's tiles for what NarSil lacks, its depleted lights, rage tiles and crownless Morgoth."""
+    hexes = lambda at: f"0x{at[0]:02X}:0x{at[1]:02X}"
+    monsters = [m.group(1) for m in re.finditer(r"^name:(.*)$", open(f"{gamedata}/monster.txt").read(), re.M)]
+    objects = OrderedDict()
+    for entry in open(f"{gamedata}/object.txt").read().split("\nname:")[1:]:
+        tval = re.search(r"^type:(.*)$", entry, re.M)
+        if tval:
+            objects[plain_name(entry.split("\n", 1)[0].strip())] = tval.group(1).strip()
+    sq, rage = silq_tiles(silq_lib)
+    sq_monsters, sq_objects = silq_names(f"{silq_lib}/edit/monster.txt"), silq_names(f"{silq_lib}/edit/object.txt")
+    monster_at = {sq_monsters[i]: at for (k, i), at in sq.items() if k == "R" and i in sq_monsters}
+    object_at = {plain_name(sq_objects[i]): at for (k, i), at in sq.items() if k == "K" and i in sq_objects}
+    full = {n.split(",")[0]: n for n in monsters}  # the game looks up "Gothmog" for "Gothmog, High Captain..."
+
+    out, have_monster, have_object = [], set(), set()
+    for line in open(prf).read().split("\n"):
+        m = re.match(r"^(object:[^:]*|monster):(.*):(0x[0-9A-Fa-f]{2}):(0x[0-9A-Fa-f]{2})$", line)
+        if not m:
+            out.append(line)
+            continue
+        kind, name, at = m.group(1), m.group(2), (int(m.group(3), 16), int(m.group(4), 16))
+        if kind == "monster":
+            name_full = name if name in monsters else full.get(name)
+            if name_full is None:
+                continue
+            have_monster.add(name_full)
+            if name_full != "<player>":  # the player's tile is by race, in xtra-mcm.prf
+                at = monster_at.get(name_full, at)
+        elif name in objects:
+            have_object.add(name)
+            at = object_at.get(name, at)
+        if at[0] == TILE_SHEET_ROW and at not in set(monster_at.values()) | set(object_at.values()):
+            at = (TILE_NARSIL_ROW, at[1])
+        out.append(f"{kind}:{name}:{hexes(at)}")
+
+    def insert_after(prefix, new):
+        at = max(i for i, l in enumerate(out) if l.startswith(prefix)) + 1
+        out[at:at] = new
+
+    insert_after("monster:", [f"monster:{n}:{hexes(monster_at[n])}" for n in monsters
+                              if n not in have_monster and n in monster_at]
+                 + [f"monster:{n}:{hexes(monster_at.get(b))}" for n, b in TILE_BORROW.items()
+                    if n in monsters and n not in have_monster and n not in monster_at and b in monster_at])
+    insert_after("object:", [f"object:{t}:{n}:{hexes(object_at[n])}" for n, t in objects.items()
+                             if n not in have_object and n in object_at])
+    out += ["", "##### Sil-Q: a spent light, a monster without its crown, and monsters as a raging player sees them #####", ""]
+    out += [f"object-depleted:{objects[n]}:{n}:{hexes(sq[('S', i)])}" for i, n in TILE_DEPLETED.items()
+            if n in objects and ("S", i) in sq]
+    out += [f"monster-uncrowned:{sq_monsters[i][:-len(' (without crown)')]}:{hexes(at)}" for (k, i), at in sq.items()
+            if k == "R" and sq_monsters.get(i, "").endswith(" (without crown)")
+            and sq_monsters[i][:-len(" (without crown)")] in monsters]
+    out += [f"monster-rage:{sq_monsters[i]}:{hexes(at)}" for i, at in sorted(rage.items())
+            if sq_monsters.get(i) in monsters]
+    return "\n".join(out).rstrip("\n") + "\n"
+
+
+def flavours(prf, silq_lib):
+    """NarSil's flavour tiles, at Sil-Q's positions where Sil-Q has the same flavour."""
+    sq = {int(m.group(1)): (m.group(2), m.group(3))
+          for m in re.finditer(r"^L:(\d+):(0x[0-9A-Fa-f]+)/(0x[0-9A-Fa-f]+)", open(f"{silq_lib}/pref/flvr-tiles.prf").read(), re.M)}
+    out = []
+    for line in open(prf).read().split("\n"):
+        m = re.match(r"^flavor:(\d+):", line)
+        if m and int(m.group(1)) in sq:
+            a, c = sq[int(m.group(1))]
+            line = f"flavor:{m.group(1)}:0x{int(a, 16):02X}:0x{int(c, 16):02X}"
+        out.append(line)
+    return "\n".join(out)
+
+
+def sheet(silq_lib, narsil_png, out_png):
+    """Sil-Q's tile sheet (its BMP, with the colour of pixel (0, 0) transparent) and NarSil's own tile row below it."""
+    from PIL import Image
+    sq = Image.open(f"{silq_lib}/xtra/graf/16x16.bmp").convert("RGBA")
+    key = sq.getpixel((0, 0))
+    px = sq.load()
+    for y in range(sq.height):
+        for x in range(sq.width):
+            if px[x, y] == key:
+                px[x, y] = (0, 0, 0, 0)
+    ns = Image.open(narsil_png).convert("RGBA")
+    out = Image.new("RGBA", (sq.width, 16 * (TILE_NARSIL_ROW - 0x80 + 1)), (0, 0, 0, 0))
+    out.paste(sq, (0, 0))
+    y = 16 * (TILE_SHEET_ROW - 0x80)
+    out.paste(ns.crop((0, y, ns.width, y + 16)), (0, 16 * (TILE_NARSIL_ROW - 0x80)))
+    out.save(out_png, optimize=True)
 
 
 def silq_object_numbers(lines):
@@ -479,8 +596,14 @@ def main():
     if len(sys.argv) == 5 and sys.argv[1] == "object":
         print(patch_objects(sys.argv[2] + "/object.txt", sys.argv[3] + "/object.txt", sys.argv[4]), end="")
         return
-    if len(sys.argv) == 4 and sys.argv[1] == "tiles":
-        print(tiles(sys.argv[2], {l.split(":", 1)[1].strip() for l in open(sys.argv[3]) if l.startswith("name:")}), end="")
+    if len(sys.argv) == 5 and sys.argv[1] == "tiles":
+        print(tiles(sys.argv[2], sys.argv[3], sys.argv[4]), end="")
+        return
+    if len(sys.argv) == 4 and sys.argv[1] == "flavours":
+        print(flavours(sys.argv[2], sys.argv[3]), end="")
+        return
+    if len(sys.argv) == 5 and sys.argv[1] == "sheet":
+        sheet(sys.argv[2], sys.argv[3], sys.argv[4])
         return
     if len(sys.argv) < 4 or sys.argv[1] != "monster":
         sys.exit(__doc__)

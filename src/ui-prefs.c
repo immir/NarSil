@@ -44,6 +44,12 @@ int use_graphics;			/* The "graphics" mode is enabled */
 
 uint8_t *monster_x_attr;
 wchar_t *monster_x_char;
+uint8_t *monster_rage_attr;
+wchar_t *monster_rage_char;
+uint8_t *monster_uncrowned_attr;
+wchar_t *monster_uncrowned_char;
+uint8_t *kind_depleted_attr;
+wchar_t *kind_depleted_char;
 uint8_t *kind_x_attr;
 wchar_t *kind_x_char;
 uint8_t *feat_x_attr[LIGHTING_MAX];
@@ -675,6 +681,60 @@ static enum parser_error parse_prefs_monster(struct parser *p)
 	return PARSE_ERROR_NONE;
 }
 
+/**
+ * An alternative tile for a monster: "monster-rage" while the player rages,
+ * "monster-uncrowned" once it has lost its crown (Sil-Q's tiles).
+ */
+static enum parser_error parse_prefs_monster_alt(struct parser *p,
+		uint8_t *attrs, wchar_t *chars)
+{
+	struct prefs_data *d = parser_priv(p);
+	assert(d != NULL);
+	if (d->bypass) return PARSE_ERROR_NONE;
+
+	const struct monster_race *const monster =
+		lookup_monster(parser_getsym(p, "name"));
+	if (!monster)
+		return PARSE_ERROR_NO_KIND_FOUND;
+
+	attrs[monster->ridx] = (uint8_t)parser_getint(p, "attr");
+	chars[monster->ridx] = (wchar_t)parser_getint(p, "char");
+	return PARSE_ERROR_NONE;
+}
+
+static enum parser_error parse_prefs_monster_rage(struct parser *p)
+{
+	return parse_prefs_monster_alt(p, monster_rage_attr, monster_rage_char);
+}
+
+static enum parser_error parse_prefs_monster_uncrowned(struct parser *p)
+{
+	return parse_prefs_monster_alt(p, monster_uncrowned_attr,
+		monster_uncrowned_char);
+}
+
+/**
+ * The tile for a light of this kind with no fuel left ("object-depleted").
+ */
+static enum parser_error parse_prefs_object_depleted(struct parser *p)
+{
+	struct prefs_data *d = parser_priv(p);
+	assert(d != NULL);
+	if (d->bypass) return PARSE_ERROR_NONE;
+
+	const int tval = tval_find_idx(parser_getsym(p, "tval"));
+	if (tval < 0)
+		return PARSE_ERROR_UNRECOGNISED_TVAL;
+	const int sval = lookup_sval(tval, parser_getsym(p, "sval"));
+	const struct object_kind *const kind = sval < 0 ? NULL : lookup_kind(tval, sval);
+	if (!kind)
+		return PARSE_ERROR_NONE;	/* as "object": outdated pref files still load */
+
+	kind_depleted_attr[kind->kidx] = (uint8_t)parser_getint(p, "attr");
+	kind_depleted_char[kind->kidx] = (wchar_t)parser_getint(p, "char");
+	return PARSE_ERROR_NONE;
+}
+
 static enum parser_error parse_prefs_monster_base(struct parser *p)
 {
 	const char *name;
@@ -1111,6 +1171,9 @@ static struct parser *init_parse_prefs(bool user)
 	parser_reg(p, "object sym tval sym sval int attr int char", parse_prefs_object);
 	parser_reg(p, "monster sym name int attr int char", parse_prefs_monster);
 	parser_reg(p, "monster-base sym name int attr int char", parse_prefs_monster_base);
+	parser_reg(p, "monster-rage sym name int attr int char", parse_prefs_monster_rage);
+	parser_reg(p, "monster-uncrowned sym name int attr int char", parse_prefs_monster_uncrowned);
+	parser_reg(p, "object-depleted sym tval sym sval int attr int char", parse_prefs_object_depleted);
 	parser_reg(p, "feat sym idx sym lighting int attr int char", parse_prefs_feat);
 	parser_reg(p, "trap sym idx sym lighting int attr int char", parse_prefs_trap);
 	parser_reg(p, "GF sym type sym direction uint attr uint char", parse_prefs_gf);
@@ -1357,6 +1420,14 @@ void reset_visuals(bool load_prefs)
 		monster_x_char[i] = race->d_char;
 	}
 
+	/* No alternative tiles until a graphics pref file gives them */
+	memset(monster_rage_attr, 0, z_info->r_max * sizeof(*monster_rage_attr));
+	memset(monster_rage_char, 0, z_info->r_max * sizeof(*monster_rage_char));
+	memset(monster_uncrowned_attr, 0, z_info->r_max * sizeof(*monster_uncrowned_attr));
+	memset(monster_uncrowned_char, 0, z_info->r_max * sizeof(*monster_uncrowned_char));
+	memset(kind_depleted_attr, 0, z_info->k_max * sizeof(*kind_depleted_attr));
+	memset(kind_depleted_char, 0, z_info->k_max * sizeof(*kind_depleted_char));
+
 	/* Extract default attr/char code for traps */
 	for (i = 0; i < z_info->trap_max; i++) {
 		struct trap_kind *trap = &trap_info[i];
@@ -1405,6 +1476,12 @@ void textui_prefs_init(void)
 
 	monster_x_attr = mem_zalloc(z_info->r_max * sizeof(uint8_t));
 	monster_x_char = mem_zalloc(z_info->r_max * sizeof(wchar_t));
+	monster_rage_attr = mem_zalloc(z_info->r_max * sizeof(uint8_t));
+	monster_rage_char = mem_zalloc(z_info->r_max * sizeof(wchar_t));
+	monster_uncrowned_attr = mem_zalloc(z_info->r_max * sizeof(uint8_t));
+	monster_uncrowned_char = mem_zalloc(z_info->r_max * sizeof(wchar_t));
+	kind_depleted_attr = mem_zalloc(z_info->k_max * sizeof(uint8_t));
+	kind_depleted_char = mem_zalloc(z_info->k_max * sizeof(wchar_t));
 	kind_x_attr = mem_zalloc(z_info->k_max * sizeof(uint8_t));
 	kind_x_char = mem_zalloc(z_info->k_max * sizeof(wchar_t));
 	for (i = 0; i < LIGHTING_MAX; i++) {
@@ -1441,6 +1518,12 @@ void textui_prefs_free(void)
 
 	mem_free(monster_x_attr);
 	mem_free(monster_x_char);
+	mem_free(monster_rage_attr);
+	mem_free(monster_rage_char);
+	mem_free(monster_uncrowned_attr);
+	mem_free(monster_uncrowned_char);
+	mem_free(kind_depleted_attr);
+	mem_free(kind_depleted_char);
 	mem_free(kind_x_attr);
 	mem_free(kind_x_char);
 	for (i = 0; i < LIGHTING_MAX; i++) {
