@@ -232,6 +232,12 @@ static void object_line(char *line, size_t size, const struct object *obj)
 	char pros[256], cons[256];
 
 	object_name(line, size, obj);
+	if (tval_is_melee_weapon(obj) || tval_is_launcher(obj)) {
+		char weight[16];
+
+		strnfmt(weight, sizeof(weight), " %d.%d lb", obj->weight / 10, obj->weight % 10);
+		my_strcat(line, weight, size);
+	}
 	object_traits(obj, pros, cons, sizeof(pros));
 	if (!pros[0] && !cons[0]) return;
 	my_strcat(line, " = ", size);
@@ -617,6 +623,8 @@ void spoil_seeds(const char *fname, uint32_t first_seed, uint32_t last_seed, int
 				 "  item (x,y)   an artefact, ego item or out-of-depth item      forge (x,y)   a forge\n"
 				 "  chest (x,y)  what is in a chest (only the notable things)    vault NAME    a greater vault\n"
 				 "  boss NAME    a unique, with what it carries and drops          mon NAME      an out-of-depth monster\n"
+				 "A weapon or bow shows its weight, which is rolled for each one: Strength adds damage sides up to the\n"
+				 "weight in pounds, and lighter weapons score critical hits more often.\n"
 				 "After \" = \": what the item gives you (modifiers, sustains, resists, slays, abilities); \"bad:\" its drawbacks.\n");
 	if (provisos)
 		file_putf(f, "Under \"If a boss is killed earlier\": the other levels of that seed generated again with that unique dead\n"
