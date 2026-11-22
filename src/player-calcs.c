@@ -885,12 +885,16 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 		if (health_level(p->chp, p->mhp) <= HEALTH_BADLY_WOUNDED) {
 			state->stat_misc_mod[STAT_STR]++;
 			state->stat_misc_mod[STAT_GRA]++;
+			/* Sil-Q: Dexterity too, and twice as much again when almost dead */
+			if (z_info->game_silq) state->stat_misc_mod[STAT_DEX]++;
 		}
 
 		/* If <= 25% health, give an extra bonus */
 		if (health_level(p->chp, p->mhp) <= HEALTH_ALMOST_DEAD) {
-			state->stat_misc_mod[STAT_STR]++;
-			state->stat_misc_mod[STAT_GRA]++;
+			const int extra = z_info->game_silq ? 2 : 1;
+			state->stat_misc_mod[STAT_STR] += extra;
+			state->stat_misc_mod[STAT_GRA] += extra;
+			if (z_info->game_silq) state->stat_misc_mod[STAT_DEX] += extra;
 		}
 	}
 
@@ -1045,7 +1049,7 @@ void calc_bonuses(struct player *p, struct player_state *state, bool known_only,
 
 	/* Apply song effects that modify skills */
 	song = lookup_song("Slaying");
-	if (player_is_singing(p, song)) {
+	if (!z_info->game_silq && player_is_singing(p, song)) {
 		int pskill = state->skill_use[SKILL_SONG];
 		state->skill_misc_mod[SKILL_MELEE] += song_bonus(p, pskill, song);
 		state->skill_misc_mod[SKILL_ARCHERY] += song_bonus(p, pskill, song);

@@ -454,7 +454,7 @@ static void monster_find_range(struct monster *mon)
 
 		/* Creatures that don't move never like to get too close */
 		if (rf_has(mon->race->flags, RF_NEVER_MOVE)) {
-			mon->min_range += 3;
+			mon->min_range += z_info->game_silq ? 6 : 3;
 		}
 
 		/* Spies have a high minimum range */
@@ -496,9 +496,10 @@ static void monster_find_range(struct monster *mon)
 	}
 	
 	/* Deal with the 'truce' on Morgoth's level (overrides everything else) */
-	if (player->truce && (mon->min_range < 5)) { 
-		mon->min_range = 5;
-		mon->best_range = 5;
+	const int truce_range = z_info->game_silq ? 25 : 5;	/* Sil-Q keeps them well back */
+	if (player->truce && (mon->min_range < truce_range)) { 
+		mon->min_range = truce_range;
+		mon->best_range = truce_range;
 	}
 }
 
@@ -3327,6 +3328,12 @@ static void monster_turn(struct monster *mon)
 								mastery);
 		int mskill = monster_skill(mon, SKILL_WILL) + 5
 			+ flow_dist(cave->player_noise, mon->grid);
+		/* Sil-Q rolls dice on both sides, with no extra five for the monster */
+		if (z_info->game_silq) {
+			pskill += damroll(2, 8);
+			mskill = damroll(2, 10) + monster_skill(mon, SKILL_WILL)
+				+ flow_dist(cave->player_noise, mon->grid);
+		}
 		if (skill_check(source_player(), pskill, mskill,
 						source_monster(mon->midx)) > 0) {
             /* Make sure the monster doesn't do any free attacks before its

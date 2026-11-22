@@ -1912,8 +1912,9 @@ static void search_square(struct player *p, struct loc grid, int dist,
 		/* Give up if the square is unseen and not adjacent */
 		if ((dist > 1) && !square_isseen(cave, grid)) return;
 
-		/* Determine the base score */
+		/* Determine the base score (Sil-Q adds the light on the grid) */
 		score = p->state.skill_use[SKILL_PERCEPTION];
+		if (z_info->game_silq) score += square(cave, grid)->light;
 
 		/* If using the search command give a score bonus */
 		if (searching) score += 5;
@@ -1937,7 +1938,9 @@ static void search_square(struct player *p, struct loc grid, int dist,
 			/* No bonus for searching on your own square */
 			dist = 1;
 		}
-		difficulty += 5 * (dist - 1);
+		/* Sil-Q: two a grid, out to four grids away */
+		difficulty += z_info->game_silq ? (dist <= 4 ? 2 * (dist - 1) : 0)
+			: 5 * (dist - 1);
 
 		/* Give various penalties */
 		if (p->timed[TMD_BLIND] || no_light(p) || p->timed[TMD_IMAGE]) {

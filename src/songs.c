@@ -250,7 +250,7 @@ int song_bonus(struct player *p, int pskill, struct song *song)
 	bonus = MAX(bonus, song->bonus_min);
 
 	/* Special case */
-	if (streq(song->name, "Slaying")) {
+	if (!z_info->game_silq && streq(song->name, "Slaying")) {
 		bonus *= p->wrath;
 		bonus += 999;
 		bonus /= 1000;

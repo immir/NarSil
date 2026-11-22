@@ -34,10 +34,10 @@ effect:SONG_OF_ELBERETH
 name:Slaying
 verb:begin a
 desc:of fury and dread
-bonus-mult:1
+bonus-mult:2
 bonus-div:1
 bonus-min:0
-noise:12
+noise:8
 extend:1
 
 name:Silence
@@ -82,9 +82,9 @@ name:Staying
 verb:begin a
 desc:about the courage of great heroes past
 bonus-mult:1
-bonus-div:3
+bonus-div:2
 bonus-min:0
-noise:4
+noise:8
 extend:0
 
 name:Lorien
