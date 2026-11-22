@@ -1920,12 +1920,11 @@ effect:TIMED_SET:CUT
 dice:$B
 expr:B:PLAYER_CUT: / 2
 effect:HEAL_HP
-dice:$B
-expr:B:PLAYER_MAX_HP: / 2
+dice:50
 effect:NOURISH:INC_BY
 dice:100
 flags:GOOD
-desc:It heals all cuts and restores half your health.
+desc:It heals all cuts and restores 50 points of health.
 
 
 # Index 319

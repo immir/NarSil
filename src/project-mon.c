@@ -31,6 +31,7 @@
 #include "mon-spell.h"
 #include "mon-timed.h"
 #include "mon-util.h"
+#include "init.h"
 #include "player-calcs.h"
 #include "project.h"
 #include "source.h"
@@ -276,7 +277,10 @@ static void project_monster_handler_KILL_WALL(project_monster_handler_context_t 
 /* Sleep */
 static void project_monster_handler_SLEEP(project_monster_handler_context_t *context)
 {
-	int result = project_monster_skill_check(context, RF_NO_SLEEP);
+	int result;
+	/* Sil-Q gives the caster a bonus of 10 over a sleeper's will */
+	if (z_info->game_silq) context->dif += 10;
+	result = project_monster_skill_check(context, RF_NO_SLEEP);
 	if (result > 0) {
 		if (context->seen) context->obvious = true;
 		set_alertness(context->mon, context->mon->alertness - (result + 5));
@@ -341,7 +345,7 @@ static void project_monster_handler_CONFUSION(project_monster_handler_context_t 
 static void project_monster_handler_FEAR(project_monster_handler_context_t *context)
 {
 	int result;
-	context->dif += 5;
+	context->dif += z_info->game_silq ? 10 : 5;
 	result = project_monster_skill_check(context, RF_NO_FEAR);
 	if (result > 0) {
 		if (context->seen) context->obvious = true;

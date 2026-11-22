@@ -357,6 +357,13 @@ def patch_objects(silq_path, narsil_path, extra_path):
             entry, name = [], line[5:].strip()
         entry.append(line)
     flush()
+    # Sil-Q's Potion of Healing restores 50 points of health (NarSil: half your maximum)
+    healing = ("effect:HEAL_HP\ndice:$B\nexpr:B:PLAYER_MAX_HP: / 2\neffect:NOURISH:INC_BY\ndice:100\n"
+               "flags:GOOD\ndesc:It heals all cuts and restores half your health.")
+    joined = "\n".join(out)
+    assert joined.count(healing) == 1, "Potion of Healing text changed"
+    out = joined.replace(healing, healing.replace("dice:$B\nexpr:B:PLAYER_MAX_HP: / 2", "dice:50")
+                         .replace("restores half your health", "restores 50 points of health")).split("\n")
     extra = open(extra_path).read()
     have = {l[5:].strip() for l in out + extra.split("\n") if l.startswith("name:")}
     for n in sorted(set(sq) - have - set(OBJECTS_NOT_PORTED)):

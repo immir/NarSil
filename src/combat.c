@@ -718,9 +718,12 @@ int protection_roll(struct player *p, int typ, bool melee, aspect prot_aspect)
 		if (slot_type_is(p, i, EQUIP_SHIELD)) {
 			if ((typ == PROJ_HURT) || (typ == PROJ_FIRE) || (typ == PROJ_COLD)){
 				if (player_active_ability(p, "Blocking") &&
-					(!melee || ((p->previous_action[0] == ACTION_STAND) ||
+					(z_info->game_silq
+						? !(p->previous_action[0] >= 1 && p->previous_action[0] <= 9
+							&& p->previous_action[0] != ACTION_STAND)	/* Sil-Q: any turn spent not moving */
+						: (!melee || ((p->previous_action[0] == ACTION_STAND) ||
 								((p->previous_action[0] == ACTION_NOTHING) &&
-								 (p->previous_action[1] == ACTION_STAND))))) {
+								 (p->previous_action[1] == ACTION_STAND)))))) {
 					mult = 2;
 				}
 				if (obj->pd > 0) {

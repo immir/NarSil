@@ -25,6 +25,7 @@
 #include "obj-pile.h"
 #include "obj-util.h"
 #include "player-calcs.h"
+#include "init.h"
 #include "player-timed.h"
 #include "project.h"
 #include "source.h"
@@ -138,7 +139,14 @@ static void project_feature_handler_KILL_WALL(project_feature_handler_context_t 
 	/* Permanent walls */
 	if (square_isperm(cave, grid)) return;
 
-	success = skill_check(context->origin, context->dif, 10, source_none()) > 0;
+	/* Sil-Q: harder the harder the wall: granite 14, quartz 12, rubble 10, doors 8 */
+	int hardness = 10;
+	if (z_info->game_silq) {
+		hardness = square_isrubble(cave, grid) ? 10
+			: square_iscloseddoor(cave, grid) ? 8
+			: square_isquartz(cave, grid) ? 12 : 14;
+	}
+	success = skill_check(context->origin, context->dif, hardness, source_none()) > 0;
 
 	/* Different treatment for different walls */
 	if (square_isrubble(cave, grid)) {
