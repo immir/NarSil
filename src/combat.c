@@ -19,6 +19,7 @@
 #include "angband.h"
 #include "cave.h"
 #include "combat.h"
+#include "init.h"
 #include "mon-calcs.h"
 #include "mon-lore.h"
 #include "mon-move.h"
@@ -287,7 +288,9 @@ static int master_hunter_bonus(struct player *p, struct monster *mon)
 
 	/* Master hunter bonus */
 	if (player_active_ability(p, "Master Hunter")) {
-		return MIN(lore->pkills, p->state.skill_use[SKILL_PERCEPTION] / 4);
+		/* Sil-Q doubled the cap */
+		return MIN(lore->pkills, p->state.skill_use[SKILL_PERCEPTION]
+			/ (z_info->game_silq ? 2 : 4));
 	}
 	return 0;
 }
@@ -689,7 +692,9 @@ int protection_roll(struct player *p, int typ, bool melee, aspect prot_aspect)
 	/* Things that always count: */
 	if (player_is_singing(p, staying)) {
 		int bonus = song_bonus(p, p->state.skill_use[SKILL_SONG], staying);
-		prt += damcalc(1, MAX(1, bonus), prot_aspect);
+		/* Sil-Q: a fixed 2d2 */
+		prt += z_info->game_silq ? damcalc(2, 2, prot_aspect)
+			: damcalc(1, MAX(1, bonus), prot_aspect);
 	}
 	
 	if (player_active_ability(p, "Hardiness")) {

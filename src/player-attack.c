@@ -139,7 +139,10 @@ static void cruel_blow(int crit_bonus_dice, struct monster *mon)
 		if (rf_has(mon->race->flags, RF_RES_CRIT)) return;
 
 		monster_desc(m_name, sizeof(m_name), mon, MDESC_TARG);
-		if (skill_check(source_player(), crit_bonus_dice * 4,
+		/* Sil-Q: the chance rises more slowly with the critical */
+		const int power = z_info->game_silq ? 30 - 60 / (crit_bonus_dice + 2)
+			: crit_bonus_dice * 4;
+		if (skill_check(source_player(), power,
 						monster_skill(mon, SKILL_WILL),
 						source_monster(mon->midx)) > 0) {
 			msg("%s reels in pain!", m_name);
@@ -583,6 +586,7 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 			if (player_active_ability(p, "Knock Back") &&
 				(attack_type != ATT_OPPORTUNIST) &&
 				!rf_has(race->flags, RF_NEVER_MOVE) &&
+				!(z_info->game_silq && rf_has(race->flags, RF_HIDDEN_MOVE)) &&
 			    (skill_check(source_player(), effective_strength * 2,
 							 monster_stat(mon, STAT_CON) * 2,
 							 source_monster(mon->midx)) > 0)) {
@@ -601,6 +605,16 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 					msg("Your %s %s.", o_name, desc);
 				}
 				player_learn_flag(p, flag);
+			}
+
+			/* Sil-Q's Song of Slaying: a critical hit kills outright a monster
+			 * with health up to twice the Song score */
+			if (z_info->game_silq && crit_bonus_dice > 0
+					&& player_is_singing(p, lookup_song("Slaying"))
+					&& mon->hp <= song_bonus(p, p->state.skill_use[SKILL_SONG],
+											 lookup_song("Slaying"))) {
+				msg("Your song soars as %s falls before you.", m_name);
+				net_dam = mon->hp;
 			}
 
 			/* Damage, check for death */
@@ -645,7 +659,7 @@ void py_attack_real(struct player *p, struct loc grid, int attack_type)
 				}
 
 				/* Gain wrath if singing song of slaying */
-				if (player_is_singing(p, lookup_song("Slaying"))) {
+				if (!z_info->game_silq && player_is_singing(p, lookup_song("Slaying"))) {
 					p->wrath += 100;
 					p->upkeep->update |= PU_BONUS;
 					p->upkeep->redraw |= PR_SONG;
@@ -1547,7 +1561,7 @@ static void ranged_helper(struct player *p,	struct object *obj, int dir,
 							}
 
 							/* Gain wrath if singing song of slaying */
-							if (player_is_singing(p, lookup_song("Slaying"))) {
+							if (!z_info->game_silq && player_is_singing(p, lookup_song("Slaying"))) {
 								p->wrath += 100;
 								p->upkeep->update |= PU_BONUS;
 								p->upkeep->redraw |= PR_SONG;

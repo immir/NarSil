@@ -729,8 +729,8 @@ static void process_player_post_energy_use_cleanup(void)
 	update_flow(cave, &cave->player_noise, NULL);
 	update_scent();
 
-	/* Possibly identify DANGER flag every so often */
-	if (one_in_(500)) {
+	/* Possibly identify DANGER flag every so often (Sil-Q: five times as often) */
+	if (one_in_(z_info->game_silq ? 100 : 500)) {
 		equip_learn_flag(player, OF_DANGER);
 	}
 
