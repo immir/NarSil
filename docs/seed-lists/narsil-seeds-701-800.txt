@@ -1,4 +1,4 @@
-NarSil 1.4.0-249-g54b33417b seed catalog
+NarSil 1.4.0-478-gb0f2fead5 seed catalog
 Seeds 701 to 800, levels at 50 ft to 600 ft, 3 visits each (v1 is the first level made at a depth, v2 the second, ...)
 A seed gives the same levels only on the same game, version and data.  Each level is listed as for
 a character diving straight down, with nothing found yet and no unique dead; levels with nothing
