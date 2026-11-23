@@ -1041,6 +1041,33 @@ bool native_write_dump(void)
 	return dump_save(path);
 }
 
+/* The 'Save build' of the character tab: at turn 0 only, since the build is what the character was made with. */
+static void save_build(void)
+{
+	if (player->turn != 0) { msg("A build can only be saved before your first turn."); return; }
+	struct player_build list[BUILD_MAX], now;
+	int n = builds_load(list, BUILD_MAX);
+	char name[BUILD_NAME_LEN];
+	strnfmt(name, sizeof(name), "%s %s", player->race->name, player->house->short_name);
+	for (;;) {
+		pthread_mutex_lock(&shared.lock);
+		text_reset();
+		text_add("Name this build\n%s\n%d\n0\n", name, (int)sizeof(name) - 1);
+		pthread_mutex_unlock(&shared.lock);
+		const int32_t a = ask(NB_PROMPT_TEXT);
+		if (a != 1) return;
+		native_answer_text(name, sizeof(name));
+		if (name[0]) break;
+	}
+	build_capture(player, name, &now);
+	int at = n;
+	for (int i = 0; i < n; i++) if (streq(list[i].name, name)) at = i;	/* the same name replaces */
+	if (at == BUILD_MAX) { msg("There are too many saved builds: delete one at birth first."); return; }
+	list[at] = now;
+	if (at == n) n++;
+	msg(builds_save(list, n) ? "Build \"%s\" saved." : "The build could not be saved.", name);
+}
+
 static void share_character_dump(void)
 {
 	/* No flush: a -more- now would sit under the panel. */
@@ -1057,6 +1084,7 @@ static void character_tab(void)
 		if (a == NB_CHARACTER_SCREEN) do_cmd_change_name();
 		else if (a == NB_CHARACTER_RENAME) rename_character();
 		else if (a == NB_CHARACTER_DUMP) share_character_dump();
+		else if (a == NB_CHARACTER_SAVE_BUILD) save_build();
 		else return;
 	}
 }

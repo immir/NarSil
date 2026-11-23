@@ -30,6 +30,7 @@
 #include "obj-info.h"
 #include "player.h"
 #include "player-birth.h"
+#include "player-abilities.h"
 #include "player-calcs.h"
 #include "player-skills.h"
 #include "project.h"
@@ -51,7 +52,8 @@
 enum birth_stage {
 	BIRTH_BACK = -1, BIRTH_RESET = 0, BIRTH_QUICKSTART, BIRTH_RACE_CHOICE, BIRTH_HOUSE_CHOICE,
 	BIRTH_SEX_CHOICE, BIRTH_STAT_POINTS, BIRTH_SKILL_POINTS, BIRTH_NAME_CHOICE, BIRTH_AHW_CHOICE,
-	BIRTH_HISTORY_CHOICE, BIRTH_FINAL_CONFIRM, BIRTH_COMPLETE
+	BIRTH_HISTORY_CHOICE, BIRTH_FINAL_CONFIRM, BIRTH_COMPLETE,
+	BIRTH_BUILDS	/* saved builds (this bridge's own stage; asked right after the reset) */
 };
 
 static const char *const skill_names_b[] = {
@@ -147,6 +149,77 @@ static void summary(void)
 /* ------------------------------------------------------------------------
  * Stages
  * ------------------------------------------------------------------------ */
+
+/* The experience a new character has to spend, as the birth options stand. */
+static int available_exp(void)
+{
+	return OPT(player, birth_fixed_exp) ? z_info->fixed_exp : z_info->start_exp;
+}
+
+/* "Delete a saved build": pick one to remove, or go back. */
+static void delete_build_stage(void)
+{
+	for (;;) {
+		struct player_build list[BUILD_MAX];
+		const int n = builds_load(list, BUILD_MAX);
+		if (n == 0) return;
+		begin("builds-delete", "Delete a saved build");
+		para("Which build do you want to delete?");
+		for (int i = 0; i < n; i++) option(1, list[i].name, format("%s of %s", list[i].race, list[i].house), NULL);
+		option(1, "Back", NULL, NULL);
+		const int32_t a = ask_screen();
+		if (a < 0 || a >= n) return;
+		for (int i = a; i + 1 < n; i++) list[i] = list[i + 1];
+		builds_save(list, n - 1);
+	}
+}
+
+/*
+ * Saved builds (see build_capture()): pick one and the character is made for
+ * you up to its name; its abilities are bought when you accept it.
+ */
+static enum birth_stage builds_stage(void)
+{
+	for (;;) {
+		struct player_build list[BUILD_MAX];
+		const int n = builds_load(list, BUILD_MAX);
+		const enum birth_stage scratch = quickstart_allowed ? BIRTH_QUICKSTART : BIRTH_RACE_CHOICE;
+		if (n == 0) return scratch;
+		begin("builds", "Saved builds");
+		para("Make the same character again: its race, house, stats, skills and abilities are bought for you. "
+			"You have %d experience to spend.", available_exp());
+		option(1, "Create a new character", "Choose everything yourself", NULL);
+		for (int i = 0; i < n; i++) {
+			const struct player_build *b = &list[i];
+			const int cost = build_exp_cost(b);
+			char names[1200] = "";
+			for (int k = 0; k < b->n_abilities; k++) my_strcat(names, format("%s%s", k ? ", " : "", b->ability[k].name), sizeof(names));
+			option(cost >= 0 && cost <= available_exp(), b->name,
+				format("%s of %s · %d abilit%s · %d experience", b->race, b->house, b->n_abilities,
+					b->n_abilities == 1 ? "y" : "ies", cost),
+				names[0] ? names : "No abilities.");
+		}
+		option(1, "Delete a saved build", NULL, NULL);
+		const int32_t a = ask_screen();
+		if (a == NB_SCREEN_OPTIONS) { native_options_birth(); continue; }
+		if (a == 0) { build_clear_pending(); return scratch; }
+		if (a >= 1 && a <= n) {
+			const struct player_build *b = &list[a - 1];
+			build_clear_pending();
+			build_queue_birth(b);
+			cmdq_execute(CTX_BIRTH);
+			if (build_shortfall(b) > 0) {
+				begin("builds-note", "Not the whole build");
+				para("This character could not afford every point of the build, so some stat or skill points were not bought. "
+					"You can fix them on the next screens.");
+				option(1, "Continue", NULL, NULL);
+				(void)ask_screen();
+			}
+			return BIRTH_NAME_CHOICE;
+		}
+		if (a == n + 1) delete_build_stage();
+	}
+}
 
 static enum birth_stage quickstart_stage(void)
 {
@@ -421,7 +494,10 @@ void native_do_birth(void)
 		switch (current) {
 			case BIRTH_RESET:
 				cmdq_push(CMD_BIRTH_RESET);
-				next = quickstart_allowed ? BIRTH_QUICKSTART : BIRTH_RACE_CHOICE;
+				next = BIRTH_BUILDS;
+				break;
+			case BIRTH_BUILDS:
+				next = builds_stage();
 				break;
 			case BIRTH_QUICKSTART:
 				next = quickstart_stage();

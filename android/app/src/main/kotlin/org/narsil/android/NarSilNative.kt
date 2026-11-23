@@ -89,6 +89,7 @@ object NarSilNative {
     const val CTX_UP_KNOWN = 1 shl 13
     const val CTX_ADJ_CHEST = 1 shl 14
     const val CTX_ADJ_SKELETON = 1 shl 17
+    const val CTX_BUILD_SAVABLE = 1 shl 18
     const val CTX_CAN_FLETCH = 1 shl 15
 
     // enum nb_action (order matters)
@@ -211,6 +212,7 @@ object NarSilNative {
     const val CHARACTER_SCREEN = 1
     const val CHARACTER_RENAME = 2
     const val CHARACTER_DUMP = 3
+    const val CHARACTER_SAVE_BUILD = 4
     /** The open panel tab, or -1. */
     @JvmStatic external fun nativePanelTab(): Int
     const val KNOW_COLLAPSE = 99999

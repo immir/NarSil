@@ -35,6 +35,7 @@
 #include "obj-tval.h"
 #include "obj-util.h"
 #include "object.h"
+#include "player-abilities.h"
 #include "player-birth.h"
 #include "player-calcs.h"
 #include "player-history.h"
@@ -941,6 +942,9 @@ void do_cmd_accept_character(struct command *cmd)
 	/* Record final starting stats and skills */
 	finalise_stats(player);
 	finalise_skills();
+
+	/* A saved build's abilities are bought with the experience that is left */
+	build_apply_pending(player);
 
 	/* Hack - player knows the tunneling rune. */
 	player->obj_k->modifiers[OBJ_MOD_TUNNEL] = 1;

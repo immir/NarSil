@@ -62,6 +62,7 @@ enum NB {
     static let CTX_CAN_FLETCH = 32768
     static let CTX_FLOOR_SPECIAL = 65536
     static let CTX_ADJ_CHEST = 16384
+    static let CTX_BUILD_SAVABLE = 262144
     static let CTX_ADJ_SKELETON = 131072
     static let ACT_REST = 0
     static let ACT_HOLD = 1
@@ -160,6 +161,7 @@ enum NB {
     static let CHARACTER_SCREEN = 1
     static let CHARACTER_RENAME = 2
     static let CHARACTER_DUMP = 3
+    static let CHARACTER_SAVE_BUILD = 4
     static let PACK_COLLAPSE = 999
     static let PACK_EXPAND = 1000
     static let PACK_ACT = 100000

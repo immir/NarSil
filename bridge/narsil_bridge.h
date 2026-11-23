@@ -161,6 +161,7 @@ enum nb_context {
 	NB_CTX_CAN_FLETCH      = 1 << 15, /* has Fletchery and ordinary arrows (NB_ACT_FLETCH) */
 	NB_CTX_FLOOR_SPECIAL   = 1 << 16, /* something underfoot is an artefact, an ego item, or has properties still to find (NB_CTX_FLOOR_ITEMS is also set) */
 	NB_CTX_ADJ_CHEST       = 1 << 14, /* a closed chest underfoot or adjacent (NB_ACT_OPEN); a known-trapped one also sets NB_CTX_ADJ_TRAP */
+	NB_CTX_BUILD_SAVABLE   = 1 << 18, /* turn 0: the character's build can still be saved (NB_CHARACTER_SAVE_BUILD) */
 	NB_CTX_ADJ_SKELETON    = 1 << 17, /* an unsearched skeleton (NarSil-Q) underfoot or adjacent (NB_ACT_SEARCH) */
 };
 
@@ -343,7 +344,8 @@ enum nb_panel_tab {
 enum { NB_PANEL_TAB = 1 << 24, NB_PANEL_CLOSE = NB_PANEL_TAB + NB_TAB_COUNT };
 /* Character tab answers: the textui character screen (equipment flags), rename, write the character dump
  * to <data>/user/character-dump.txt (for the UI to share). */
-enum { NB_CHARACTER_SCREEN = 1, NB_CHARACTER_RENAME = 2, NB_CHARACTER_DUMP = 3 };
+enum { NB_CHARACTER_SCREEN = 1, NB_CHARACTER_RENAME = 2, NB_CHARACTER_DUMP = 3,
+	NB_CHARACTER_SAVE_BUILD = 4 /* save the character's build (asks for a name); offered while NB_CTX_BUILD_SAVABLE */ };
 /* The open panel tab, or -1 (any thread). */
 int nb_panel_tab(void);
 

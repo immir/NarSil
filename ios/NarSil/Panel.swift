@@ -148,7 +148,10 @@ private struct PanelContent: View {
         case .abilities(let p): AbilitiesView(prompt: p, nav: abilities, answer: answer)
         case .pack(let p): PackView(prompt: p, colour: { game.colour($0) }, answer: answer).textScale(itemScale)
         case .character(let sections):
-            CharacterView(game: game, sections: sections, actions: [("Rename", { answer(NB.CHARACTER_RENAME) }), ("Share dump", { Saves.shareDump(answer) })])
+            CharacterView(game: game, sections: sections,
+                          actions: [("Rename", { answer(NB.CHARACTER_RENAME) }), ("Share dump", { Saves.shareDump(answer) })]
+                            // Only before the first turn: the build is what the character was made with.
+                            + (game.status.has(NB.CTX_BUILD_SAVABLE) ? [("Save build", { answer(NB.CHARACTER_SAVE_BUILD) })] : []))
         case .knowledge(let p): KnowledgeView(prompt: p, colour: { game.colour($0) }, answer: answer)
         case .smith(let p): SmithView(prompt: p, answer: answer)
         case .options(let p): OptionsView(prompt: p, onAppSettings: onAppSettings, answer: answer)

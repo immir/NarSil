@@ -512,6 +512,7 @@ static int32_t context_flags(void)
 		const struct object *const skeleton = skeleton_check(n);
 		if (skeleton && skeleton->pval > 0 && skeleton->known) f |= NB_CTX_ADJ_SKELETON;
 	}
+	if (player->turn == 0) f |= NB_CTX_BUILD_SAVABLE;
 	return f;
 }
 

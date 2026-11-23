@@ -287,9 +287,11 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(prompt) {
                     if (shareDumpPending) { shareDumpPending = false; Share.file(this@MainActivity, Share.characterDump(this@MainActivity), "text/plain", "Share character dump") }
                 }
-                CharacterSheet(prompt.info, state, onDismiss = { answer(-1) }, actions = listOf(
+                CharacterSheet(prompt.info, state, onDismiss = { answer(-1) }, actions = listOfNotNull(
                     "Rename" to { answer(NarSilNative.CHARACTER_RENAME) },
                     "Share dump" to { shareDumpPending = true; answer(NarSilNative.CHARACTER_DUMP) },
+                    /* Only before the first turn: the build is what the character was made with. */
+                    ("Save build" to { answer(NarSilNative.CHARACTER_SAVE_BUILD) }).takeIf { state.status.has(NarSilNative.CTX_BUILD_SAVABLE) },
                 ))
             }
             is GameState.Prompt.Knowledge -> KnowledgeScreen(prompt, state::colour, answer)

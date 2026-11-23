@@ -18,6 +18,7 @@
  */
 
 #include "angband.h"
+#include "cmd-core.h"
 #include "datafile.h"
 #include "game-input.h"
 #include "init.h"
@@ -541,22 +542,27 @@ static bool player_choose_oath(struct player *p)
 	return false;
 }
 
-bool player_gain_ability(struct player *p, struct ability *ability)
+/**
+ * Buys an ability.  With ask, the game asks which oath to swear (for the Oath
+ * ability) and for confirmation; without, it just buys (the oath is already set).
+ */
+static bool gain_ability(struct player *p, struct ability *ability, bool ask)
 {
 	struct ability *new;
 	int cost = player_ability_cost(p, ability);
+
 	if (cost > p->new_exp) {
-		msg("You do not have enough experience to acquire this ability.");
+		if (ask) msg("You do not have enough experience to acquire this ability.");
 		return false;
 	}
-	if (streq(ability->name, "Oath")) {
+	if (ask && streq(ability->name, "Oath")) {
 		if (p->oaths_broken == 7) {
 			msg("Every oath has been broken before it was made.");
 			return false;
 		}
 		if (!player_choose_oath(p)) return false;
 	}
-	if (!get_check("Are you sure you wish to gain this ability? ")) {
+	if (ask && !get_check("Are you sure you wish to gain this ability? ")) {
 		if (streq(ability->name, "Oath")) p->oath_type = OATH_NONE;
 		return false;
 	}
@@ -572,6 +578,11 @@ bool player_gain_ability(struct player *p, struct ability *ability)
 	p->upkeep->update |= (PU_BONUS);
 	p->upkeep->redraw |= (PR_EXP);
 	return true;
+}
+
+bool player_gain_ability(struct player *p, struct ability *ability)
+{
+	return gain_ability(p, ability, true);
 }
 
 /**
@@ -618,4 +629,245 @@ struct ability *copy_ability_list(const struct ability *head)
 	}
 	dest_tail->next = NULL;
 	return dest_head;
+}
+
+
+/**
+ * ------------------------------------------------------------------------
+ * Saved builds
+ * ------------------------------------------------------------------------ */
+
+_Static_assert(BUILD_STATS == STAT_MAX, "a build holds one purchase per stat");
+_Static_assert(BUILD_SKILLS == SKILL_MAX, "a build holds one purchase per skill");
+
+/* What a build still has to buy once the character exists (set by build_queue_birth()) */
+static struct player_build pending_build;
+static bool have_pending;
+
+/**
+ * Records the character's build: its race, house and sex, the points bought in
+ * each stat and skill, its abilities and its oath.
+ *
+ * \param p is the character; \param name is what to call the build.
+ */
+bool build_capture(const struct player *p, const char *name, struct player_build *b)
+{
+	memset(b, 0, sizeof(*b));
+	my_strcpy(b->name, name, sizeof(b->name));
+	my_strcpy(b->race, p->race->name, sizeof(b->race));
+	my_strcpy(b->house, p->house->name, sizeof(b->house));
+	my_strcpy(b->sex, p->sex->name, sizeof(b->sex));
+	for (int i = 0; i < STAT_MAX; i++) {
+		b->stat_buys[i] = p->stat_base[i] - (p->race->stat_adj[i] + p->house->stat_adj[i]);
+	}
+	for (int i = 0; i < SKILL_MAX; i++) b->skills[i] = p->skill_base[i];
+	for (const struct ability *a = p->abilities; a && b->n_abilities < BUILD_MAX_ABILITIES; a = a->next) {
+		b->ability[b->n_abilities].skill = a->skill;
+		my_strcpy(b->ability[b->n_abilities].name, a->name, sizeof(b->ability[0].name));
+		b->n_abilities++;
+	}
+	b->oath = p->oath_type;
+	b->fixed_exp = OPT(p, birth_fixed_exp);
+	return true;
+}
+
+static const char *builds_path(char *buf, size_t len)
+{
+	path_build(buf, len, ANGBAND_DIR_USER, "builds.txt");
+	return buf;
+}
+
+/**
+ * Reads the saved builds, oldest first.  \return how many.
+ */
+int builds_load(struct player_build *list, int max)
+{
+	char path[1024], line[256];
+	ang_file *f = file_open(builds_path(path, sizeof(path)), MODE_READ, FTYPE_TEXT);
+	int n = 0;
+	struct player_build *b = NULL;
+
+	if (!f) return 0;
+	while (file_getl(f, line, sizeof(line))) {
+		char *val = strchr(line, '=');
+		if (val) *val++ = '\0';
+		if (streq(line, "build")) {
+			if (n >= max) break;
+			b = &list[n++];
+			memset(b, 0, sizeof(*b));
+			my_strcpy(b->name, val ? val : "", sizeof(b->name));
+		} else if (!b || !val) {
+			continue;
+		} else if (streq(line, "race")) {
+			my_strcpy(b->race, val, sizeof(b->race));
+		} else if (streq(line, "house")) {
+			my_strcpy(b->house, val, sizeof(b->house));
+		} else if (streq(line, "sex")) {
+			my_strcpy(b->sex, val, sizeof(b->sex));
+		} else if (streq(line, "stats")) {
+			sscanf(val, "%d %d %d %d", &b->stat_buys[0], &b->stat_buys[1], &b->stat_buys[2], &b->stat_buys[3]);
+		} else if (streq(line, "skills")) {
+			sscanf(val, "%d %d %d %d %d %d %d %d", &b->skills[0], &b->skills[1], &b->skills[2], &b->skills[3],
+				&b->skills[4], &b->skills[5], &b->skills[6], &b->skills[7]);
+		} else if (streq(line, "oath")) {
+			b->oath = (uint8_t) atoi(val);
+		} else if (streq(line, "fixed")) {
+			b->fixed_exp = atoi(val) != 0;
+		} else if (streq(line, "ability") && b->n_abilities < BUILD_MAX_ABILITIES) {
+			char *name = strchr(val, ':');
+			if (!name) continue;
+			*name++ = '\0';
+			b->ability[b->n_abilities].skill = (uint8_t) atoi(val);
+			my_strcpy(b->ability[b->n_abilities].name, name, sizeof(b->ability[0].name));
+			b->n_abilities++;
+		}
+	}
+	file_close(f);
+	return n;
+}
+
+/**
+ * Writes the builds, replacing the file.
+ */
+bool builds_save(const struct player_build *list, int n)
+{
+	char path[1024];
+	ang_file *f = file_open(builds_path(path, sizeof(path)), MODE_WRITE, FTYPE_TEXT);
+
+	if (!f) return false;
+	file_putf(f, "# Saved character builds\n");
+	for (int k = 0; k < n; k++) {
+		const struct player_build *b = &list[k];
+		file_putf(f, "build=%s\nrace=%s\nhouse=%s\nsex=%s\n", b->name, b->race, b->house, b->sex);
+		file_putf(f, "stats=%d %d %d %d\n", b->stat_buys[0], b->stat_buys[1], b->stat_buys[2], b->stat_buys[3]);
+		file_putf(f, "skills=%d %d %d %d %d %d %d %d\n", b->skills[0], b->skills[1], b->skills[2], b->skills[3],
+			b->skills[4], b->skills[5], b->skills[6], b->skills[7]);
+		file_putf(f, "oath=%d\nfixed=%d\n", b->oath, b->fixed_exp ? 1 : 0);
+		for (int i = 0; i < b->n_abilities; i++) {
+			file_putf(f, "ability=%d:%s\n", b->ability[i].skill, b->ability[i].name);
+		}
+	}
+	return file_close(f);
+}
+
+static const struct player_race *build_race(const struct player_build *b)
+{
+	for (const struct player_race *r = races; r; r = r->next) if (streq(r->name, b->race)) return r;
+	return NULL;
+}
+
+static const struct player_house *build_house(const struct player_build *b, const struct player_race *r)
+{
+	for (const struct player_house *h = houses; h; h = h->next) {
+		if (h->race == r && streq(h->name, b->house)) return h;
+	}
+	return NULL;
+}
+
+/**
+ * The experience a build spends: the skill points (the nth point in a skill
+ * costs 100 n) and the abilities (the kth ability in a skill costs 500 k, less
+ * 500 for each point of the race's and house's affinity), or -1 if the build
+ * names a race or house the game does not have.
+ */
+int build_exp_cost(const struct player_build *b)
+{
+	const struct player_race *r = build_race(b);
+	const struct player_house *h = r ? build_house(b, r) : NULL;
+	int cost = 0, per_skill[SKILL_MAX] = { 0 };
+
+	if (!r || !h) return -1;
+	for (int i = 0; i < SKILL_MAX; i++) cost += 50 * b->skills[i] * (b->skills[i] + 1);
+	for (int i = 0; i < b->n_abilities; i++) {
+		const int skill = b->ability[i].skill;
+		if (skill < 0 || skill >= SKILL_MAX) continue;
+		per_skill[skill]++;
+		cost += MAX(0, (per_skill[skill] - (r->skill_adj[skill] + h->skill_adj[skill])) * z_info->ability_cost);
+	}
+	return cost;
+}
+
+/**
+ * Queues the birth commands that make the build's character, up to the name:
+ * race, house and sex, the stat points and the skill points.  Its abilities are
+ * bought when the character is accepted.  Call it after the birth reset.
+ */
+void build_queue_birth(const struct player_build *b)
+{
+	const struct player_race *r = build_race(b);
+	const struct player_house *h = r ? build_house(b, r) : NULL;
+	unsigned int first_house = UINT_MAX;
+	const struct player_sex *s = NULL;
+
+	if (!r || !h) return;
+	for (const struct player_house *x = houses; x; x = x->next) {
+		if (x->race == r && x->hidx < first_house) first_house = x->hidx;
+	}
+	for (const struct player_sex *x = sexes; x; x = x->next) if (streq(x->name, b->sex)) s = x;
+
+	cmdq_push(CMD_CHOOSE_RACE);
+	cmd_set_arg_choice(cmdq_peek(), "choice", r->ridx);
+	cmdq_push(CMD_CHOOSE_HOUSE);
+	cmd_set_arg_choice(cmdq_peek(), "choice", h->hidx - first_house);
+	cmdq_push(CMD_CHOOSE_SEX);
+	cmd_set_arg_choice(cmdq_peek(), "choice", s ? s->sidx : 0);
+	for (int i = 0; i < STAT_MAX; i++) {
+		for (int k = 0; k < ABS(b->stat_buys[i]); k++) {
+			cmdq_push(b->stat_buys[i] > 0 ? CMD_BUY_STAT : CMD_SELL_STAT);
+			cmd_set_arg_choice(cmdq_peek(), "choice", i);
+		}
+	}
+	for (int i = 0; i < SKILL_MAX; i++) {
+		for (int k = 0; k < b->skills[i]; k++) {
+			cmdq_push(CMD_BUY_SKILL);
+			cmd_set_arg_choice(cmdq_peek(), "choice", i);
+		}
+	}
+	pending_build = *b;
+	have_pending = true;
+}
+
+/**
+ * After the commands queued by build_queue_birth() have run: how many stat and
+ * skill points the character could not afford, 0 if it is the build.
+ */
+int build_shortfall(const struct player_build *b)
+{
+	int missing = 0;
+
+	if (!player->race || !player->house) return -1;
+	for (int i = 0; i < STAT_MAX; i++) {
+		/* during birth stat_base holds just the points bought */
+		missing += ABS(b->stat_buys[i] - player->stat_base[i]);
+	}
+	for (int i = 0; i < SKILL_MAX; i++) missing += MAX(0, b->skills[i] - player->skill_base[i]);
+	return missing;
+}
+
+void build_clear_pending(void)
+{
+	have_pending = false;
+}
+
+/**
+ * Buys the pending build's abilities for a character just accepted, as far as
+ * its experience goes.
+ */
+void build_apply_pending(struct player *p)
+{
+	int missed = 0;
+
+	if (!have_pending) return;
+	have_pending = false;
+	for (int i = 0; i < pending_build.n_abilities; i++) {
+		struct ability *a = lookup_ability(pending_build.ability[i].skill, pending_build.ability[i].name);
+		if (!a || !gain_ability(p, a, false)) {
+			missed++;
+		} else if (streq(a->name, "Oath")) {
+			p->oath_type = pending_build.oath;	/* the oath sworn is the build's */
+		}
+	}
+	if (missed) {
+		msg("The build's experience ran short: %d abilit%s not bought.", missed, missed == 1 ? "y was" : "ies were");
+	}
 }

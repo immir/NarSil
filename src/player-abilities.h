@@ -60,6 +60,35 @@ enum { OATH_NONE, OATH_MERCY, OATH_SILENCE, OATH_IRON, OATH_MAX };
 bool player_oath_active(const struct player *p, int oath);
 bool player_oath_break(struct player *p, int oath, bool ask);
 bool player_gain_ability(struct player *p, struct ability *ability);
+
+/**
+ * A saved build: the choices that make a character at the start of a game
+ * (race, house, sex, the points bought in each stat and skill, the abilities
+ * and the oath), kept in builds.txt so the same character can be made again.
+ */
+#define BUILD_NAME_LEN 48
+#define BUILD_MAX 24
+#define BUILD_MAX_ABILITIES 64
+#define BUILD_STATS 4
+#define BUILD_SKILLS 8
+struct player_build {
+	char name[BUILD_NAME_LEN];
+	char race[32], house[32], sex[16];
+	int stat_buys[BUILD_STATS];		/* points bought in each stat, beyond what race and house give */
+	int skills[BUILD_SKILLS];		/* skill points bought */
+	int n_abilities;
+	struct { uint8_t skill; char name[40]; } ability[BUILD_MAX_ABILITIES];
+	uint8_t oath;				/* the oath sworn, if the Oath ability is in the build */
+	bool fixed_exp;				/* made with the fixed experience birth option */
+};
+bool build_capture(const struct player *p, const char *name, struct player_build *b);
+int builds_load(struct player_build *list, int max);
+bool builds_save(const struct player_build *list, int n);
+int build_exp_cost(const struct player_build *b);
+void build_queue_birth(const struct player_build *b);
+int build_shortfall(const struct player_build *b);
+void build_clear_pending(void);
+void build_apply_pending(struct player *p);
 void release_ability_list(struct ability *head);
 struct ability *copy_ability_list(const struct ability *head);
 

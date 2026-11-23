@@ -156,6 +156,13 @@ Fixed experience: gain 50,000 at the start and nothing after ``birth_fixed_exp``
   smithing is still spent. The amount is ``player:fixed-exp`` in
   ``constants.txt``.
 
+  Saved builds (mobile): to make the same character again, for a diving run
+  say, use *Save build* on the character panel before your first turn. It
+  stores the race, house, sex, stat and skill points and abilities (and the
+  oath) in ``builds.txt`` in the user directory. A later new character starts
+  with a *Saved builds* screen: choosing one buys all of that for you, and
+  you carry on from the name.
+
 
 Cheating options
 ================

@@ -354,6 +354,26 @@ echo "$out" | grep -qP '^Screen\trace\tRace$'
 echo "== ...and the new character starts with an empty message log"
 echo "$out" | awk '/^messages:/{n++} n==2' | sed -n 2p | grep -q '^state='  # nothing between the header and the final state line
 
+echo "== saved builds: Save build only at turn 0 (0x40000); the build is kept and bought again for a new character"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @ctx @run=6 @run=4 @ctx 2>/dev/null)
+ctx_has 1 0x40000
+refute ctx_has 2 0x40000
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=23 @answer=100 @answer=100 @answer=2 @answer=-1 @act=21 @answer=0 @answer=1 @answer=-1 @act=20 @answer=4 @text=Fighter @answer=-1 @messages @die @enter @prompt @answer=5 @prompt @answer=1 @prompt @answer=1 @answer=1 @answer=0 @answer=0 @esc @ctx @act=21 @prompt @answer=-1 2>&1)
+grep -qx 'build=Fighter' "$work/data/user/builds.txt"
+grep -qx 'skills=2 0 0 0 0 0 0 0' "$work/data/user/builds.txt"
+grep -qP '^ability=\d+:\S' "$work/data/user/builds.txt"
+echo "$out" | grep -qP '^#O\t1\tFighter\t.* · 1 ability · \d+ experience\t'
+echo "== ...the same character comes back: the skills and the ability are bought"
+echo "$out" | grep -qP '^0\t2\t1\t\d+\t\t[A-Z]'
+echo "== ...and a build can be deleted"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=20 @answer=4 @text=Fighter @answer=-1 @messages @die @enter @prompt @answer=5 @prompt @answer=1 @prompt @answer=2 @prompt @answer=0 @prompt 2>&1)
+echo "$out" | grep -q '^Screen	builds-delete	Delete a saved build'
+refute grep -q '^build=' "$work/data/user/builds.txt"
+rm -rf "$work/data"
+
 echo "== native options: toggle, number, locked birth page; birth options editable at birth"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=26 @prompt @answer=1007 @prompt @answer=10005 @prompt @answer=100 @prompt @answer=-1 @prompt @answer=-1 "${quit[@]}")
