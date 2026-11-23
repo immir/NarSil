@@ -58,6 +58,9 @@ bool player_can_gain_ability(struct player *p, struct ability *ability);
 /* NarSil-Q's oaths of the "Oath" ability; the flag of an oath is 1 << (oath - 1) */
 enum { OATH_NONE, OATH_MERCY, OATH_SILENCE, OATH_IRON, OATH_MAX };
 bool player_oath_active(const struct player *p, int oath);
+const char *player_oath_name(const struct player *p);
+const char *player_oath_vow(const struct player *p);
+bool player_oath_broken(const struct player *p);
 bool player_oath_break(struct player *p, int oath, bool ask);
 bool player_gain_ability(struct player *p, struct ability *ability);
 

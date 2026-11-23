@@ -633,6 +633,24 @@ struct ability *copy_ability_list(const struct ability *head)
 
 
 /**
+ * The oath sworn ("mercy", "silence" or "iron"), its vow, and whether it is broken (none: "" and false).
+ */
+const char *player_oath_name(const struct player *p)
+{
+	return p->oath_type > OATH_NONE && p->oath_type < OATH_MAX ? oath_names[p->oath_type] : "";
+}
+
+const char *player_oath_vow(const struct player *p)
+{
+	return p->oath_type > OATH_NONE && p->oath_type < OATH_MAX ? oath_vows[p->oath_type] : "";
+}
+
+bool player_oath_broken(const struct player *p)
+{
+	return p->oath_type > OATH_NONE && p->oath_type < OATH_MAX && (p->oaths_broken & (1 << (p->oath_type - 1)));
+}
+
+/**
  * ------------------------------------------------------------------------
  * Saved builds
  * ------------------------------------------------------------------------ */

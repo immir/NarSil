@@ -959,6 +959,10 @@ static void character_sheet(void)
 	info_add("Light radius\t%d\t%d\t\n", player->upkeep->cur_light, COLOUR_L_GREEN);
 	info_add("Game turn\t%d\t%d\t\n", player->turn, COLOUR_L_GREEN);
 	info_add("Seed\t%u\t%d\t%s\n", seed_game, COLOUR_L_BLUE, game_title());
+	if (player->oath_type) {
+		info_add("Oath\t%s%s\t%d\t%s\n", player_oath_name(player), player_oath_broken(player) ? " (broken)" : "",
+			player_oath_broken(player) ? COLOUR_L_RED : COLOUR_L_GREEN, player_oath_vow(player));
+	}
 
 	if (player->history && player->history[0]) {
 		char history[1024];
