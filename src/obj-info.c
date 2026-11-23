@@ -26,6 +26,7 @@
 #include "mon-util.h"
 #include "obj-gear.h"
 #include "obj-info.h"
+#include "player-forecast.h"
 #include "obj-knowledge.h"
 #include "obj-make.h"
 #include "obj-pile.h"
@@ -826,7 +827,11 @@ static textblock *object_info_out(const struct object *obj, int mode)
 textblock *object_info(const struct object *obj, oinfo_detail_t mode)
 {
 	mode |= OINFO_SUBJ;
-	return object_info_out(obj, mode);
+	textblock *tb = object_info_out(obj, mode);
+
+	/* What it would do to the current target (the show_forecast option) */
+	if (player && object_is_carried(player, obj)) forecast_describe_object(tb, player, obj);
+	return tb;
 }
 
 /**

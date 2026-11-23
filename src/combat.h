@@ -31,6 +31,7 @@ int skill_check(struct source attacker, int skill, int difficulty,
 int hit_roll(int att, int evn, struct source attacker, struct source defender,
 			 bool display_roll);
 int total_player_attack(struct player *p, struct monster *mon, int base);
+int total_player_attack_preview(struct player *p, struct monster *mon, int base);
 int total_player_evasion(struct player *p, struct monster *mon, bool archery);
 int total_monster_attack(struct player *p, struct monster *mon, int base);
 int total_monster_evasion(struct player *p, struct monster *mon, bool archery);

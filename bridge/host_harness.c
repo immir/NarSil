@@ -22,6 +22,7 @@
  *   @ego                                          a known short sword of Hador's House into the pack
  *   @chest, @trapchest, @pile                     drop a locked chest, a trapped one, or a pile of four under the player
  *   @skeleton @rage                               an unsearched orc skeleton underfoot / the player rages
+ *   @orc                                          an awake orc soldier beside the player, its defence known, targeted
  *   @ctx                                          print the context flags
  *   @answer=N                                     answer any native prompt (see nb_answer)
  *   @aim@DX,DY                                    answer an aim prompt with a grid relative to the player
@@ -364,9 +365,9 @@ static int run_token(const char *tok)
 		return 0;
 	}
 	if (strcmp(tok, "@chest") == 0 || strcmp(tok, "@trapchest") == 0 || strcmp(tok, "@pile") == 0
-		|| strcmp(tok, "@ego") == 0 || strcmp(tok, "@specials") == 0 || strcmp(tok, "@skeleton") == 0
+		|| strcmp(tok, "@ego") == 0 || strcmp(tok, "@specials") == 0 || strcmp(tok, "@skeleton") == 0 || strcmp(tok, "@orc") == 0
 		|| strcmp(tok, "@rage") == 0) {
-		nb_test_chest(strcmp(tok, "@rage") == 0 ? 6 : strcmp(tok, "@skeleton") == 0 ? 5 : strcmp(tok, "@specials") == 0 ? 4 : strcmp(tok, "@ego") == 0 ? 3 : tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
+		nb_test_chest(strcmp(tok, "@orc") == 0 ? 7 : strcmp(tok, "@rage") == 0 ? 6 : strcmp(tok, "@skeleton") == 0 ? 5 : strcmp(tok, "@specials") == 0 ? 4 : strcmp(tok, "@ego") == 0 ? 3 : tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
 		return settle() ? 0 : 1;
 	}
 	if (sscanf(tok, "@details=%d%c", &mx, &tail) == 1) {

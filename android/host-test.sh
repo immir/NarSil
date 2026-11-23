@@ -374,6 +374,20 @@ echo "$out" | grep -q '^Screen	builds-delete	Delete a saved build'
 refute grep -q '^build=' "$work/data/user/builds.txt"
 rm -rf "$work/data"
 
+echo "== combat forecast: off by default; with the option, inspecting a monster whose defence is known gives the odds"
+around=(@inspect@0,1 @inspect@0,-1 @inspect@1,0 @inspect@-1,0 @inspect@1,1 @inspect@-1,1 @inspect@1,-1 @inspect@-1,-1)
+rm -rf "$work/data"
+forecast_opt=$(run "${birth[@]}" @act=26 @prompt @answer=-1 "${quit[@]}" 2>/dev/null | grep -P '^#O\t\d+\t[01]\t[01]\tShow combat forecasts' | cut -f2)
+[ -n "$forecast_opt" ]
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @orc "${around[@]}" "${quit[@]}" 2>/dev/null)
+echo "$out" | grep -qP '^#M\tAn Orc soldier'
+refute grep -q 'to hit (' <<<"$out"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=26 @answer="$forecast_opt" @answer=-1 @orc "${around[@]}" "${quit[@]}" 2>/dev/null)
+echo "$out" | grep -qP '\d+%[\s\x04]*to hit \([+-]\d+ against [+-]\d+\), \S*\d+%[\s\x04]*to crit, \S*\d+\.\d[\s\x04]*damage an attack'
+rm -rf "$work/data"
+
 echo "== native options: toggle, number, locked birth page; birth options editable at birth"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=26 @prompt @answer=1007 @prompt @answer=10005 @prompt @answer=100 @prompt @answer=-1 @prompt @answer=-1 "${quit[@]}")

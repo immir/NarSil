@@ -235,11 +235,11 @@ int hit_roll(int att, int evn, struct source attacker, struct source defender,
 }
 
 /**
- * Determines the bonus for the ability 'concentration' and updates some
- * related variables.
+ * Determines the bonus for the ability 'concentration' and, if commit, updates
+ * some related variables.
  */
 
-static int concentration_bonus(struct player *p, struct loc grid)
+static int concentration_bonus(struct player *p, struct loc grid, bool commit)
 {
 	int bonus = 0;
 	int midx = square_monster(cave, grid) ? square_monster(cave, grid)->midx :0;
@@ -253,7 +253,7 @@ static int concentration_bonus(struct player *p, struct loc grid)
 
 	/* If the player is not engaged with this monster, reset the attack count
 	 * and monster */
-	if (p->last_attack_m_idx != midx) {
+	if (commit && p->last_attack_m_idx != midx) {
 		p->consecutive_attacks = 0;
 		p->last_attack_m_idx = midx;
 	}
@@ -262,13 +262,13 @@ static int concentration_bonus(struct player *p, struct loc grid)
 }
 
 /**
- * Determines the bonus for the ability 'focused attack'.
+ * Determines the bonus for the ability 'focused attack' (which, if commit, the attack uses up).
  */
-static int focused_attack_bonus(struct player *p)
+static int focused_attack_bonus(struct player *p, bool commit)
 {
 	/* Focused attack */
 	if (p->focused) {
-		p->focused = false;
+		if (commit) p->focused = false;
 		
 		if (player_active_ability(p, "Focused Attack")) {
 			return (p->state.skill_use[SKILL_PERCEPTION] / 2);
@@ -300,15 +300,15 @@ static int master_hunter_bonus(struct player *p, struct monster *mon)
  * Determines the player's attack based on all the relevant attributes and
  * modifiers.
  */
-int total_player_attack(struct player *p, struct monster *mon, int base)
+static int player_attack_score(struct player *p, struct monster *mon, int base, bool commit)
 {
 	int att = base;
 
 	/* Reward concentration ability (if applicable) */
-	att += concentration_bonus(p, mon->grid);
+	att += concentration_bonus(p, mon->grid, commit);
 
 	/* Reward focused attack ability (if applicable) */
-	att += focused_attack_bonus(p);
+	att += focused_attack_bonus(p, commit);
 	
 	/* reward bane ability (if applicable) */
 	att += player_bane_bonus(p, mon);
@@ -332,6 +332,20 @@ int total_player_attack(struct player *p, struct monster *mon, int base)
 	}
 	
 	return att;
+}
+
+int total_player_attack(struct player *p, struct monster *mon, int base)
+{
+	return player_attack_score(p, mon, base, true);
+}
+
+/**
+ * total_player_attack() for a forecast: the same score, but the attack's
+ * bookkeeping (the Concentration count, using up Focused Attack) is left alone.
+ */
+int total_player_attack_preview(struct player *p, struct monster *mon, int base)
+{
+	return player_attack_score(p, mon, base, false);
 }
 
 /**

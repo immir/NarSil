@@ -165,6 +165,7 @@ ANGFILES0 = \
 	option.o \
 	parser.o \
 	player-abilities.o \
+	player-forecast.o \
 	player-attack.o \
 	player-birth.o \
 	player-calcs.o \

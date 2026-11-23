@@ -18,6 +18,7 @@
 #include "cmds.h"
 #include "combat.h"
 #include "player-abilities.h"
+#include "player-forecast.h"
 #include "project.h"
 #include "game-event.h"
 #include "game-world.h"
@@ -49,6 +50,9 @@
 #include "monster.h"
 #include "obj-desc.h"
 #include "obj-ignore.h"
+#include "mon-calcs.h"
+#include "mon-make.h"
+#include "mon-util.h"
 #include "target.h"
 #include "ui-mon-lore.h"
 #include "z-textblock.h"
@@ -791,6 +795,7 @@ static void inspect(struct loc g)
 		monster_race_track(player->upkeep, mon->race);
 		health_track(player->upkeep, mon);
 		textblock *const tb = textblock_new();
+		forecast_describe_monster(tb, player, mon);
 		lore_description(tb, mon->race, get_lore(mon->race), false);
 		info_add_textblock(tb);
 		textblock_free(tb);
@@ -1043,6 +1048,24 @@ bool native_service(bool at_prompt)
 			else if (o->known) o->known->notice |= OBJ_NOTICE_ASSESSED;
 		}
 		event_signal(EVENT_SEEFLOOR);
+		native_publish(at_prompt);
+		return false;
+	}
+	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 7) {
+		/* An awake orc soldier next to the player, its defence known, targeted. */
+		struct monster_race *const race = lookup_monster("Orc soldier");
+		const struct monster_group_info info = { 0, 0 };
+		assert(race);
+		for (int d = 0; d < 8; d++) {
+			const struct loc g = loc_sum(player->grid, ddgrid_ddd[d]);
+			if (!square_isempty(cave, g)) continue;
+			if (!place_new_monster(cave, g, race, false, false, info, ORIGIN_DROP_WIZARD)) continue;
+			struct monster *const mon = square_monster(cave, g);
+			get_lore(race)->armour_known = true;
+			update_mon(mon, cave, true);
+			target_set_monster(mon);
+			break;
+		}
 		native_publish(at_prompt);
 		return false;
 	}

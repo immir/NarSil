@@ -113,4 +113,6 @@ OP(birth_fixed_exp,       "Fixed experience: gain 50,000 at the start and nothin
 BIRTH, false)
 OP(know_monster_info,     "Know all monster info",
 INTERFACE, false)
+OP(show_forecast,         "Show combat forecasts: chance to hit, criticals and damage",
+INTERFACE, false)
 

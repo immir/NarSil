@@ -115,6 +115,19 @@ Know all monster info ``know_monster_info``
   counting as a cheat. (The debug option "Know complete monster info" does the
   same, and marks the character as a cheater.)
 
+Show combat forecasts: chance to hit, criticals and damage ``show_forecast``
+  Off by default. Looking at a monster whose defence you know (from its
+  recall) shows, for your weapon and for your bow with the first quiver's
+  ammunition: the chance to hit, the chance of a critical hit, and the mean
+  damage after its armour, per attack and per hit, with the most a hit can
+  do. With a monster targeted, an item's description does the same: a melee
+  weapon or bow in your pack as if you wielded it, and ammunition as shot
+  from your bow. The odds are exact (Sil's d20 rolls are few enough to count),
+  but they use only what you know: a weapon's undiscovered runes, or a
+  monster's unknown resistance, are not counted. They reflect the moment (the
+  monster asleep or unwary, your Concentration and Focused Attack, the range)
+  and leave out a Charge, a Smite and Deadly Hail.
+
 
 
 Birth options
