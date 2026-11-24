@@ -338,9 +338,9 @@ class MainActivity : ComponentActivity() {
         /* Landscape: the status moves to a rail on the right and the buttons run along the whole bottom edge. */
         val rail = state.mapMode && LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
         Column(Modifier.fillMaxSize()) {
-        if (state.mapMode && settings.tabsOnTop) TabsBar(-1, settings.panelTabs, onTab = { i ->
+        if (state.mapMode && settings.tabsOnTop) TabsBar(-1, settings.panelTabs) { i ->
             Trace.log("panel.request", "via" to "tabs", "tab" to i); NarSilNative.nativeRequestAction(TAB_ACTIONS[i])
-        }, onClose = null)
+        }
         Row(Modifier.weight(1f).fillMaxWidth()) {
             Column(Modifier.weight(1f).fillMaxHeight()) {
                 /* At -more- a tap continues; otherwise it opens the scrollable history. */

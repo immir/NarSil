@@ -9,7 +9,7 @@ itemScale | Inventory and items |
 statusScale | Status |
 messageLines | Messages shown |
 panelTabs | Panel tabs | Icons fit the panel without scrolling; names are the scrolling strip.
-tabsOnTop | Panel tabs along the top | The seven tabs always across the top of the screen, each opening its screen at once; the panel then opens below them and its own tab row and the panel button go.  Experimental.
+tabsOnTop | Panel tabs along the top | The seven tabs always across the top of the screen, each opening its screen at once; tap the open tab to close it.  The panel then fills a portrait screen below them (in landscape, part of the width), and its own tab row, ✕ and the panel button go.  Experimental.
 tiles | Tiles on the map | MicroChasm's pictures instead of letters. Lists and menus keep the letters.
 dpad | D-pad | Tap a key to step; hold it, or drag from the centre key towards it, to run.  Centre: tap to wait, hold to rest; on a floating pad hold the centre then drag to move it.  Beside status sits under the status in portrait and in the side column in landscape.
 dpadSize | D-pad size |

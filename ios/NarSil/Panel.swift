@@ -109,23 +109,15 @@ private struct PanelTabs: View {
 let tabActions = [NB.ACT_INVENTORY, NB.ACT_CHARACTER, NB.ACT_SKILLS, NB.ACT_ABILITIES, NB.ACT_KNOWLEDGE, NB.ACT_SMITH, NB.ACT_OPTIONS]
 
 /// Settings → "Panel tabs along the top": the tabs as a strip across the top of the screen, drawn the same over the map
-/// (nothing selected, `onClose` nil) and over the open panel (its tab selected, with ✕), so it does not move.
+/// and over the open panel (its tab selected), so it does not move.  A tab opens its screen; the open tab closes it.
 struct TabsBar: View {
     @AppStorage("panelTabs") private var tabStyle = TabStyle.iconsAndNames.rawValue
     let selected: Int
     let onTab: (Int) -> Void
-    var onClose: (() -> Void)?
 
     var body: some View {
-        HStack(spacing: 0) {
-            PanelTabs(tab: selected, style: TabStyle(rawValue: tabStyle) ?? .iconsAndNames, onTab: onTab)
-            if let onClose {
-                Button("✕", action: onClose).scaledFont(18).foregroundColor(.white).frame(width: 48).frame(maxHeight: .infinity)
-            } else {
-                Color.clear.frame(width: 48)
-            }
-        }
-        .frame(height: 56).frame(maxWidth: .infinity).background(Palette.sheet)
+        PanelTabs(tab: selected, style: TabStyle(rawValue: tabStyle) ?? .iconsAndNames, onTab: onTab)
+            .frame(height: 56).frame(maxWidth: .infinity).background(Palette.sheet)
     }
 }
 
@@ -138,12 +130,13 @@ private struct PanelHost<Content: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            /* Tabs along the top: the same strip as over the map, now showing the open tab; its tab again, or ✕, closes. */
-            if tabsOnTop { TabsBar(selected: tab, onTab: { i in answer(i == tab ? NB.PANEL_CLOSE : NB.PANEL_TAB + i) }, onClose: { answer(NB.PANEL_CLOSE) }) }
+            /* Tabs along the top: the same strip as over the map, now showing the open tab; its tab again closes. */
+            if tabsOnTop { TabsBar(selected: tab) { i in answer(i == tab ? NB.PANEL_CLOSE : NB.PANEL_TAB + i) } }
             GeometryReader { g in
                 // A wide window (iPad): a side column of a readable width, the map still showing beside it.
                 let wide = g.size.width >= 840
-                let width = wide ? min(g.size.width * 0.4, 560) : g.size.width > g.size.height ? g.size.width * 0.58 : g.size.width * 0.94
+                // With the tabs along the top the panel fills a portrait screen; in landscape it keeps a share of the width.
+                let width = wide ? min(g.size.width * 0.4, 560) : g.size.width > g.size.height ? g.size.width * 0.58 : tabsOnTop ? g.size.width : g.size.width * 0.94
                 ZStack(alignment: .trailing) {
                     Color.black.opacity(wide ? 0.2 : 0.47).ignoresSafeArea().onTapGesture { answer(NB.PANEL_CLOSE) }
                     VStack(spacing: 0) {

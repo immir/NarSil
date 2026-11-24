@@ -52,7 +52,7 @@ struct RootView: View {
                 HardwareKeys(active: keysActive, onKey: hardwareKey).frame(width: 0, height: 0)
                 VStack(spacing: 0) {
                     if tabsOnTop && game.mapMode {
-                        TabsBar(selected: -1, onTab: { i in Trace.log("panel.request", ("via", "tabs"), ("tab", i)); Native.requestAction(tabActions[i]) })
+                        TabsBar(selected: -1) { i in Trace.log("panel.request", ("via", "tabs"), ("tab", i)); Native.requestAction(tabActions[i]) }
                     }
                     if rail { landscape } else { portrait }
                 }

@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.material.icons.Icons
@@ -144,12 +143,13 @@ fun PanelHost(gameTab: Int, tabStyle: Int, tabsOnTop: Boolean, onAnswer: (Int) -
         onAnswer(a)
     }
     Column(Modifier.fillMaxSize()) {
-    /* Tabs along the top: the same strip as over the map, now showing the open tab; its tab again, or ✕, closes. */
-    if (tabsOnTop) TabsBar(tab, tabStyle, onTab = { i -> answer(if (i == tab) N.PANEL_CLOSE else N.PANEL_TAB + i) }, onClose = { answer(N.PANEL_CLOSE) })
+    /* Tabs along the top: the same strip as over the map, now showing the open tab; its tab again closes. */
+    if (tabsOnTop) TabsBar(tab, tabStyle) { i -> answer(if (i == tab) N.PANEL_CLOSE else N.PANEL_TAB + i) }
     BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
         /* A wide window (tablet, foldable): a side column of a readable width, the map still showing beside it. */
         val wide = maxWidth >= 840.dp
-        val width = if (wide) minOf(maxWidth * 0.4f, 560.dp) else if (maxWidth > maxHeight) maxWidth * 0.58f else maxWidth * 0.94f
+        /* With the tabs along the top the panel fills a portrait screen; in landscape it keeps a share of the width. */
+        val width = if (wide) minOf(maxWidth * 0.4f, 560.dp) else if (maxWidth > maxHeight) maxWidth * 0.58f else if (tabsOnTop) maxWidth else maxWidth * 0.94f
         Box(Modifier.fillMaxSize().background(Color(if (wide) 0x33000000 else 0x77000000))
                 .clickable(remember { MutableInteractionSource() }, indication = null) { answer(N.PANEL_CLOSE) })
             Surface(color = PANEL_BG, shape = RoundedCornerShape(topStart = if (tabsOnTop) 0.dp else 16.dp, bottomStart = 16.dp),
@@ -189,18 +189,15 @@ private fun PanelTabs(tab: Int, tabStyle: Int, modifier: Modifier, onTab: (Int) 
 }
 
 private val TABS_BAR_HEIGHT = 56.dp
-private val TABS_CLOSE_WIDTH = 48.dp
 
 /**
  * Settings → "Panel tabs along the top": the tabs as a strip across the top of the screen, drawn the same over the map
- * (nothing selected, [onClose] null) and over the open panel (its tab selected, with ✕), so it does not move.
+ * and over the open panel (its tab selected), so it does not move.  A tab opens its screen; the open tab closes it.
  */
 @Composable
-fun TabsBar(selected: Int, tabStyle: Int, onTab: (Int) -> Unit, onClose: (() -> Unit)?) {
+fun TabsBar(selected: Int, tabStyle: Int, onTab: (Int) -> Unit) {
     Row(Modifier.fillMaxWidth().height(TABS_BAR_HEIGHT).background(PANEL_BG), verticalAlignment = Alignment.CenterVertically) {
         PanelTabs(selected, tabStyle, Modifier.weight(1f), onTab)
-        if (onClose != null) Box(Modifier.width(TABS_CLOSE_WIDTH).fillMaxHeight().clickable(onClick = onClose), contentAlignment = Alignment.Center) { Text("✕", fontSize = 18.sp, color = Color.White) }
-        else Spacer(Modifier.width(TABS_CLOSE_WIDTH))
     }
 }
 

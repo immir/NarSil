@@ -35,8 +35,8 @@
 
 ## Menus and prompts
 - The panel button at the right of the message strip opens the character panel: Pack, Character, Skills, Abilities, Knowledge, Smithing and Options as tabs. The pill of unspent experience and the ☰ entries open it at their tab, and so do the keyboard's i and e. Options → Display and controls → Panel tabs along the top (experimental) puts the seven tabs across the top of the screen instead, each opening directly. Swipe sideways across a tab to move to the next or previous one. Options → Display and controls → Panel tabs shows the tabs as icons, icons and names, or names.
-- [android] Close the panel with ✕, Back, a tap on the map, a swipe right on the tabs, or a swipe right on Pack. (Options → Display and controls can also let a swipe in from the right edge open it.)
-- [ios] Close the panel with ✕, a tap on the map, or a swipe right on the first tab.
+- [android] Close the panel with ✕ (or, with the tabs along the top, a tap on the open tab), Back, a tap on the map, a swipe right on the tabs, or a swipe right on Pack. (Options → Display and controls can also let a swipe in from the right edge open it.)
+- [ios] Close the panel with ✕ (or, with the tabs along the top, a tap on the open tab), a tap on the map, or a swipe right on the first tab.
 - Pack lists everything you carry, wear and stand on. Tap an item to open it in place with its description and actions; tap another to switch. After an action the panel comes back, except after Fire and Throw. Dropping part of a stack asks how many; inscribing asks for the text.
 - Skill points you buy are kept when you switch tabs; Cancel on the Skills tab undoes this visit's purchases. A smithing design is kept while you look at other tabs.
 - Knowledge lists creatures, objects, artefacts, special items, runes, terrain, traps, your history and the hall of fame. Long lists have a search box. Runes can be inscribed, so items with that rune get the inscription.

@@ -38,7 +38,7 @@ internal val TOUCH_GUIDE: List<Pair<String, List<String>>> = listOf(
     ),
     "Menus and prompts" to listOf(
         "The panel button at the right of the message strip opens the character panel: Pack, Character, Skills, Abilities, Knowledge, Smithing and Options as tabs. The pill of unspent experience and the ☰ entries open it at their tab, and so do the keyboard's i and e. Options → Display and controls → Panel tabs along the top (experimental) puts the seven tabs across the top of the screen instead, each opening directly. Swipe sideways across a tab to move to the next or previous one. Options → Display and controls → Panel tabs shows the tabs as icons, icons and names, or names.",
-        "Close the panel with ✕, Back, a tap on the map, a swipe right on the tabs, or a swipe right on Pack. (Options → Display and controls can also let a swipe in from the right edge open it.)",
+        "Close the panel with ✕ (or, with the tabs along the top, a tap on the open tab), Back, a tap on the map, a swipe right on the tabs, or a swipe right on Pack. (Options → Display and controls can also let a swipe in from the right edge open it.)",
         "Pack lists everything you carry, wear and stand on. Tap an item to open it in place with its description and actions; tap another to switch. After an action the panel comes back, except after Fire and Throw. Dropping part of a stack asks how many; inscribing asks for the text.",
         "Skill points you buy are kept when you switch tabs; Cancel on the Skills tab undoes this visit's purchases. A smithing design is kept while you look at other tabs.",
         "Knowledge lists creatures, objects, artefacts, special items, runes, terrain, traps, your history and the hall of fame. Long lists have a search box. Runes can be inscribed, so items with that rune get the inscription.",
@@ -81,7 +81,7 @@ internal object UiText {
     const val PANEL_TABS = "Panel tabs"
     const val PANEL_TABS_HINT = "Icons fit the panel without scrolling; names are the scrolling strip."
     const val TABS_ON_TOP = "Panel tabs along the top"
-    const val TABS_ON_TOP_HINT = "The seven tabs always across the top of the screen, each opening its screen at once; the panel then opens below them and its own tab row and the panel button go.  Experimental."
+    const val TABS_ON_TOP_HINT = "The seven tabs always across the top of the screen, each opening its screen at once; tap the open tab to close it.  The panel then fills a portrait screen below them (in landscape, part of the width), and its own tab row, ✕ and the panel button go.  Experimental."
     const val TILES = "Tiles on the map"
     const val TILES_HINT = "MicroChasm's pictures instead of letters. Lists and menus keep the letters."
     const val DPAD = "D-pad"
