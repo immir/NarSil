@@ -30,6 +30,7 @@
  *   @pick=N                                       answer an item prompt (-1 cancels)
  *   @map                                          print the native map around the player
  *   @walk=D @run=D                                native step / run in keypad direction D
+ *   @runreport                                    print the latest run: runs ended, its steps, why it stopped
  *   @preview@DX,DY @travel@DX,DY                  native path preview / travel, relative to player grid
  *   @dump                                         print the current frame
  *   @fuzz=SEED,N                                  N random inputs, checking the game never hangs
@@ -319,6 +320,12 @@ static int run_token(const char *tok)
 	if (sscanf(tok, "@msgt=%d%c", &mx, &tail) == 1) {
 		nb_test_message(mx);
 		return settle() ? 0 : 1;
+	}
+	if (strcmp(tok, "@runreport") == 0) {
+		int32_t meta[NB_META_COUNT];
+		nb_map_snapshot(meta, NULL, 0);
+		printf("runreport %d %d %d\n", meta[NB_META_RUN_SEQ], meta[NB_META_RUN_STEPS], meta[NB_META_RUN_STOP]);
+		return 0;
 	}
 	if (strcmp(tok, "@feel") == 0) {
 		int32_t meta[NB_META_COUNT];

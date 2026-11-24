@@ -232,7 +232,7 @@ class GameState {
         N.nativeMessagesGeneration().let { gen -> if (gen != messagesGen) { messagesGen = gen; messages = Parse.messages(N.nativeMessages()) } }
         N.nativeInfoGeneration().let { gen ->
             if (infoGen < 0) infoGen = gen  // ignore whatever was there before this UI existed
-            else if (gen != infoGen) { infoGen = gen; info = Parse.info(N.nativeInfo()); info?.let { Trace.log("info.show", "kind" to it::class.simpleName.orEmpty()) } }
+            else if (gen != infoGen) { infoGen = gen; info = Parse.info(N.nativeInfo()); info?.let { Trace.log("info.show", "kind" to traceName(it)) } }
         }
     }
 
@@ -240,6 +240,16 @@ class GameState {
     /** A pack action or Make it: that screen stays shown while the command runs; it reopens within moments. */
     val holding get() = holdUntilNanos != 0L
 
+    /** The usage trace's names for prompts and info sheets: spelled out, as release builds rename classes. */
+    private fun traceName(p: Prompt): String = when (p) {
+        is Prompt.Items -> "Items"; is Prompt.Pack -> "Pack"; is Prompt.Check -> "Check"; is Prompt.Aim -> "Aim"
+        is Prompt.Direction -> "Direction"; is Prompt.Choice -> "Choice"; is Prompt.Skills -> "Skills"; is Prompt.Smith -> "Smith"
+        is Prompt.Knowledge -> "Knowledge"; is Prompt.Quantity -> "Quantity"; is Prompt.Character -> "Character"
+        is Prompt.Options -> "Options"; is Prompt.Text -> "Text"; is Prompt.Screen -> "Screen"; is Prompt.Abilities -> "Abilities"
+    }
+    private fun traceName(i: Info): String = when (i) { is Info.Inspect -> "Inspect"; is Info.LookList -> "LookList"; is Info.Character -> "Character" }
+
+    private var tracedRunSeq = -1
     private var tracedPanelTab = -1
     private var tracedPrompt: String? = null
     private var tracedDepth = -1
@@ -258,9 +268,17 @@ class GameState {
             }
             tracedPanelTab = panelTab
         }
-        val kind = prompt?.let { it::class.simpleName }
+        val kind = prompt?.let(::traceName)
         if (kind != tracedPrompt) { if (kind != null) Trace.log("prompt.show", "kind" to kind); tracedPrompt = kind }
         if (status.depth != tracedDepth) { if (tracedDepth >= 0) Trace.log("level", "depth" to status.depth); tracedDepth = status.depth }
+        meta[N.META_RUN_SEQ].let { seq ->
+            if (tracedRunSeq >= 0 && seq != tracedRunSeq) {
+                val stop = meta[N.META_RUN_STOP]
+                Trace.log("run.end", "steps" to meta[N.META_RUN_STEPS], "why" to (N.RUN_STOP_NAMES.getOrNull(stop and 0xff) ?: "?"),
+                          "path" to ((stop and N.RUN_PATH) != 0), "threats" to status.threats)
+            }
+            tracedRunSeq = seq
+        }
     }
 
     /** Called with every answer the UI sends: an action from the pack keeps the pack on screen until it reopens. */
@@ -283,10 +301,15 @@ class GameState {
                 val p = prompt
                 if (p is Prompt.Pack && value >= N.PACK_ACT && value < N.PANEL_TAB) {
                     actedInPanel = true
-                    Trace.log("pack.action", "item" to (value - N.PACK_ACT) / N.PACK_ACT_STRIDE, "act" to (value - N.PACK_ACT) % N.PACK_ACT_STRIDE)
+                    val i = (value - N.PACK_ACT) / N.PACK_ACT_STRIDE
+                    val k = (value - N.PACK_ACT) % N.PACK_ACT_STRIDE
+                    val item = p.items.getOrNull(i)
+                    /* The item's kind of thing (its map symbol) and where it is, never its name; the action's game label. */
+                    Trace.log("pack.action", "item" to i, "act" to k, "symbol" to (item?.glyph?.let { if (it in 33..126) it.toChar().toString() else it.toString() } ?: "?"),
+                              "section" to (item?.section ?: -1), "label" to (p.actions.getOrNull(k)?.label ?: "?"))
                 } else {
                     if (!(p is Prompt.Pack && value < N.PACK_ACT) && p !is Prompt.Knowledge) actedInPanel = true
-                    Trace.log("answer", "prompt" to (p?.let { it::class.simpleName } ?: "none"), "v" to value)
+                    Trace.log("answer", "prompt" to (p?.let(::traceName) ?: "none"), "v" to value)
                 }
             }
         }

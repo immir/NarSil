@@ -159,10 +159,11 @@ struct RootView: View {
         let context = contextActions(game.status)
         return context + quickActions(game.quickSlots) { quickKinds = QuickPins.toggled(quickKinds, $0) }
             + pinnedActions(QuickPins.decode(quickActs), shown: context) { quickActs = QuickPins.toggled(quickActs, $0) }
-            + coreActions(game.status) { showRest = true }
+            + coreActions(game.status, padShown: pad != PadMode.off.rawValue) { showRest = true }
     }
     private var more: [BarAction] {
-        moreActions(game.status, messages: { showMore = false; showMessages = true }, toggleMap: { map.toggleOverview() }, toggleTiles: { tiles.toggle(); Native.setTiles(tiles) }, tilesOn: tiles, help: { showHelp = true })
+        moreActions(game.status, messages: { showMore = false; showMessages = true }, toggleMap: { map.toggleOverview() }, toggleTiles: { tiles.toggle(); Native.setTiles(tiles) }, tilesOn: tiles, help: { showHelp = true },
+                    restOptions: pad != PadMode.off.rawValue ? { showMore = false; showRest = true } : nil)
             + (scumming ? [BarAction(label: "Scum", run: { Task { say(await Saves.take()) } }),
                            BarAction(label: "Restore scum save", run: { showScum = true })] : [])
     }

@@ -38,6 +38,7 @@
 #include "obj-pile.h"
 #include "obj-tval.h"
 #include "obj-util.h"
+#include "player-path.h"
 #include "player-abilities.h"
 #include "player-attack.h"
 #include "player-calcs.h"
@@ -1853,6 +1854,8 @@ void disturb(struct player *p, bool stop_stealth)
 	/* Cancel running */
 	if (p->upkeep->running) {
 		p->upkeep->running = 0;
+		if (run_report.stop == RUN_STOP_NONE) run_report.stop = RUN_STOP_DISTURBED;
+		run_report.seq++;
 
 		/* Cancel queued commands */
 		cmdq_flush();

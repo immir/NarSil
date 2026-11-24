@@ -14,6 +14,10 @@ from statistics import median
 
 REOPEN_MS = 10_000
 QUICK_MS = 1_000
+# Release builds before the trace spelled names out traced R8's renamed classes (the 0.3 mapping)
+RENAMED = {"Z0": "Screen", "X0": "Pack", "a1": "Skills", "O0": "Abilities", "R0": "Check", "W0": "Options", "c1": "Text",
+           "Y0": "Quantity", "T0": "Direction", "U0": "Items", "Q0": "Character", "V0": "Knowledge", "w0": "Inspect",
+           "x0": "LookList"}
 
 
 def read(path):
@@ -34,6 +38,9 @@ def parse(lines):
         if len(parts) < 2 or not parts[0].isdigit():
             continue
         fields = dict(p.split("=", 1) for p in parts[2:] if "=" in p)
+        for key in ("kind", "prompt"):
+            if key in fields:
+                fields[key] = RENAMED.get(fields[key], fields[key])
         if parts[1] == "session" or not sessions:
             sessions.append([])
         sessions[-1].append((int(parts[0]), parts[1], fields))
@@ -51,6 +58,13 @@ def summarise(sessions):
 
     print("\nmap input:", dict(kinds("map.tap")), "hold", counts["map.hold"], "swipe", dict(kinds("map.swipe")))
     print("d-pad:", dict(kinds("pad")))
+    runs = [f for _, e, f in events if e == "run.end"]
+    for path, title in (("false", "runs"), ("true", "walks along a path")):
+        these = [f for f in runs if f.get("path") == path]
+        if these:
+            steps = [int(f.get("steps", 0)) for f in these]
+            print(f"{title}: {len(these)}, median {median(steps)} steps, 1 step or none: {sum(n <= 1 for n in steps)};",
+                  "stopped by", dict(Counter(f.get("why", "?") for f in these).most_common()))
     print("action bar taps:", counts["bar.tap"], "scrolls:", counts["bar.scroll"], "long-presses:", counts["bar.longpress"])
     print("menu opens:", counts["menu.open"], "picks:", counts["menu.pick"])
     for title, key in (("most used bar actions", "bar.tap"), ("most used menu actions", "menu.pick")):
@@ -67,19 +81,25 @@ def summarise(sessions):
         idle = sum(1 for f in closes if f.get("acted") == "false")
         print(f"time open: median {median(durations) / 1000:.1f} s; visits with no action taken: {idle} of {len(closes)}")
     print("tabs shown:", dict(Counter(f.get("tab", "?") for _, e, f in events if e in ("panel.open", "tab.show"))))
+    labelled = Counter(f"{f['label']} ({f.get('symbol', '?')})" for _, e, f in events if e == "pack.action" and "label" in f)
+    if labelled:
+        print("pack actions:", ", ".join(f"{a} {n}" for a, n in labelled.most_common(10)))
 
     print("\nfriction:")
+    reopened, quick = [], 0
     for s in sessions:
         last_close = None
         for t, e, f in s:
             if e == "panel.close":
                 last_close = t
             elif e == "panel.open" and last_close is not None and t - last_close < REOPEN_MS:
-                print(f"  panel reopened {(t - last_close) / 1000:.1f} s after closing (session at {s[0][0]} ms, t={t} ms)")
+                reopened.append(t - last_close)
         presses = [(t, f.get("act")) for t, e, f in s if e in ("bar.tap", "menu.pick")]
-        quick = sum(1 for (a, _), (b, _) in zip(presses, presses[1:]) if b - a < QUICK_MS)
-        if quick:
-            print(f"  {quick} bar/menu actions within {QUICK_MS // 1000} s of the previous one")
+        quick += sum(1 for (a, _), (b, _) in zip(presses, presses[1:]) if b - a < QUICK_MS)
+    if reopened:
+        print(f"  panel reopened within {REOPEN_MS // 1000} s of closing: {len(reopened)} times (median {median(reopened) / 1000:.1f} s)")
+    if quick:
+        print(f"  {quick} bar/menu actions within {QUICK_MS // 1000} s of the previous one")
     if counts["bar.scroll"]:
         print(f"  the action bar was scrolled {counts['bar.scroll']} times")
 

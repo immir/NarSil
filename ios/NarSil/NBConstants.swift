@@ -36,7 +36,10 @@ enum NB {
     static let META_MIN_DEPTH = 29
     static let META_FEEL_SEQ = 30
     static let META_FEEL_BITS = 31
-    static let META_COUNT = 32
+    static let META_RUN_SEQ = 32
+    static let META_RUN_STEPS = 33
+    static let META_RUN_STOP = 34
+    static let META_COUNT = 35
     static let STANCE_NONE = 0
     static let STANCE_SLEEPING = 1
     static let STANCE_UNWARY = 2
@@ -141,6 +144,13 @@ enum NB {
     static let ABILITY_ITEM_ON = 4
     static let ABILITY_ITEM_OFF = 5
     static let TEXT_RANDOM = 2
+    static let RUN_STOP_NONE = 0
+    static let RUN_STOP_MONSTER = 1
+    static let RUN_STOP_NOTICE = 2
+    static let RUN_STOP_JUNCTION = 3
+    static let RUN_STOP_ARRIVED = 4
+    static let RUN_STOP_DISTURBED = 5
+    static let RUN_PATH = 256
     static let FEEL_HIT = 1
     static let FEEL_MISS = 2
     static let FEEL_KILL = 4

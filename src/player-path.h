@@ -27,4 +27,27 @@ bool find_path(struct loc grid);
 int path_copy_steps(int *dirs, int max);
 void run_step(int dir);
 
+/**
+ * Why a run (or a walk along a path) stopped.
+ */
+enum run_stop {
+	RUN_STOP_NONE,		/* still running, or never ran */
+	RUN_STOP_MONSTER,	/* a visible monster ahead or alongside */
+	RUN_STOP_NOTICE,	/* a trap, an object or an interesting feature beside the way */
+	RUN_STOP_JUNCTION,	/* the way divides, opens out or ends */
+	RUN_STOP_ARRIVED,	/* the path's end */
+	RUN_STOP_DISTURBED	/* anything else that disturbed the player (a monster came into view, a noise, damage) */
+};
+
+/**
+ * The latest run: steps taken, why it stopped, whether it followed a path; seq counts the runs that have ended.
+ */
+struct run_report {
+	uint32_t seq;
+	int steps;
+	enum run_stop stop;
+	bool pathfind;
+};
+extern struct run_report run_report;
+
 #endif /* !PLAYER_PATH_H */

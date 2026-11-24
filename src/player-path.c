@@ -595,6 +595,10 @@ static void run_init(int dir)
 }
 
 
+/* How the latest run went (see struct run_report); run_test() says why it stopped, RUN_STOP_JUNCTION if it does not */
+struct run_report run_report;
+static enum run_stop run_test_stop;
+
 /**
  * Update the current "run" path
  *
@@ -633,19 +637,24 @@ static bool run_test(const struct player *p)
 		if (square(cave, grid)->mon > 0) {
 			struct monster *mon = square_monster(cave, grid);
 			if (monster_is_visible(mon)) {
+				run_test_stop = RUN_STOP_MONSTER;
 				return true;
 			}
 		}
 
 		/* Visible traps abort running */
 		if (square_isvisibletrap(cave, grid)) {
+			run_test_stop = RUN_STOP_NOTICE;
 			return true;
 		}
 
 		/* Visible objects abort running */
 		for (obj = square_object(cave, grid); obj; obj = obj->next)
 			/* Visible object */
-			if (obj->known && !ignore_item_ok(p, obj)) return true;
+			if (obj->known && !ignore_item_ok(p, obj)) {
+				run_test_stop = RUN_STOP_NOTICE;
+				return true;
+			}
 
 		/* Assume unknown */
 		inv = true;
@@ -655,7 +664,10 @@ static bool run_test(const struct player *p)
 			bool notice = square_isinteresting(p->cave, grid);
 
 			/* Interesting feature */
-			if (notice) return true;
+			if (notice) {
+				run_test_stop = RUN_STOP_NOTICE;
+				return true;
+			}
 
 			/* The grid is "visible" */
 			inv = false;
@@ -713,8 +725,10 @@ static bool run_test(const struct player *p)
 		/* Obvious monsters abort running */
 		if (square(cave, grid)->mon > 0) {
 			struct monster *mon = square_monster(cave, grid);
-			if (monster_is_visible(mon))
+			if (monster_is_visible(mon)) {
+				run_test_stop = RUN_STOP_MONSTER;
 				return true;
+			}
 		}
 	}
 
@@ -798,6 +812,7 @@ void run_step(int dir)
 	if (dir) {
 		/* Initialize */
 		run_init(dir);
+		run_report = (struct run_report) { .seq = run_report.seq, .pathfind = false };
 
 		/* Set the run counter if no count given */
 		if (player->upkeep->running == 0)
@@ -809,13 +824,16 @@ void run_step(int dir)
 		/* Continue running */
 		if (!player->upkeep->running_withpathfind) {
 			/* Update regular running */
+			run_test_stop = RUN_STOP_JUNCTION;
 			if (run_test(player)) {
+				run_report.stop = run_test_stop;
 				/* Disturb */
 				disturb(player, false);
 				return;
 			}
 		} else if (path_step_idx < 0) {
 			/* Pathfinding, and the path is finished */
+			run_report.stop = RUN_STOP_ARRIVED;
 			disturb(player, false);
 			player->upkeep->running_withpathfind = false;
 			return;
@@ -896,6 +914,7 @@ void run_step(int dir)
 
 	/* Move the player; running straight into a trap == trying to disarm */
 	move_player(run_cur_dir, dir && disarm ? true : false);
+	run_report.steps++;
 
 	/* Check if the player is escaping */
 	if (!square_in_bounds_fully(cave, player->grid)) {

@@ -102,11 +102,14 @@ fun contextActions(s: GameState.Status): List<BarAction> = buildList {
  * Sil does not level you up: experience waits to be spent (the cheapest point costs 100),
  * which matters but is not urgent, so it comes last.
  */
-/** [restOptions] opens the rest choices (long press on Rest). */
-fun coreActions(s: GameState.Status, restOptions: () -> Unit): List<BarAction> = listOfNotNull(
-    BarAction("Rest", longPress = restOptions, run = act(N.ACT_REST)),
+/**
+ * [restOptions] opens the rest choices (long press on Rest).  With the d-pad shown its centre key waits (tap) and
+ * rests (hold), so Wait and Rest leave the bar and the rest choices move to ☰.
+ */
+fun coreActions(s: GameState.Status, padShown: Boolean, restOptions: () -> Unit): List<BarAction> = listOfNotNull(
+    BarAction("Rest", longPress = restOptions, run = act(N.ACT_REST)).takeIf { !padShown },
     BarAction("Explore", longPress = act(N.ACT_EXPLORE_STEP), run = act(N.ACT_EXPLORE)),
-    BarAction("Wait", run = act(N.ACT_HOLD)),
+    BarAction("Wait", run = act(N.ACT_HOLD)).takeIf { !padShown },
     BarAction(if (s.has(N.CTX_STEALTH)) "Stealth ●" else "Stealth", active = s.has(N.CTX_STEALTH), run = act(N.ACT_STEALTH)),
     BarAction(if (s.has(N.CTX_SINGING)) "Song ♪" else "Song", active = s.has(N.CTX_SINGING), run = act(N.ACT_SONG)),
     BarAction("Pack", run = act(N.ACT_INVENTORY)),
@@ -117,9 +120,10 @@ fun coreActions(s: GameState.Status, restOptions: () -> Unit): List<BarAction> =
 
 /** Less frequent but necessary: behind the ☰ button. */
 fun moreActions(s: GameState.Status, router: KeyRouter, showMessages: () -> Unit, showOptions: () -> Unit, showHelp: () -> Unit, toggleMap: () -> Unit,
-                toggleKeyboard: () -> Unit): List<BarAction> = listOfNotNull(
+                restOptions: (() -> Unit)?, toggleKeyboard: () -> Unit): List<BarAction> = listOfNotNull(
     /* Pack, gear, character, skills, abilities, knowledge, smithing and game options live in the panel (@). */
     BarAction("Panel", run = act(N.ACT_PANEL)),
+    restOptions?.let { BarAction("Rest…", run = it) },
     BarAction("Map", run = toggleMap),
     BarAction("Walk to ▼", pin = N.ACT_TRAVEL_DOWN, run = act(N.ACT_TRAVEL_DOWN)).takeIf { s.has(N.CTX_DOWN_KNOWN) && !s.has(N.CTX_DOWN_STAIRS) },
     BarAction("Walk to ▲", pin = N.ACT_TRAVEL_UP, run = act(N.ACT_TRAVEL_UP)).takeIf { s.has(N.CTX_UP_KNOWN) && !s.has(N.CTX_UP_STAIRS) },
@@ -142,6 +146,13 @@ fun ActionBar(actions: List<BarAction>, onMore: () -> Unit) {
     /* A scroll of the bar is a sign it does not hold what the player wants: log where it came to rest. */
     LaunchedEffect(scroll) {
         snapshotFlow { scroll.isScrollInProgress }.drop(1).filter { !it }.collect { Trace.log("bar.scroll", "at" to scroll.value, "of" to scroll.maxValue) }
+    }
+    /* Context actions (stairs, Pick up, Fire, doors, traps) come first: when a new one appears, show it. */
+    val context = actions.filter { it.emphasised }.map { it.label }
+    val seen = remember { mutableListOf<String>() }
+    LaunchedEffect(context) {
+        if (context.any { it !in seen } && scroll.value > 0) scroll.animateScrollTo(0)
+        seen.clear(); seen.addAll(context)
     }
     Row(
         Modifier.fillMaxWidth().background(Color(0xFF101012)).horizontalScroll(scroll)

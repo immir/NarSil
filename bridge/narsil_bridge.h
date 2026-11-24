@@ -119,6 +119,9 @@ enum nb_meta {
 	NB_META_MIN_DEPTH,      /* the shallowest level the player may now go up to (the depth clock); 50 ft each */
 	NB_META_FEEL_SEQ,       /* counts the updates in which the player landed a blow, missed or killed: a change means feel the bits */
 	NB_META_FEEL_BITS,      /* NB_FEEL_* of the latest such update */
+	NB_META_RUN_SEQ,        /* counts the runs (and walks along a path) that have ended: a change means read the next two */
+	NB_META_RUN_STEPS,      /* steps the latest run took */
+	NB_META_RUN_STOP,       /* why it stopped: enum nb_run_stop, plus NB_RUN_PATH if it followed a path */
 	NB_META_COUNT
 };
 
@@ -327,6 +330,12 @@ enum nb_ability_state {
 /* Text prompt: title; default text; maximum length in bytes; 1 if NB_TEXT_RANDOM is offered. */
 enum { NB_TEXT_RANDOM = 2 };
 /* Screen answers besides an option index.  The birth stats screen answers like skills (NB_SKILL_*). */
+/* Why the latest run stopped (NB_META_RUN_STOP); mirrors the engine's enum run_stop. */
+enum nb_run_stop {
+	NB_RUN_STOP_NONE = 0, NB_RUN_STOP_MONSTER = 1, NB_RUN_STOP_NOTICE = 2, NB_RUN_STOP_JUNCTION = 3,
+	NB_RUN_STOP_ARRIVED = 4, NB_RUN_STOP_DISTURBED = 5, NB_RUN_PATH = 1 << 8
+};
+
 /* What the player's attacks did since the previous update (NB_META_FEEL_BITS): for haptics. */
 enum { NB_FEEL_HIT = 1, NB_FEEL_MISS = 2, NB_FEEL_KILL = 4 };
 enum { NB_SCREEN_RANDOM = 1000, NB_SCREEN_OPTIONS = 1001 };

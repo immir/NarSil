@@ -381,6 +381,11 @@ echo "$out" | grep -q '^Screen	builds-delete	Delete a saved build'
 refute grep -q '^build=' "$work/data/user/builds.txt"
 rm -rf "$work/data"
 
+echo "== usage trace: a run reports its steps and why it stopped (NB_META_RUN_*)"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @runreport @run=2 @runreport @run=4 @runreport "${quit[@]}" 2>/dev/null)
+echo "$out" | grep -qx 'runreport 0 0 0'
+echo "$out" | grep -qP '^runreport [1-9]\d* [1-9]\d* [1-5]$'
 echo "== combat forecast: off by default; with the option, inspecting a monster whose defence is known gives the odds"
 around=(@inspect@0,1 @inspect@0,-1 @inspect@1,0 @inspect@-1,0 @inspect@1,1 @inspect@-1,1 @inspect@1,-1 @inspect@-1,-1)
 rm -rf "$work/data"

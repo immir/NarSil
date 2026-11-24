@@ -69,12 +69,13 @@ func quickActions(_ slots: [QuickSlot], unpin: @escaping (Int) -> Void) -> [BarA
     }
 }
 
-/// Always present: the turn-by-turn Sil toolkit.  `restOptions` opens the rest choices (long press on Rest).
-func coreActions(_ s: Status, restOptions: @escaping () -> Void) -> [BarAction] {
-    var out = [
-        BarAction(label: "Rest", longPress: restOptions, run: act(NB.ACT_REST)),
-        BarAction(label: "Explore", longPress: act(NB.ACT_EXPLORE_STEP), run: act(NB.ACT_EXPLORE)),
-        BarAction(label: "Wait", run: act(NB.ACT_HOLD)),
+/// Always present: the turn-by-turn Sil toolkit.  `restOptions` opens the rest choices (long press on Rest).  With the
+/// d-pad shown its centre key waits (tap) and rests (hold), so Wait and Rest leave the bar and the rest choices move to ☰.
+func coreActions(_ s: Status, padShown: Bool, restOptions: @escaping () -> Void) -> [BarAction] {
+    var out = padShown ? [] : [BarAction(label: "Rest", longPress: restOptions, run: act(NB.ACT_REST))]
+    out.append(BarAction(label: "Explore", longPress: act(NB.ACT_EXPLORE_STEP), run: act(NB.ACT_EXPLORE)))
+    if !padShown { out.append(BarAction(label: "Wait", run: act(NB.ACT_HOLD))) }
+    out += [
         BarAction(label: s.has(NB.CTX_STEALTH) ? "Stealth ●" : "Stealth", active: s.has(NB.CTX_STEALTH), run: act(NB.ACT_STEALTH)),
         BarAction(label: s.has(NB.CTX_SINGING) ? "Song ♪" : "Song", active: s.has(NB.CTX_SINGING), run: act(NB.ACT_SONG)),
         BarAction(label: "Pack", run: act(NB.ACT_INVENTORY)),
@@ -86,11 +87,11 @@ func coreActions(_ s: Status, restOptions: @escaping () -> Void) -> [BarAction] 
 }
 
 /// Less frequent but necessary: behind the ☰ button.  Pack, character, skills and the rest live in the panel (@).
-func moreActions(_ s: Status, messages: @escaping () -> Void, toggleMap: @escaping () -> Void, toggleTiles: @escaping () -> Void, tilesOn: Bool, help: @escaping () -> Void) -> [BarAction] {
-    var out = [
-        BarAction(label: "Panel", run: act(NB.ACT_PANEL)),
-        BarAction(label: "Map", run: toggleMap),
-    ]
+func moreActions(_ s: Status, messages: @escaping () -> Void, toggleMap: @escaping () -> Void, toggleTiles: @escaping () -> Void, tilesOn: Bool, help: @escaping () -> Void,
+                 restOptions: (() -> Void)? = nil) -> [BarAction] {
+    var out = [BarAction(label: "Panel", run: act(NB.ACT_PANEL))]
+    if let restOptions { out.append(BarAction(label: "Rest…", run: restOptions)) }
+    out.append(BarAction(label: "Map", run: toggleMap))
     if s.has(NB.CTX_DOWN_KNOWN) && !s.has(NB.CTX_DOWN_STAIRS) { out.append(BarAction(label: "Walk to ▼", pin: NB.ACT_TRAVEL_DOWN, run: act(NB.ACT_TRAVEL_DOWN))) }
     if s.has(NB.CTX_UP_KNOWN) && !s.has(NB.CTX_UP_STAIRS) { out.append(BarAction(label: "Walk to ▲", pin: NB.ACT_TRAVEL_UP, run: act(NB.ACT_TRAVEL_UP))) }
     out += [
@@ -113,14 +114,25 @@ struct ActionBar: View {
     let actions: [BarAction]
     let onMore: () -> Void
 
+    @State private var seen: [String] = []
+
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                ForEach(actions) { BarButton(action: $0) }
-                Button(action: onMore) { Text("☰").scaledFont(18).padding(.horizontal, 14).frame(minHeight: 40) }
-                    .buttonStyle(.plain).background(Color.white.opacity(0.14), in: Capsule())
+        /* Context actions (stairs, Pick up, Fire, doors, traps) come first: when a new one appears, show it. */
+        let context = actions.filter(\.emphasised).map(\.label)
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    Color.clear.frame(width: 0, height: 0).id("start")
+                    ForEach(actions) { BarButton(action: $0) }
+                    Button(action: onMore) { Text("☰").scaledFont(18).padding(.horizontal, 14).frame(minHeight: 40) }
+                        .buttonStyle(.plain).background(Color.white.opacity(0.14), in: Capsule())
+                }
+                .padding(.horizontal, 6).padding(.vertical, 6)
             }
-            .padding(.horizontal, 6).padding(.vertical, 6)
+            .onChange(of: context) { new in
+                if new.contains(where: { !seen.contains($0) }) { withAnimation { proxy.scrollTo("start", anchor: .leading) } }
+                seen = new
+            }
         }
         /* A drag along the bar is a scroll: a sign it does not hold what the player wants. */
         .simultaneousGesture(DragGesture(minimumDistance: 12).onEnded { v in

@@ -59,12 +59,18 @@ object NarSilNative {
     const val META_MIN_DEPTH = 29
     const val META_FEEL_SEQ = 30
     const val META_FEEL_BITS = 31
+    const val META_RUN_SEQ = 32
+    const val META_RUN_STEPS = 33
+    const val META_RUN_STOP = 34
+    const val RUN_PATH = 256
+    /** enum nb_run_stop, as the usage trace names it. */
+    val RUN_STOP_NAMES = arrayOf("none", "monster", "notice", "junction", "arrived", "disturbed")
     const val FEEL_HIT = 1
     const val FEEL_MISS = 2
     const val FEEL_KILL = 4
     /** nb_exit_message() after the welcome screen's "Play the other game" (NB_EXIT_SWITCH_GAME). */
     const val EXIT_SWITCH_GAME = "switch-game"
-    const val META_COUNT = 32
+    const val META_COUNT = 35
 
     /** enum nb_stance, as sidebar text. */
     val STANCE_NAMES = arrayOf("", "Sleeping", "Unwary", "Mindless", "Fleeing", "Confident", "Aggressive")

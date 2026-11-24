@@ -2089,6 +2089,7 @@ void do_cmd_pathfind(struct command *cmd)
 		/* Calculate torch radius */
 		player->upkeep->update |= (PU_TORCH);
 		player->upkeep->running_withpathfind = true;
+		run_report = (struct run_report) { .seq = run_report.seq, .pathfind = true };
 		run_step(0);
 	}
 }

@@ -217,7 +217,8 @@ class MainActivity : ComponentActivity() {
                 }
                 TextScale(settings.messageScale / settings.buttonScale) { MessagesSheet(state) { showMessages = false } }
             }
-            if (showMore) MoreSheet(moreActions(state.status, router, { showMessages = true }, { showOptions = true }, { showHelp = true }, { mapView?.toggleOverview() }) { terminal?.toggleKeyboard() } +
+            if (showMore) MoreSheet(moreActions(state.status, router, { showMessages = true }, { showOptions = true }, { showHelp = true }, { mapView?.toggleOverview() },
+                                                { showRest = true }.takeIf { settings.dpad != Settings.DPAD_OFF }) { terminal?.toggleKeyboard() } +
                                     listOfNotNull(scumAction(), BarAction("Restore scum save", run = { showScum = true }).takeIf { settings.scumming }),
                                     settings.quickActs, settings::toggleQuickAct) { showMore = false }
             if (showKeys) MoreSheet(extraKeys(router)) { showKeys = false }
@@ -385,7 +386,7 @@ class MainActivity : ComponentActivity() {
     private fun barActions(state: GameState): List<BarAction> {
         val context = contextActions(state.status)
         return context + quickActions(state.quickSlots, settings::toggleQuick) +
-            pinnedActions(settings.quickActs, context, settings::toggleQuickAct) + coreActions(state.status) { showRest = true }
+            pinnedActions(settings.quickActs, context, settings::toggleQuickAct) + coreActions(state.status, settings.dpad != Settings.DPAD_OFF) { showRest = true }
     }
 
     /** The d-pad as set (off, docked or floating); docked is beside the status in portrait, in the side column in landscape. */

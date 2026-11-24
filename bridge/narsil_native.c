@@ -65,6 +65,10 @@
 #include <time.h>
 #include "ui-object.h"
 
+_Static_assert((int) NB_RUN_STOP_MONSTER == (int) RUN_STOP_MONSTER && (int) NB_RUN_STOP_NOTICE == (int) RUN_STOP_NOTICE &&
+	(int) NB_RUN_STOP_JUNCTION == (int) RUN_STOP_JUNCTION && (int) NB_RUN_STOP_ARRIVED == (int) RUN_STOP_ARRIVED &&
+	(int) NB_RUN_STOP_DISTURBED == (int) RUN_STOP_DISTURBED, "enum nb_run_stop mirrors enum run_stop");
+
 enum { PATH_MAX_STEPS = 500, MESSAGES_SHOWN = 300, INFO_CAP = 32 * 1024, LOOK_MAX = 40 };
 
 /* NB_MAP_CELL_INTS per grid: glyph, attr | flags << 16, tile, terrain tile beneath it (each or -1), then the
@@ -626,6 +630,9 @@ void native_publish(bool at_prompt)
 	if (feel_pending) { feel_bits = feel_pending; feel_pending = 0; feel_seq++; }
 	meta[NB_META_FEEL_SEQ] = feel_seq;
 	meta[NB_META_FEEL_BITS] = feel_bits;
+	meta[NB_META_RUN_SEQ] = (int32_t) run_report.seq;
+	meta[NB_META_RUN_STEPS] = run_report.steps;
+	meta[NB_META_RUN_STOP] = (int32_t) run_report.stop | (run_report.pathfind ? NB_RUN_PATH : 0);
 	meta[NB_META_HP_WARN] = player ? player->opts.hitpoint_warn : 0;
 	meta[NB_META_AUTO_MORE] = player && OPT(player, auto_more) ? 1 : 0;
 	meta[NB_META_TILE_ALERT] = meta[NB_META_TILE_GLOW] = -1;

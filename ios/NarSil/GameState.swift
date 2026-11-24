@@ -82,6 +82,8 @@ final class GameState: ObservableObject {
     private var tracedPanelTab = -1
     private var tracedPrompt: String?
     private var tracedDepth = -1
+    private var tracedRunSeq = -1
+    private static let runStopNames = ["none", "monster", "notice", "junction", "arrived", "disturbed"]
     private var panelOpenedAt = DispatchTime.now()
     private var actedInPanel = false
 
@@ -106,6 +108,13 @@ final class GameState: ObservableObject {
         let kind = Self.kind(prompt)
         if kind != tracedPrompt { if let kind { Trace.log("prompt.show", ("kind", kind)) }; tracedPrompt = kind }
         if status.depth != tracedDepth { if tracedDepth >= 0 { Trace.log("level", ("depth", status.depth)) }; tracedDepth = status.depth }
+        let runSeq = Int(meta[NB.META_RUN_SEQ])
+        if tracedRunSeq >= 0 && runSeq != tracedRunSeq {
+            let stop = Int(meta[NB.META_RUN_STOP])
+            Trace.log("run.end", ("steps", Int(meta[NB.META_RUN_STEPS])), ("why", Self.runStopNames.indices.contains(stop & 0xff) ? Self.runStopNames[stop & 0xff] : "?"),
+                      ("path", stop & NB.RUN_PATH != 0), ("threats", status.threats))
+        }
+        tracedRunSeq = runSeq
     }
 
     fileprivate func traceAnswer(_ value: Int) {
@@ -113,9 +122,14 @@ final class GameState: ObservableObject {
         if value >= NB.PANEL_TAB && value < NB.PANEL_CLOSE { Trace.log("tab.pick", ("tab", value - NB.PANEL_TAB)); return }
         if value == NB.PANEL_CLOSE { Trace.log("panel.dismiss"); return }
         let kind = Self.kind(prompt)
-        if kind == "Pack", value >= NB.PACK_ACT, value < NB.PANEL_TAB {
+        if case .pack(let p) = prompt, value >= NB.PACK_ACT, value < NB.PANEL_TAB {
             actedInPanel = true
-            Trace.log("pack.action", ("item", (value - NB.PACK_ACT) / NB.PACK_ACT_STRIDE), ("act", (value - NB.PACK_ACT) % NB.PACK_ACT_STRIDE))
+            let i = (value - NB.PACK_ACT) / NB.PACK_ACT_STRIDE, k = (value - NB.PACK_ACT) % NB.PACK_ACT_STRIDE
+            let item = p.items.indices.contains(i) ? p.items[i] : nil
+            /* The item's kind of thing (its map symbol) and where it is, never its name; the action's game label. */
+            let symbol = item.map { (33...126).contains($0.glyph) ? String(UnicodeScalar(UInt8($0.glyph))) : String($0.glyph) } ?? "?"
+            Trace.log("pack.action", ("item", i), ("act", k), ("symbol", symbol), ("section", item?.section ?? -1),
+                      ("label", p.actions.indices.contains(k) ? p.actions[k].label : "?"))
             return
         }
         if !(kind == "Pack" && value < NB.PACK_ACT) && kind != "Knowledge" { actedInPanel = true }
