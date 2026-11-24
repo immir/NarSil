@@ -503,6 +503,7 @@ int main(int argc, char **argv)
 		.cols = 80, .rows = 24, .log = log_stderr,
 	};
 	data_dir = argv[2];
+	if (getenv("NARSIL_TILES")) nb_set_tiles(true);  /* as the apps do when tiles are on: before the game starts */
 	if (!nb_start(&cfg)) { fprintf(stderr, "nb_start failed\n"); return 1; }
 	if (!settle()) { dump(); return 1; }
 

@@ -636,7 +636,7 @@ void native_publish(bool at_prompt)
 	meta[NB_META_HP_WARN] = player ? player->opts.hitpoint_warn : 0;
 	meta[NB_META_AUTO_MORE] = player && OPT(player, auto_more) ? 1 : 0;
 	meta[NB_META_TILE_ALERT] = meta[NB_META_TILE_GLOW] = -1;
-	if (tiles_on()) {
+	if (visible && tiles_on()) {  /* not while the game data is still loading: the tiles need it */
 		meta[NB_META_TILE_ALERT] = native_tile_overlay(false);
 		meta[NB_META_TILE_GLOW] = native_tile_overlay(true);
 	}

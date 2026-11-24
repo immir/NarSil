@@ -120,7 +120,7 @@ static bool load_tiles(void)
 {
 	static bool loading;    /* a pref error is reported through the message flush, which publishes the map */
 	if (tile_mode) return true;
-	if (load_failed || loading) return false;
+	if (load_failed || loading || !z_info) return false;  /* no game data yet: try again later */
 	if (!graphics_modes && !init_graphics_modes()) { load_failed = true; return false; }
 	const graphics_mode *mode = graphics_modes;
 	while (mode && !strstr(mode->path, "microchasm")) mode = mode->pNext;

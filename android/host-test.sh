@@ -35,6 +35,9 @@ birth=(@answer=0 @answer=0 @answer=0 @answer=0 @answer=2 @answer=2 @text= @answe
 quit=(@esc @esc ^x @enter @esc)
 
 rm -rf "$work/data"
+echo "== tiles on before the game starts (as the apps set them): startup and birth publish without touching unloaded data"
+rm -rf "$work/data"
+NARSIL_TILES=1 run "${birth[@]}" "${quit[@]}" | tail -1 | grep -q '^state=2 '
 echo "== empty message log at startup is published cleanly (MSan catches the old bug)"
 rm -rf "$work/data"
 run @messages | grep -q '^messages:'
