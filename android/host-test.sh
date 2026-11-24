@@ -241,6 +241,14 @@ out=$(run "${birth[@]}" @trapchest @ctx "${quit[@]}")
 ctx=($(echo "$out" | grep -o 'context=0x[0-9a-f]*' | sed 's/context=//'))
 [ $(( ctx[0] & 0x4000 )) -ne 0 ] && [ $(( ctx[0] & 0x400 )) -ne 0 ]
 
+echo "== Open beside two chests asks which way, naming just the chests (the d-pad lights those keys)"
+rm -rf "$work/data"
+# west then back south-east (NarSil-Q's first room: west then north-east), each start a chest behind
+if [ "$game" = silq ]; then back=9 want="1 chest 2 chest "; else back=3 want="7 chest 8 chest "; fi
+out=$(run "${birth[@]}" @chest @walk=4 @chest @walk=$back @act=9 @prompt @answer=-1 "${quit[@]}" 2>/dev/null)
+echo "$out" | grep -qx 'walk 4: moved 1' && echo "$out" | grep -qx "walk $back: moved 1"
+[ "$(echo "$out" | grep -P '^[1-9]\t[0-9]+\t[0-9]+\t' | cut -f1,4 | tr '\t\n' ' ')" = "$want" ]
+
 echo "== a pile underfoot is one line in the message log, not a screen waiting for a key"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @pile @act=1 @messages "${quit[@]}")

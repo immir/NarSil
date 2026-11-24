@@ -237,12 +237,39 @@ struct AimBar: View {
 
 private let directionArrows = [1: "↙", 2: "↓", 3: "↘", 4: "←", 6: "→", 7: "↖", 8: "↑", 9: "↗"]
 
-/// Adjacent-direction prompt: the map stays live (tap a neighbour or swipe); buttons for interesting neighbours.
+/// The d-pad keys a direction prompt suggests: its interesting neighbours, and the centre when "here" is allowed.
+func padMarks(_ p: Prompt?) -> Set<Int> {
+    guard case .direction(let d)? = p else { return [] }
+    return Set(d.neighbours.map(\.dir)).union(d.allowHere ? [5] : [])
+}
+
+/// Adjacent-direction prompt: the map stays live (tap a neighbour or swipe). With the d-pad shown its keys for
+/// the interesting neighbours light up and this bar only names them; otherwise they are buttons.
 struct DirectionBar: View {
     let prompt: DirectionPrompt
+    let padShown: Bool
     let answer: (Int) -> Void
 
+    private var named: String {
+        (prompt.neighbours.map { "\(directionArrows[$0.dir] ?? "") \($0.what)" } + (prompt.allowHere ? ["• here"] : []))
+            .joined(separator: " · ")
+    }
+
     var body: some View {
+        if padShown {
+            HStack {
+                Text(named.isEmpty ? "Which way? Use the d-pad, or tap a neighbouring square" : "Which way? \(named)")
+                    .scaledFont(14).foregroundColor(.white).frame(maxWidth: .infinity, alignment: .leading)
+                Button("Cancel") { answer(-1) }.buttonStyle(.bordered)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 4)
+            .background(Color(rgb: 0x1C1C1E).opacity(0.93))
+        } else {
+            chips
+        }
+    }
+
+    private var chips: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Which way? Tap a neighbouring square or swipe").scaledFont(14).foregroundColor(.white)
             ScrollView(.horizontal, showsIndicators: false) {

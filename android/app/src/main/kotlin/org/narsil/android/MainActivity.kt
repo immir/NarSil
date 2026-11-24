@@ -357,15 +357,15 @@ class MainActivity : ComponentActivity() {
                         Box(Modifier.align(Alignment.BottomCenter)) { AimBar(aim, NarSilNative::nativeAnswer) }
                     }
                     (state.prompt as? GameState.Prompt.Direction)?.let { d ->
-                        Box(Modifier.align(Alignment.BottomCenter)) { DirectionBar(d, NarSilNative::nativeAnswer) }
+                        Box(Modifier.align(Alignment.BottomCenter)) { DirectionBar(d, dpadMode() != Settings.DPAD_OFF, NarSilNative::nativeAnswer) }
                     }
-                    if (state.mapMode && dpadMode() == Settings.DPAD_FLOATING) FloatingDpad(settings) { dpad(state, it) }
+                    if (state.mapMode && dpadMode() == Settings.DPAD_FLOATING) FloatingDpad(settings, padMarks(state.prompt)) { dpad(state, it) }
                     if (state.mapMode && settings.edgeSwipePanel) EdgeSwipeHandle(Modifier.align(Alignment.CenterEnd))
                 }
                 if (state.mapMode && !rail) TextScale(settings.statusScale) {
                     if (dpadMode() == Settings.DPAD_DOCKED) Row(Modifier.background(Color(0xFF141414)), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.weight(1f)) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
-                        Box(Modifier.padding(4.dp)) { Dpad(settings.dpadSizeDp, { dpad(state, it) }) }
+                        Box(Modifier.padding(4.dp)) { Dpad(settings.dpadSizeDp, { dpad(state, it) }, marked = padMarks(state.prompt)) }
                     } else StatusStrip(state, stacked = false, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz)
                 }
                 if (state.mapMode && !rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { Trace.log("menu.open"); showMore = true } }
@@ -375,7 +375,7 @@ class MainActivity : ComponentActivity() {
                 TextScale(settings.statusScale) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
                 Spacer(Modifier.weight(1f))
                 if (dpadMode() == Settings.DPAD_DOCKED) Box(Modifier.fillMaxWidth().padding(4.dp), contentAlignment = Alignment.Center) {
-                    Dpad(settings.dpadSizeDp.coerceAtMost(150f), { dpad(state, it) })
+                    Dpad(settings.dpadSizeDp.coerceAtMost(150f), { dpad(state, it) }, marked = padMarks(state.prompt))
                 }
             }
         }

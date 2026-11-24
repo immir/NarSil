@@ -116,7 +116,7 @@ struct RootView: View {
             MapView(game: game, handle: map, swipeMode: swipeMode, tiles: tiles).overlay(floatingPad)
             HStack(alignment: .center, spacing: 0) {
                 StatusStrip(game: game, stacked: true).textScale(statusScale)
-                if pad == PadMode.docked.rawValue { Dpad(size: padSize, onAction: padAction).padding(4) }
+                if pad == PadMode.docked.rawValue { Dpad(size: padSize, onAction: padAction, marked: padMarks(game.prompt)).padding(4) }
             }.background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
             promptBar
             ActionBar(actions: bar) { Trace.log("menu.open"); showMore = true }
@@ -134,7 +134,7 @@ struct RootView: View {
             VStack(spacing: 0) {
                 StatusStrip(game: game, stacked: true).textScale(statusScale)
                 Spacer(minLength: 0)
-                if pad == PadMode.docked.rawValue { Dpad(size: min(padSize, 150), onAction: padAction).padding(4) }
+                if pad == PadMode.docked.rawValue { Dpad(size: min(padSize, 150), onAction: padAction, marked: padMarks(game.prompt)).padding(4) }
             }
             .frame(width: 260).background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
         }
@@ -146,7 +146,7 @@ struct RootView: View {
         if pad == PadMode.floating.rawValue && game.mapMode {
             GeometryReader { g in
                 let freeW = max(g.size.width - padSize, 1), freeH = max(g.size.height - padSize, 1)
-                Dpad(size: padSize, onAction: padAction) { d in
+                Dpad(size: padSize, onAction: padAction, marked: padMarks(game.prompt)) { d in
                     padX = min(max(padX + Double(d.width / freeW), 0), 1)
                     padY = min(max(padY + Double(d.height / freeH), 0), 1)
                 }
@@ -231,7 +231,7 @@ struct RootView: View {
     @ViewBuilder private var promptBar: some View {
         switch game.prompt {
         case .aim(let p)?: AimBar(prompt: p, answer: Native.answer)
-        case .direction(let p)?: DirectionBar(prompt: p, answer: Native.answer)
+        case .direction(let p)?: DirectionBar(prompt: p, padShown: pad != PadMode.off.rawValue, answer: Native.answer)
         case nil, .screen?, .items?, .check?, .choice?, .quantity?, .text?: EmptyView()
         case .skills? where game.panelTab < 0, .abilities? where game.panelTab < 0: EmptyView()
         case let p? where p.isPanelContent && game.panelTab >= 0: EmptyView()

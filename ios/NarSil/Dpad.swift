@@ -10,9 +10,11 @@ enum PadAction: Equatable {
 ///  - tap a direction: step; hold it: run
 ///  - centre: tap waits; drag out towards a direction runs that way; hold rests
 ///  - with `onMove`: hold the centre, then drag, to move the pad
+///  - `marked`: the directions a prompt suggests (a door, a chest; 5 = here), lit while the others dim
 struct Dpad: View {
     let size: CGFloat
     let onAction: (PadAction) -> Void
+    var marked: Set<Int> = []
     var onMove: ((CGSize) -> Void)?
 
     @State private var lit = 0
@@ -94,9 +96,11 @@ struct Dpad: View {
 
     private static let keyLit = Color(red: 58.0 / 255.0, green: 95.0 / 255.0, blue: 138.0 / 255.0, opacity: 0.82)
     private static let keyIdle = Color(red: 38.0 / 255.0, green: 38.0 / 255.0, blue: 43.0 / 255.0, opacity: 0.55)
+    private static let keyMarked = Color(rgb: 0x6A5018).opacity(0.75)
+    private static let markEdge = Color(rgb: 0xE0B040)
 
     var body: some View {
-        let lit = self.lit
+        let lit = self.lit, marked = self.marked
         return Canvas { ctx, sz in
             let k: CGFloat = min(sz.width, sz.height) / 3
             let gap: CGFloat = 3
@@ -105,9 +109,11 @@ struct Dpad: View {
                     let r = CGRect(x: CGFloat(col) * k + gap / 2, y: CGFloat(row) * k + gap / 2, width: k - gap, height: k - gap)
                     let shape = Path(roundedRect: r, cornerRadius: 6)
                     let on = dir == lit
-                    ctx.fill(shape, with: .color(on ? Self.keyLit : Self.keyIdle))
-                    ctx.stroke(shape, with: .color(Color.white.opacity(0.19)), lineWidth: 1)
-                    let ink = Color.white.opacity(on ? 1.0 : 0.8)
+                    let mark = marked.contains(dir)
+                    let dim = !marked.isEmpty && !mark
+                    ctx.fill(shape, with: .color(on ? Self.keyLit : mark ? Self.keyMarked : Self.keyIdle))
+                    ctx.stroke(shape, with: .color(mark ? Self.markEdge : Color.white.opacity(0.19)), lineWidth: mark ? 2 : 1)
+                    let ink = Color.white.opacity(on || mark ? 1.0 : dim ? 0.33 : 0.8)
                     if dir == 5 {
                         let d: CGFloat = k * 0.14
                         ctx.fill(Path(ellipseIn: CGRect(x: r.midX - d / 2, y: r.midY - d / 2, width: d, height: d)), with: .color(ink))

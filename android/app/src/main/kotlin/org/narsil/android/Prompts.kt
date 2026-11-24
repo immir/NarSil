@@ -93,10 +93,23 @@ fun keypadDir(dx: Int, dy: Int): Int = 5 - 3 * dy + dx
 
 private val DIR_ARROWS = mapOf(1 to "↙", 2 to "↓", 3 to "↘", 4 to "←", 6 to "→", 7 to "↖", 8 to "↑", 9 to "↗")
 
-/** Adjacent-direction prompt: the map stays live (tap a neighbour or swipe); chips for interesting neighbours. */
+/**
+ * Adjacent-direction prompt: the map stays live (tap a neighbour or swipe).  With the d-pad shown its
+ * keys for the interesting neighbours light up and this bar only names them; otherwise they are chips.
+ */
 @Composable
-fun DirectionBar(prompt: GameState.Prompt.Direction, onAnswer: (Int) -> Unit) {
+fun DirectionBar(prompt: GameState.Prompt.Direction, padShown: Boolean, onAnswer: (Int) -> Unit) {
     Surface(color = Color(0xEE1C1C1E), modifier = Modifier.fillMaxWidth()) {
+        if (padShown) {
+            Row(Modifier.padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                val named = prompt.neighbours.joinToString(" · ") { "${DIR_ARROWS[it.dir] ?: ""} ${it.what}" } +
+                    if (prompt.allowHere) (if (prompt.neighbours.isEmpty()) "" else " · ") + "• here" else ""
+                Text(if (named.isEmpty()) "Which way? Use the d-pad, or tap a neighbouring square" else "Which way? $named",
+                     color = Color.White, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                OutlinedButton(onClick = { onAnswer(-1) }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("Cancel") }
+            }
+            return@Surface
+        }
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("Which way? Tap a neighbouring square or swipe", color = Color.White, fontSize = 14.sp)
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

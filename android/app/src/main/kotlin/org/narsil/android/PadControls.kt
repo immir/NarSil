@@ -31,19 +31,24 @@ fun applyPad(state: GameState, router: KeyRouter, a: PadAction) {
     }
 }
 
+/** The d-pad keys a direction prompt suggests: its interesting neighbours, and the centre when "here" is allowed. */
+fun padMarks(p: GameState.Prompt?): Set<Int> = (p as? GameState.Prompt.Direction)?.let { d ->
+    d.neighbours.map { it.dir }.toSet() + if (d.allowHere) setOf(5) else emptySet()
+} ?: emptySet()
+
 /** Draggable by its centre; the position is kept as a fraction of the free space. */
 @Composable
-fun FloatingDpad(settings: Settings, onAction: (PadAction) -> Unit) {
+fun FloatingDpad(settings: Settings, marked: Set<Int>, onAction: (PadAction) -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val density = LocalDensity.current
         val pad = with(density) { settings.dpadSizeDp.dp.toPx() }
         val freeW = (constraints.maxWidth - pad).coerceAtLeast(1f)
         val freeH = (constraints.maxHeight - pad).coerceAtLeast(1f)
         Box(Modifier.offset { IntOffset((settings.dpadX * freeW).roundToInt(), (settings.dpadY * freeH).roundToInt()) }) {
-            Dpad(settings.dpadSizeDp, onAction) { delta ->
+            Dpad(settings.dpadSizeDp, onAction, { delta ->
                 settings.dpadX = (settings.dpadX + delta.x / freeW).coerceIn(0f, 1f)
                 settings.dpadY = (settings.dpadY + delta.y / freeH).coerceIn(0f, 1f)
-            }
+            }, marked)
         }
     }
 }

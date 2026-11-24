@@ -49,11 +49,12 @@ private const val SWIPE_OUT = 0.6f     // drag this far from the centre, in key 
  *  - tap a direction: step; hold it: run
  *  - centre: tap waits; drag out towards a direction runs that way; hold rests
  *  - with [onMove]: hold the centre, then drag, to move the pad
+ *  - [marked]: the directions a prompt suggests (a door, a chest; 5 = here), lit while the others dim
  */
 private val PAD_NAMES = listOf(8 to "north", 9 to "north-east", 6 to "east", 3 to "south-east", 2 to "south", 1 to "south-west", 4 to "west", 7 to "north-west")
 
 @Composable
-fun Dpad(sizeDp: Float, onAction: (PadAction) -> Unit, onMove: ((Offset) -> Unit)? = null) {
+fun Dpad(sizeDp: Float, onAction: (PadAction) -> Unit, onMove: ((Offset) -> Unit)? = null, marked: Set<Int> = emptySet()) {
     var lit by remember { mutableIntStateOf(0) }
     val haptics = LocalHapticFeedback.current
     val action by rememberUpdatedState(onAction)
@@ -113,7 +114,7 @@ fun Dpad(sizeDp: Float, onAction: (PadAction) -> Unit, onMove: ((Offset) -> Unit
                 lit = 0
             }
         },
-    ) { drawPad(lit) }
+    ) { drawPad(lit, marked) }
 }
 
 /** Suspends until the pointer that went down is lifted; returns that change. */
@@ -126,7 +127,9 @@ private suspend fun AwaitPointerEventScope.awaitRelease(): PointerInputChange {
 
 private val ARROW_ANGLE = mapOf(6 to 0f, 3 to 45f, 2 to 90f, 1 to 135f, 4 to 180f, 7 to 225f, 8 to 270f, 9 to 315f)
 
-private fun DrawScope.drawPad(lit: Int) {
+private val MARK = Color(0xFFE0B040)
+
+private fun DrawScope.drawPad(lit: Int, marked: Set<Int>) {
     val key = size.minDimension / 3f
     val gap = 3.dp.toPx()
     val corner = CornerRadius(6.dp.toPx())
@@ -138,10 +141,12 @@ private fun DrawScope.drawPad(lit: Int) {
         dirs.forEachIndexed { col, dir ->
             val topLeft = Offset(col * key + gap / 2, row * key + gap / 2)
             val k = Size(key - gap, key - gap)
-            drawRoundRect(if (dir == lit) Color(0xD03A5F8A) else Color(0x8C26262B), topLeft, k, corner)
-            drawRoundRect(Color(0x30FFFFFF), topLeft, k, corner, style = Stroke(1.dp.toPx()))
+            val mark = dir in marked
+            val dim = marked.isNotEmpty() && !mark
+            drawRoundRect(when { dir == lit -> Color(0xD03A5F8A); mark -> Color(0xC06A5018); else -> Color(0x8C26262B) }, topLeft, k, corner)
+            drawRoundRect(if (mark) MARK else Color(0x30FFFFFF), topLeft, k, corner, style = Stroke((if (mark) 2 else 1).dp.toPx()))
             val mid = topLeft + Offset(k.width / 2, k.height / 2)
-            val ink = if (dir == lit) Color.White else Color(0xCCFFFFFF)
+            val ink = when { dir == lit || mark -> Color.White; dim -> Color(0x55FFFFFF); else -> Color(0xCCFFFFFF) }
             ARROW_ANGLE[dir]?.let { a -> translate(mid.x, mid.y) { rotate(a, Offset.Zero) { drawPath(arrow, ink) } } }
                 ?: drawCircle(ink, key * 0.07f, mid)
         }

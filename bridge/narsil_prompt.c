@@ -674,6 +674,7 @@ static const char *neighbour_kind(struct loc n)
 	if (square_iscloseddoor(cave, n)) return "door";
 	if (square_isopendoor(cave, n)) return "open door";
 	if (square_isrubble(cave, n)) return "rubble";
+	if (chest_check(player, n, CHEST_ANY)) return "chest";
 	if (square_isdisarmabletrap(cave, n) && square_isvisibletrap(cave, n)) return "trap";
 	if (unsearched_skeleton(n)) return "skeleton";
 	return NULL;
@@ -692,10 +693,11 @@ static bool fits_intent(int intent, struct loc n)
 	if (!square_in_bounds(cave, n) || !square_isknown(cave, n)) return false;
 	switch (intent) {
 		case NB_ACT_CLOSE: return square_isopendoor(cave, n);
-		case NB_ACT_OPEN:
+		case NB_ACT_OPEN: return square_iscloseddoor(cave, n) || chest_check(player, n, CHEST_OPENABLE);
 		case NB_ACT_BASH: return square_iscloseddoor(cave, n);
 		case NB_ACT_TUNNEL: return square_isrubble(cave, n);
-		case NB_ACT_DISARM: return square_isdisarmabletrap(cave, n) && square_isvisibletrap(cave, n);
+		case NB_ACT_DISARM: return (square_isdisarmabletrap(cave, n) && square_isvisibletrap(cave, n))
+			|| chest_check(player, n, CHEST_TRAPPED);
 		case NB_ACT_SEARCH: return unsearched_skeleton(n);
 		default: return false;
 	}
@@ -727,11 +729,15 @@ static bool native_get_rep_dir(int *dp, bool allow_5)
 	pthread_mutex_lock(&shared.lock);
 	text_reset();
 	text_add("Direction\n%d\n", allow_5 ? 1 : 0);
+	/* Only the neighbours the action suits, when it suits any (the d-pad lights these) */
+	bool any_fit = false;
+	for (int dir = 1; dir <= 9; dir++)
+		if (dir != 5 && fits_intent(intent, loc_sum(player->grid, ddgrid[dir]))) any_fit = true;
 	for (int dir = 1; dir <= 9; dir++) {
 		if (dir == 5) continue;
 		const struct loc n = loc_sum(player->grid, ddgrid[dir]);
 		const char *const what = neighbour_kind(n);
-		if (what) text_add("%d\t%d\t%d\t%s\n", dir, n.x, n.y, what);
+		if (what && (!any_fit || fits_intent(intent, n))) text_add("%d\t%d\t%d\t%s\n", dir, n.x, n.y, what);
 	}
 	pthread_mutex_unlock(&shared.lock);
 
