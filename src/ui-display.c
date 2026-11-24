@@ -2530,6 +2530,10 @@ static void see_floor_items(game_event_type type, game_event_data *data,
 	bool can_pickup = false;
 	int i;
 
+	/* Stepping here has not yet touched the objects (the next update does): do it, so the description is what
+	 * the player will see once it is, with its {??} for properties still to find */
+	square_know_pile(cave, player->grid);
+
 	/* Scan all visible, sensed objects in the grid */
 	floor_num = scan_floor(floor_list, floor_max, player,
 						   OFLOOR_SENSE | OFLOOR_VISIBLE, NULL);

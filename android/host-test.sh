@@ -261,6 +261,13 @@ echo "$out" | grep -qP "You see a Shortsword \x013\{\?\?\}\x02 and a Shortsword 
 ctx=($(echo "$out" | grep -o 'context=0x[0-9a-f]*' | sed 's/context=//'))
 [ $(( ctx[0] & 0x10000 )) -ne 0 ] && [ $(( ctx[0] & 0x4 )) -ne 0 ]
 
+echo "== stepping onto one item with a property still to find says so in the message ({??}), before the game's update has touched it"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @sword @walk=4 @messages @ctx "${quit[@]}" 2>/dev/null)
+echo "$out" | grep -qP "You see a Shortsword .*\x013\{\?\?\}\x02"
+ctx=($(echo "$out" | grep -o 'context=0x[0-9a-f]*' | sed 's/context=//'))
+[ $(( ctx[0] & 0x10000 )) -ne 0 ]
+
 echo "== long-press on Pick up opens the pack at the floor section (focus 2)"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @specials @act=1 @esc @esc @act=33 @prompt @answer=-1 "${quit[@]}")

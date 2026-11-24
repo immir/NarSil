@@ -1079,6 +1079,22 @@ bool native_service(bool at_prompt)
 		native_publish(at_prompt);
 		return false;
 	}
+	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 10) {
+		/* On every open floor grid beside the player, a plain sword with a property still to find: stepping onto one is
+		 * the real order of events (the message comes before the game has touched the item). */
+		for (int dir = 1; dir <= 9; dir++) {
+			const struct loc grid = loc_sum(player->grid, ddgrid[dir]);
+			if (dir == 5 || !square_isopen(cave, grid) || square_object(cave, grid)) continue;
+			struct object *sword = object_new(); /* mutable: floor_carry() takes the pointer */
+			object_prep(sword, lookup_kind(TV_SWORD, lookup_sval(TV_SWORD, "Shortsword")), 5, RANDOMISE);
+			sword->modifiers[OBJ_MOD_STEALTH] = 1;
+			bool dummy = false;
+			floor_carry(cave, grid, sword, &dummy);
+			square_note_spot(cave, grid);
+		}
+		native_publish(at_prompt);
+		return false;
+	}
 	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 9) {
 		/* Wounded: one hitpoint and no voice left (to watch a rest). */
 		player->chp = 1;
