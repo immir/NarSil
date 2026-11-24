@@ -34,6 +34,7 @@ struct SettingsSheet: View {
     let onExportSave: () -> Void
     let onImportSave: () -> Void
     let onSendLogs: () -> Void
+    let onGameOptions: () -> Void
     let dismiss: () -> Void
 
     var body: some View {
@@ -104,6 +105,7 @@ struct SettingsSheet: View {
                             Text(UiText.problemsHint).scaledFont(12).foregroundColor(Palette.sub)
                             button("Send logs") { dismiss(); onSendLogs() }
                         })
+                        Button("Game options…") { dismiss(); onGameOptions() }.padding(.top, 4)
                     }.padding(.bottom, 16)
                 }
             }

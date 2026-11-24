@@ -118,8 +118,8 @@ fun coreActions(s: GameState.Status, padShown: Boolean, restOptions: () -> Unit)
 )
 
 /** Less frequent but necessary: behind the ☰ button. */
-fun moreActions(s: GameState.Status, router: KeyRouter, showMessages: () -> Unit, showOptions: () -> Unit, showHelp: () -> Unit, toggleMap: () -> Unit,
-                restOptions: (() -> Unit)?, toggleKeyboard: () -> Unit): List<BarAction> = listOfNotNull(
+fun moreActions(s: GameState.Status, router: KeyRouter, showMessages: () -> Unit, showHelp: () -> Unit, toggleMap: () -> Unit,
+                toggleTiles: () -> Unit, tilesOn: Boolean, restOptions: (() -> Unit)?, toggleKeyboard: () -> Unit): List<BarAction> = listOfNotNull(
     /* Pack, gear, character, skills, abilities, knowledge, smithing and game options live in the panel (@). */
     BarAction("Panel", run = act(N.ACT_PANEL)),
     restOptions?.let { BarAction("Rest…", run = it) },
@@ -133,7 +133,8 @@ fun moreActions(s: GameState.Status, router: KeyRouter, showMessages: () -> Unit
     BarAction("Exchange", pin = N.ACT_EXCHANGE, run = act(N.ACT_EXCHANGE)),
     BarAction("All commands", run = { router.special(Keys.ENTER) }),
     BarAction("Help", run = showHelp),
-    BarAction("Options", run = showOptions),
+    BarAction("Options", run = act(N.ACT_OPTIONS)),
+    BarAction(if (tilesOn) "Tiles: on" else "Tiles: off", run = toggleTiles),
     BarAction("Keyboard", run = toggleKeyboard),
     BarAction("Retire character", run = { router.char('Q'.code) }),
     BarAction("Esc", run = { router.special(Keys.ESCAPE) }),
@@ -202,7 +203,8 @@ fun MoreSheet(actions: List<BarAction>, pinned: List<Int> = emptyList(), onPin: 
             color = Color(0xFF1C1C1E),
             modifier = Modifier.fillMaxWidth().clickable(remember { MutableInteractionSource() }, indication = null) {},
         ) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            /* Scrolls: in landscape the rows do not all fit above the bottom edge. */
+            Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 actions.chunked(2).forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         row.forEach { a ->
@@ -240,7 +242,7 @@ fun RestSheet(onDismiss: () -> Unit, onRest: (Int) -> Unit) {
         onDismissRequest = onDismiss,
         title = { Text("Rest") },
         text = {
-            Column {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
                 choices.forEach { (label, turns) ->
                     Text(label, fontSize = 16.sp, modifier = Modifier.fillMaxWidth().clickable { onDismiss(); onRest(turns) }
                         .padding(vertical = 12.dp))

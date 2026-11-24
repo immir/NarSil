@@ -58,17 +58,18 @@ struct InspectSheet: View {
 struct LookSheet: View {
     @ObservedObject var game: GameState
     let entries: [LookEntry]
+    let monstersOnly: Bool
     let dismiss: () -> Void
 
     var body: some View {
         BottomSheet(maxHeight: 600, cancel: dismiss) {
             VStack(spacing: 0) {
                 HStack {
-                    Text("In view").scaledFont(17, weight: .semibold).foregroundColor(.white)
+                    Text(monstersOnly ? "Monsters in view" : "In view").scaledFont(17, weight: .semibold).foregroundColor(.white)
                     Spacer()
                     Button("Close", action: dismiss)
                 }.padding(.horizontal, 16).padding(.top, 12).padding(.bottom, 4)
-                if entries.isEmpty { Text("Nothing of interest.").foregroundColor(Palette.sub).padding(16) }
+                if entries.isEmpty { Text(monstersOnly ? "No monsters in view." : "Nothing of interest.").foregroundColor(Palette.sub).padding(16) }
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         ForEach(Array(entries.enumerated()), id: \.offset) { _, e in

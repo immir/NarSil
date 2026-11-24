@@ -105,4 +105,6 @@ enum UiText {
     static let savesHint = "Export sends a copy of your save to another app (Files, mail…). Import loads one back, replacing the current game; NarSil then closes, and loads it when opened again."
     static let problems = "Problems"
     static let problemsHint = "Send logs shares the app's log, your save and character dump, for a bug report."
+    static let displayLink = "Display and controls"
+    static let displayLinkHint = "Messages, panel tabs, tiles, d-pad, swipes"
 }

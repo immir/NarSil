@@ -106,4 +106,6 @@ internal object UiText {
     const val SAVES_HINT = "Export sends a copy of your save to another app (Drive, mail…). Import loads one back, replacing the current game."
     const val PROBLEMS = "Problems"
     const val PROBLEMS_HINT = "Send logs shares a zip of the app's log, your save and character dump, for a bug report."
+    const val DISPLAY_LINK = "Display and controls"
+    const val DISPLAY_LINK_HINT = "Messages, panel tabs, tiles, d-pad, swipes"
 }

@@ -20,8 +20,8 @@ struct OptionsView: View {
                         Button(action: onAppSettings) {
                             card(HStack {
                                 VStack(alignment: .leading) {
-                                    Text("Display and controls").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
-                                    Text("Messages, panel tabs, tiles, d-pad, swipes").scaledFont(12).foregroundColor(Palette.sub)
+                                    Text(UiText.displayLink).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                                    Text(UiText.displayLinkHint).scaledFont(12).foregroundColor(Palette.sub)
                                 }
                                 Spacer()
                                 Text("›").scaledFont(20).foregroundColor(Palette.sub)

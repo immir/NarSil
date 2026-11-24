@@ -118,7 +118,7 @@ final class ParseTests: XCTestCase {
     func testInfoRecords() throws {
         guard case .inspect(_, _, _, _, let terrain, _, _)? = Parse.info(try fixture("inspect.info")) else { return XCTFail("inspect") }
         XCTAssertEqual(terrain, "Open floor")
-        guard case .lookList? = Parse.info(try fixture("look.info")) else { return XCTFail("look") }
+        guard case .lookList(_, _)? = Parse.info(try fixture("look.info")) else { return XCTFail("look") }
     }
 
     func testMessagesDropSeparators() {

@@ -203,7 +203,7 @@ enum Parse {
             return .lookList(try nonEmpty(Array(ls.dropFirst())).map { l in
                 let f = fields(l, 3)
                 return LookEntry(x: try int(f, 0), y: try int(f, 1), summary: str(f, 2))
-            })
+            }, monstersOnly: head[0] == "Monsters")
         case "Character":
             var sections: [SheetSection] = []
             for l in nonEmpty(Array(ls.dropFirst())) {

@@ -58,7 +58,7 @@ struct LookEntry: Equatable { let x: Int, y: Int; let summary: String }
 /// Read-only descriptions the player asked for; dismissable, the game is not waiting on them.
 enum Info: Equatable {
     case inspect(x: Int, y: Int, monster: Monster?, objects: [String], terrain: String?, targetable: Bool, isTarget: Bool)
-    case lookList([LookEntry])
+    case lookList([LookEntry], monstersOnly: Bool)
     case character([SheetSection])
 }
 

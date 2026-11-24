@@ -217,7 +217,8 @@ class MainActivity : ComponentActivity() {
                 }
                 TextScale(settings.messageScale / settings.buttonScale) { MessagesSheet(state) { showMessages = false } }
             }
-            if (showMore) MoreSheet(moreActions(state.status, router, { showMessages = true }, { showOptions = true }, { showHelp = true }, { mapView?.toggleOverview() },
+            if (showMore) MoreSheet(moreActions(state.status, router, { showMessages = true }, { showHelp = true }, { mapView?.toggleOverview() },
+                                                { settings.tiles = !settings.tiles }, settings.tiles,
                                                 { showRest = true }.takeIf { settings.dpad != Settings.DPAD_OFF }) { terminal?.toggleKeyboard() } +
                                     listOfNotNull(scumAction(), BarAction("Restore scum save", run = { showScum = true }).takeIf { settings.scumming }),
                                     settings.quickActs, settings::toggleQuickAct) { showMore = false }

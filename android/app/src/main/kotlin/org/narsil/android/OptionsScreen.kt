@@ -58,7 +58,7 @@ fun OptionsScreen(p: GameState.Prompt.Options, onAnswer: (Int) -> Unit, onAppSet
             }
             LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = rememberListPlace("options/${p.page}"), contentPadding = PaddingValues(bottom = 16.dp)) {
                 if (main && onAppSettings != null) item {
-                    LinkRow(OptionRow.Link(0, "Display and controls", "Text sizes, d-pad, swipes, save scumming"), { onAppSettings() })
+                    LinkRow(OptionRow.Link(0, UiText.DISPLAY_LINK, UiText.DISPLAY_LINK_HINT), { onAppSettings() })
                 }
                 items(p.rows) { row ->
                     when (row) {

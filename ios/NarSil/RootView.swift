@@ -198,7 +198,7 @@ struct RootView: View {
             switch info {
             case .inspect(let x, let y, let monster, let objects, let terrain, let targetable, let isTarget):
                 InspectSheet(game: game, x: x, y: y, monster: monster, objects: objects, terrain: terrain, targetable: targetable, isTarget: isTarget, dismiss: close)
-            case .lookList(let entries): LookSheet(game: game, entries: entries, dismiss: close)
+            case .lookList(let entries, let monstersOnly): LookSheet(game: game, entries: entries, monstersOnly: monstersOnly, dismiss: close)
             case .character(let sections):
                 BottomSheet(maxHeight: 700, cancel: close) {
                     VStack(spacing: 0) {
@@ -213,7 +213,8 @@ struct RootView: View {
                           itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, combatBuzz: $combatBuzz, traceUsage: $traceUsage, scumming: $scumming,
                           onExportSave: { Task { if let url = await Saves.export() { ShareSheet.present([url]) } else { say(Saves.cantSave) } } },
                           onImportSave: { importing = true },
-                          onSendLogs: { ShareSheet.present(Saves.reportFiles) }) { showSettings = false } }
+                          onSendLogs: { ShareSheet.present(Saves.reportFiles) },
+                          onGameOptions: { Native.requestAction(NB.ACT_OPTIONS) }) { showSettings = false } }
         if showScum { ScumSheet { showScum = false } }
         if showMessages { MessagesSheet(game: game) { showMessages = false }.textScale(messageScale) }
         if !seenTips && game.mapMode && game.atPrompt && game.prompt == nil && game.panelTab < 0 && game.info == nil {

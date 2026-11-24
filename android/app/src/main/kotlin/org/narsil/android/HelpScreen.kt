@@ -56,7 +56,7 @@ private fun helpFile(context: Context, name: String): String =
 @Composable
 fun HelpScreen(context: Context, onDismiss: () -> Unit) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
-    val tabs = listOf("Touch controls", "Symbols", "Keyboard commands")
+    val tabs = listOf("Touch controls", "Symbols", "Keyboard")
     Surface(color = BG, modifier = Modifier.fillMaxSize()) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 8.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {

@@ -167,6 +167,16 @@ struct MoreSheet: View {
     let dismiss: () -> Void
 
     var body: some View {
+        /* Scrolls when the rows do not all fit above the bottom edge (landscape). */
+        ViewThatFits(in: .vertical) {
+            grid
+            ScrollView { grid }
+        }
+        .frame(maxWidth: .infinity)
+        .background(Color(red: 0x1C / 255, green: 0x1C / 255, blue: 0x1E / 255))
+    }
+
+    private var grid: some View {
         VStack(spacing: 8) {
             ForEach(Array(stride(from: 0, to: actions.count, by: 2)), id: \.self) { i in
                 HStack(spacing: 8) {
@@ -187,7 +197,6 @@ struct MoreSheet: View {
         }
         .padding(16).foregroundColor(.white)
         .frame(maxWidth: .infinity)
-        .background(Color(red: 0x1C / 255, green: 0x1C / 255, blue: 0x1E / 255))
     }
 }
 
@@ -200,6 +209,15 @@ struct RestSheet: View {
     ]
 
     var body: some View {
+        ViewThatFits(in: .vertical) {
+            choicesList
+            ScrollView { choicesList }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(red: 0x1C / 255, green: 0x1C / 255, blue: 0x1E / 255))
+    }
+
+    private var choicesList: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Rest").font(.headline).padding(.bottom, 8)
             ForEach(Self.choices, id: \.0) { label, turns in
@@ -211,6 +229,5 @@ struct RestSheet: View {
         }
         .padding(16).foregroundColor(.white)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(red: 0x1C / 255, green: 0x1C / 255, blue: 0x1E / 255))
     }
 }

@@ -25,3 +25,4 @@ saves | Saves | Export sends a copy of your save to another app (Drive, mail…)
 [ios] saves | Saves | Export sends a copy of your save to another app (Files, mail…). Import loads one back, replacing the current game; NarSil then closes, and loads it when opened again.
 problems | Problems | Send logs shares a zip of the app's log, your save and character dump, for a bug report.
 [ios] problems | Problems | Send logs shares the app's log, your save and character dump, for a bug report.
+displayLink | Display and controls | Messages, panel tabs, tiles, d-pad, swipes
