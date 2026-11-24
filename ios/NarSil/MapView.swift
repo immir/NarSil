@@ -18,6 +18,7 @@ struct MapView: UIViewRepresentable {
     let handle: MapHandle
     var swipeMode: Int
     var tiles: Bool
+    var padShown: Bool
 
     func makeUIView(context: Context) -> MapUIView {
         let v = MapUIView(game: game)
@@ -28,6 +29,7 @@ struct MapView: UIViewRepresentable {
     func updateUIView(_ v: MapUIView, context: Context) {
         v.swipeMode = SwipeMode(rawValue: swipeMode) ?? .step
         v.tilesWanted = tiles
+        v.padShown = padShown
         v.mapChanged()
     }
 }
@@ -37,6 +39,8 @@ final class MapUIView: UIView {
     private let game: GameState
     private let painter = GlyphPainter()
     var swipeMode = SwipeMode.step
+    /// With the d-pad on, a direction prompt is shown on its keys, not on the map.
+    var padShown = false { didSet { if oldValue != padShown { setNeedsDisplay() } } }
     var tilesWanted = false { didSet { if oldValue != tilesWanted { setNeedsDisplay() } } }
 
     private let tileSheet: UIImage? = UIImage(contentsOfFile: GameLauncher.libDir.appendingPathComponent("tiles/microchasm/16x16.png").path)
@@ -268,11 +272,13 @@ final class MapUIView: UIView {
             }
             if let c = aim.current { outline(Self.gold, c.x, c.y) }
         } else if case .direction(let d)? = prompt {
-            let p = player
-            for dy in -1...1 {
-                for dx in -1...1 where !(dx == 0 && dy == 0 && !d.allowHere) { outline(Self.gold, p.x + dx, p.y + dy) }
+            if !padShown {
+                let p = player
+                for dy in -1...1 {
+                    for dx in -1...1 where !(dx == 0 && dy == 0 && !d.allowHere) { outline(Self.gold, p.x + dx, p.y + dy) }
+                }
+                d.neighbours.forEach { fill(Self.pathFill, $0.x, $0.y) }
             }
-            d.neighbours.forEach { fill(Self.pathFill, $0.x, $0.y) }
         } else {
             for k in stride(from: 1, to: game.pathPairs, by: 1) {
                 let p = game.pathPoint(k)

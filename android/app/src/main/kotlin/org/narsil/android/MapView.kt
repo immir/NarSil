@@ -34,7 +34,8 @@ import org.narsil.android.NarSilNative as N
  */
 @SuppressLint("ViewConstructor")
 class MapView(context: Context, private val state: GameState, private val router: KeyRouter,
-              private val swipeMode: () -> Int, private val tiles: () -> Boolean) : View(context) {
+              private val swipeMode: () -> Int, private val tiles: () -> Boolean,
+              private val padShown: () -> Boolean) : View(context) {
     init { contentDescription = "Dungeon map. Tap a square to preview the path, tap it again to walk there. Long-press to describe what is there." }
     private val painter = GlyphPainter(context, state::colour)
     /** MicroChasm's 16x16 tile sheet (lib/tiles/microchasm; NarSil-Q's overlay has Sil-Q's), drawn unsmoothed. */
@@ -253,8 +254,9 @@ class MapView(context: Context, private val state: GameState, private val router
     private val aim get() = state.prompt as? GameState.Prompt.Aim
     private val direction get() = state.prompt as? GameState.Prompt.Direction
 
-    /** Direction mode: outline all eight neighbours; fill the interesting ones. */
+    /** Direction mode: outline all eight neighbours; fill the interesting ones.  The d-pad shows them instead when it is on. */
     private fun drawDirection(canvas: Canvas, d: GameState.Prompt.Direction, ox: Float, oy: Float, cw: Float, ch: Float) {
+        if (padShown()) return
         val (px, py) = player
         for (dy in -1..1) for (dx in -1..1) {
             if (dx == 0 && dy == 0 && !d.allowHere) continue
