@@ -282,7 +282,7 @@ frames=$(echo "$out" | sed -n 's/^animframes=//p')
 echo "== the status area's data: a lit torch has turns left; the monsters-only look list has its own header"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @ctx @lookm "${quit[@]}")
-echo "$out" | grep -qE '^threats=0 light=([0-9]+|-1)$'
+echo "$out" | grep -qE '^threats=0 light=([0-9]+|-1) hp=[0-9]+/[0-9]+$'
 echo "$out" | grep -q '^Monsters$'
 
 echo "== look list and inspect are answered, read-only"
@@ -394,6 +394,12 @@ echo "$out" | grep -q '^Screen	builds-delete	Delete a saved build'
 refute grep -q '^build=' "$work/data/user/builds.txt"
 rm -rf "$work/data"
 
+echo "== resting (the d-pad's held centre) heals to full; the resting flag (0x80000) is clear once it ends"
+rm -rf "$work/data"
+out=$(NARSIL_SEED=2 run "${birth[@]}" @hurt @ctx @act=0 @ctx "${quit[@]}" 2>/dev/null)  # a seed where no monster interrupts the rest in either game
+echo "$out" | grep -qP '^threats=\d+ light=-?\d+ hp=1/\d+$'
+echo "$out" | grep -P '^threats=' | sed -n 2p | grep -qP ' hp=(\d+)/\1$'
+refute ctx_has 2 0x80000
 echo "== usage trace: a run reports its steps and why it stopped (NB_META_RUN_*)"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @runreport @run=2 @runreport @run=4 @runreport "${quit[@]}" 2>/dev/null)

@@ -96,6 +96,7 @@ object NarSilNative {
     const val CTX_ADJ_CHEST = 1 shl 14
     const val CTX_ADJ_SKELETON = 1 shl 17
     const val CTX_BUILD_SAVABLE = 1 shl 18
+    const val CTX_RESTING = 1 shl 19
     const val CTX_CAN_FLETCH = 1 shl 15
 
     // enum nb_action (order matters)

@@ -24,6 +24,7 @@
  *   @skeleton @rage                               an unsearched orc skeleton underfoot / the player rages
  *   @orc                                          an awake orc soldier beside the player, its defence known, targeted
  *   @arrows                                       twenty plain arrows into the pack
+ *   @hurt                                         the player down to 1 hitpoint and no voice
  *   @ctx                                          print the context flags
  *   @answer=N                                     answer any native prompt (see nb_answer)
  *   @aim@DX,DY                                    answer an aim prompt with a grid relative to the player
@@ -374,8 +375,8 @@ static int run_token(const char *tok)
 	}
 	if (strcmp(tok, "@chest") == 0 || strcmp(tok, "@trapchest") == 0 || strcmp(tok, "@pile") == 0
 		|| strcmp(tok, "@ego") == 0 || strcmp(tok, "@specials") == 0 || strcmp(tok, "@skeleton") == 0 || strcmp(tok, "@orc") == 0
-		|| strcmp(tok, "@rage") == 0 || strcmp(tok, "@arrows") == 0) {
-		nb_test_chest(strcmp(tok, "@arrows") == 0 ? 8 : strcmp(tok, "@orc") == 0 ? 7 : strcmp(tok, "@rage") == 0 ? 6 : strcmp(tok, "@skeleton") == 0 ? 5 : strcmp(tok, "@specials") == 0 ? 4 : strcmp(tok, "@ego") == 0 ? 3 : tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
+		|| strcmp(tok, "@rage") == 0 || strcmp(tok, "@arrows") == 0 || strcmp(tok, "@hurt") == 0) {
+		nb_test_chest(strcmp(tok, "@hurt") == 0 ? 9 : strcmp(tok, "@arrows") == 0 ? 8 : strcmp(tok, "@orc") == 0 ? 7 : strcmp(tok, "@rage") == 0 ? 6 : strcmp(tok, "@skeleton") == 0 ? 5 : strcmp(tok, "@specials") == 0 ? 4 : strcmp(tok, "@ego") == 0 ? 3 : tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
 		return settle() ? 0 : 1;
 	}
 	if (sscanf(tok, "@details=%d%c", &mx, &tail) == 1) {
@@ -385,7 +386,7 @@ static int run_token(const char *tok)
 	if (strcmp(tok, "@ctx") == 0) {
 		int32_t meta[NB_META_COUNT];
 		nb_map_snapshot(meta, NULL, 0);
-		printf("context=0x%x\nthreats=%d light=%d\n", (unsigned)meta[NB_META_CONTEXT], meta[NB_META_THREATS], meta[NB_META_LIGHT_TURNS]);
+		printf("context=0x%x\nthreats=%d light=%d hp=%d/%d\n", (unsigned)meta[NB_META_CONTEXT], meta[NB_META_THREATS], meta[NB_META_LIGHT_TURNS], meta[NB_META_HP], meta[NB_META_MAX_HP]);
 		return 0;
 	}
 	if (sscanf(tok, "@answer=%d%c", &mx, &tail) == 1) {

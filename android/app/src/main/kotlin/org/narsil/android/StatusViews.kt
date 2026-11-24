@@ -64,7 +64,9 @@ internal fun MessageStrip(state: GameState, lines: Int, onTap: () -> Unit) {
         }
         if (banner != null) Text(banner, color = Color(0xFFFFD54F), fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)
         if (more) Text("▸ tap to continue", color = Color(0xFFFFD54F), fontSize = 13.sp, lineHeight = 16.sp)
-        if (recent.isEmpty() && banner == null && !more) Text(" ", fontSize = 14.sp)
+        val resting = state.status.has(NarSilNative.CTX_RESTING)
+        if (resting) Text("Resting…", color = Color(0xFF8AB4F8), fontSize = 13.sp, lineHeight = 16.sp)
+        if (recent.isEmpty() && banner == null && !more && !resting) Text(" ", fontSize = 14.sp)
     }
         PanelButton()
     }

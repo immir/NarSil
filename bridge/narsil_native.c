@@ -248,6 +248,25 @@ static void native_floor_pile(struct object **const list, const int num, const c
 	else msg("You %s %s and %s.", verb, names[0], names[1]);
 }
 
+/*
+ * Resting skips the game's redraws until it ends, so a long rest would look like a pause and then full health.  Before
+ * each of the player's turns, show the health and voice climbing, at most every REST_FRAME_NS, without slowing it down.
+ */
+enum { REST_FRAME_NS = 33 * 1000 * 1000 };
+
+static void publish_while_resting(game_event_type type, game_event_data *data, void *user)
+{
+	(void)type; (void)data; (void)user;
+	static struct timespec last;
+	if (!player || !player_is_resting(player)) return;
+	struct timespec now;
+	clock_gettime(CLOCK_MONOTONIC, &now);
+	const int64_t since = (int64_t)(now.tv_sec - last.tv_sec) * 1000000000 + (now.tv_nsec - last.tv_nsec);
+	if (since < REST_FRAME_NS) return;
+	last = now;
+	native_publish(false);
+}
+
 void native_init(void)
 {
 	native_birth_init();
@@ -259,6 +278,7 @@ void native_init(void)
 	};
 	event_add_handler_set(dirtying, N_ELEMENTS(dirtying), mark_dirty, NULL);
 	event_add_handler(EVENT_NEW_LEVEL_DISPLAY, count_level, NULL);
+	event_add_handler(EVENT_CHECK_INTERRUPT, publish_while_resting, NULL);
 	/* After the terminal's own handlers, so that these run first (handlers are called latest first). */
 	event_add_handler(EVENT_BOLT, animate_bolt, NULL);
 	event_add_handler(EVENT_MISSILE, animate_missile, NULL);
@@ -502,6 +522,7 @@ static int32_t context_flags(void)
 	if (player_can_fire_quiver1(player, false)) f |= NB_CTX_CAN_FIRE;
 	if (player_has_throwable(player, false)) f |= NB_CTX_CAN_THROW;
 	if (player_can_fletch(player)) f |= NB_CTX_CAN_FLETCH;
+	if (player_is_resting(player)) f |= NB_CTX_RESTING;
 	if (player->stealth_mode) f |= NB_CTX_STEALTH;
 	if (player->song[SONG_MAIN]) f |= NB_CTX_SINGING;
 	for (int d = 0; d < 8; d++) {
@@ -1055,6 +1076,15 @@ bool native_service(bool at_prompt)
 			else if (o->known) o->known->notice |= OBJ_NOTICE_ASSESSED;
 		}
 		event_signal(EVENT_SEEFLOOR);
+		native_publish(at_prompt);
+		return false;
+	}
+	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 9) {
+		/* Wounded: one hitpoint and no voice left (to watch a rest). */
+		player->chp = 1;
+		player->csp = 0;
+		player->upkeep->redraw |= (PR_HP | PR_MANA);
+		handle_stuff(player);
 		native_publish(at_prompt);
 		return false;
 	}

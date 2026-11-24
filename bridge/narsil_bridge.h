@@ -165,6 +165,7 @@ enum nb_context {
 	NB_CTX_FLOOR_SPECIAL   = 1 << 16, /* something underfoot is an artefact, an ego item, or has properties still to find (NB_CTX_FLOOR_ITEMS is also set) */
 	NB_CTX_ADJ_CHEST       = 1 << 14, /* a closed chest underfoot or adjacent (NB_ACT_OPEN); a known-trapped one also sets NB_CTX_ADJ_TRAP */
 	NB_CTX_BUILD_SAVABLE   = 1 << 18, /* turn 0: the character's build can still be saved (NB_CHARACTER_SAVE_BUILD) */
+	NB_CTX_RESTING         = 1 << 19, /* resting (the map and status still update; a key or tap interrupts it) */
 	NB_CTX_ADJ_SKELETON    = 1 << 17, /* an unsearched skeleton (NarSil-Q) underfoot or adjacent (NB_ACT_SEARCH) */
 };
 
@@ -283,7 +284,7 @@ int nb_test_anim_frames(void); /* how many published maps have had an animation 
 void nb_test_depth(int level); /* at the command prompt, go straight to dungeon level `level` (50' each) */
 /* Forges on the current level, and (NarSil-Q) the guaranteed forges made so far; only while the game waits for input. */
 int nb_test_forges(int *fixed_made, int *depth);
-void nb_test_chest(int kind); /* 8: twenty plain arrows into the pack; 7: an awake, targeted orc soldier next to the player, its defence known; 6: the player rages; 5: an unsearched orc skeleton under the player (NarSil-Q); 0: a locked small chest under the player; 1: a trapped one; 2: a pile of four, reported as stepping on it would be; 3: a known short sword of Hador's House into the pack; 4: under the player, a known Hador's House sword and a plain one with a property still to find */
+void nb_test_chest(int kind); /* 9: the player down to 1 hitpoint and no voice; 8: twenty plain arrows into the pack; 7: an awake, targeted orc soldier next to the player, its defence known; 6: the player rages; 5: an unsearched orc skeleton under the player (NarSil-Q); 0: a locked small chest under the player; 1: a trapped one; 2: a pile of four, reported as stepping on it would be; 3: a known short sword of Hador's House into the pack; 4: under the player, a known Hador's House sword and a plain one with a property still to find */
 #endif
 
 /* Path as (x, y) pairs: the target first, then each step; 0 = no path. */

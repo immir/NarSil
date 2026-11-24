@@ -35,7 +35,9 @@ struct MessageStrip: View {
                 }
                 if let banner { Text(banner).scaledFont(14).lineLimit(2).foregroundColor(Color(red: 1, green: 0xD5 / 255, blue: 0x4F / 255)) }
                 if more { Text("▸ tap to continue").scaledFont(13).foregroundColor(Color(red: 1, green: 0xD5 / 255, blue: 0x4F / 255)) }
-                if recent.isEmpty && banner == nil && !more { Text(" ").scaledFont(14) }
+                let resting = game.status.has(NB.CTX_RESTING)
+                if resting { Text("Resting…").scaledFont(13).foregroundColor(Color(red: 0x8A / 255, green: 0xB4 / 255, blue: 0xF8 / 255)) }
+                if recent.isEmpty && banner == nil && !more && !resting { Text(" ").scaledFont(14) }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 10).padding(.vertical, 4)

@@ -66,6 +66,7 @@ enum NB {
     static let CTX_FLOOR_SPECIAL = 65536
     static let CTX_ADJ_CHEST = 16384
     static let CTX_BUILD_SAVABLE = 262144
+    static let CTX_RESTING = 524288
     static let CTX_ADJ_SKELETON = 131072
     static let ACT_REST = 0
     static let ACT_HOLD = 1
