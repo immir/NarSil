@@ -19,6 +19,7 @@ struct SettingsSheet: View {
     let gamePalette: [UInt32]
     @Binding var messageLines: Int
     @Binding var panelTabs: Int
+    @Binding var tabsOnTop: Bool
     @Binding var tiles: Bool
     @Binding var pad: Int
     @Binding var padSize: Double
@@ -74,6 +75,7 @@ struct SettingsSheet: View {
                         choice(UiText.messageLines, nil, $messageLines, [(2, "2"), (3, "3"), (4, "4"), (5, "5")])
                         choice(UiText.panelTabs, UiText.panelTabsHint, $panelTabs,
                                [(TabStyle.iconsAndNames.rawValue, "Icons and names"), (TabStyle.iconsOnly.rawValue, "Icons"), (TabStyle.names.rawValue, "Names")])
+                        toggle(UiText.tabsOnTop, UiText.tabsOnTopHint, $tabsOnTop)
                         toggle(UiText.tiles, UiText.tilesHint, $tiles)
                         choice(UiText.dpad, UiText.dpadHint,
                                $pad, [(PadMode.off.rawValue, "Off"), (PadMode.docked.rawValue, "Beside status"), (PadMode.floating.rawValue, "Floating")])

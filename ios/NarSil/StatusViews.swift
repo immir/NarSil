@@ -17,6 +17,7 @@ struct MessageStrip: View {
     @ObservedObject var game: GameState
     let lines: Int
     let onPanel: () -> Void
+    var panelButton = true
     let onMessages: () -> Void
 
     var body: some View {
@@ -43,13 +44,13 @@ struct MessageStrip: View {
             .padding(.horizontal, 10).padding(.vertical, 4)
             .contentShape(Rectangle())
             .onTapGesture { if more { Trace.log("more.tap"); Native.pushKey(Keys.enter) } else { onMessages() } }
-            Button(action: onPanel) {
+            if panelButton { Button(action: onPanel) {
                 PanelIcon(index: IconIndex.panel).stroke(style: StrokeStyle(lineWidth: 1.8 * 26 / 24, lineCap: .round, lineJoin: .round))
                     .frame(width: 26, height: 26)
                     .foregroundColor(Color(red: 0xF3 / 255, green: 0xD2 / 255, blue: 0x7A / 255))
                     .frame(width: 40, height: 40)
                     .background(Color(red: 0x26 / 255, green: 0x26 / 255, blue: 0x2B / 255), in: RoundedRectangle(cornerRadius: 10))
-            }.buttonStyle(.plain).padding(4).accessibilityLabel("Character panel")
+            }.buttonStyle(.plain).padding(4).accessibilityLabel("Character panel") }
         }
         .background(stripBackground)
     }

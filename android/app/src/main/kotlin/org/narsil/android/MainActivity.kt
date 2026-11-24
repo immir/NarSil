@@ -321,7 +321,7 @@ class MainActivity : ComponentActivity() {
         val interactive = prompt?.isPanelContent() == true
         /* Dimmed under a question asked over it; not in the moment between two tabs (no prompt yet). */
         val dimmed = prompt != null && !interactive
-        if (live) PanelHost(tab, settings.panelTabs, answer) {
+        if (live) PanelHost(tab, settings.panelTabs, settings.tabsOnTop, answer) {
             (if (interactive) prompt else shown)?.let { c ->
                 Box(Modifier.fillMaxSize()) {
                     PromptUi(state, c, if (interactive) answer else { _ -> })
@@ -338,11 +338,14 @@ class MainActivity : ComponentActivity() {
         /* Landscape: the status moves to a rail on the right and the buttons run along the whole bottom edge. */
         val rail = state.mapMode && LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
         Column(Modifier.fillMaxSize()) {
+        if (state.mapMode && settings.tabsOnTop) TabsBar(-1, settings.panelTabs, onTab = { i ->
+            Trace.log("panel.request", "via" to "tabs", "tab" to i); NarSilNative.nativeRequestAction(TAB_ACTIONS[i])
+        }, onClose = null)
         Row(Modifier.weight(1f).fillMaxWidth()) {
             Column(Modifier.weight(1f).fillMaxHeight()) {
                 /* At -more- a tap continues; otherwise it opens the scrollable history. */
                 if (state.mapMode) TextScale(settings.messageScale) {
-                    MessageStrip(state, settings.messageLines) { if (state.messageLine.contains("-more-")) { Trace.log("more.tap"); router.special(Keys.ENTER) } else { Trace.log("messages.open", "via" to "strip"); showMessages = true } }
+                    MessageStrip(state, settings.messageLines, panelButton = !settings.tabsOnTop) { if (state.messageLine.contains("-more-")) { Trace.log("more.tap"); router.special(Keys.ENTER) } else { Trace.log("messages.open", "via" to "strip"); showMessages = true } }
                 }
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     AndroidView(

@@ -65,20 +65,18 @@ struct PanelLayer: View {
     }
 }
 
-private struct PanelHost<Content: View>: View {
-    @AppStorage("panelTabs") private var tabStyle = TabStyle.iconsAndNames.rawValue
+/// The seven tabs in a row, `tab` selected: icons (with names, or not) fit the width; names alone scroll.
+private struct PanelTabs: View {
     let tab: Int
-    let answer: (Int) -> Void
-    @ViewBuilder let content: Content
+    let style: TabStyle
+    let onTab: (Int) -> Void
 
-    /// Icons fit the panel's width without scrolling; the names are the fallback for those who prefer words.
-    @ViewBuilder private var tabStrip: some View {
-        let style = TabStyle(rawValue: tabStyle) ?? .iconsAndNames
+    var body: some View {
         if style == .names {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 0) {
                     ForEach(Array(tabTitles.enumerated()), id: \.offset) { i, t in
-                        Button { if i != tab { answer(NB.PANEL_TAB + i) } } label: {
+                        Button { onTab(i) } label: {
                             Text(t).scaledFont(14, weight: i == tab ? .semibold : .regular)
                                 .foregroundColor(i == tab ? Palette.gold : Palette.sub)
                                 .padding(.horizontal, 12).padding(.vertical, 12)
@@ -90,7 +88,7 @@ private struct PanelHost<Content: View>: View {
         } else {
             HStack(spacing: 0) {
                 ForEach(Array(tabTitles.enumerated()), id: \.offset) { i, t in
-                    Button { if i != tab { answer(NB.PANEL_TAB + i) } } label: {
+                    Button { onTab(i) } label: {
                         VStack(spacing: 2) {
                             PanelIcon(index: i).stroke(style: StrokeStyle(lineWidth: 1.8 * 20 / 24, lineCap: .round, lineJoin: .round)).frame(width: 20, height: 20)
                             if style == .iconsAndNames { Text(t).scaledFont(9, dynamic: false).lineLimit(1).minimumScaleFactor(0.7) }
@@ -105,28 +103,66 @@ private struct PanelHost<Content: View>: View {
             }.padding(.horizontal, 4)
         }
     }
+}
+
+/// What opens each tab, by tab index: the same actions as the pack, character and the rest have elsewhere.
+let tabActions = [NB.ACT_INVENTORY, NB.ACT_CHARACTER, NB.ACT_SKILLS, NB.ACT_ABILITIES, NB.ACT_KNOWLEDGE, NB.ACT_SMITH, NB.ACT_OPTIONS]
+
+/// Settings → "Panel tabs along the top": the tabs as a strip across the top of the screen, drawn the same over the map
+/// (nothing selected, `onClose` nil) and over the open panel (its tab selected, with ✕), so it does not move.
+struct TabsBar: View {
+    @AppStorage("panelTabs") private var tabStyle = TabStyle.iconsAndNames.rawValue
+    let selected: Int
+    let onTab: (Int) -> Void
+    var onClose: (() -> Void)?
 
     var body: some View {
-        GeometryReader { g in
-            // A wide window (iPad): a side column of a readable width, the map still showing beside it.
-            let wide = g.size.width >= 840
-            let width = wide ? min(g.size.width * 0.4, 560) : g.size.width > g.size.height ? g.size.width * 0.58 : g.size.width * 0.94
-            ZStack(alignment: .trailing) {
-                Color.black.opacity(wide ? 0.2 : 0.47).ignoresSafeArea().onTapGesture { answer(NB.PANEL_CLOSE) }
-                VStack(spacing: 0) {
-                    HStack(spacing: 0) {
-                        tabStrip
-                        Button("✕") { answer(NB.PANEL_CLOSE) }.scaledFont(18).padding(.horizontal, 12)
+        HStack(spacing: 0) {
+            PanelTabs(tab: selected, style: TabStyle(rawValue: tabStyle) ?? .iconsAndNames, onTab: onTab)
+            if let onClose {
+                Button("✕", action: onClose).scaledFont(18).foregroundColor(.white).frame(width: 48).frame(maxHeight: .infinity)
+            } else {
+                Color.clear.frame(width: 48)
+            }
+        }
+        .frame(height: 56).frame(maxWidth: .infinity).background(Palette.sheet)
+    }
+}
+
+private struct PanelHost<Content: View>: View {
+    @AppStorage("panelTabs") private var tabStyle = TabStyle.iconsAndNames.rawValue
+    @AppStorage("tabsOnTop") private var tabsOnTop = false
+    let tab: Int
+    let answer: (Int) -> Void
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(spacing: 0) {
+            /* Tabs along the top: the same strip as over the map, now showing the open tab; its tab again, or ✕, closes. */
+            if tabsOnTop { TabsBar(selected: tab, onTab: { i in answer(i == tab ? NB.PANEL_CLOSE : NB.PANEL_TAB + i) }, onClose: { answer(NB.PANEL_CLOSE) }) }
+            GeometryReader { g in
+                // A wide window (iPad): a side column of a readable width, the map still showing beside it.
+                let wide = g.size.width >= 840
+                let width = wide ? min(g.size.width * 0.4, 560) : g.size.width > g.size.height ? g.size.width * 0.58 : g.size.width * 0.94
+                ZStack(alignment: .trailing) {
+                    Color.black.opacity(wide ? 0.2 : 0.47).ignoresSafeArea().onTapGesture { answer(NB.PANEL_CLOSE) }
+                    VStack(spacing: 0) {
+                        if !tabsOnTop {
+                            HStack(spacing: 0) {
+                                PanelTabs(tab: tab, style: TabStyle(rawValue: tabStyle) ?? .iconsAndNames) { i in if i != tab { answer(NB.PANEL_TAB + i) } }
+                                Button("✕") { answer(NB.PANEL_CLOSE) }.scaledFont(18).padding(.horizontal, 12)
+                            }
+                        }
+                        content.frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .simultaneousGesture(DragGesture(minimumDistance: 40).onEnded { v in
+                                guard abs(v.translation.width) > 2 * abs(v.translation.height) else { return }
+                                if v.translation.width < 0, tab + 1 < NB.TAB_COUNT { answer(NB.PANEL_TAB + tab + 1) }
+                                else if v.translation.width > 0 { answer(tab > 0 ? NB.PANEL_TAB + tab - 1 : NB.PANEL_CLOSE) }
+                            })
                     }
-                    content.frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .simultaneousGesture(DragGesture(minimumDistance: 40).onEnded { v in
-                            guard abs(v.translation.width) > 2 * abs(v.translation.height) else { return }
-                            if v.translation.width < 0, tab + 1 < NB.TAB_COUNT { answer(NB.PANEL_TAB + tab + 1) }
-                            else if v.translation.width > 0 { answer(tab > 0 ? NB.PANEL_TAB + tab - 1 : NB.PANEL_CLOSE) }
-                        })
+                    .frame(width: width).frame(maxHeight: .infinity).background(Palette.sheet)
+                    .clipShape(UnevenRoundedRectangle(topLeadingRadius: tabsOnTop ? 0 : 16, bottomLeadingRadius: 16))
                 }
-                .frame(width: width).frame(maxHeight: .infinity).background(Palette.sheet)
-                .clipShape(UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16))
             }
         }
         .preferredColorScheme(.dark)

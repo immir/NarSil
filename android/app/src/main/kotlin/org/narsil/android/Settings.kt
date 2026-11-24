@@ -63,6 +63,7 @@ class Settings(context: Context) {
     private val scum = mutableStateOf(prefs.getBoolean("scumming", false))
     private val edge = mutableStateOf(prefs.getBoolean("edgeSwipePanel", false))
     private val tile = mutableStateOf(prefs.getBoolean("tiles", false))
+    private val topTabs = mutableStateOf(prefs.getBoolean("tabsOnTop", false))
     private val details = mutableStateOf(prefs.getBoolean("itemDetails", false))
     private val buzz = mutableStateOf(prefs.getBoolean("lowHealthBuzz", true))
     private val combat = mutableStateOf(prefs.getBoolean("combatBuzz", true))
@@ -112,6 +113,8 @@ class Settings(context: Context) {
     /** How many recent messages the strip shows (2..5). */
     var messageLines: Int get() = msgLines.intValue; set(v) { msgLines.intValue = v.coerceIn(2, 5); prefs.edit().putInt("messageLines", msgLines.intValue).apply() }
     /** MicroChasm tiles on the map (the game is told by NarSilNative.nativeSetTiles). */
+    /** The panel's tabs always across the top of the screen (experimental). */
+    var tabsOnTop: Boolean get() = topTabs.value; set(v) { topTabs.value = v; prefs.edit().putBoolean("tabsOnTop", v).apply() }
     var tiles: Boolean get() = tile.value; set(v) { tile.value = v; prefs.edit().putBoolean("tiles", v).apply(); NarSilNative.nativeSetTiles(v) }
 
     /** Extra item description lines: what an ego item gives, and what its abilities do (the game is told by nativeSetItemDetails). */
@@ -182,6 +185,13 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                         }
                 }
                 Hint(UiText.PANEL_TABS_HINT)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Label(UiText.TABS_ON_TOP)
+                        Hint(UiText.TABS_ON_TOP_HINT)
+                    }
+                    Switch(settings.tabsOnTop, { settings.tabsOnTop = it })
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Label(UiText.TILES)

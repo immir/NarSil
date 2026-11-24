@@ -35,6 +35,7 @@ struct RootView: View {
     @AppStorage("traceUsage") private var traceUsage = false
     @State private var lastFeel = 0
     @AppStorage("panelTabs") private var panelTabs = TabStyle.iconsAndNames.rawValue
+    @AppStorage("tabsOnTop") private var tabsOnTop = false
     @StateObject private var abilities = AbilitiesNav()
     private let map = MapHandle()
 
@@ -49,7 +50,12 @@ struct RootView: View {
             ZStack(alignment: .bottom) {
                 Color.black.ignoresSafeArea()
                 HardwareKeys(active: keysActive, onKey: hardwareKey).frame(width: 0, height: 0)
-                if rail { landscape } else { portrait }
+                VStack(spacing: 0) {
+                    if tabsOnTop && game.mapMode {
+                        TabsBar(selected: -1, onTab: { i in Trace.log("panel.request", ("via", "tabs"), ("tab", i)); Native.requestAction(tabActions[i]) })
+                    }
+                    if rail { landscape } else { portrait }
+                }
                 if !game.mapMode { TerminalScreen(game: game) }
                 promptLayer
                 PanelLayer(game: game, abilities: abilities, onAppSettings: { showSettings = true })
@@ -112,7 +118,7 @@ struct RootView: View {
 
     private var portrait: some View {
         VStack(spacing: 0) {
-            MessageStrip(game: game, lines: messageLines, onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
+            MessageStrip(game: game, lines: messageLines, onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, panelButton: !tabsOnTop, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
             MapView(game: game, handle: map, swipeMode: swipeMode, tiles: tiles, padShown: pad != PadMode.off.rawValue).overlay(floatingPad)
             HStack(alignment: .center, spacing: 0) {
                 StatusStrip(game: game, stacked: true).textScale(statusScale)
@@ -126,7 +132,7 @@ struct RootView: View {
     private var landscape: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
-                MessageStrip(game: game, lines: messageLines, onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
+                MessageStrip(game: game, lines: messageLines, onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, panelButton: !tabsOnTop, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
                 MapView(game: game, handle: map, swipeMode: swipeMode, tiles: tiles, padShown: pad != PadMode.off.rawValue).overlay(floatingPad)
                 promptBar
                 ActionBar(actions: bar) { Trace.log("menu.open"); showMore = true }
@@ -208,7 +214,7 @@ struct RootView: View {
             }
         }
         if showSettings { SettingsSheet(buttonScale: $buttonScale, messageScale: $messageScale, itemScale: $itemScale, statusScale: $statusScale,
-                          theme: $theme, gamePalette: game.gamePalette, messageLines: $messageLines, panelTabs: $panelTabs, tiles: $tiles, pad: $pad, padSize: $dpadSize, swipeMode: $swipeMode,
+                          theme: $theme, gamePalette: game.gamePalette, messageLines: $messageLines, panelTabs: $panelTabs, tabsOnTop: $tabsOnTop, tiles: $tiles, pad: $pad, padSize: $dpadSize, swipeMode: $swipeMode,
                           autoMore: game.status.autoMore, autoMoreEnabled: game.atPrompt && game.prompt == nil, onAutoMore: Native.setAutoMore,
                           itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, combatBuzz: $combatBuzz, traceUsage: $traceUsage, scumming: $scumming,
                           onExportSave: { Task { if let url = await Saves.export() { ShareSheet.present([url]) } else { say(Saves.cantSave) } } },

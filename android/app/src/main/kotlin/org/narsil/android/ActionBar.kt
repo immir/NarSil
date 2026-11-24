@@ -70,7 +70,7 @@ fun quickActions(slots: List<GameState.QuickSlot>, unpin: (Int) -> Unit): List<B
 
 /** The commands that can be pinned to the bar (long-press one in ☰), by native action id. */
 private val PINNABLE = mapOf(
-    N.ACT_BASH to "Bash", N.ACT_TUNNEL to "Tunnel", N.ACT_DISARM to "Disarm", N.ACT_EXCHANGE to "Exchange",
+    N.ACT_INVENTORY to "Pack", N.ACT_BASH to "Bash", N.ACT_TUNNEL to "Tunnel", N.ACT_DISARM to "Disarm", N.ACT_EXCHANGE to "Exchange",
     N.ACT_TRAVEL_DOWN to "Walk to ▼", N.ACT_TRAVEL_UP to "Walk to ▲",
 )
 
@@ -97,9 +97,8 @@ fun contextActions(s: GameState.Status): List<BarAction> = buildList {
 }
 
 /**
- * Always present: the turn-by-turn Sil toolkit.  Look is the native list of what is in view.
- * Sil does not level you up: experience waits to be spent (the cheapest point costs 100),
- * which matters but is not urgent, so it comes last.
+ * Always present: the turn-by-turn Sil toolkit.  Look is the native list of what is in view.  The pack is in the
+ * panel (☰ → Pack can pin it here), and unspent experience is the pill in the status, which opens Skills.
  */
 /**
  * [restOptions] opens the rest choices (long press on Rest).  With the d-pad shown its centre key waits (tap) and
@@ -111,10 +110,8 @@ fun coreActions(s: GameState.Status, padShown: Boolean, restOptions: () -> Unit)
     BarAction("Wait", run = act(N.ACT_HOLD)).takeIf { !padShown },
     BarAction(if (s.has(N.CTX_STEALTH)) "Stealth ●" else "Stealth", active = s.has(N.CTX_STEALTH), run = act(N.ACT_STEALTH)),
     BarAction(if (s.has(N.CTX_SINGING)) "Song ♪" else "Song", active = s.has(N.CTX_SINGING), run = act(N.ACT_SONG)),
-    BarAction("Pack", run = act(N.ACT_INVENTORY)),
     BarAction("Look", run = { N.nativeRequestLookList() }),
     BarAction("Again", run = act(N.ACT_REPEAT)),
-    BarAction("Skills (${s.newExp})", active = true, run = act(N.ACT_SKILLS)).takeIf { s.newExp >= 100 },
 )
 
 /** Less frequent but necessary: behind the ☰ button. */
@@ -123,6 +120,7 @@ fun moreActions(s: GameState.Status, router: KeyRouter, showMessages: () -> Unit
     /* Pack, gear, character, skills, abilities, knowledge, smithing and game options live in the panel (@). */
     BarAction("Panel", run = act(N.ACT_PANEL)),
     restOptions?.let { BarAction("Rest…", run = it) },
+    BarAction("Pack", pin = N.ACT_INVENTORY, run = act(N.ACT_INVENTORY)),
     BarAction("Map", run = toggleMap),
     BarAction("Walk to ▼", pin = N.ACT_TRAVEL_DOWN, run = act(N.ACT_TRAVEL_DOWN)).takeIf { s.has(N.CTX_DOWN_KNOWN) && !s.has(N.CTX_DOWN_STAIRS) },
     BarAction("Walk to ▲", pin = N.ACT_TRAVEL_UP, run = act(N.ACT_TRAVEL_UP)).takeIf { s.has(N.CTX_UP_KNOWN) && !s.has(N.CTX_UP_STAIRS) },

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.material.icons.Icons
@@ -131,7 +132,7 @@ fun PanelAwareSheet(onDismiss: (() -> Unit)?, heightFraction: Float? = null, max
  * draws the open tab's screen.
  */
 @Composable
-fun PanelHost(gameTab: Int, tabStyle: Int, onAnswer: (Int) -> Unit, content: @Composable () -> Unit) {
+fun PanelHost(gameTab: Int, tabStyle: Int, tabsOnTop: Boolean, onAnswer: (Int) -> Unit, content: @Composable () -> Unit) {
     /* The tab asked for shows at once; the game's answer (its new screen) follows. */
     var asked by remember { mutableStateOf(-1) }
     LaunchedEffect(gameTab) { asked = -1 }
@@ -142,33 +143,21 @@ fun PanelHost(gameTab: Int, tabStyle: Int, onAnswer: (Int) -> Unit, content: @Co
         if (a >= N.PANEL_TAB && a < N.PANEL_CLOSE) asked = a - N.PANEL_TAB
         onAnswer(a)
     }
-    BoxWithConstraints(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize()) {
+    /* Tabs along the top: the same strip as over the map, now showing the open tab; its tab again, or ✕, closes. */
+    if (tabsOnTop) TabsBar(tab, tabStyle, onTab = { i -> answer(if (i == tab) N.PANEL_CLOSE else N.PANEL_TAB + i) }, onClose = { answer(N.PANEL_CLOSE) })
+    BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
         /* A wide window (tablet, foldable): a side column of a readable width, the map still showing beside it. */
         val wide = maxWidth >= 840.dp
         val width = if (wide) minOf(maxWidth * 0.4f, 560.dp) else if (maxWidth > maxHeight) maxWidth * 0.58f else maxWidth * 0.94f
         Box(Modifier.fillMaxSize().background(Color(if (wide) 0x33000000 else 0x77000000))
                 .clickable(remember { MutableInteractionSource() }, indication = null) { answer(N.PANEL_CLOSE) })
-            Surface(color = PANEL_BG, shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp),
+            Surface(color = PANEL_BG, shape = RoundedCornerShape(topStart = if (tabsOnTop) 0.dp else 16.dp, bottomStart = 16.dp),
                     modifier = Modifier.align(Alignment.CenterEnd).width(width).fillMaxHeight()
                         .clickable(remember { MutableInteractionSource() }, indication = null) {}) {
                 Column {
-                    Row(Modifier.fillMaxWidth().swipeRightToClose { answer(N.PANEL_CLOSE) }, verticalAlignment = Alignment.CenterVertically) {
-                        if (tabStyle == Settings.TABS_NAMES) {
-                            ScrollableTabRow(selectedTabIndex = tab.coerceIn(0, TAB_TITLES.lastIndex), containerColor = PANEL_BG,
-                                             edgePadding = 4.dp, modifier = Modifier.weight(1f)) {
-                                TAB_TITLES.forEachIndexed { i, t ->
-                                    Tab(selected = i == tab, onClick = { if (i != tab) answer(N.PANEL_TAB + i) }, text = { Text(t, fontSize = 14.sp) })
-                                }
-                            }
-                        } else {
-                            /* Icons fit the panel's width, so there is nothing to scroll. */
-                            Row(Modifier.weight(1f)) {
-                                TAB_TITLES.forEachIndexed { i, t ->
-                                    IconTab(PANEL_ICON_PATHS[i], t, showName = tabStyle == Settings.TABS_ICONS_AND_NAMES, selected = i == tab,
-                                            modifier = Modifier.weight(1f)) { if (i != tab) answer(N.PANEL_TAB + i) }
-                                }
-                            }
-                        }
+                    if (!tabsOnTop) Row(Modifier.fillMaxWidth().swipeRightToClose { answer(N.PANEL_CLOSE) }, verticalAlignment = Alignment.CenterVertically) {
+                        PanelTabs(tab, tabStyle, Modifier.weight(1f)) { i -> if (i != tab) answer(N.PANEL_TAB + i) }
                         TextButton(onClick = { answer(N.PANEL_CLOSE) }) { Text("✕", fontSize = 18.sp) }
                     }
                     Box(Modifier.weight(1f).fillMaxWidth().swipeBetweenTabs(tab, answer)) {
@@ -177,7 +166,46 @@ fun PanelHost(gameTab: Int, tabStyle: Int, onAnswer: (Int) -> Unit, content: @Co
                 }
             }
     }
+    }
 }
+
+/** The seven tabs in a row, [tab] selected: icons (with names, or not) fit the width; names alone scroll. */
+@Composable
+private fun PanelTabs(tab: Int, tabStyle: Int, modifier: Modifier, onTab: (Int) -> Unit) {
+    if (tabStyle == Settings.TABS_NAMES) {
+        ScrollableTabRow(selectedTabIndex = tab.coerceIn(0, TAB_TITLES.lastIndex), containerColor = PANEL_BG,
+                         edgePadding = 4.dp, modifier = modifier) {
+            TAB_TITLES.forEachIndexed { i, t -> Tab(selected = i == tab, onClick = { onTab(i) }, text = { Text(t, fontSize = 14.sp) }) }
+        }
+    } else {
+        /* Icons fit the panel's width, so there is nothing to scroll. */
+        Row(modifier) {
+            TAB_TITLES.forEachIndexed { i, t ->
+                IconTab(PANEL_ICON_PATHS[i], t, showName = tabStyle == Settings.TABS_ICONS_AND_NAMES, selected = i == tab,
+                        modifier = Modifier.weight(1f)) { onTab(i) }
+            }
+        }
+    }
+}
+
+private val TABS_BAR_HEIGHT = 56.dp
+private val TABS_CLOSE_WIDTH = 48.dp
+
+/**
+ * Settings → "Panel tabs along the top": the tabs as a strip across the top of the screen, drawn the same over the map
+ * (nothing selected, [onClose] null) and over the open panel (its tab selected, with ✕), so it does not move.
+ */
+@Composable
+fun TabsBar(selected: Int, tabStyle: Int, onTab: (Int) -> Unit, onClose: (() -> Unit)?) {
+    Row(Modifier.fillMaxWidth().height(TABS_BAR_HEIGHT).background(PANEL_BG), verticalAlignment = Alignment.CenterVertically) {
+        PanelTabs(selected, tabStyle, Modifier.weight(1f), onTab)
+        if (onClose != null) Box(Modifier.width(TABS_CLOSE_WIDTH).fillMaxHeight().clickable(onClick = onClose), contentAlignment = Alignment.Center) { Text("✕", fontSize = 18.sp, color = Color.White) }
+        else Spacer(Modifier.width(TABS_CLOSE_WIDTH))
+    }
+}
+
+/** What opens each tab, by tab index: the same actions as the pack, character and the rest have elsewhere. */
+val TAB_ACTIONS = intArrayOf(N.ACT_INVENTORY, N.ACT_CHARACTER, N.ACT_SKILLS, N.ACT_ABILITIES, N.ACT_KNOWLEDGE, N.ACT_SMITH, N.ACT_OPTIONS)
 
 /**
  * A sideways swipe across a tab's screen: left for the next tab, right for the

@@ -32,7 +32,7 @@ private func act(_ id: Int) -> () -> Void { { Native.requestAction(id) } }
 
 /// The commands that can be pinned to the bar (long-press one in ☰), by native action id.
 private let pinnable: [Int: String] = [
-    NB.ACT_BASH: "Bash", NB.ACT_TUNNEL: "Tunnel", NB.ACT_DISARM: "Disarm", NB.ACT_EXCHANGE: "Exchange",
+    NB.ACT_INVENTORY: "Pack", NB.ACT_BASH: "Bash", NB.ACT_TUNNEL: "Tunnel", NB.ACT_DISARM: "Disarm", NB.ACT_EXCHANGE: "Exchange",
     NB.ACT_TRAVEL_DOWN: "Walk to ▼", NB.ACT_TRAVEL_UP: "Walk to ▲",
 ]
 
@@ -68,7 +68,8 @@ func quickActions(_ slots: [QuickSlot], unpin: @escaping (Int) -> Void) -> [BarA
     }
 }
 
-/// Always present: the turn-by-turn Sil toolkit.  `restOptions` opens the rest choices (long press on Rest).  With the
+/// Always present: the turn-by-turn Sil toolkit (the pack is in the panel, and ☰ → Pack can pin it here; unspent
+/// experience is the pill in the status, which opens Skills).  `restOptions` opens the rest choices (long press on Rest).  With the
 /// d-pad shown its centre key waits (tap) and rests (hold), so Wait and Rest leave the bar and the rest choices move to ☰.
 func coreActions(_ s: Status, padShown: Bool, restOptions: @escaping () -> Void) -> [BarAction] {
     var out = padShown ? [] : [BarAction(label: "Rest", longPress: restOptions, run: act(NB.ACT_REST))]
@@ -77,11 +78,9 @@ func coreActions(_ s: Status, padShown: Bool, restOptions: @escaping () -> Void)
     out += [
         BarAction(label: s.has(NB.CTX_STEALTH) ? "Stealth ●" : "Stealth", active: s.has(NB.CTX_STEALTH), run: act(NB.ACT_STEALTH)),
         BarAction(label: s.has(NB.CTX_SINGING) ? "Song ♪" : "Song", active: s.has(NB.CTX_SINGING), run: act(NB.ACT_SONG)),
-        BarAction(label: "Pack", run: act(NB.ACT_INVENTORY)),
         BarAction(label: "Look", run: { Native.requestLookList() }),
         BarAction(label: "Again", run: act(NB.ACT_REPEAT)),
     ]
-    if s.newExp >= 100 { out.append(BarAction(label: "Skills (\(s.newExp))", active: true, run: act(NB.ACT_SKILLS))) }
     return out
 }
 
@@ -90,6 +89,7 @@ func moreActions(_ s: Status, messages: @escaping () -> Void, toggleMap: @escapi
                  restOptions: (() -> Void)? = nil) -> [BarAction] {
     var out = [BarAction(label: "Panel", run: act(NB.ACT_PANEL))]
     if let restOptions { out.append(BarAction(label: "Rest…", run: restOptions)) }
+    out.append(BarAction(label: "Pack", pin: NB.ACT_INVENTORY, run: act(NB.ACT_INVENTORY)))
     out.append(BarAction(label: "Map", run: toggleMap))
     if s.has(NB.CTX_DOWN_KNOWN) && !s.has(NB.CTX_DOWN_STAIRS) { out.append(BarAction(label: "Walk to ▼", pin: NB.ACT_TRAVEL_DOWN, run: act(NB.ACT_TRAVEL_DOWN))) }
     if s.has(NB.CTX_UP_KNOWN) && !s.has(NB.CTX_UP_STAIRS) { out.append(BarAction(label: "Walk to ▲", pin: NB.ACT_TRAVEL_UP, run: act(NB.ACT_TRAVEL_UP))) }
