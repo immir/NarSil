@@ -40,6 +40,16 @@ class KeyRouter(
     /** While a native prompt is open it gets first refusal on every key; true = consumed. */
     var intercept: ((code: Int) -> Boolean)? = null
 
+    /**
+     * Takes first refusal on keys until the returned function is called, which gives it back to whoever had it
+     * (a sheet over a panel must not leave the panel deaf to Back); a handler that was since replaced stays replaced.
+     */
+    fun intercepting(handler: (code: Int) -> Boolean): () -> Unit {
+        val before = intercept
+        intercept = handler
+        return { if (intercept === handler) intercept = before }
+    }
+
     fun char(cp: Int) {
         val code = if (ctrlLatched && cp in 0x40..0x7F) Keys.ctrl(cp) else cp
         ctrlLatched = false

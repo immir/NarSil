@@ -192,16 +192,16 @@ class MainActivity : ComponentActivity() {
             PanelLayer(state, answer)
             state.prompt?.let { prompt ->
                 DisposableEffect(prompt) {
-                    router.intercept = { code -> answerByKey(prompt, code)?.let(answer); true }
-                    onDispose { router.intercept = null }
+                    val release = router.intercepting { code -> answerByKey(prompt, code)?.let(answer); true }
+                    onDispose { release() }
                 }
                 /* In the panel, its tab screens are drawn by PanelLayer; anything else is asked over it. */
                 if (state.panelTab < 0 || !prompt.isPanelContent()) PromptUi(state, prompt, answer)
             }
             if (state.prompt == null) state.info?.let { info ->
                 DisposableEffect(info) {
-                    router.intercept = { code -> if (code == Keys.ESCAPE) state.info = null; code == Keys.ESCAPE }
-                    onDispose { router.intercept = null }
+                    val release = router.intercepting { code -> if (code == Keys.ESCAPE) state.info = null; code == Keys.ESCAPE }
+                    onDispose { release() }
                 }
             }
             if (state.prompt == null) when (val info = state.info) {
@@ -212,8 +212,8 @@ class MainActivity : ComponentActivity() {
             }
             if (state.prompt == null && showMessages) {
                 DisposableEffect(Unit) {
-                    router.intercept = { code -> if (code == Keys.ESCAPE) showMessages = false; code == Keys.ESCAPE }
-                    onDispose { router.intercept = null }
+                    val release = router.intercepting { code -> if (code == Keys.ESCAPE) showMessages = false; code == Keys.ESCAPE }
+                    onDispose { release() }
                 }
                 TextScale(settings.messageScale / settings.buttonScale) { MessagesSheet(state) { showMessages = false } }
             }
@@ -224,8 +224,8 @@ class MainActivity : ComponentActivity() {
             if (showKeys) MoreSheet(extraKeys(router)) { showKeys = false }
             if (showOptions) {
                 DisposableEffect(Unit) {
-                    router.intercept = { code -> if (code == Keys.ESCAPE) showOptions = false; code == Keys.ESCAPE }
-                    onDispose { router.intercept = null }
+                    val release = router.intercepting { code -> if (code == Keys.ESCAPE) showOptions = false; code == Keys.ESCAPE }
+                    onDispose { release() }
                 }
                 OptionsSheet(settings, state.gamePalette, autoMore = state.status.autoMore,
                              autoMoreEnabled = state.atPrompt && state.prompt == null, onAutoMore = NarSilNative::nativeSetAutoMore,
@@ -262,8 +262,8 @@ class MainActivity : ComponentActivity() {
             if (showRest) RestSheet({ showRest = false }) { NarSilNative.nativeRequestRest(it) }
             if (showHelp) {
                 DisposableEffect(Unit) {
-                    router.intercept = { code -> if (code == Keys.ESCAPE) showHelp = false; code == Keys.ESCAPE }
-                    onDispose { router.intercept = null }
+                    val release = router.intercepting { code -> if (code == Keys.ESCAPE) showHelp = false; code == Keys.ESCAPE }
+                    onDispose { release() }
                 }
                 HelpScreen(this@MainActivity) { showHelp = false }
             }
