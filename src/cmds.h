@@ -68,6 +68,7 @@ void do_cmd_quaff_potion(struct command *cmd);
 void do_cmd_use(struct command *cmd);
 void do_cmd_fletch(struct command *cmd);
 bool player_can_fletch(const struct player *p);
+bool obj_can_fletch(const struct player *p, const struct object *obj);
 void do_cmd_refuel(struct command *cmd);
 
 /* cmd-pickup.c */

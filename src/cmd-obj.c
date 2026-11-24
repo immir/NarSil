@@ -1075,6 +1075,12 @@ static bool obj_is_ordinary_arrow(const struct object *obj)
 	return tval_is_ammo(obj) && !obj->ego && !obj->artifact && obj->att == 0;
 }
 
+/* Fletchery could improve this object (ordinary arrows) */
+bool obj_can_fletch(const struct player *p, const struct object *obj)
+{
+	return player_active_ability((struct player *)p, "Fletchery") && obj_is_ordinary_arrow(obj);
+}
+
 bool player_can_fletch(const struct player *p)
 {
 	if (!player_active_ability((struct player *)p, "Fletchery")) return false;

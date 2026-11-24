@@ -88,7 +88,6 @@ fun contextActions(s: GameState.Status): List<BarAction> = buildList {
     if (s.has(N.CTX_FLOOR_ITEMS)) add(BarAction(if (s.has(N.CTX_FLOOR_SPECIAL)) "Pick up ✦" else "Pick up", emphasised = true, longPress = act(N.ACT_FLOOR), run = act(N.ACT_PICKUP)))
     if (s.has(N.CTX_FORGE)) add(BarAction("Forge", emphasised = true, run = act(N.ACT_SMITH)))
     if (s.has(N.CTX_CAN_FIRE)) add(BarAction("Fire", emphasised = true, longPress = { N.nativeRequestLookMonsters() }, run = act(N.ACT_FIRE_NEAREST)))
-    if (s.has(N.CTX_CAN_FLETCH)) add(BarAction("Fletch", run = act(N.ACT_FLETCH)))
     if (s.has(N.CTX_CAN_THROW)) add(BarAction("Throw", emphasised = true, run = act(N.ACT_THROW_NEAREST)))
     if (s.has(N.CTX_ADJ_CLOSED_DOOR) || s.has(N.CTX_ADJ_CHEST)) add(BarAction("Open", emphasised = true, run = act(N.ACT_OPEN)))
     if (s.has(N.CTX_ADJ_SKELETON)) add(BarAction("Search", emphasised = true, run = act(N.ACT_SEARCH)))

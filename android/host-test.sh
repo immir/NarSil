@@ -158,6 +158,16 @@ if [ "$game" = silq ]; then
     [ "$(echo "$out" | grep -c 'You find something among the bones!')" = 1 ]
     echo "$out" | grep -qP '^1\t1\tYou have (a|an|\d+) .*\([a-z]\)\.$'
     echo "$out" | grep -qx 'prompt kind=0'
+    echo "== NarSil-Q: Fletch is an action on plain arrows once you have Fletchery (not a bar button)"
+    rm -rf "$work/data"
+    archer=(@answer=0 @answer=1001 @answer=$fixed_opt @answer=-1 "${birth[@]:1:4}" @answer=101 @answer=101 @answer=101 "${birth[@]:5}")
+    out=$(run "${archer[@]}" @arrows @act=15 @answer=1002 @prompt @answer=-1 @act=21 @prompt @answer=-1 "${quit[@]}" 2>/dev/null)
+    refute grep -qP '^#A\t1\tFletch$' <<<"$out"
+    fletchery=$(echo "$out" | awk -F'\t' '/^[0-9]\t[0-9]\t/ { if ($6 == "Fletchery") { print n; exit } n++ }')
+    rm -rf "$work/data"
+    out=$(run "${archer[@]}" @arrows @act=21 @answer=$fletchery @answer=1 @answer=-1 @act=15 @answer=1002 @prompt @answer=100204 @prompt @answer=-1 @messages "${quit[@]}" 2>/dev/null)
+    echo "$out" | grep -qP '^#A\t1\tFletch$'
+    echo "$out" | grep -q 'You straighten and adjust the feathering of 20 arrows.'
 else
     echo "== NarSil: gorged, you cannot eat more; a skeleton is junk"
     echo "$out" | grep -q 'You are too full to eat it.'

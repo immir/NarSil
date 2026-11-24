@@ -1058,6 +1058,22 @@ bool native_service(bool at_prompt)
 		native_publish(at_prompt);
 		return false;
 	}
+	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 8) {
+		/* A stack of twenty plain arrows into the pack (for Fletchery). */
+		struct object *arrows = object_new(); /* mutable: inven_carry() takes the pointer */
+		object_prep(arrows, lookup_kind(TV_ARROW, lookup_sval(TV_ARROW, "Arrow")), 1, MINIMISE);
+		arrows->number = 20;
+		arrows->known = object_new();
+		arrows->known->kind = arrows->kind;
+		arrows->known->tval = arrows->tval;
+		arrows->known->sval = arrows->sval;
+		arrows->known->number = arrows->number;
+		object_flavor_aware(player, arrows);
+		inven_carry(player, arrows, true, false);
+		handle_stuff(player);
+		native_publish(at_prompt);
+		return false;
+	}
 	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 7) {
 		/* An awake orc soldier next to the player, its defence known, targeted. */
 		struct monster_race *const race = lookup_monster("Orc soldier");

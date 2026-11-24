@@ -52,7 +52,6 @@ func contextActions(_ s: Status) -> [BarAction] {
     if s.has(NB.CTX_FLOOR_ITEMS) { out.append(BarAction(label: s.has(NB.CTX_FLOOR_SPECIAL) ? "Pick up ✦" : "Pick up", emphasised: true, longPress: act(NB.ACT_FLOOR), run: act(NB.ACT_PICKUP))) }
     if s.has(NB.CTX_FORGE) { out.append(BarAction(label: "Forge", emphasised: true, run: act(NB.ACT_SMITH))) }
     if s.has(NB.CTX_CAN_FIRE) { out.append(BarAction(label: "Fire", emphasised: true, longPress: { Native.requestLookMonsters() }, run: act(NB.ACT_FIRE_NEAREST))) }
-    if s.has(NB.CTX_CAN_FLETCH) { out.append(BarAction(label: "Fletch", run: act(NB.ACT_FLETCH))) }
     if s.has(NB.CTX_CAN_THROW) { out.append(BarAction(label: "Throw", emphasised: true, run: act(NB.ACT_THROW_NEAREST))) }
     if s.has(NB.CTX_ADJ_CLOSED_DOOR) || s.has(NB.CTX_ADJ_CHEST) { out.append(BarAction(label: "Open", emphasised: true, run: act(NB.ACT_OPEN))) }
     if s.has(NB.CTX_ADJ_SKELETON) { out.append(BarAction(label: "Search", emphasised: true, run: act(NB.ACT_SEARCH))) }

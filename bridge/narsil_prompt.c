@@ -16,6 +16,7 @@
 
 #include "angband.h"
 #include "cmd-core.h"
+#include "cmds.h"
 #include "game-input.h"
 #include "init.h"
 #include "mon-desc.h"
@@ -373,6 +374,7 @@ static int item_actions(const struct object *obj, action *a)
 	if (object_is_carried(player, obj)) ACT("Drop", CMD_DROP, true);
 	else ACT("Pick up", CMD_PICKUP, inven_carry_okay(obj));
 	if (obj_can_throw(obj)) ACT("Throw", CMD_THROW, true);
+	if (obj_can_fletch(player, obj)) ACT("Fletch", CMD_FLETCH, true);
 	ACT("Inscribe", CMD_INSCRIBE, true);
 	if (obj_has_inscrip(obj)) ACT("Uninscribe", CMD_UNINSCRIBE, true);
 	ACT(object_is_ignored(obj) ? "Unignore" : "Ignore", CMD_IGNORE, true);
