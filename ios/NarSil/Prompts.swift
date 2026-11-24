@@ -183,7 +183,7 @@ struct ItemSheet: View {
             HStack(spacing: 12) {
                 Text(String(Unicode.Scalar(UInt32(item.glyph)).map(Character.init) ?? " "))
                     .scaledFont(22, design: .monospaced).foregroundColor(Color(rgb: colour(item.attr % 256 % 32))).frame(width: 24)
-                Text(item.label == "-" ? "" : "\(item.label))").scaledFont(14, design: .monospaced).foregroundColor(Palette.sub).frame(width: 24)
+                Text(verbatim: item.label == "-" ? "" : "\(item.label))").scaledFont(14, design: .monospaced).foregroundColor(Palette.sub).frame(width: 24)
                 Text(item.name).scaledFont(16).foregroundColor(specialColour(item.special) ?? .white).lineLimit(2)
                 Spacer()
                 if item.weightTenthsLb > 0 {

@@ -123,8 +123,9 @@ static void creature_row(const entry *e)
 	const struct monster_race *race = &r_info[e->id];
 	const struct monster_lore *lore = &l_list[e->id];
 	char note[60];
-	if (rf_has(race->flags, RF_UNIQUE)) my_strcpy(note, lore->pkills ? "slain" : "", sizeof(note));
-	else strnfmt(note, sizeof(note), lore->pkills ? "%d slain" : "", lore->pkills);
+	if (!lore->pkills) note[0] = '\0';
+	else if (rf_has(race->flags, RF_UNIQUE)) my_strcpy(note, "slain", sizeof(note));
+	else strnfmt(note, sizeof(note), "%d slain", lore->pkills);
 	add_entry(monster_x_char[race->ridx], monster_x_attr[race->ridx], race->name, note);
 }
 

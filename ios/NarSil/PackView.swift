@@ -51,7 +51,7 @@ struct PackView: View {
                 HStack(spacing: 12) {
                     Text(glyphString(item.glyph)).scaledFont(22, design: .monospaced)
                         .foregroundColor(Color(rgb: colour(item.attr % 256 % 32))).frame(width: 24)
-                    Text(item.label == "-" ? "" : "\(item.label))").scaledFont(14, design: .monospaced).foregroundColor(Palette.sub).frame(width: 24)
+                    Text(verbatim: item.label == "-" ? "" : "\(item.label))").scaledFont(14, design: .monospaced).foregroundColor(Palette.sub).frame(width: 24)
                     Text(item.name).scaledFont(16, weight: open ? .semibold : .regular).foregroundColor(specialColour(item.special) ?? .white)
                         .lineLimit(open ? 3 : 2).multilineTextAlignment(.leading)
                     Spacer()

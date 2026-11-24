@@ -791,7 +791,8 @@ static void summarise(struct loc g, char *out, size_t cap)
 		object_desc(out, cap, cave->objects[known->oidx] ? cave->objects[known->oidx] : known,
 			ODESC_PREFIX | ODESC_FULL, player);
 	} else {
-		square_apparent_name(cave, g, out, cap);
+		assert(cap <= INT_MAX);
+		square_apparent_name(cave, g, out, (int)cap);
 		my_strcap(out);
 	}
 	flatten(out);

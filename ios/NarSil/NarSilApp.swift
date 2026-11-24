@@ -27,13 +27,16 @@ struct NarSilApp: App {
 
 /// iOS suspends an app soon after it leaves the foreground, and may kill it without notice afterwards: ask for
 /// a save and borrow background time until the game has made it.  (Android does the same in onStop.)
+/// The identifier of the borrowed background time, set after the expiry closure that ends it is made.
+private final class BackgroundTask: @unchecked Sendable { var id = UIBackgroundTaskIdentifier.invalid }
+
 enum Lifecycle {
     @MainActor static func saveBeforeSuspend() {
         let before = Native.saveCount
         Native.requestSave()
-        var task = UIBackgroundTaskIdentifier.invalid
-        task = UIApplication.shared.beginBackgroundTask(withName: "narsil-save") {
-            UIApplication.shared.endBackgroundTask(task)
+        let task = BackgroundTask()
+        task.id = UIApplication.shared.beginBackgroundTask(withName: "narsil-save") {
+            UIApplication.shared.endBackgroundTask(task.id)
         }
         Task {
             var waited = 0
@@ -41,7 +44,7 @@ enum Lifecycle {
                 try? await Task.sleep(nanoseconds: 50_000_000)
                 waited += 1
             }
-            UIApplication.shared.endBackgroundTask(task)
+            UIApplication.shared.endBackgroundTask(task.id)
         }
     }
 }
