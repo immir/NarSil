@@ -482,13 +482,18 @@ echo "== skip -more-: set from the UI side, shown by the game's option"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @automore=1 @act=26 @prompt @answer=-1 "${quit[@]}")
 echo "$out" | grep -qP '^#O\t[0-9]+\t1\t0\tAutomatically clear'
-echo "== welcome: the splash screen is native (verse, welcome, Begin)"
+echo "== welcome: the splash screen is native (verse, welcome, New game)"
 rm -rf "$work/data"
 out=$(run @prompt "${birth[@]}" "${quit[@]}")
 title=$([ "$game" = silq ] && echo NarSil-Q || echo NarSil)
 echo "$out" | grep -qP "^Screen\twelcome\t$title\$"
 echo "$out" | grep -qP '^#V\tThe world was young'
-echo "$out" | grep -qP '^#O\t1\tBegin\t'
+echo "$out" | grep -qP '^#O\t1\tNew game\t'
+echo "== welcome: with a saved character the first button reads Continue"
+rm -rf "$work/data"
+run "${birth[@]}" @save "${quit[@]}" >/dev/null 2>&1
+run @prompt 2>/dev/null | grep -qP '^#O\t1\tContinue\t'
+rm -rf "$work/data"
 other=$([ "$game" = silq ] && echo NarSil || echo NarSil-Q)
 echo "$out" | grep -qP "^#O\t1\tPlay $other instead\t"
 

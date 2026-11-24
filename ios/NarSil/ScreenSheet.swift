@@ -161,7 +161,7 @@ private struct Figures: View {
     }
 }
 
-/// The splash screen: the verse, the welcome, the version, and Begin.
+/// The splash screen: the verse, the welcome, the version, and Continue or New game.
 private struct Welcome: View {
     let p: ScreenPrompt
     let answer: (Int) -> Void

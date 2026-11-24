@@ -160,7 +160,7 @@ private fun Figures(p: GameState.Prompt.Screen) {
     }
 }
 
-/** The splash screen: the verse, the welcome, the version, and Begin. */
+/** The splash screen: the verse, the welcome, the version, and Continue or New game. */
 @Composable
 private fun Welcome(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
     Surface(color = Color(0xFF0E0E10), modifier = Modifier.fillMaxSize()) {

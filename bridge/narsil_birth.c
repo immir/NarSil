@@ -583,7 +583,8 @@ enum welcome_choice native_welcome(void)
 	if (prose[0]) para("%s", prose);
 	if (fp) file_close(fp);
 	para("Version %s (engine %s)", NB_APP_VERSION, buildver);
-	option(1, "Begin", NULL, NULL);
+	/* A character to carry on with, or the start of a new one */
+	option(1, file_exists(savefile) ? "Continue" : "New game", NULL, NULL);
 	option(1, "Tutorial", "A short guided dungeon; your own character is untouched.", NULL);
 	if (z_info->game_silq)
 		option(1, "Play NarSil instead", "NarSil itself; each game keeps its own characters and saves.", NULL);

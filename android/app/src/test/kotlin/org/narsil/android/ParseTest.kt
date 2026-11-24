@@ -34,7 +34,7 @@ class ParseTest {
     @Test fun welcome() = prompt<Prompt.Screen>("welcome").let {
         assertEquals("welcome", it.stage)
         assertTrue(it.verse.isNotEmpty())
-        assertEquals(listOf("Begin", "Tutorial", "Play NarSil-Q instead"), it.options.map { o -> o.label })
+        assertEquals(listOf("New game", "Tutorial", "Play NarSil-Q instead"), it.options.map { o -> o.label })
     }
 
     @Test fun birthStages() {

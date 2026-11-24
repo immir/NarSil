@@ -24,7 +24,7 @@ final class ParseTests: XCTestCase {
         guard case .screen(let s) = try prompt("welcome") else { return XCTFail("not a screen") }
         XCTAssertEqual(s.stage, "welcome")
         XCTAssertFalse(s.verse.isEmpty)
-        XCTAssertEqual(s.options.map(\.label), ["Begin", "Tutorial", "Play NarSil-Q instead"])
+        XCTAssertEqual(s.options.map(\.label), ["New game", "Tutorial", "Play NarSil-Q instead"])
     }
 
     func testBirthStages() throws {
