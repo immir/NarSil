@@ -42,7 +42,7 @@ map 99x33 player (87,5) hp 28/28 voice 28/28 depth 1 mode=1 prompt=0
               ###.#####                  
 player tile -1,-1
 player terrain tile -1,-1 overlays -1,-1
----- frame 159 ----
+---- frame 149 ----
                                                                                 
                                                                                 
 Harness                                                                         

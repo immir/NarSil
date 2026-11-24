@@ -13,6 +13,7 @@ struct ScreenSheet: View {
         switch p.stage {
         case "welcome": Welcome(p: p, answer: answer)
         case "note": NoteCard(p: p, answer: answer)
+        case "poem": Poem(p: p, answer: answer)
         default: Birth(p: p, answer: answer, onScum: onScum)
         }
     }
@@ -190,6 +191,36 @@ private struct Welcome: View {
                     if let last = p.paragraphs.last { Text(last).scaledFont(12).foregroundColor(Palette.sub).padding(.top, 16) }
                 }
                 .padding(.horizontal, 28).padding(.bottom, 32).frame(maxWidth: .infinity)
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+}
+
+/// A poem (entering the dungeon, the throne room): the verse with its indentation, then Continue.
+private struct Poem: View {
+    let p: ScreenPrompt
+    let answer: (Int) -> Void
+
+    var body: some View {
+        ZStack {
+            Palette.splash.ignoresSafeArea()
+            ScrollView {
+                VStack(spacing: 0) {
+                    Text(p.title).scaledFont(24, weight: .semibold).tracking(1).foregroundColor(GameLauncher.game == .silq ? Color(rgb: 0x7AD3F3) : Palette.gold).padding(.top, 32).padding(.bottom, 24)
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(Array(p.verse.enumerated()), id: \.offset) { _, v in
+                            let line = v.drop(while: { $0 == " " })
+                            Text(String(line)).font(.system(size: 16).italic()).foregroundColor(Palette.verse)
+                                .padding(.leading, CGFloat(v.count - line.count) * 6)
+                        }
+                    }
+                    Button { answer(p.options.first?.index ?? 0) } label: {
+                        Text(p.options.first?.label ?? "Continue").scaledFont(17).frame(maxWidth: .infinity, minHeight: 44)
+                    }
+                    .buttonStyle(.borderedProminent).padding(.horizontal, 64).padding(.top, 36)
+                }
+                .padding(.horizontal, 24).padding(.bottom, 32).frame(maxWidth: .infinity)
             }
         }
         .preferredColorScheme(.dark)

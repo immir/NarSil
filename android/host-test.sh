@@ -477,6 +477,14 @@ echo "$out" | grep -qP '^#O\t1\tBegin\t'
 other=$([ "$game" = silq ] && echo NarSil || echo NarSil-Q)
 echo "$out" | grep -qP "^#O\t1\tPlay $other instead\t"
 
+echo "== entering the dungeon: the entry poetry is a native screen, its indentation kept, then Continue"
+rm -rf "$work/data"
+out=$(run "${birth[@]:0:${#birth[@]}-1}" @prompt @answer=0 @ctx "${quit[@]}")
+echo "$out" | grep -qP '^Screen\tpoem\tThe Gates of Angband$'
+echo "$out" | grep -qP '^#V\t {6}down to the mountain'"'"'s roots profound,$'
+echo "$out" | grep -qP '^#O\t1\tContinue\t'
+echo "$out" | grep -q 'context='
+
 echo "== the status data has the minimum depth (the depth clock): 1 at the start"
 rm -rf "$work/data"
 run "${birth[@]}" @mindepth "${quit[@]}" | grep -qx 'depth 1 min 1'

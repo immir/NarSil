@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -51,6 +53,7 @@ private val CHOICE_STAGES = setOf("race", "house", "sex")
 fun ScreenSheet(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit, onScum: (() -> Unit)? = null) {
     if (p.stage == "welcome") { Welcome(p, onAnswer); return }
     if (p.stage == "note") { NoteCard(p, onAnswer); return }
+    if (p.stage == "poem") { Poem(p, onAnswer); return }
     val canGoBack = p.stage != "death" && p.stage != "race" && p.stage != "quickstart"
     Surface(color = Color(0xFF121214), modifier = Modifier.fillMaxSize()) {
         Column {
@@ -184,6 +187,29 @@ private fun Welcome(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
                 if (o.summary.isNotEmpty()) Text(o.summary, color = SUB, fontSize = 12.sp, textAlign = TextAlign.Center)
             }
             p.paragraphs.lastOrNull()?.let { Text(it, color = SUB, fontSize = 12.sp, modifier = Modifier.padding(top = 16.dp)) }
+        }
+    }
+}
+
+/** A poem (entering the dungeon, the throne room): the verse with its indentation, then Continue. */
+@Composable
+private fun Poem(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
+    Surface(color = Color(0xFF0E0E10), modifier = Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 32.dp),
+               horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text(p.title, color = if (N.silq) Color(0xFF7AD3F3) else GOLD, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
+            Box(Modifier.padding(top = 24.dp))
+            Column(Modifier.width(IntrinsicSize.Max)) {
+                p.verse.forEach { v ->
+                    val indent = v.length - v.trimStart().length
+                    Text(v.trimStart(), color = Color(0xFF8FC3FF), fontSize = 16.sp, lineHeight = 24.sp, fontStyle = FontStyle.Italic,
+                         modifier = Modifier.padding(start = (indent * 6).dp))
+                }
+            }
+            Box(Modifier.padding(top = 36.dp))
+            Button(onClick = { onAnswer(p.options.firstOrNull()?.index ?: 0) }, modifier = Modifier.fillMaxWidth(0.6f).heightIn(min = 52.dp)) {
+                Text(p.options.firstOrNull()?.label ?: "Continue", fontSize = 17.sp)
+            }
         }
     }
 }

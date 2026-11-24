@@ -31,6 +31,10 @@ extern const char *window_flag_desc[32];
  * left NULL, the pile is drawn over the map and a key is awaited. */
 extern void (*floor_pile_hook)(struct object **list, int num, const char *verb);
 
+/* A front end may show a poem or note itself: a gamedata file's name (no ".txt") or, when that is
+ * NULL, a textblock; left NULL, the verse is written to the screen and a key is awaited. */
+extern void (*poem_hook)(const char *filename, struct textblock *text);
+
 uint8_t health_attr(int current, int max);
 void cnv_stat(int val, char *out_val, size_t out_len);
 void allow_animations(void);

@@ -1579,6 +1579,8 @@ static void display_hit(game_event_type type, game_event_data *data, void *user)
  * ------------------------------------------------------------------------
  * Show the poetry on entering Morgoth's Throne Room, etc
  * ------------------------------------------------------------------------ */
+void (*poem_hook)(const char *filename, struct textblock *text);
+
 static void pause_with_text(game_event_type type, game_event_data *data,
 							void *user)
 {
@@ -1587,6 +1589,12 @@ static void pause_with_text(game_event_type type, game_event_data *data,
 	int row = data->verse.row;
 	int col = data->verse.col;
 	int msec = 50;
+
+	if (poem_hook) {
+		poem_hook(data->verse.filename, data->verse.text);
+		event_signal(EVENT_MESSAGE_FLUSH);
+		return;
+	}
 
 	if (data->verse.filename) {
 		/* Build the filename */

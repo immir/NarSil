@@ -37,6 +37,7 @@
 #include "buildid.h"
 #include "tutorial.h"
 #include "ui-birth.h"
+#include "ui-display.h"
 #include "ui-game.h"
 #include "ui-history.h"
 #include "ui-options.h"
@@ -624,6 +625,40 @@ static void native_tutorial_note(textblock *tb, const char *header)
 }
 
 /* ------------------------------------------------------------------------
+ * Poems (EVENT_POEM): the verse on entering the dungeon, the throne room, victory
+ * ------------------------------------------------------------------------ */
+
+static const char *poem_title(const char *filename)
+{
+	if (strstr(filename, "entry_poetry")) return "The Gates of Angband";
+	if (streq(filename, "throne_poetry")) return "The Throne of Morgoth";
+	if (streq(filename, "ultimate_bug")) return "Victory";
+	return "Verse";
+}
+
+/* Each line a verse line, its leading spaces (the poem's indentation) kept. */
+static void native_poem(const char *filename, textblock *text)
+{
+	if (!filename) {
+		assert(text);
+		native_tutorial_note(text, NULL);
+		return;
+	}
+	char path[1024], line[1024];
+	path_build(path, sizeof(path), ANGBAND_DIR_GAMEDATA, format("%s.txt", filename));
+	ang_file *const fp = file_open(path, MODE_READ, FTYPE_TEXT);
+	if (!fp) return;
+	begin("poem", poem_title(filename));
+	while (file_getl(fp, line, sizeof(line))) {
+		native_sanitise(line);
+		native_prompt_add("#V\t%s\n", line);
+	}
+	file_close(fp);
+	option(1, "Continue", NULL, NULL);
+	(void)ask_screen();
+}
+
+/* ------------------------------------------------------------------------
  * Death (death_screen() in ui-death.c)
  * ------------------------------------------------------------------------ */
 
@@ -715,4 +750,5 @@ void native_birth_init(void)
 	birth_hook = native_do_birth;
 	death_hook = native_death_screen;
 	tutorial_textblock_show_hook = native_tutorial_note;
+	poem_hook = native_poem;
 }

@@ -151,6 +151,13 @@ static bool settle_or_prompt(void)
 	return false;
 }
 
+/* A poem screen (EVENT_POEM) is open: the terminal's "any key" is its Continue. */
+static bool poem_open(void)
+{
+	static char text[NB_PROMPT_CAP];
+	return nb_prompt(text, sizeof(text)) == NB_PROMPT_SCREEN && strncmp(text, "Screen\tpoem\t", 12) == 0;
+}
+
 /* xorshift64*: a seeded, reproducible stream. */
 static uint64_t fuzz_next(uint64_t *const st)
 {
@@ -204,7 +211,8 @@ static int run_token(const char *tok)
 {
 	for (size_t i = 0; i < sizeof(specials) / sizeof(specials[0]); i++)
 		if (strcmp(tok, specials[i].name) == 0) {
-			nb_push_key(specials[i].code, 0);
+			if (poem_open()) nb_answer(-1);	/* the terminal's "any key" */
+			else nb_push_key(specials[i].code, 0);
 			return settle() ? 0 : 1;
 		}
 	if (strcmp(tok, "@dump") == 0) { dump(); return 0; }
