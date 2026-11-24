@@ -58,7 +58,8 @@ class Settings(context: Context) {
     private val padX = float("dpadX", 1f)
     private val padY = float("dpadY", 1f)
     private val pad = mutableIntStateOf(prefs.getInt("dpad", DPAD_DOCKED))
-    private val swipe = mutableStateOf(prefs.getBoolean("swipeRuns", false))
+    /* "swipeRuns" was the earlier on/off setting: on was Run, off was Step. */
+    private val swipe = mutableIntStateOf(prefs.getInt("swipeMode", if (prefs.getBoolean("swipeRuns", false)) SWIPE_RUN else SWIPE_STEP))
     private val scum = mutableStateOf(prefs.getBoolean("scumming", false))
     private val edge = mutableStateOf(prefs.getBoolean("edgeSwipePanel", false))
     private val tile = mutableStateOf(prefs.getBoolean("tiles", false))
@@ -82,7 +83,8 @@ class Settings(context: Context) {
     var dpadX: Float get() = padX.floatValue; set(v) { padX.floatValue = v; save("dpadX", v) }
     var dpadY: Float get() = padY.floatValue; set(v) { padY.floatValue = v; save("dpadY", v) }
     var dpad: Int get() = pad.intValue; set(v) { pad.intValue = v; prefs.edit().putInt("dpad", v).apply() }
-    var swipeRuns: Boolean get() = swipe.value; set(v) { swipe.value = v; prefs.edit().putBoolean("swipeRuns", v).apply() }
+    /** What a one-finger swipe on the map does: [SWIPE_PAN], [SWIPE_STEP] or [SWIPE_RUN]. */
+    var swipeMode: Int get() = swipe.intValue; set(v) { swipe.intValue = v; prefs.edit().putInt("swipeMode", v).apply() }
     var scumming: Boolean get() = scum.value; set(v) { scum.value = v; prefs.edit().putBoolean("scumming", v).apply() }
     var edgeSwipePanel: Boolean get() = edge.value; set(v) { edge.value = v; prefs.edit().putBoolean("edgeSwipePanel", v).apply() }
     /** A short buzz when health falls below the game's hitpoint warning. */
@@ -122,6 +124,9 @@ class Settings(context: Context) {
         const val DPAD_OFF = 0
         const val DPAD_DOCKED = 1
         const val DPAD_FLOATING = 2
+        const val SWIPE_PAN = 0
+        const val SWIPE_STEP = 1
+        const val SWIPE_RUN = 2
         val SCALES = 0.8f..1.8f
     }
 }
@@ -196,13 +201,14 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                     Label("${UiText.DPAD_SIZE}  ${settings.dpadSizeDp.roundToInt()} dp")
                     Slider(settings.dpadSizeDp, { settings.dpadSizeDp = it }, valueRange = 100f..220f)
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Label(UiText.SWIPE_RUNS)
-                        Hint(UiText.SWIPE_RUNS_HINT)
-                    }
-                    Switch(settings.swipeRuns, { settings.swipeRuns = it })
+                Label(UiText.SWIPE)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(Settings.SWIPE_PAN to "Pan", Settings.SWIPE_STEP to "Step", Settings.SWIPE_RUN to "Run")
+                        .forEach { (mode, label) ->
+                            FilterChip(selected = settings.swipeMode == mode, onClick = { settings.swipeMode = mode }, label = { Text(label) })
+                        }
                 }
+                Hint(UiText.SWIPE_HINT)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Label(UiText.AUTO_MORE)

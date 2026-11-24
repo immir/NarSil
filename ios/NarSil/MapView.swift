@@ -11,12 +11,12 @@ final class MapHandle {
 /// Native, zoomable map of the whole level, drawn from the game's own glyphs or MicroChasm tiles (MapView.kt).
 ///  - tap an adjacent grid: step there; tap a distant one: ghost path, tap again to go
 ///  - long press: describe the grid
-///  - swipe: one step (or a run, by option); also answers direction prompts
+///  - swipe: by option, pan the map, or one step or a run; always answers aim and direction prompts
 ///  - pinch: zoom; two-finger drag: pan (the camera follows the player again once they move)
 struct MapView: UIViewRepresentable {
     @ObservedObject var game: GameState
     let handle: MapHandle
-    var swipeRuns: Bool
+    var swipeMode: Int
     var tiles: Bool
 
     func makeUIView(context: Context) -> MapUIView {
@@ -26,7 +26,7 @@ struct MapView: UIViewRepresentable {
     }
 
     func updateUIView(_ v: MapUIView, context: Context) {
-        v.swipeRuns = swipeRuns
+        v.swipeMode = SwipeMode(rawValue: swipeMode) ?? .step
         v.tilesWanted = tiles
         v.mapChanged()
     }
@@ -36,7 +36,7 @@ struct MapView: UIViewRepresentable {
 final class MapUIView: UIView {
     private let game: GameState
     private let painter = GlyphPainter()
-    var swipeRuns = false
+    var swipeMode = SwipeMode.step
     var tilesWanted = false { didSet { if oldValue != tilesWanted { setNeedsDisplay() } } }
 
     private let tileSheet: UIImage? = UIImage(contentsOfFile: GameLauncher.libDir.appendingPathComponent("tiles/microchasm/16x16.png").path)
@@ -348,16 +348,23 @@ final class MapUIView: UIView {
         }
     }
 
+    /// Pan mode drags the map with one finger, except while a swipe answers a prompt.
     @objc private func swiped(_ r: UIPanGestureRecognizer) {
+        if swipeMode == .pan && !isAimingOrDirecting {
+            if r.state == .began { Trace.log("map.swipe", ("kind", "pan")) }
+            dragged(r)
+            return
+        }
         guard r.state == .ended else { return }
         let t = r.translation(in: self)
         guard hypot(t.x, t.y) >= 2 * cellW else { return }
         let dir = Direction.octantToDir[Direction.octant(dx: t.x, dy: t.y)]
-        Trace.log("map.swipe", ("kind", isAimingOrDirecting ? "answer" : (game.atPrompt && game.prompt == nil ? (swipeRuns ? "run" : "step") : "none")))
+        let run = swipeMode == .run
+        Trace.log("map.swipe", ("kind", isAimingOrDirecting ? "answer" : (game.atPrompt && game.prompt == nil ? (run ? "run" : "step") : "none")))
         if isAimingOrDirecting {
             Native.answer(dir)
         } else if game.atPrompt && game.prompt == nil {
-            Native.requestMove(dir, run: swipeRuns)
+            Native.requestMove(dir, run: run)
         }
     }
 

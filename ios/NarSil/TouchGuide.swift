@@ -7,7 +7,7 @@ let touchGuide: [(String, [String])] = [
         "Tap a distant square to see a path to it; tap it again to walk there.",
         "Tap your own square to pick up what is there, use a forge, or wait a turn.",
         "Long-press any square to describe it: creature recall, objects, terrain. For a creature in view, Fire or Throw (when you can) shoots at it directly; Target makes it your target; a gold outline then marks the target on the map until it dies or you clear it (◎ Clear target in the same description).",
-        "Swipe to step in that direction (or run, if \"Swipe on the map runs\" is on in Options).",
+        "Swipe to step in that direction (Options → \"Swipe on the map\" can make a swipe run, or pan the map instead).",
         "Pinch to zoom; drag with two fingers to look around. The view follows you again once you move.",
         "☰ → Map zooms out to fit the whole level; tap it again, or just move, to zoom back.",
         "Options → Colours picks a colour theme (Bright is the default; Original is the game's own palette; Solarized, Dracula, Gruvbox and High contrast are the others). Dark blues and reds are lifted so they read on black.",
@@ -84,8 +84,8 @@ enum UiText {
     static let dpad = "D-pad"
     static let dpadHint = "Tap a key to step; hold it, or drag from the centre key towards it, to run.  Centre: tap to wait, hold to rest; on a floating pad hold the centre then drag to move it.  Beside status sits under the status in portrait and in the side column in landscape."
     static let dpadSize = "D-pad size"
-    static let swipeRuns = "Swipe on the map runs"
-    static let swipeRunsHint = "Otherwise a swipe takes one step."
+    static let swipe = "Swipe on the map"
+    static let swipeHint = "Pan drags the map with one finger, as two fingers always do; Step takes one step that way; Run runs. Aiming and \"Which way?\" take a swipe in every mode."
     static let autoMore = "Skip -more- prompts"
     static let autoMoreHint = "Messages are not held for a tap to continue; the message log keeps all of them. This is the game's own \"Automatically clear -more- prompts\" option, saved with the character."
     static let autoMoreLockedHint = "Change it from the map, or in Game options → User interface."

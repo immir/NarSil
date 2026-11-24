@@ -2,6 +2,11 @@ import SwiftUI
 
 /// How the d-pad is shown (Settings → Display and controls); the same choices as Android where the layout allows.
 enum PadMode: Int { case off = 0, docked = 1, floating = 2 }
+/// What a one-finger swipe on the map does; "swipeRuns" was the earlier on/off setting (on was Run).
+enum SwipeMode: Int {
+    case pan = 0, step = 1, run = 2
+    static var initial: Int { (UserDefaults.standard.bool(forKey: "swipeRuns") ? SwipeMode.run : .step).rawValue }
+}
 
 /// The app's own settings (not the game's options), in the same order and words as Android's Options sheet.
 /// Kept in UserDefaults; the game is told about the ones it needs.
@@ -17,7 +22,7 @@ struct SettingsSheet: View {
     @Binding var tiles: Bool
     @Binding var pad: Int
     @Binding var padSize: Double
-    @Binding var swipeRuns: Bool
+    @Binding var swipeMode: Int
     let autoMore: Bool
     let autoMoreEnabled: Bool
     let onAutoMore: (Bool) -> Void
@@ -77,7 +82,8 @@ struct SettingsSheet: View {
                                 Slider(value: $padSize, in: 100...220, step: 5)
                             })
                         }
-                        toggle(UiText.swipeRuns, UiText.swipeRunsHint, $swipeRuns)
+                        choice(UiText.swipe, UiText.swipeHint,
+                               $swipeMode, [(SwipeMode.pan.rawValue, "Pan"), (SwipeMode.step.rawValue, "Step"), (SwipeMode.run.rawValue, "Run")])
                         toggle(UiText.autoMore, UiText.autoMoreHint + (autoMoreEnabled ? "" : "  " + UiText.autoMoreLockedHint),
                                Binding(get: { autoMore }, set: onAutoMore), enabled: autoMoreEnabled)
                         toggle(UiText.itemDetails, UiText.itemDetailsHint, $itemDetails)

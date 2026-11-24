@@ -29,12 +29,12 @@ import org.narsil.android.NarSilNative as N
  *  - tap an adjacent grid: step there
  *  - tap a distant grid: ghost path (from the game's pathfinder); tap it again to go
  *  - long press: describe the grid (monster recall, objects, terrain)
- *  - swipe: one step (or a run, by option) in that direction; also answers direction prompts
+ *  - swipe: by option, pan the map, or one step or a run in that direction; always answers aim and direction prompts
  *  - pinch: zoom; two-finger drag: pan (the camera follows the player again once they move)
  */
 @SuppressLint("ViewConstructor")
 class MapView(context: Context, private val state: GameState, private val router: KeyRouter,
-              private val swipeRuns: () -> Boolean, private val tiles: () -> Boolean) : View(context) {
+              private val swipeMode: () -> Int, private val tiles: () -> Boolean) : View(context) {
     init { contentDescription = "Dungeon map. Tap a square to preview the path, tap it again to walk there. Long-press to describe what is there." }
     private val painter = GlyphPainter(context, state::colour)
     /** MicroChasm's 16x16 tile sheet (lib/tiles/microchasm; NarSil-Q's overlay has Sil-Q's), drawn unsmoothed. */
@@ -334,17 +334,27 @@ class MapView(context: Context, private val state: GameState, private val router
             }
         }
 
+        /** Pan mode: one finger drags the map, except while a swipe answers a prompt. */
+        override fun onScroll(e1: MotionEvent?, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
+            if (multiTouch || !panning) return false
+            if (!panned) Trace.log("map.swipe", "kind" to "pan")
+            panned = true
+            panBy(-distanceX, -distanceY)
+            return true
+        }
+
         override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
             val start = e1 ?: return false
-            if (multiTouch) return false
+            if (multiTouch || panning) return false
             val dx = e2.x - start.x
             val dy = e2.y - start.y
             if (hypot(dx, dy) < 2f * cellW) return false
             val o = octant(dx, dy)
-            Trace.log("map.swipe", "kind" to if (aim != null || direction != null) "answer" else if (state.atPrompt && state.prompt == null) (if (swipeRuns()) "run" else "step") else "key")
+            val run = swipeMode() == Settings.SWIPE_RUN
+            Trace.log("map.swipe", "kind" to if (answering) "answer" else if (state.atPrompt && state.prompt == null) (if (run) "run" else "step") else "key")
             when {
-                aim != null || direction != null -> N.nativeAnswer(OCTANT_TO_DIR[o])
-                state.atPrompt && state.prompt == null -> N.nativeRequestMove(OCTANT_TO_DIR[o], swipeRuns())
+                answering -> N.nativeAnswer(OCTANT_TO_DIR[o])
+                state.atPrompt && state.prompt == null -> N.nativeRequestMove(OCTANT_TO_DIR[o], run)
                 else -> router.direction(o)
             }
             return true
@@ -365,7 +375,7 @@ class MapView(context: Context, private val state: GameState, private val router
     override fun onTouchEvent(e: MotionEvent): Boolean {
         scaler.onTouchEvent(e)
         when (e.actionMasked) {
-            MotionEvent.ACTION_DOWN -> multiTouch = false
+            MotionEvent.ACTION_DOWN -> { multiTouch = false; panned = false }
             MotionEvent.ACTION_POINTER_DOWN -> { multiTouch = true; lastFocus = focus(e) }
             MotionEvent.ACTION_POINTER_UP -> lastFocus = focus(e, excluding = e.actionIndex)
             MotionEvent.ACTION_MOVE -> if (multiTouch && e.pointerCount >= 2) pan(e)
@@ -382,13 +392,23 @@ class MapView(context: Context, private val state: GameState, private val router
 
     private fun pan(e: MotionEvent) {
         val f = focus(e)
+        panBy(f.first - lastFocus.first, f.second - lastFocus.second)
+        lastFocus = f
+    }
+
+    /** Moves the map with the finger by (dx, dy) pixels; the camera stops following the player. */
+    private fun panBy(dx: Float, dy: Float) {
         camAnimator?.cancel()
         followPlayer = false
-        camX -= (f.first - lastFocus.first) / cellW
-        camY -= (f.second - lastFocus.second) / cellH
-        lastFocus = f
+        camX -= dx / cellW
+        camY -= dy / cellH
         invalidate()
     }
+
+    private val answering get() = aim != null || direction != null
+    /** One finger pans: Pan mode, at the command prompt or a textui screen alike, but not while a swipe answers. */
+    private val panning get() = swipeMode() == Settings.SWIPE_PAN && !answering
+    private var panned = false
 
     private companion object {
         const val FLASH_MS = 180L

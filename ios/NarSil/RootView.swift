@@ -6,7 +6,7 @@ import SwiftUI
 struct RootView: View {
     @EnvironmentObject var game: GameState
     @AppStorage("tiles") private var tiles = false
-    @AppStorage("swipeRuns") private var swipeRuns = false
+    @AppStorage("swipeMode") private var swipeMode = SwipeMode.initial
     @State private var showMore = false
     @State private var showRest = false
     @State private var showMessages = false
@@ -113,7 +113,7 @@ struct RootView: View {
     private var portrait: some View {
         VStack(spacing: 0) {
             MessageStrip(game: game, lines: messageLines, onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
-            MapView(game: game, handle: map, swipeRuns: swipeRuns, tiles: tiles).overlay(floatingPad)
+            MapView(game: game, handle: map, swipeMode: swipeMode, tiles: tiles).overlay(floatingPad)
             HStack(alignment: .center, spacing: 0) {
                 StatusStrip(game: game, stacked: true).textScale(statusScale)
                 if pad == PadMode.docked.rawValue { Dpad(size: padSize, onAction: padAction).padding(4) }
@@ -127,7 +127,7 @@ struct RootView: View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
                 MessageStrip(game: game, lines: messageLines, onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
-                MapView(game: game, handle: map, swipeRuns: swipeRuns, tiles: tiles).overlay(floatingPad)
+                MapView(game: game, handle: map, swipeMode: swipeMode, tiles: tiles).overlay(floatingPad)
                 promptBar
                 ActionBar(actions: bar) { Trace.log("menu.open"); showMore = true }
             }
@@ -208,7 +208,7 @@ struct RootView: View {
             }
         }
         if showSettings { SettingsSheet(buttonScale: $buttonScale, messageScale: $messageScale, itemScale: $itemScale, statusScale: $statusScale,
-                          theme: $theme, gamePalette: game.gamePalette, messageLines: $messageLines, panelTabs: $panelTabs, tiles: $tiles, pad: $pad, padSize: $dpadSize, swipeRuns: $swipeRuns,
+                          theme: $theme, gamePalette: game.gamePalette, messageLines: $messageLines, panelTabs: $panelTabs, tiles: $tiles, pad: $pad, padSize: $dpadSize, swipeMode: $swipeMode,
                           autoMore: game.status.autoMore, autoMoreEnabled: game.atPrompt && game.prompt == nil, onAutoMore: Native.setAutoMore,
                           itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, combatBuzz: $combatBuzz, traceUsage: $traceUsage, scumming: $scumming,
                           onExportSave: { Task { if let url = await Saves.export() { ShareSheet.present([url]) } else { say(Saves.cantSave) } } },

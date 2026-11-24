@@ -349,7 +349,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                     )
                     AndroidView(
-                        factory = { ctx -> MapView(ctx, state, router, { settings.swipeRuns }, { settings.tiles }).also { mapView = it } },
+                        factory = { ctx -> MapView(ctx, state, router, { settings.swipeMode }, { settings.tiles }).also { mapView = it } },
                         update = { it.visibility = if (state.mapMode) View.VISIBLE else View.GONE },
                         modifier = Modifier.fillMaxSize(),
                     )
