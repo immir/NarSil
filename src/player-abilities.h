@@ -88,7 +88,7 @@ bool build_capture(const struct player *p, const char *name, struct player_build
 int builds_load(struct player_build *list, int max);
 bool builds_save(const struct player_build *list, int n);
 int build_exp_cost(const struct player_build *b);
-void build_queue_birth(const struct player_build *b);
+void build_run_birth(const struct player_build *b);
 int build_shortfall(const struct player_build *b);
 void build_clear_pending(void);
 void build_apply_pending(struct player *p);

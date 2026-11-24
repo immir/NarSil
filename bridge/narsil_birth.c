@@ -206,8 +206,7 @@ static enum birth_stage builds_stage(void)
 		if (a >= 1 && a <= n) {
 			const struct player_build *b = &list[a - 1];
 			build_clear_pending();
-			build_queue_birth(b);
-			cmdq_execute(CTX_BIRTH);
+			build_run_birth(b);
 			if (build_shortfall(b) > 0) {
 				begin("builds-note", "Not the whole build");
 				para("This character could not afford every point of the build, so some stat or skill points were not bought. "

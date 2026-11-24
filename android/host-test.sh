@@ -367,6 +367,13 @@ grep -qP '^ability=\d+:\S' "$work/data/user/builds.txt"
 echo "$out" | grep -qP '^#O\t1\tFighter\t.* · 1 ability · \d+ experience\t'
 echo "== ...the same character comes back: the skills and the ability are bought"
 echo "$out" | grep -qP '^0\t2\t1\t\d+\t\t[A-Z]'
+echo "== ...a build with more purchases than the command queue holds (20) comes back whole"
+rm -rf "$work/data"; mkdir -p "$work/data/user"
+race=$(echo "$out" | grep -oP '^#O\t1\tFighter\t\K[^·]*?(?= of )'); house=$(echo "$out" | grep -oP '^#O\t1\tFighter\t[^·]*? of \K[^·]*(?= · )')
+printf 'build=Big\nrace=%s\nhouse=%s\nsex=Male\nstats=0 0 0 0\nskills=3 3 3 3 2 2 2 2\noath=0\nfixed=0\n' "$race" "$house" > "$work/data/user/builds.txt"
+out=$(run @answer=0 @answer=1 @text= @answer=0 @answer=0 @esc @act=21 @prompt @answer=-1 2>&1)
+refute grep -q 'builds-note' <<<"$out"
+echo "$out" | grep -qP '^Melee/3/\d+\tArchery/3/\d+\tEvasion/3/\d+\tStealth/3/\d+\tPerception/2/\d+\tWill/2/\d+\tSmithing/2/\d+\tSong/2/\d+$'
 echo "== ...and a build can be deleted"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=20 @answer=4 @text=Fighter @answer=-1 @messages @die @enter @prompt @answer=5 @prompt @answer=1 @prompt @answer=2 @prompt @answer=0 @prompt 2>&1)

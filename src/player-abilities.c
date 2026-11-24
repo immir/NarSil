@@ -658,7 +658,7 @@ bool player_oath_broken(const struct player *p)
 _Static_assert(BUILD_STATS == STAT_MAX, "a build holds one purchase per stat");
 _Static_assert(BUILD_SKILLS == SKILL_MAX, "a build holds one purchase per skill");
 
-/* What a build still has to buy once the character exists (set by build_queue_birth()) */
+/* What a build still has to buy once the character exists (set by build_run_birth()) */
 static struct player_build pending_build;
 static bool have_pending;
 
@@ -805,12 +805,25 @@ int build_exp_cost(const struct player_build *b)
 	return cost;
 }
 
-/**
- * Queues the birth commands that make the build's character, up to the name:
- * race, house and sex, the stat points and the skill points.  Its abilities are
- * bought when the character is accepted.  Call it after the birth reset.
+/*
+ * Runs one birth command at once: the command queue holds only CMD_QUEUE_SIZE
+ * commands and drops the rest, far fewer than a large build's skill points.
  */
-void build_queue_birth(const struct player_build *b)
+static void run_birth_choice(cmd_code code, int choice)
+{
+	const errr queued = cmdq_push(code);
+	assert(!queued);
+	(void) queued;
+	cmd_set_arg_choice(cmdq_peek(), "choice", choice);
+	cmdq_execute(CTX_BIRTH);
+}
+
+/**
+ * Makes the build's character up to the name: race, house and sex, the stat
+ * points and the skill points, as far as its experience goes.  Its abilities
+ * are bought when the character is accepted.  Call it after the birth reset.
+ */
+void build_run_birth(const struct player_build *b)
 {
 	const struct player_race *r = build_race(b);
 	const struct player_house *h = r ? build_house(b, r) : NULL;
@@ -823,30 +836,24 @@ void build_queue_birth(const struct player_build *b)
 	}
 	for (const struct player_sex *x = sexes; x; x = x->next) if (streq(x->name, b->sex)) s = x;
 
-	cmdq_push(CMD_CHOOSE_RACE);
-	cmd_set_arg_choice(cmdq_peek(), "choice", r->ridx);
-	cmdq_push(CMD_CHOOSE_HOUSE);
-	cmd_set_arg_choice(cmdq_peek(), "choice", h->hidx - first_house);
-	cmdq_push(CMD_CHOOSE_SEX);
-	cmd_set_arg_choice(cmdq_peek(), "choice", s ? s->sidx : 0);
+	cmdq_execute(CTX_BIRTH);
+	run_birth_choice(CMD_CHOOSE_RACE, r->ridx);
+	run_birth_choice(CMD_CHOOSE_HOUSE, h->hidx - first_house);
+	run_birth_choice(CMD_CHOOSE_SEX, s ? s->sidx : 0);
 	for (int i = 0; i < STAT_MAX; i++) {
 		for (int k = 0; k < ABS(b->stat_buys[i]); k++) {
-			cmdq_push(b->stat_buys[i] > 0 ? CMD_BUY_STAT : CMD_SELL_STAT);
-			cmd_set_arg_choice(cmdq_peek(), "choice", i);
+			run_birth_choice(b->stat_buys[i] > 0 ? CMD_BUY_STAT : CMD_SELL_STAT, i);
 		}
 	}
 	for (int i = 0; i < SKILL_MAX; i++) {
-		for (int k = 0; k < b->skills[i]; k++) {
-			cmdq_push(CMD_BUY_SKILL);
-			cmd_set_arg_choice(cmdq_peek(), "choice", i);
-		}
+		for (int k = 0; k < b->skills[i]; k++) run_birth_choice(CMD_BUY_SKILL, i);
 	}
 	pending_build = *b;
 	have_pending = true;
 }
 
 /**
- * After the commands queued by build_queue_birth() have run: how many stat and
+ * After build_run_birth(): how many stat and
  * skill points the character could not afford, 0 if it is the build.
  */
 int build_shortfall(const struct player_build *b)
