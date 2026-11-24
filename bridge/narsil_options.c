@@ -44,10 +44,31 @@ static uint8_t *number_slot(enum number_setting n)
 	}
 }
 
+/*
+ * Interface options with nothing to do here: they act on a keyboard, a sound card, the terminal's cursor or its
+ * scrolling, which a phone's native screens replace, or the app has its own setting for them.  Hidden from the
+ * main page; the Advanced text menu still lists every option.
+ */
+static bool useless_on_mobile(int opt)
+{
+	static const char *const names[] = {
+		"hjkl_movement", "angband_keyset",                     /* keyboard layouts */
+		"use_sound", "beep",                                   /* no sound output */
+		"highlight_player", "highlight_target",                /* the terminal's cursor */
+		"center_player", "run_avoid_center",                   /* the terminal's scrolling; the native map has its own camera */
+		"quick_messages", "mouse_movement",                    /* the key and the mouse of the terminal */
+		"auto_more",                                           /* the app's own "Skip -more- prompts" */
+	};
+	const char *const name = option_name(opt);
+	for (size_t i = 0; i < N_ELEMENTS(names); i++) if (streq(name, names[i])) return true;
+	return false;
+}
+
 static void add_toggles(int page, bool locked)
 {
 	for (int i = 0; option_page[page][i] != OPT_none; i++) {
 		const int opt = option_page[page][i];
+		if (page == OP_INTERFACE && useless_on_mobile(opt)) continue;
 		native_prompt_add("#O\t%d\t%d\t%d\t%s\t%s\n", ANSWER_TOGGLE + opt, player->opts.opt[opt], locked,
 			option_desc(opt), option_name(opt));
 	}
@@ -68,7 +89,6 @@ static void publish_main(void)
 	native_prompt_add("#H\tSettings\n");
 	add_number(NUM_HP_WARN, "Hitpoint warning", 9, "Warn when health falls below this many tenths (0 = off).");
 	add_number(NUM_DELAY, "Base delay", 255, "Milliseconds per step of missile and spell animations.");
-	add_number(NUM_LAZYMOVE, "Movement delay", 255, "Centiseconds to wait for a second key for diagonal moves.");
 	native_prompt_add("#H\tMore\n");
 	native_prompt_add("#L\t%d\tBirth options\tSet when the character was created; shown for reference.\n", ANSWER_LINK + LINK_BIRTH);
 	native_prompt_add("#L\t%d\tCheat options\tDebugging aids; using one marks the character as a cheater.\n", ANSWER_LINK + LINK_CHEAT);

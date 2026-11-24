@@ -436,8 +436,8 @@ rm -rf "$work/data"
 
 echo "== native options: toggle, number, locked birth page; birth options editable at birth"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" @act=26 @prompt @answer=1007 @prompt @answer=10005 @prompt @answer=100 @prompt @answer=-1 @prompt @answer=-1 "${quit[@]}")
-echo "$out" | grep -qP '^#O\t1007\t1\t0\tAudible beep'
+out=$(run "${birth[@]}" @act=26 @prompt @answer=1019 @prompt @answer=10005 @prompt @answer=100 @prompt @answer=-1 @prompt @answer=-1 "${quit[@]}")
+echo "$out" | grep -qP '^#O\t1019\t1\t0\tAlways pickup items'
 echo "$out" | grep -qP '^#N\t10000\tHitpoint warning\t5\t'
 echo "$out" | grep -qP '^#O\t1046\t0\t1\tDisconnected stairs'
 rm -rf "$work/data"
@@ -475,13 +475,22 @@ echo "$out" | grep -qP '^#D\tFollow-Through: Allows you to continue'
 
 echo "== native pack: equipping (two messages, so a -more-) reopens the pack by itself, and the option is put back"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" @act=15 @answer=1001 @answer=100102 @prompt @answer=-1 @act=26 @prompt @answer=-1 "${quit[@]}")
+out=$(run "${birth[@]}" @act=15 @answer=1001 @answer=100102 @prompt @answer=-1 @ctx "${quit[@]}")
 echo "$out" | grep -qP '^prompt kind=13$'
-echo "$out" | grep -qP '^#O\t[0-9]+\t0\t0\tAutomatically clear'
+echo "$out" | grep -q 'automore=0'
 echo "== skip -more-: set from the UI side, shown by the game's option"
 rm -rf "$work/data"
-out=$(run "${birth[@]}" @automore=1 @act=26 @prompt @answer=-1 "${quit[@]}")
-echo "$out" | grep -qP '^#O\t[0-9]+\t1\t0\tAutomatically clear'
+out=$(run "${birth[@]}" @automore=1 @ctx "${quit[@]}")
+echo "$out" | grep -q 'automore=1'
+echo "== game options: what a phone has no use for is not listed (keys, sound, cursor, centring, -more-), the rest is"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @act=26 @prompt @answer=-1 "${quit[@]}" 2>/dev/null)
+for gone in hjkl_movement angband_keyset use_sound beep highlight_player highlight_target center_player run_avoid_center quick_messages mouse_movement auto_more; do
+    refute grep -qP "^#O\t\d+\t[01]\t[01]\t.*\t$gone\$" <<<"$out"
+done
+echo "$out" | grep -qP '^#O\t\d+\t[01]\t[01]\t.*\tshow_forecast$'
+echo "$out" | grep -qP '^#N\t\d+\tHitpoint warning\t'
+refute grep -qP '^#N\t\d+\tMovement delay\t' <<<"$out"
 echo "== welcome: the splash screen is native (verse, welcome, New game)"
 rm -rf "$work/data"
 out=$(run @prompt "${birth[@]}" "${quit[@]}")

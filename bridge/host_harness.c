@@ -395,7 +395,7 @@ static int run_token(const char *tok)
 	if (strcmp(tok, "@ctx") == 0) {
 		int32_t meta[NB_META_COUNT];
 		nb_map_snapshot(meta, NULL, 0);
-		printf("context=0x%x\nthreats=%d light=%d hp=%d/%d\n", (unsigned)meta[NB_META_CONTEXT], meta[NB_META_THREATS], meta[NB_META_LIGHT_TURNS], meta[NB_META_HP], meta[NB_META_MAX_HP]);
+		printf("context=0x%x\nthreats=%d light=%d hp=%d/%d\nautomore=%d\n", (unsigned)meta[NB_META_CONTEXT], meta[NB_META_THREATS], meta[NB_META_LIGHT_TURNS], meta[NB_META_HP], meta[NB_META_MAX_HP], meta[NB_META_AUTO_MORE]);
 		return 0;
 	}
 	if (sscanf(tok, "@answer=%d%c", &mx, &tail) == 1) {
