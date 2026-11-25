@@ -120,6 +120,9 @@ static bool apply(int32_t a, bool birth_editable)
 		const int opt = a - ANSWER_TOGGLE;
 		if (option_type(opt) == OP_BIRTH && !birth_editable) return true;
 		option_set(option_name(opt), !player->opts.opt[opt]);
+		/* Solid and shaded walls exclude each other (the game draws shaded if both are on): switching one on switches the other off */
+		if (player->opts.opt[opt] && streq(option_name(opt), "solid_walls")) option_set("hybrid_walls", false);
+		if (player->opts.opt[opt] && streq(option_name(opt), "hybrid_walls")) option_set("solid_walls", false);
 		player->upkeep->redraw |= PR_MAP | PR_BASIC;
 		return true;
 	}
@@ -156,4 +159,11 @@ void native_options(void)
 			default: handle_stuff(player); return;
 		}
 	}
+}
+
+/* A character saved with both wall styles on (the game draws shaded, whatever the solid switch says) keeps solid. */
+void native_options_normalise(void)
+{
+	if (!player) return;
+	if (OPT(player, solid_walls) && OPT(player, hybrid_walls)) option_set("hybrid_walls", false);
 }

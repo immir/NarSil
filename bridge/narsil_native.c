@@ -267,6 +267,12 @@ static void publish_while_resting(game_event_type type, game_event_data *data, v
 	native_publish(false);
 }
 
+static void normalise_walls(game_event_type type, game_event_data *data, void *user)
+{
+	(void)type; (void)data; (void)user;
+	native_options_normalise();
+}
+
 void native_init(void)
 {
 	native_birth_init();
@@ -279,6 +285,7 @@ void native_init(void)
 	event_add_handler_set(dirtying, N_ELEMENTS(dirtying), mark_dirty, NULL);
 	event_add_handler(EVENT_NEW_LEVEL_DISPLAY, count_level, NULL);
 	event_add_handler(EVENT_CHECK_INTERRUPT, publish_while_resting, NULL);
+	event_add_handler(EVENT_ENTER_WORLD, normalise_walls, NULL);
 	/* After the terminal's own handlers, so that these run first (handlers are called latest first). */
 	event_add_handler(EVENT_BOLT, animate_bolt, NULL);
 	event_add_handler(EVENT_MISSILE, animate_missile, NULL);

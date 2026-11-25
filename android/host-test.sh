@@ -497,6 +497,16 @@ echo "== skip -more-: set from the UI side, shown by the game's option"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @automore=1 @ctx "${quit[@]}")
 echo "$out" | grep -q 'automore=1'
+echo "== walls: solid is the default; shaded takes over from it (and the page shows it); solid on again takes it back"
+rm -rf "$work/data"
+out=$(run "${birth[@]}" @walls @act=26 @answer=1012 @prompt @answer=-1 @walls @act=26 @answer=1011 @answer=-1 @walls "${quit[@]}" 2>/dev/null)
+mapfile -t w < <(echo "$out" | grep '^walls ')
+[[ "${w[0]}" =~ bg1=[1-9] && "${w[0]}" =~ bg2=0 ]]
+[[ "${w[1]}" =~ bg1=0 && "${w[1]}" =~ bg2=[1-9] ]]
+[[ "${w[2]}" =~ bg1=[1-9] && "${w[2]}" =~ bg2=0 ]]
+echo "$out" | grep -qP '^#O\t1011\t0\t0\tShow walls as solid blocks'
+echo "$out" | grep -qP '^#O\t1012\t1\t0\tShow walls with shaded background'
+
 echo "== game options: what a phone has no use for is not listed (keys, sound, cursor, centring, -more-), the rest is"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @act=26 @prompt @answer=-1 "${quit[@]}" 2>/dev/null)

@@ -26,6 +26,7 @@
  *   @arrows                                       twenty plain arrows into the pack
  *   @hurt                                         the player down to 1 hitpoint and no voice
  *   @bow                                          a shortbow in hand and twenty arrows in the first quiver
+ *   @walls                                        counts of '#' cells in the map by background mode (0 none, 1 solid, 2 shaded)
  *   @sword                                        a plain sword (a property still to find) on every open grid beside the player
  *   @ctx                                          print the context flags
  *   @answer=N                                     answer any native prompt (see nb_answer)
@@ -414,6 +415,20 @@ static int run_token(const char *tok)
 	if (sscanf(tok, "@pick=%d%c", &mx, &tail) == 1) {
 		nb_answer_item(mx);
 		return settle() ? 0 : 1;
+	}
+	if (strcmp(tok, "@walls") == 0) {
+		/* How the walls in the map are filled: counts of '#' cells by background mode (0 none, 1 same as the glyph, 2 shaded). */
+		int32_t meta[NB_META_COUNT];
+		nb_map_snapshot(meta, NULL, 0);
+		const size_t w = (size_t)meta[NB_META_WIDTH], h = (size_t)meta[NB_META_HEIGHT];
+		int32_t *const cells = malloc(sizeof(int32_t) * NB_MAP_CELL_INTS * w * h);
+		nb_map_snapshot(meta, cells, NB_MAP_CELL_INTS * w * h);
+		int by_mode[4] = { 0, 0, 0, 0 };
+		for (size_t i = 0; i < w * h; i++)
+			if (cells[NB_MAP_CELL_INTS * i] == '#') by_mode[(cells[NB_MAP_CELL_INTS * i + 1] / 256) & 3]++;
+		printf("walls bg0=%d bg1=%d bg2=%d\n", by_mode[0], by_mode[1], by_mode[2]);
+		free(cells);
+		return 0;
 	}
 	if (strcmp(tok, "@map") == 0) {
 		int32_t meta[NB_META_COUNT];

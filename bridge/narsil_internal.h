@@ -49,6 +49,7 @@ int native_skill_points(int cmd_context, bool reset);
 
 /* Implemented by narsil_birth.c: birth_hook and death_hook (ui-game.h); game thread. */
 void native_birth_init(void);
+void native_options_normalise(void);
 void native_do_birth(void);
 void native_death_screen(void);
 /* The splash screen (news.txt) and its pause, natively; true if the player chose the tutorial. */
