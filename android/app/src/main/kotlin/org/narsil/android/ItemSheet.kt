@@ -56,11 +56,7 @@ fun ItemSheet(prompt: GameState.Prompt.Items, colour: (Int) -> Int, onAnswer: (I
                 .clickable(remember { MutableInteractionSource() }, indication = null) {},
         ) {
             Column(Modifier.padding(top = 12.dp)) {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(prompt.title, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
-                         modifier = Modifier.weight(1f))
-                    TextButton(onClick = { onAnswer(-1) }) { Text("Cancel") }
-                }
+                ScreenHeader(prompt.title, onClose = { onAnswer(-1) })
                 LazyColumn(Modifier.fillMaxWidth()) {
                     sections.forEach { (section, items) ->
                         item(key = "h$section") {

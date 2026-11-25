@@ -41,11 +41,8 @@ fun OptionsScreen(p: GameState.Prompt.Options, onAnswer: (Int) -> Unit, onAppSet
     val main = p.page == "main"
     Surface(color = Ui.Screen, modifier = Modifier.fillMaxSize()) {
         Column {
-            Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (!(main && LocalInPanel.current)) TextButton(onClick = { onAnswer(-1) }) { Text(if (main) "Close" else "‹ Back") }
-                Text(p.title, color = Ui.Gold, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-                     modifier = Modifier.weight(1f).padding(start = if (main && LocalInPanel.current) 12.dp else 0.dp))
-            }
+            ScreenHeader(p.title, onBack = if (!main) ({ onAnswer(-1) }) else null,
+                         onClose = if (main && !LocalInPanel.current) ({ onAnswer(-1) }) else null)
             when (p.page) {
                 "birth" -> if (p.rows.any { it is OptionRow.Toggle && it.locked }) Note("Fixed once the character exists.")
                 "cheat" -> Note("Switching one on marks this character as a cheater for good, even if you switch it off again.")

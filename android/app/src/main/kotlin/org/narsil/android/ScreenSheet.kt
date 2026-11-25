@@ -55,10 +55,7 @@ fun ScreenSheet(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit, onScum: (()
     val canGoBack = p.stage != "death" && p.stage != "race" && p.stage != "quickstart"
     Surface(color = Ui.Screen, modifier = Modifier.fillMaxSize()) {
         Column {
-            Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 8.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (canGoBack) TextButton(onClick = { onAnswer(-1) }) { Text("‹ Back") }
-                Text(p.title, color = Ui.Gold, fontSize = 22.sp, fontWeight = FontWeight.SemiBold,
-                     modifier = Modifier.weight(1f).padding(start = if (canGoBack) 0.dp else 16.dp))
+            ScreenHeader(p.title, onBack = if (canGoBack) ({ onAnswer(-1) }) else null) {
                 if (p.stage in CHOICE_STAGES) TextButton(onClick = { onAnswer(N.SCREEN_RANDOM) }) { Text("Random") }
             }
             LazyColumn(Modifier.weight(1f).fillMaxWidth()) {

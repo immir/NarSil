@@ -73,14 +73,9 @@ fun PackSheet(p: GameState.Prompt.Pack, colour: (Int) -> Int, onAnswer: (Int) ->
     DisposableEffect(Unit) { onDispose { PackView.first = list.firstVisibleItemIndex; PackView.offset = list.firstVisibleItemScrollOffset } }
     PanelAwareSheet({ onAnswer(-1) }, heightFraction = 0.88f) {
             Column(Modifier.padding(top = 10.dp)) {
-                Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Pack", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-                        Text("Carrying ${lb(p.weight)} of ${lb(p.limit)}", fontSize = 12.sp,
-                             color = if (p.weight > p.limit) Ui.Warn else Ui.Sub)
-                    }
-                    if (!LocalInPanel.current) TextButton(onClick = { onAnswer(-1) }) { Text("Close") }
-                }
+                ScreenHeader("Pack", onClose = if (!LocalInPanel.current) ({ onAnswer(-1) }) else null,
+                             subtitle = "Carrying ${lb(p.weight)} of ${lb(p.limit)}",
+                             subtitleColour = if (p.weight > p.limit) Ui.Warn else Ui.Sub)
                 LazyColumn(Modifier.fillMaxWidth(), state = list) {
                     sections.forEach { (section, items) ->
                         item(key = "h$section") {

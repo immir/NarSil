@@ -201,11 +201,7 @@ fun ScumSheet(context: Context, onDismiss: () -> Unit) {
                 modifier = Modifier.fillMaxWidth().heightIn(max = 560.dp)
                     .clickable(remember { MutableInteractionSource() }, indication = null) {}) {
             Column(Modifier.padding(vertical = 12.dp)) {
-                Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Restore a scum save", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
-                         modifier = Modifier.weight(1f))
-                    TextButton(onClick = onDismiss) { Text("Close") }
-                }
+                ScreenHeader("Restore a scum save", onClose = onDismiss)
                 LazyColumn {
                     item {
                         Text("Your saves in white, the game's autosaves in blue.", color = Ui.Sub, fontSize = 13.sp,

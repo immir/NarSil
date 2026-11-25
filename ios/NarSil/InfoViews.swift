@@ -40,7 +40,6 @@ struct InspectSheet: View {
                             Button("Show path") { dismiss(); Native.requestPreview(x: x, y: y) }.buttonStyle(.bordered)
                             Button("Go there") { dismiss(); Native.requestTravel(x: x, y: y) }.buttonStyle(.bordered)
                         }
-                        Button("Close", action: dismiss)
                     }
                 }.padding(16)
             }
@@ -64,11 +63,7 @@ struct LookSheet: View {
     var body: some View {
         BottomSheet(maxHeight: 600, cancel: dismiss) {
             VStack(spacing: 0) {
-                HStack {
-                    Text(monstersOnly ? "Monsters in view" : "In view").scaledFont(17, weight: .semibold).foregroundColor(.white)
-                    Spacer()
-                    Button("Close", action: dismiss)
-                }.padding(.horizontal, 16).padding(.top, 12).padding(.bottom, 4)
+                ScreenHeader(title: monstersOnly ? "Monsters in view" : "In view", onClose: dismiss)
                 if entries.isEmpty { Text(monstersOnly ? "No monsters in view." : "Nothing of interest.").foregroundColor(Palette.sub).padding(16) }
                 ScrollView {
                     LazyVStack(spacing: 0) {
@@ -105,12 +100,8 @@ struct MessagesSheet: View {
     var body: some View {
         BottomSheet(maxHeight: 700, cancel: dismiss) {
             VStack(spacing: 0) {
-                HStack {
-                    Text("Messages").scaledFont(17, weight: .semibold).foregroundColor(.white)
-                    Spacer()
-                    Button(find == nil ? "Find" : "Done") { find = find == nil ? "" : nil }
-                    Button("Close", action: dismiss).padding(.leading, 12)
-                }.padding(.horizontal, 16).padding(.top, 12).padding(.bottom, 4)
+                ScreenHeader(title: "Messages", onClose: dismiss,
+                             accessory: AnyView(Button(find == nil ? "Find" : "Done") { find = find == nil ? "" : nil }))
                 if find != nil {
                     TextField("Search the log, e.g. hits, dies, you feel", text: Binding(get: { find ?? "" }, set: { find = $0 }))
                         .textFieldStyle(.roundedBorder).autocorrectionDisabled().textInputAutocapitalization(.never)

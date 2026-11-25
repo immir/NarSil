@@ -62,8 +62,11 @@ fun CheckDialog(prompt: GameState.Prompt.Check, onAnswer: (Int) -> Unit) {
 fun AimBar(prompt: GameState.Prompt.Aim, onAnswer: (Int) -> Unit) {
     Surface(color = Color(0xEE1C1C1E), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(if (prompt.targets.isEmpty()) "Aim: swipe a direction or tap a grid" else "Aim: tap a target, or swipe a direction",
-                 color = Color.White, fontSize = 14.sp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(if (prompt.targets.isEmpty()) "Aim: swipe a direction or tap a grid" else "Aim: tap a target, or swipe a direction",
+                     color = Color.White, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                NavIcon(NavKind.Close, { onAnswer(-1) })
+            }
             if (prompt.targets.isNotEmpty())
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     prompt.targets.forEach { t ->
@@ -77,7 +80,6 @@ fun AimBar(prompt: GameState.Prompt.Aim, onAnswer: (Int) -> Unit) {
                     FilledTonalButton(onClick = { onAnswer(N.AIM_CURRENT) }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("Target") }
                 if (prompt.targets.isNotEmpty())
                     FilledTonalButton(onClick = { onAnswer(N.AIM_NEAREST) }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("Nearest") }
-                OutlinedButton(onClick = { onAnswer(-1) }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("Cancel") }
             }
         }
     }
@@ -106,12 +108,15 @@ fun DirectionBar(prompt: GameState.Prompt.Direction, padShown: Boolean, onAnswer
                     if (prompt.allowHere) (if (prompt.neighbours.isEmpty()) "" else " · ") + "• here" else ""
                 Text(if (named.isEmpty()) "Which way? Use the d-pad, or tap a neighbouring square" else "Which way? $named",
                      color = Color.White, fontSize = 14.sp, modifier = Modifier.weight(1f))
-                OutlinedButton(onClick = { onAnswer(-1) }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("Cancel") }
+                NavIcon(NavKind.Close, { onAnswer(-1) })
             }
             return@Surface
         }
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Which way? Tap a neighbouring square or swipe", color = Color.White, fontSize = 14.sp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Which way? Tap a neighbouring square or swipe", color = Color.White, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                NavIcon(NavKind.Close, { onAnswer(-1) })
+            }
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 prompt.neighbours.forEach { n ->
                     FilledTonalButton(onClick = { onAnswer(n.dir) }, contentPadding = PaddingValues(horizontal = 12.dp)) {
@@ -120,7 +125,6 @@ fun DirectionBar(prompt: GameState.Prompt.Direction, padShown: Boolean, onAnswer
                 }
                 if (prompt.allowHere)
                     FilledTonalButton(onClick = { onAnswer(5) }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("Here") }
-                OutlinedButton(onClick = { onAnswer(-1) }, contentPadding = PaddingValues(horizontal = 12.dp)) { Text("Cancel") }
             }
         }
     }
@@ -141,10 +145,7 @@ fun ChoiceSheet(prompt: GameState.Prompt.Choice, onAnswer: (Int) -> Unit) {
                 .clickable(remember { MutableInteractionSource() }, indication = null) {},
         ) {
             Column(Modifier.padding(vertical = 12.dp).verticalScroll(rememberScrollState())) {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(prompt.title, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                    TextButton(onClick = { onAnswer(-1) }) { Text("Cancel") }
-                }
+                ScreenHeader(prompt.title, onClose = { onAnswer(-1) })
                 prompt.options.forEach { o ->
                     Column(Modifier.fillMaxWidth().clickable { onAnswer(o.index) }.padding(horizontal = 16.dp, vertical = 10.dp)) {
                         Text(o.label, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)

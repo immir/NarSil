@@ -9,11 +9,7 @@ struct HelpView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Button("Close", action: dismiss)
-                Text("Help").scaledFont(20, weight: .semibold).foregroundColor(Palette.gold).frame(maxWidth: .infinity, alignment: .leading)
-                Link("Online manual ↗", destination: Self.manual)
-            }.padding(.horizontal, 12).padding(.vertical, 10)
+            ScreenHeader(title: "Help", onClose: dismiss, accessory: AnyView(Link("Online manual ↗", destination: Self.manual)))
             Picker("", selection: $tab) {
                 Text("Touch controls").tag(0); Text("Symbols").tag(1); Text("Keyboard").tag(2)
             }.pickerStyle(.segmented).padding(.horizontal, 12).padding(.bottom, 6)

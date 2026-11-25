@@ -61,10 +61,9 @@ private fun Page(p: GameState.Prompt.Knowledge, main: Boolean, list: LazyListSta
     val searchable = !main && p.view != "scores" && p.rows.count { it is KnowRow.Entry } > 8
     Surface(color = Ui.Screen, modifier = Modifier.fillMaxSize()) {
         Column {
-            Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (!(main && LocalInPanel.current)) TextButton(onClick = { onAnswer(-1) }) { Text(if (main) "Close" else "‹ Back") }
-                Text(p.title, color = Ui.Gold, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                if (!main) Text("${p.rows.count { it is KnowRow.Entry }}", color = Ui.Sub, fontSize = 13.sp)
+            ScreenHeader(p.title, onBack = if (!main) ({ onAnswer(-1) }) else null,
+                         onClose = if (main && !LocalInPanel.current) ({ onAnswer(-1) }) else null) {
+                if (!main) Text("${p.rows.count { it is KnowRow.Entry }}", color = Ui.Sub, fontSize = 13.sp, modifier = Modifier.padding(end = 8.dp))
             }
             if (searchable) OutlinedTextField(query, { query = it }, singleLine = true, placeholder = { Text("Search") },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))

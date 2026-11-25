@@ -157,10 +157,7 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                 .clickable(remember { MutableInteractionSource() }, indication = null) {},
         ) {
             Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Options", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                    TextButton(onClick = onDismiss) { Text("Done") }
-                }
+                ScreenHeader("Display and controls", onClose = onDismiss)
                 Scale(UiText.BUTTON_SCALE, settings.buttonScale) { settings.buttonScale = it }
                 Scale(UiText.MESSAGE_SCALE, settings.messageScale) { settings.messageScale = it }
                 Label(UiText.COLOURS)

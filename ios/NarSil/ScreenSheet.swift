@@ -29,14 +29,8 @@ private struct Birth: View {
         ZStack {
             Palette.screen.ignoresSafeArea()
             VStack(spacing: 0) {
-                HStack {
-                    if canGoBack { Button("‹ Back") { answer(-1) } }
-                    Text(p.title).scaledFont(22, weight: .semibold).foregroundColor(Palette.gold)
-                        .padding(.leading, canGoBack ? 0 : 12)
-                    Spacer()
-                    if choiceStages.contains(p.stage) { Button("Random") { answer(NB.SCREEN_RANDOM) } }
-                }
-                .padding(.horizontal, 8).padding(.top, 8).padding(.bottom, 4)
+                ScreenHeader(title: p.title, back: canGoBack ? { answer(-1) } : nil,
+                             accessory: choiceStages.contains(p.stage) ? AnyView(Button("Random") { answer(NB.SCREEN_RANDOM) }.padding(.trailing, 12)) : nil)
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         ForEach(Array(p.paragraphs.enumerated()), id: \.offset) { _, t in

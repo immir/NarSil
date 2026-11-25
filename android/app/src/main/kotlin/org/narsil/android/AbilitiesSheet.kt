@@ -72,13 +72,8 @@ fun AbilitiesSheet(prompt: GameState.Prompt.Abilities, onAnswer: (Int) -> Unit) 
     val shown = prompt.abilities.filter { it.skill == tab }
     PanelAwareSheet(null, heightFraction = 0.9f) {
             Column {
-                Row(Modifier.padding(start = 16.dp, top = 12.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Abilities", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                        Text("Experience to spend: ${prompt.expLeft}", color = Ui.Gold, fontSize = 13.sp)
-                    }
-                    if (!LocalInPanel.current) TextButton(onClick = { onAnswer(-1) }) { Text("Close") }
-                }
+                ScreenHeader("Abilities", onClose = if (!LocalInPanel.current) ({ onAnswer(-1) }) else null,
+                             subtitle = "Experience to spend: ${prompt.expLeft}", subtitleColour = Ui.Gold)
                 ScrollableTabRow(selectedTabIndex = tab, containerColor = Ui.Sheet, edgePadding = 8.dp) {
                     prompt.skills.forEachIndexed { i, sk ->
                         val name = sk.name

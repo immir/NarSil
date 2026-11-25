@@ -41,11 +41,7 @@ struct SettingsSheet: View {
     var body: some View {
         BottomSheet(maxHeight: 640, cancel: dismiss) {
             VStack(spacing: 0) {
-                HStack {
-                    Text("Options").scaledFont(17, weight: .semibold).foregroundColor(.white)
-                    Spacer()
-                    Button("Done", action: dismiss)
-                }.padding(.horizontal, 16).padding(.vertical, 12)
+                ScreenHeader(title: "Display and controls", onClose: dismiss)
                 ScrollView {
                     VStack(spacing: 6) {
                         scale(UiText.buttonScale, $buttonScale)

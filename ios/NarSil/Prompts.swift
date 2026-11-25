@@ -53,11 +53,7 @@ struct ChoiceSheet: View {
     var body: some View {
         BottomSheet(maxHeight: 600, cancel: { answer(-1) }) {
             VStack(spacing: 0) {
-                HStack {
-                    Text(prompt.title).scaledFont(17, weight: .semibold).foregroundColor(.white)
-                    Spacer()
-                    Button("Cancel") { answer(-1) }
-                }.padding(.horizontal, 16).padding(.vertical, 12)
+                ScreenHeader(title: prompt.title, onClose: { answer(-1) })
                 ScrollView {
                     VStack(spacing: 0) {
                         ForEach(prompt.options, id: \.index) { o in
@@ -160,11 +156,7 @@ struct ItemSheet: View {
     var body: some View {
         BottomSheet(maxHeight: 560, cancel: { answer(-1) }) {
             VStack(spacing: 0) {
-                HStack {
-                    Text(prompt.title).scaledFont(17, weight: .semibold).foregroundColor(.white)
-                    Spacer()
-                    Button("Cancel") { answer(-1) }
-                }.padding(.horizontal, 16).padding(.vertical, 12)
+                ScreenHeader(title: prompt.title, onClose: { answer(-1) })
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(sections, id: \.0) { section, items in
@@ -213,8 +205,12 @@ struct AimBar: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(prompt.targets.isEmpty ? "Aim: swipe a direction or tap a grid" : "Aim: tap a target, or swipe a direction")
-                .scaledFont(14).foregroundColor(.white)
+            HStack {
+                Text(prompt.targets.isEmpty ? "Aim: swipe a direction or tap a grid" : "Aim: tap a target, or swipe a direction")
+                    .scaledFont(14).foregroundColor(.white)
+                Spacer()
+                NavIcon(kind: .close) { answer(-1) }
+            }
             if !prompt.targets.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
@@ -228,7 +224,6 @@ struct AimBar: View {
             HStack(spacing: 8) {
                 if prompt.current != nil { Button("Target") { answer(NB.AIM_CURRENT) }.buttonStyle(.bordered) }
                 if !prompt.targets.isEmpty { Button("Nearest") { answer(NB.AIM_NEAREST) }.buttonStyle(.bordered) }
-                Button("Cancel") { answer(-1) }.buttonStyle(.bordered)
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
@@ -261,9 +256,9 @@ struct DirectionBar: View {
             HStack {
                 Text(named.isEmpty ? "Which way? Use the d-pad, or tap a neighbouring square" : "Which way? \(named)")
                     .scaledFont(14).foregroundColor(.white).frame(maxWidth: .infinity, alignment: .leading)
-                Button("Cancel") { answer(-1) }.buttonStyle(.bordered)
+                NavIcon(kind: .close) { answer(-1) }
             }
-            .padding(.horizontal, 12).padding(.vertical, 4)
+            .padding(.leading, 12).padding(.trailing, 0).padding(.vertical, 0)
             .background(Palette.sheet.opacity(0.93))
         } else {
             chips
@@ -272,14 +267,17 @@ struct DirectionBar: View {
 
     private var chips: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Which way? Tap a neighbouring square or swipe").scaledFont(14).foregroundColor(.white)
+            HStack {
+                Text("Which way? Tap a neighbouring square or swipe").scaledFont(14).foregroundColor(.white)
+                Spacer()
+                NavIcon(kind: .close) { answer(-1) }
+            }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(prompt.neighbours, id: \.dir) { n in
                         Button("\(n.what) \(directionArrows[n.dir] ?? "")") { answer(n.dir) }.buttonStyle(.bordered)
                     }
                     if prompt.allowHere { Button("Here") { answer(5) }.buttonStyle(.bordered) }
-                    Button("Cancel") { answer(-1) }.buttonStyle(.bordered)
                 }
             }
         }

@@ -41,29 +41,6 @@ func glyphString(_ glyph: Int) -> String { Unicode.Scalar(UInt32(max(glyph, 0)))
 /// "12.3 lb" from tenths of a pound.
 func pounds(_ tenths: Int) -> String { "\(tenths / 10).\(tenths % 10) lb" }
 
-/// A panel tab's header: a title, with Back (or Close outside the panel's main page) on the left.
-struct ScreenHeader: View {
-    let title: String
-    var subtitle: String?
-    var back: (() -> Void)?
-    var backLabel = "‹ Back"
-    var trailing: String?
-
-    var body: some View {
-        HStack(spacing: 4) {
-            if let back { Button(backLabel, action: back) }
-            VStack(alignment: .leading, spacing: 0) {
-                if let subtitle { Text(subtitle).scaledFont(12).foregroundColor(Palette.sub) }
-                Text(title).scaledFont(20, weight: .semibold).foregroundColor(Palette.gold).lineLimit(1)
-            }
-            .padding(.leading, back == nil ? 12 : 4)
-            Spacer()
-            if let trailing { Text(trailing).scaledFont(13).foregroundColor(Palette.sub) }
-        }
-        .padding(.horizontal, 8).padding(.top, 8).padding(.bottom, 4)
-    }
-}
-
 extension View {
     /// A card or dialog: its fill, rounded, with the faint edge.
     func cardSurface(_ fill: Color = Palette.card, radius: CGFloat = 10) -> some View {

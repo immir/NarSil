@@ -62,13 +62,9 @@ fun SmithSheet(p: GameState.Prompt.Smith, onAnswer: (Int) -> Unit) {
     val main = p.view == "main"
     Surface(color = Ui.Screen, modifier = Modifier.fillMaxSize()) {
         Column {
-            Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (!(main && LocalInPanel.current)) TextButton(onClick = { onAnswer(-1) }) { Text(if (main) "Close" else "‹ Back") }
-                Column(Modifier.weight(1f)) {
-                    if (!main) VIEW_NAMES[p.view]?.let { Text("Smithing · $it", color = Ui.Sub, fontSize = 12.sp) }
-                    Text(p.title, color = Ui.Gold, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-            }
+            ScreenHeader(p.title, onBack = if (!main) ({ onAnswer(-1) }) else null,
+                         onClose = if (main && !LocalInPanel.current) ({ onAnswer(-1) }) else null,
+                         subtitle = if (!main) VIEW_NAMES[p.view]?.let { "Smithing · $it" } else null)
             p.notes.forEach { Banner(it) }
             DesignCard(p.item, p.costs, p.description)
             val make = if (main) p.options.firstOrNull { it.label == "Make it" } else null

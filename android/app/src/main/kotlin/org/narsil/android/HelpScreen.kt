@@ -55,9 +55,7 @@ fun HelpScreen(context: Context, onDismiss: () -> Unit) {
     val tabs = listOf("Touch controls", "Symbols", "Keyboard")
     Surface(color = Ui.Screen, modifier = Modifier.fillMaxSize()) {
         Column {
-            Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 8.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = onDismiss) { Text("Close") }
-                Text("Help", color = Ui.Gold, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            ScreenHeader("Help", onClose = onDismiss) {
                 TextButton(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(MANUAL))) }) { Text("Online manual ↗") }
             }
             ScrollableTabRow(selectedTabIndex = tab, containerColor = Ui.Screen, edgePadding = 8.dp) {

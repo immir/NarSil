@@ -211,11 +211,7 @@ struct ScumSheet: View {
     var body: some View {
         BottomSheet(maxHeight: 560, cancel: dismiss) {
             VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    Text("Restore a scum save").scaledFont(17, weight: .semibold).foregroundColor(.white)
-                    Spacer()
-                    Button("Close", action: dismiss)
-                }.padding(.horizontal, 16).padding(.vertical, 12)
+                ScreenHeader(title: "Restore a scum save", onClose: dismiss)
                 Text("Your saves in white, the game's autosaves in blue.").scaledFont(13).foregroundColor(Palette.sub).padding(.horizontal, 16)
                 ScrollView {
                     VStack(spacing: 0) {

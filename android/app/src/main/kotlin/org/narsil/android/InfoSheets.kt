@@ -55,7 +55,8 @@ private fun Glyph(cell: Pair<Int, Int>?, colour: (Int) -> Int, size: Int = 24) {
 @Composable
 fun InspectSheet(info: GameState.Info.Inspect, state: GameState, onDismiss: () -> Unit) {
     BottomSheet(onDismiss) {
-        Column(Modifier.padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.padding(start = 16.dp, end = 4.dp, bottom = 16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) { NavIcon(NavKind.Close, onDismiss) }
             val cell = state.mapCell(info.x, info.y)
             info.monster?.let { m ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -82,7 +83,7 @@ fun InspectSheet(info: GameState.Info.Inspect, state: GameState, onDismiss: () -
                     FilledTonalButton(onClick = { onDismiss(); N.nativeRequestPreview(info.x, info.y) }) { Text("Show path") }
                     FilledTonalButton(onClick = { onDismiss(); N.nativeRequestTravel(info.x, info.y) }) { Text("Go there") }
                 }
-                TextButton(onClick = onDismiss) { Text("Close") }
+                
             }
         }
     }
@@ -93,10 +94,7 @@ fun InspectSheet(info: GameState.Info.Inspect, state: GameState, onDismiss: () -
 fun LookSheet(info: GameState.Info.LookList, state: GameState, onDismiss: () -> Unit) {
     BottomSheet(onDismiss) {
         Column(Modifier.padding(top = 12.dp)) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(if (info.monstersOnly) "Monsters in view" else "In view", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                TextButton(onClick = onDismiss) { Text("Close") }
-            }
+            ScreenHeader(if (info.monstersOnly) "Monsters in view" else "In view", onClose = onDismiss)
             if (info.entries.isEmpty())
                 Text(if (info.monstersOnly) "No monsters in view." else "Nothing of interest.", color = Ui.Sub, modifier = Modifier.padding(16.dp))
             LazyColumn {
@@ -124,10 +122,8 @@ fun MessagesSheet(state: GameState, onDismiss: () -> Unit) {
     val list = rememberLazyListState(initialFirstVisibleItemIndex = maxOf(messages.size - 1, 0))
     BottomSheet(onDismiss, tall = true) {
         Column(Modifier.padding(top = 12.dp)) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Messages", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            ScreenHeader("Messages", onClose = onDismiss) {
                 TextButton(onClick = { find = if (find == null) "" else null }) { Text(if (find == null) "Find" else "Done") }
-                TextButton(onClick = onDismiss) { Text("Close") }
             }
             find?.let { q ->
                 OutlinedTextField(q, { find = it }, singleLine = true, placeholder = { Text("Search the log, e.g. hits, dies, you feel") },
@@ -152,11 +148,7 @@ fun CharacterSheet(info: GameState.Info.Character, state: GameState, onDismiss: 
     val inPanel = LocalInPanel.current
     BottomSheet(onDismiss, tall = true) {
         Column(Modifier.padding(top = 12.dp)) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(info.sections.firstOrNull()?.title ?: "Character", color = Color.White, fontSize = 18.sp,
-                     fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                if (!inPanel) TextButton(onClick = onDismiss) { Text("Close") }
-            }
+            ScreenHeader(info.sections.firstOrNull()?.title ?: "Character", onClose = if (!inPanel) onDismiss else null)
             LazyColumn(Modifier.weight(1f, fill = false), state = rememberListPlace("character")) {
                 info.sections.forEachIndexed { i, sec ->
                     if (i > 0) item { Text(sec.title, color = Ui.Sub, fontSize = 13.sp,
