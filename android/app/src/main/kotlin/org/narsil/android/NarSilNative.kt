@@ -68,6 +68,9 @@ object NarSilNative {
     const val FEEL_HIT = 1
     const val FEEL_MISS = 2
     const val FEEL_KILL = 4
+    const val FEEL_LEVEL = 8
+    const val FEEL_ALARM = 16
+    const val FEEL_DEATH = 32
     /** nb_exit_message() after the welcome screen's "Play the other game" (NB_EXIT_SWITCH_GAME). */
     const val EXIT_SWITCH_GAME = "switch-game"
     const val META_COUNT = 35

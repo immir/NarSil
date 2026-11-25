@@ -101,17 +101,28 @@ struct RootView: View {
         .onChange(of: itemDetails) { Native.setItemDetails($0) }
         .onChange(of: game.status.lowHp) { low in if low && lowHealthBuzz { UINotificationFeedbackGenerator().notificationOccurred(.warning) } }
         .onChange(of: game.status.feelSeq) { seq in
-            /* A tick when the player's blow lands, a stronger one for a kill, a faint one for a miss. */
+            /* Your blows (combat buzz), then big moments (death, a level, trouble), which are felt over them. */
             defer { lastFeel = seq }
-            guard combatBuzz, seq != lastFeel else { return }
+            guard seq != lastFeel else { return }
             let bits = game.status.feelBits
-            if bits & NB.FEEL_KILL != 0 { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
-            else if bits & NB.FEEL_HIT != 0 { UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
-            else if bits & NB.FEEL_MISS != 0 { UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.4) }
+            if combatBuzz {
+                if bits & NB.FEEL_KILL != 0 { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
+                else if bits & NB.FEEL_HIT != 0 { UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
+                else if bits & NB.FEEL_MISS != 0 { UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.4) }
+            }
+            guard lowHealthBuzz else { return }
+            if bits & NB.FEEL_DEATH != 0 { UINotificationFeedbackGenerator().notificationOccurred(.error) }
+            else if bits & NB.FEEL_LEVEL != 0 { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+            else if bits & NB.FEEL_ALARM != 0 { UINotificationFeedbackGenerator().notificationOccurred(.warning) }
         }
         .onChange(of: game.status.hp) { hp in
-            /* A short pulse when one turn costs a fifth or more of maximum health. */
-            if lowHealthBuzz, game.status.maxHp > 0, lastHp - hp >= max(1, game.status.maxHp / 5) { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
+            /* Being hurt is felt harder than anything you do, more so as the share of health lost grows. */
+            let lost = lastHp - hp, most = game.status.maxHp
+            if combatBuzz, most > 0, lost > 0 {
+                if lost * 5 >= most { UIImpactFeedbackGenerator(style: .heavy).impactOccurred(intensity: 1) }
+                else if lost * 10 >= most { UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: 1) }
+                else { UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: 0.7) }
+            }
             lastHp = hp
         }
     }

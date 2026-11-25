@@ -18,8 +18,8 @@ autoMore | Skip -more- prompts | Messages are not held for a tap to continue; th
 autoMoreLocked | | Change it from the map, or in Game options → User interface.
 itemDetails | Item details in the pack | Says what an ego item gives in general, and what each ability an item grants does, when you open it in the pack.
 traceUsage | Record usage trace | Keeps a log on this device of which buttons, panels and tabs you use, never what you type or the game's text, to help improve the controls. Nothing leaves the phone unless you choose Options → Send logs.
-combatBuzz | Buzz in combat | A tick when your blow lands, a stronger one when it kills, and a faint one when you miss.
-lowHealthBuzz | Buzz when health is low | Below the game's hitpoint warning (Game options → Hitpoint warning), and a short pulse when one turn costs a fifth of your health.
+combatBuzz | Buzz in combat | A faint tick when you swing and miss, a firmer one when your blow lands, a double pulse when it kills, and a stronger buzz whenever you are hurt, the more so the more it costs you.
+lowHealthBuzz | Buzz on big moments | When health falls below the game's hitpoint warning (Game options → Hitpoint warning), when you gain a level, are poisoned or paralysed, something is summoned, and when you die.
 edgeSwipe | Swipe from the right edge opens the panel | A short stretch in the middle of the right edge, marked by a faint handle, opens the character panel. That stretch no longer works as the system Back gesture.
 scumming | Save scumming (for testing) | Adds Scum (keep a copy of your save) and Restore scum save to the ☰ menu, and Restore to the death screen. Restore also lists the last three autosaves, at least five minutes apart.
 saves | Saves | Export sends a copy of your save to another app (Drive, mail…). Import loads one back, replacing the current game.

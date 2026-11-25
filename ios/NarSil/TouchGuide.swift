@@ -32,7 +32,7 @@ let touchGuide: [(String, [String])] = [
         "☰ holds the rest: the panel, the whole-level map, messages, bash, tunnel, disarm, exchange, app options and help.",
         "Tap the message strip to scroll back through old messages; Options sets how many recent messages it shows. When it says \"tap to continue\", a tap dismisses -more-. Known ego items and artefacts are highlighted (cyan and gold) in the pack and wherever a message names them; items with properties still to discover (marked ??) are lilac in the pack.",
         "Options → Item details in the pack (off by default) adds, to an expanded pack item, what a known ego gives in general and what each ability it grants does.",
-        "When health falls below the game's hitpoint warning the phone buzzes and the HP bar turns red; a turn that costs a fifth of your health gives a short pulse. Your own attacks buzz too: a tick when a blow lands, a stronger double pulse for a kill, a faint one for a miss (Options turns each off).",
+        "The phone buzzes as you fight: a faint tick for a miss, a firmer one when a blow lands, a double pulse for a kill, and a stronger buzz whenever you are hurt (stronger still for a big hit). Big moments buzz harder: health falling below the game's hitpoint warning (the HP bar turns red), a level gained, poison or paralysis, a summons, death. Options turns the two groups off separately.",
     ]),
     ("Menus and prompts", [
         "The panel button at the right of the message strip opens the character panel: Pack, Character, Skills, Abilities, Knowledge, Smithing and Options as tabs. The pill of unspent experience and the ☰ entries open it at their tab, and so do the keyboard's i and e. Options → Display and controls → Panel tabs along the top (experimental) puts the seven tabs across the top of the screen instead, each opening directly. Swipe sideways across a tab to move to the next or previous one. Options → Display and controls → Panel tabs shows the tabs as icons, icons and names, or names.",
@@ -96,9 +96,9 @@ enum UiText {
     static let traceUsage = "Record usage trace"
     static let traceUsageHint = "Keeps a log on this device of which buttons, panels and tabs you use, never what you type or the game's text, to help improve the controls. Nothing leaves the phone unless you choose Options → Send logs."
     static let combatBuzz = "Buzz in combat"
-    static let combatBuzzHint = "A tick when your blow lands, a stronger one when it kills, and a faint one when you miss."
-    static let lowHealthBuzz = "Buzz when health is low"
-    static let lowHealthBuzzHint = "Below the game's hitpoint warning (Game options → Hitpoint warning), and a short pulse when one turn costs a fifth of your health."
+    static let combatBuzzHint = "A faint tick when you swing and miss, a firmer one when your blow lands, a double pulse when it kills, and a stronger buzz whenever you are hurt, the more so the more it costs you."
+    static let lowHealthBuzz = "Buzz on big moments"
+    static let lowHealthBuzzHint = "When health falls below the game's hitpoint warning (Game options → Hitpoint warning), when you gain a level, are poisoned or paralysed, something is summoned, and when you die."
     static let edgeSwipe = "Swipe from the right edge opens the panel"
     static let edgeSwipeHint = "A short stretch in the middle of the right edge, marked by a faint handle, opens the character panel. That stretch no longer works as the system Back gesture."
     static let scumming = "Save scumming (for testing)"

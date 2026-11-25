@@ -156,6 +156,9 @@ enum NB {
     static let FEEL_HIT = 1
     static let FEEL_MISS = 2
     static let FEEL_KILL = 4
+    static let FEEL_LEVEL = 8
+    static let FEEL_ALARM = 16
+    static let FEEL_DEATH = 32
     static let SCREEN_RANDOM = 1000
     static let SCREEN_OPTIONS = 1001
     static let KNOW_COLLAPSE = 99999

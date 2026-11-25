@@ -338,8 +338,11 @@ enum nb_run_stop {
 	NB_RUN_STOP_ARRIVED = 4, NB_RUN_STOP_DISTURBED = 5, NB_RUN_PATH = 1 << 8
 };
 
-/* What the player's attacks did since the previous update (NB_META_FEEL_BITS): for haptics. */
-enum { NB_FEEL_HIT = 1, NB_FEEL_MISS = 2, NB_FEEL_KILL = 4 };
+/* What happened since the previous update (NB_META_FEEL_BITS): for haptics. */
+enum { NB_FEEL_HIT = 1, NB_FEEL_MISS = 2, NB_FEEL_KILL = 4,
+	NB_FEEL_LEVEL = 8,   /* gained a level */
+	NB_FEEL_ALARM = 16,  /* poisoned, paralysed, or something was summoned */
+	NB_FEEL_DEATH = 32 };
 enum { NB_SCREEN_RANDOM = 1000, NB_SCREEN_OPTIONS = 1001 };
 
 enum { NB_KNOW_COLLAPSE = 99999, NB_KNOW_ACTION = 100000 };

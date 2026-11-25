@@ -146,7 +146,7 @@ static void mark_dirty(game_event_type type, game_event_data *data, void *user)
 	game.dirty = true;
 }
 
-/* How the player's attacks went, from the game's message types; accumulated until the next published update. */
+/* How the fight and the day went, from the game's message types; accumulated until the next published update. */
 static int32_t feel_pending, feel_bits, feel_seq;
 
 static int32_t feel_of(const int msg_type)
@@ -156,7 +156,10 @@ static int32_t feel_of(const int msg_type)
 		case MSG_HIT_HI_GREAT: case MSG_HIT_HI_SUPERB: case MSG_SHOOT_HIT: return NB_FEEL_HIT;
 		case MSG_MISS: return NB_FEEL_MISS;
 		case MSG_KILL: case MSG_KILL_UNIQUE: case MSG_KILL_KING: return NB_FEEL_KILL;
-		default: return 0;
+		case MSG_LEVEL: return NB_FEEL_LEVEL;
+		case MSG_POISONED: case MSG_PARALYZED: return NB_FEEL_ALARM;
+		case MSG_DEATH: return NB_FEEL_DEATH;
+		default: return (msg_type >= MSG_SUM_MONSTER && msg_type <= MSG_SUM_UNIQUE) ? NB_FEEL_ALARM : 0;
 	}
 }
 

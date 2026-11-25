@@ -90,9 +90,11 @@ internal fun PanelButton() {
 @Composable
 internal fun StatusStrip(state: GameState, stacked: Boolean, buzzOnLowHealth: Boolean, buzzInCombat: Boolean) {
     val s = state.status
+    /* Later effects cancel earlier ones, so the order is the ranking: your blows, then being hurt, then the big moments. */
     if (buzzInCombat) CombatBuzz(s.feelSeq, s.feelBits)
     LowHealthBuzz(s.lowHp && buzzOnLowHealth)
-    if (buzzOnLowHealth) BigHitBuzz(s.hp, s.maxHp)
+    if (buzzInCombat) BigHitBuzz(s.hp, s.maxHp)
+    if (buzzOnLowHealth) EventBuzz(s.feelSeq, s.feelBits)
     val hpColour = if (s.lowHp) Color(0xFFFF3B30) else Color(0xFFD04040)
     Column(Modifier.fillMaxWidth().background(Ui.Chrome).clickable { Trace.log("panel.request", "via" to "status"); NarSilNative.nativeRequestAction(NarSilNative.ACT_CHARACTER) }
                .padding(horizontal = 8.dp, vertical = 4.dp)) {
@@ -121,30 +123,48 @@ internal fun LowHealthBuzz(low: Boolean) {
     }
 }
 
-/** One short pulse when a single turn costs a fifth or more of maximum health. */
+/** Being hurt is felt harder than anything you do: any loss of health buzzes, more as the share of maximum health lost grows. */
 @Composable
 internal fun BigHitBuzz(hp: Int, maxHp: Int) {
     val context = LocalContext.current
     var was by remember { mutableStateOf(hp) }
     LaunchedEffect(hp) {
-        if (maxHp > 0 && was - hp >= maxOf(1, maxHp / 5)) buzz(context, longArrayOf(0, 120))
+        val lost = was - hp
+        if (maxHp > 0 && lost > 0) when {
+            lost * 5 >= maxHp -> pulse(context, longArrayOf(0, 90, 40, 140), intArrayOf(0, 255, 0, 255))
+            lost * 10 >= maxHp -> pulse(context, longArrayOf(0, 110), intArrayOf(0, 255))
+            else -> pulse(context, longArrayOf(0, 60), intArrayOf(0, 230))
+        }
         was = hp
     }
 }
 
-/** Feedback for the player's own attacks: a firm tick for a blow that lands, a stronger double pulse for a kill, a faint one for a miss. */
+/** Feedback for your own attacks: a double pulse for a kill, a firm tick for a blow that lands, a faint one for a miss. */
 @Composable
-internal fun CombatBuzz(seq: Int, bits: Int) {
+internal fun CombatBuzz(seq: Int, bits: Int) = OnFeel(seq) {
+    when {
+        bits and NarSilNative.FEEL_KILL != 0 -> pulse(it, longArrayOf(0, 40, 50, 90), intArrayOf(0, 200, 0, 255))
+        bits and NarSilNative.FEEL_HIT != 0 -> pulse(it, longArrayOf(0, 35), intArrayOf(0, 200))
+        bits and NarSilNative.FEEL_MISS != 0 -> pulse(it, longArrayOf(0, 15), intArrayOf(0, 70))
+    }
+}
+
+/** Big moments, felt over everything else: death, a level gained, trouble (poison, paralysis, a summons). */
+@Composable
+internal fun EventBuzz(seq: Int, bits: Int) = OnFeel(seq) {
+    when {
+        bits and NarSilNative.FEEL_DEATH != 0 -> pulse(it, longArrayOf(0, 400, 120, 600), intArrayOf(0, 255, 0, 255))
+        bits and NarSilNative.FEEL_LEVEL != 0 -> pulse(it, longArrayOf(0, 40, 60, 60, 60, 120), intArrayOf(0, 120, 0, 190, 0, 255))
+        bits and NarSilNative.FEEL_ALARM != 0 -> pulse(it, longArrayOf(0, 80, 80, 80, 80, 80), intArrayOf(0, 255, 0, 255, 0, 255))
+    }
+}
+
+@Composable
+private fun OnFeel(seq: Int, act: (Context) -> Unit) {
     val context = LocalContext.current
     var seen by remember { mutableStateOf(seq) }
     LaunchedEffect(seq) {
-        if (seq != seen) {
-            when {
-                bits and NarSilNative.FEEL_KILL != 0 -> pulse(context, longArrayOf(0, 40, 50, 90), intArrayOf(0, 200, 0, 255))
-                bits and NarSilNative.FEEL_HIT != 0 -> pulse(context, longArrayOf(0, 35), intArrayOf(0, 200))
-                bits and NarSilNative.FEEL_MISS != 0 -> pulse(context, longArrayOf(0, 15), intArrayOf(0, 70))
-            }
-        }
+        if (seq != seen) act(context)
         seen = seq
     }
 }
