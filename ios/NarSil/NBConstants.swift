@@ -105,7 +105,8 @@ enum NB {
     static let ACT_EXPLORE = 34
     static let ACT_EXPLORE_STEP = 35
     static let ACT_SEARCH = 36
-    static let ACT_COUNT = 37
+    static let ACT_FIRE_AIM = 37
+    static let ACT_COUNT = 38
     static let REST_HP_AND_VOICE = -1
     static let REST_AS_NEEDED = -2
     static let REST_HP_OR_VOICE = -3

@@ -274,6 +274,15 @@ echo "$out" | grep -qP "You see a Shortsword .*\x013\{\?\?\}\x02"
 ctx=($(echo "$out" | grep -o 'context=0x[0-9a-f]*' | sed 's/context=//'))
 [ $(( ctx[0] & 0x10000 )) -ne 0 ]
 
+echo "== Fire with nothing in view asks which way (the aim prompt) and shoots that way; Hold-Fire asks even with a monster in view"
+rm -rf "$work/data"
+out=$(NARSIL_SEED=2 run "${birth[@]}" @bow @act=7 @prompt @answer=6 @messages "${quit[@]}" 2>/dev/null)
+echo "$out" | grep -qx 'prompt kind=4'
+echo "$out" | grep -qP '^1\t1\tYou have 19 Arrows'
+rm -rf "$work/data"
+out=$(NARSIL_SEED=2 run "${birth[@]}" @bow @orc @act=37 @prompt @answer=-1 "${quit[@]}" 2>/dev/null)
+echo "$out" | grep -qx 'prompt kind=4'
+
 echo "== long-press on Pick up opens the pack at the floor section (focus 2)"
 rm -rf "$work/data"
 out=$(run "${birth[@]}" @specials @act=1 @esc @esc @act=33 @prompt @answer=-1 "${quit[@]}")

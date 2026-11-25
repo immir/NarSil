@@ -1105,6 +1105,34 @@ bool native_service(bool at_prompt)
 		native_publish(at_prompt);
 		return false;
 	}
+	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 11) {
+		/* A shortbow in hand and twenty arrows in the first quiver: ready to fire. */
+		struct object *bow = object_new(); /* mutable: inven_carry() takes the pointer */
+		struct object *arrows = object_new();
+		struct object *const both[] = { bow, arrows };
+		object_prep(bow, lookup_kind(TV_BOW, lookup_sval(TV_BOW, "Shortbow")), 1, MINIMISE);
+		object_prep(arrows, lookup_kind(TV_ARROW, lookup_sval(TV_ARROW, "Arrow")), 1, MINIMISE);
+		arrows->number = 20;
+		for (int i = 0; i < 2; i++) {
+			both[i]->known = object_new();
+			both[i]->known->kind = both[i]->kind;
+			both[i]->known->tval = both[i]->tval;
+			both[i]->known->sval = both[i]->sval;
+			both[i]->known->number = both[i]->number;
+			object_flavor_aware(player, both[i]);
+			inven_carry(player, both[i], true, false);
+		}
+		const bool auto_more = OPT(player, auto_more);  /* wielding speaks twice: no -more- to wait on here */
+		OPT(player, auto_more) = true;
+		inven_wield(bow, slot_by_name(player, "shooting"));
+		inven_wield(arrows, slot_by_name(player, "first quiver"));
+		event_signal(EVENT_MESSAGE_FLUSH);
+		OPT(player, auto_more) = auto_more;
+		player->upkeep->update |= PU_BONUS;
+		handle_stuff(player);
+		native_publish(at_prompt);
+		return false;
+	}
 	if (r.kind == REQ_TEST_CHEST && at_prompt && r.dir == 8) {
 		/* A stack of twenty plain arrows into the pack (for Fletchery). */
 		struct object *arrows = object_new(); /* mutable: inven_carry() takes the pointer */
@@ -1190,17 +1218,48 @@ bool native_service(bool at_prompt)
 	return false;
 }
 
-/*
- * do_cmd_fire_at_nearest(), except that a chosen target still in view is kept
- * rather than replaced by the closest monster.
- */
-static void fire_at_target_or_nearest(void)
+/* A monster the player could fire at is in view. */
+static bool any_target_in_view(void)
 {
-	if (!target_okay(0) || !target_get_monster()) { do_cmd_fire_at_nearest(); return; }
+	struct point_set *const targets = target_get_monsters(TARGET_KILL, NULL, false);
+	const bool any = point_set_size(targets) > 0;
+	point_set_dispose(targets);
+	return any;
+}
+
+/* The ammunition do_cmd_fire_at_nearest() would use; NULL if there is none or nothing to fire it with. */
+static struct object *quiver_ammo(void)
+{
 	const struct object *const bow = equipped_item_by_slot_name(player, "shooting");
 	struct object *const ammo1 = equipped_item_by_slot_name(player, "first quiver");
 	struct object *const ammo = ammo1 ? ammo1 : equipped_item_by_slot_name(player, "second quiver");
-	if (!bow || !player->state.ammo_tval || !ammo) { do_cmd_fire_at_nearest(); return; }  /* it explains */
+	return bow && player->state.ammo_tval ? ammo : NULL;
+}
+
+/*
+ * Fire where the player says: the game's own aim prompt, answered with a direction (the d-pad, a swipe), a tapped grid
+ * or a ringed monster.  For a shot with nothing in view to aim at, and for a deliberate choice of direction.
+ */
+static void fire_aimed(void)
+{
+	struct object *const ammo = quiver_ammo();
+	if (!ammo) { do_cmd_fire_at_nearest(); return; }  /* it explains what is missing */
+	cmdq_push(CMD_FIRE);
+	cmd_set_arg_item(cmdq_peek(), "item", ammo);
+}
+
+/*
+ * do_cmd_fire_at_nearest(), except that a chosen target still in view is kept rather than replaced by the closest
+ * monster, and that with no monster to shoot at the player is asked for a direction instead of nothing happening.
+ */
+static void fire_at_target_or_nearest(void)
+{
+	if (!target_okay(0) || !target_get_monster()) {
+		if (any_target_in_view()) do_cmd_fire_at_nearest(); else fire_aimed();
+		return;
+	}
+	struct object *const ammo = quiver_ammo();
+	if (!ammo) { do_cmd_fire_at_nearest(); return; }  /* it explains */
 	cmdq_push(CMD_FIRE);
 	cmd_set_arg_item(cmdq_peek(), "item", ammo);
 	cmd_set_arg_target(cmdq_peek(), "target", DIR_TARGET);
@@ -1487,6 +1546,7 @@ static void run_action(enum nb_action a)
 		case NB_ACT_STEALTH: cmdq_push(CMD_TOGGLE_STEALTH); break;
 		case NB_ACT_SONG: cmdq_push(CMD_SING); break;
 		case NB_ACT_FIRE_NEAREST: if (player_can_fire_quiver1(player, true)) fire_at_target_or_nearest(); break;
+		case NB_ACT_FIRE_AIM: if (player_can_fire_quiver1(player, true)) fire_aimed(); break;
 		case NB_ACT_THROW_NEAREST: if (player_has_throwable(player, true)) do_cmd_automatic_throw(); break;
 		case NB_ACT_OPEN: cmdq_push(CMD_OPEN); break;
 		case NB_ACT_SEARCH:  /* the direction prompt picks the skeleton */

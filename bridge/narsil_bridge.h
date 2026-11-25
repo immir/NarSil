@@ -193,6 +193,7 @@ enum nb_action {
 	NB_ACT_EXPLORE,       /* walk on to the nearest unexplored grid or unseen item, again and again, until something calls for attention */
 	NB_ACT_EXPLORE_STEP,  /* the same, one stop at a time */
 	NB_ACT_SEARCH,        /* search the skeleton underfoot, else the adjacent one (NarSil-Q) */
+	NB_ACT_FIRE_AIM,      /* fire, asking where: a direction, a grid or a monster (the aim prompt), even with none in view */
 	NB_ACT_COUNT
 };
 
@@ -284,7 +285,7 @@ int nb_test_anim_frames(void); /* how many published maps have had an animation 
 void nb_test_depth(int level); /* at the command prompt, go straight to dungeon level `level` (50' each) */
 /* Forges on the current level, and (NarSil-Q) the guaranteed forges made so far; only while the game waits for input. */
 int nb_test_forges(int *fixed_made, int *depth);
-void nb_test_chest(int kind); /* 10: a plain sword with a property still to find on every open grid beside the player; 9: the player down to 1 hitpoint and no voice; 8: twenty plain arrows into the pack; 7: an awake, targeted orc soldier next to the player, its defence known; 6: the player rages; 5: an unsearched orc skeleton under the player (NarSil-Q); 0: a locked small chest under the player; 1: a trapped one; 2: a pile of four, reported as stepping on it would be; 3: a known short sword of Hador's House into the pack; 4: under the player, a known Hador's House sword and a plain one with a property still to find */
+void nb_test_chest(int kind); /* 11: a shortbow in hand and twenty arrows in the first quiver; 10: a plain sword with a property still to find on every open grid beside the player; 9: the player down to 1 hitpoint and no voice; 8: twenty plain arrows into the pack; 7: an awake, targeted orc soldier next to the player, its defence known; 6: the player rages; 5: an unsearched orc skeleton under the player (NarSil-Q); 0: a locked small chest under the player; 1: a trapped one; 2: a pile of four, reported as stepping on it would be; 3: a known short sword of Hador's House into the pack; 4: under the player, a known Hador's House sword and a plain one with a property still to find */
 #endif
 
 /* Path as (x, y) pairs: the target first, then each step; 0 = no path. */

@@ -137,6 +137,7 @@ object NarSilNative {
     const val ACT_EXPLORE = 34
     const val ACT_EXPLORE_STEP = 35
     const val ACT_SEARCH = 36
+    const val ACT_FIRE_AIM = 37
 
     /** Only honoured at the command prompt. */
     @JvmStatic external fun nativeRequestAction(action: Int)

@@ -25,6 +25,7 @@
  *   @orc                                          an awake orc soldier beside the player, its defence known, targeted
  *   @arrows                                       twenty plain arrows into the pack
  *   @hurt                                         the player down to 1 hitpoint and no voice
+ *   @bow                                          a shortbow in hand and twenty arrows in the first quiver
  *   @sword                                        a plain sword (a property still to find) on every open grid beside the player
  *   @ctx                                          print the context flags
  *   @answer=N                                     answer any native prompt (see nb_answer)
@@ -384,8 +385,8 @@ static int run_token(const char *tok)
 	}
 	if (strcmp(tok, "@chest") == 0 || strcmp(tok, "@trapchest") == 0 || strcmp(tok, "@pile") == 0
 		|| strcmp(tok, "@ego") == 0 || strcmp(tok, "@specials") == 0 || strcmp(tok, "@skeleton") == 0 || strcmp(tok, "@orc") == 0
-		|| strcmp(tok, "@rage") == 0 || strcmp(tok, "@arrows") == 0 || strcmp(tok, "@hurt") == 0 || strcmp(tok, "@sword") == 0) {
-		nb_test_chest(strcmp(tok, "@sword") == 0 ? 10 : strcmp(tok, "@hurt") == 0 ? 9 : strcmp(tok, "@arrows") == 0 ? 8 : strcmp(tok, "@orc") == 0 ? 7 : strcmp(tok, "@rage") == 0 ? 6 : strcmp(tok, "@skeleton") == 0 ? 5 : strcmp(tok, "@specials") == 0 ? 4 : strcmp(tok, "@ego") == 0 ? 3 : tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
+		|| strcmp(tok, "@rage") == 0 || strcmp(tok, "@arrows") == 0 || strcmp(tok, "@hurt") == 0 || strcmp(tok, "@sword") == 0 || strcmp(tok, "@bow") == 0) {
+		nb_test_chest(strcmp(tok, "@bow") == 0 ? 11 : strcmp(tok, "@sword") == 0 ? 10 : strcmp(tok, "@hurt") == 0 ? 9 : strcmp(tok, "@arrows") == 0 ? 8 : strcmp(tok, "@orc") == 0 ? 7 : strcmp(tok, "@rage") == 0 ? 6 : strcmp(tok, "@skeleton") == 0 ? 5 : strcmp(tok, "@specials") == 0 ? 4 : strcmp(tok, "@ego") == 0 ? 3 : tok[1] == 'c' ? 0 : tok[1] == 't' ? 1 : 2);
 		return settle() ? 0 : 1;
 	}
 	if (sscanf(tok, "@details=%d%c", &mx, &tail) == 1) {
