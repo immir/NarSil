@@ -1090,8 +1090,9 @@ bool player_can_fletch(const struct player *p)
 }
 
 /*
- * Fletchery (Sil-Q): give a stack of ordinary arrows +3 to hit.  Sil-Q spends a
- * turn per arrow; here the whole stack costs that many turns of energy at once.
+ * Fletchery (Sil-Q): give ordinary arrows +3 to hit, an arrow a turn.  The command repeats until the stack is done
+ * (see game_cmds), and anything that disturbs the player (a monster coming into view, a blow) ends the repeat, so a
+ * long stack never leaves the player helpless.
  */
 void do_cmd_fletch(struct command *cmd)
 {
@@ -1106,15 +1107,17 @@ void do_cmd_fletch(struct command *cmd)
 			"You need ordinary arrows to do that.", obj_is_ordinary_arrow,
 			USE_INVEN | USE_QUIVER | USE_FLOOR) != CMD_OK) return;
 
-	const int count = obj->number;
-	struct object *improved = gear_object_for_use(player, obj, count, false, &none_left);
+	struct object *improved = gear_object_for_use(player, obj, 1, false, &none_left);
 	improved->att = 3;
-	msg("You straighten and adjust the feathering of %d arrow%s.", count, count == 1 ? "" : "s");
-	inven_carry(player, improved, true, true);
-	player->upkeep->energy_use = z_info->move_energy * count;
+	msg("You straighten and adjust the feathering of an arrow.");
+	inven_carry(player, improved, true, false);
+	player->upkeep->energy_use = z_info->move_energy;
 	player->upkeep->notice |= (PN_COMBINE);
 	player->upkeep->redraw |= (PR_INVEN);
 	player->previous_action[0] = ACTION_MISC;
+
+	/* The stack is gone: nothing left to repeat on */
+	if (none_left) disturb(player, false);
 }
 
 /*

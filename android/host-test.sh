@@ -168,9 +168,15 @@ if [ "$game" = silq ]; then
     refute grep -qP '^#A\t1\tFletch$' <<<"$out"
     fletchery=$(echo "$out" | awk -F'\t' '/^[0-9]\t[0-9]\t/ { if ($6 == "Fletchery") { print n; exit } n++ }')
     rm -rf "$work/data"
-    out=$(run "${archer[@]}" @arrows @act=21 @answer=$fletchery @answer=1 @answer=-1 @act=15 @answer=1002 @prompt @answer=100204 @prompt @answer=-1 @messages "${quit[@]}" 2>/dev/null)
+    fletch_all=(@arrows @act=21 @answer=$fletchery @answer=1 @answer=-1 @act=15 @answer=1002 @prompt @answer=100204 @prompt @answer=-1 @messages)
+    out=$(NARSIL_SEED=2 run "${archer[@]}" "${fletch_all[@]}" "${quit[@]}" 2>/dev/null)  # a seed where nothing turns up meanwhile
     echo "$out" | grep -qP '^#A\t1\tFletch$'
-    echo "$out" | grep -q 'You straighten and adjust the feathering of 20 arrows.'
+    echo "$out" | grep -qP '^1\t20\tYou straighten and adjust the feathering of an arrow\.$'  # an arrow a turn, all twenty (the count is the repeats)
+    echo "== NarSil-Q: fletching stops when something disturbs (a Mewlip comes down the stairs): the rest of the stack is left plain"
+    rm -rf "$work/data"
+    out=$(run "${archer[@]}" "${fletch_all[@]}" "${quit[@]}" 2>/dev/null)
+    echo "$out" | grep -q 'The Mewlip comes down the stair!'
+    echo "$out" | grep -qP '^1\t([1-9]|1[0-9])\tYou straighten and adjust the feathering of an arrow\.$'
 else
     echo "== NarSil: gorged, you cannot eat more; a skeleton is junk"
     echo "$out" | grep -q 'You are too full to eat it.'
