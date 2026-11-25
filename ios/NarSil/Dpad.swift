@@ -97,7 +97,7 @@ struct Dpad: View {
     private static let keyLit = Color(red: 58.0 / 255.0, green: 95.0 / 255.0, blue: 138.0 / 255.0, opacity: 0.82)
     private static let keyIdle = Color(red: 38.0 / 255.0, green: 38.0 / 255.0, blue: 43.0 / 255.0, opacity: 0.55)
     private static let keyMarked = Color(rgb: 0x6A5018).opacity(0.75)
-    private static let markEdge = Color(rgb: 0xE0B040)
+    private static let markEdge = Palette.gold
 
     var body: some View {
         let lit = self.lit, marked = self.marked

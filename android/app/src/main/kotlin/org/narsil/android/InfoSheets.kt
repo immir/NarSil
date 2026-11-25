@@ -62,17 +62,17 @@ fun InspectSheet(info: GameState.Info.Inspect, state: GameState, onDismiss: () -
                     Glyph(cell, state::colour, 28)
                     Column(Modifier.weight(1f)) {
                         Text(m.name, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                        if (m.state.isNotEmpty()) Text(m.state, color = Color(0xFFFFB74D), fontSize = 14.sp)
+                        if (m.state.isNotEmpty()) Text(m.state, color = Ui.Warn, fontSize = 14.sp)
                     }
                     if (info.isTarget) TextButton(onClick = { N.nativeRequestTarget(-1, -1); onDismiss() }) { Text("◎ Clear target", color = Color(0xFFFF8A80)) }
                     else if (info.targetable) FilledTonalButton(onClick = { N.nativeRequestTarget(info.x, info.y) }) { Text("Target") }
                 }
-                if (m.recall.isNotEmpty()) Text(colouredText(m.recall, state::colour), color = Color(0xFFC8C8CC), fontSize = 14.sp)
+                if (m.recall.isNotEmpty()) Text(colouredText(m.recall, state::colour), color = Ui.Body, fontSize = 14.sp)
             }
             info.objects.forEach { o -> Text(o, color = Color.White, fontSize = 16.sp) }
-            info.terrain?.let { t -> Text(t, color = Color(0xFF9A9AA0), fontSize = 14.sp) }
+            info.terrain?.let { t -> Text(t, color = Ui.Sub, fontSize = 14.sp) }
             if (info.monster == null && info.objects.isEmpty() && info.terrain == null)
-                Text("You know nothing about that place.", color = Color(0xFF9A9AA0))
+                Text("You know nothing about that place.", color = Ui.Sub)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.End)) {
                 if (state.atPrompt) {
                     if (info.monster != null && info.targetable) {
@@ -98,7 +98,7 @@ fun LookSheet(info: GameState.Info.LookList, state: GameState, onDismiss: () -> 
                 TextButton(onClick = onDismiss) { Text("Close") }
             }
             if (info.entries.isEmpty())
-                Text(if (info.monstersOnly) "No monsters in view." else "Nothing of interest.", color = Color(0xFF9A9AA0), modifier = Modifier.padding(16.dp))
+                Text(if (info.monstersOnly) "No monsters in view." else "Nothing of interest.", color = Ui.Sub, modifier = Modifier.padding(16.dp))
             LazyColumn {
                 items(info.entries) { e ->
                     Row(Modifier.fillMaxWidth().clickable { N.nativeRequestInspect(e.x, e.y) }.heightIn(min = 48.dp)
@@ -106,7 +106,7 @@ fun LookSheet(info: GameState.Info.LookList, state: GameState, onDismiss: () -> 
                         Glyph(state.mapCell(e.x, e.y), state::colour)
                         Text(e.summary, color = Color.White, fontSize = 16.sp, modifier = Modifier.weight(1f))
                     }
-                    Divider(color = Color(0xFF2C2C2E), modifier = Modifier.padding(start = 52.dp))
+                    Divider(color = Ui.Divider, modifier = Modifier.padding(start = 52.dp))
                 }
             }
         }
@@ -133,7 +133,7 @@ fun MessagesSheet(state: GameState, onDismiss: () -> Unit) {
                 OutlinedTextField(q, { find = it }, singleLine = true, placeholder = { Text("Search the log, e.g. hits, dies, you feel") },
                                   modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp))
             }
-            if (messages.isEmpty()) Text(if (find.isNullOrBlank()) "No messages yet." else "No message contains that.", color = Color(0xFF9A9AA0), modifier = Modifier.padding(16.dp))
+            if (messages.isEmpty()) Text(if (find.isNullOrBlank()) "No messages yet." else "No message contains that.", color = Ui.Sub, modifier = Modifier.padding(16.dp))
             LazyColumn(Modifier.fillMaxWidth(), state = list) {
                 items(messages) { m ->
                     Text(Special.styled(m, if (m.count > 1) " (x${m.count})" else ""), color = Color(state.colour(m.attr)), fontSize = 15.sp,
@@ -159,18 +159,18 @@ fun CharacterSheet(info: GameState.Info.Character, state: GameState, onDismiss: 
             }
             LazyColumn(Modifier.weight(1f, fill = false), state = rememberListPlace("character")) {
                 info.sections.forEachIndexed { i, sec ->
-                    if (i > 0) item { Text(sec.title, color = Color(0xFF9A9AA0), fontSize = 13.sp,
+                    if (i > 0) item { Text(sec.title, color = Ui.Sub, fontSize = 13.sp,
                                            modifier = Modifier.padding(start = 16.dp, top = 14.dp, bottom = 2.dp)) }
                     items(sec.rows) { r ->
                         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Text(r.label, color = Color.White, fontSize = 15.sp)
-                                if (r.detail.isNotEmpty()) Text(r.detail, color = Color(0xFF8A8A90), fontSize = 12.sp)
+                                if (r.detail.isNotEmpty()) Text(r.detail, color = Ui.Sub, fontSize = 12.sp)
                             }
                             Text(r.value, color = Color(state.colour(r.attr)), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
-                    sec.text?.let { t -> item { Text(t, color = Color(0xFFC8C8CC), fontSize = 14.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) } }
+                    sec.text?.let { t -> item { Text(t, color = Ui.Body, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) } }
                 }
             }
             Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

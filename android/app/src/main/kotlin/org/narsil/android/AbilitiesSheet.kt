@@ -49,8 +49,8 @@ private fun colour(a: GameState.Ability) = when (a.state) {
     N.ABILITY_ON -> Color.White
     N.ABILITY_OFF, N.ABILITY_ITEM_OFF -> Color(0xFFEF9A9A)
     N.ABILITY_ITEM_ON -> Color(0xFFA5D6A7)
-    N.ABILITY_AVAILABLE -> Color(0xFF90CAF9)
-    else -> Color(0xFF77777D)
+    N.ABILITY_AVAILABLE -> Ui.Summary
+    else -> Ui.Sub
 }
 
 private fun summary(a: GameState.Ability, skill: GameState.AbilitySkill, expLeft: Int) = when (a.state) {
@@ -75,11 +75,11 @@ fun AbilitiesSheet(prompt: GameState.Prompt.Abilities, onAnswer: (Int) -> Unit) 
                 Row(Modifier.padding(start = 16.dp, top = 12.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text("Abilities", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                        Text("Experience to spend: ${prompt.expLeft}", color = Color(0xFFFFD54F), fontSize = 13.sp)
+                        Text("Experience to spend: ${prompt.expLeft}", color = Ui.Gold, fontSize = 13.sp)
                     }
                     if (!LocalInPanel.current) TextButton(onClick = { onAnswer(-1) }) { Text("Close") }
                 }
-                ScrollableTabRow(selectedTabIndex = tab, containerColor = Color(0xFF1C1C1E), edgePadding = 8.dp) {
+                ScrollableTabRow(selectedTabIndex = tab, containerColor = Ui.Sheet, edgePadding = 8.dp) {
                     prompt.skills.forEachIndexed { i, sk ->
                         val name = sk.name
                         val learnt = prompt.abilities.count { it.skill == i && it.state == N.ABILITY_ON || it.skill == i && it.state == N.ABILITY_OFF }
@@ -90,7 +90,7 @@ fun AbilitiesSheet(prompt: GameState.Prompt.Abilities, onAnswer: (Int) -> Unit) 
                 prompt.skills.getOrNull(tab)?.let { sk ->
                     Text("${sk.name}: base ${sk.base}" + (if (sk.total != sk.base) " (${sk.total} with bonuses)" else "") +
                              ". Abilities depend on base points.",
-                         color = Color(0xFF9A9AA0), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+                         color = Ui.Sub, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
                 }
                 LazyColumn(Modifier.fillMaxWidth(), state = rememberListPlace("abilities/$tab")) {
                     items(shown, key = { it.index }) { a ->
@@ -108,13 +108,13 @@ private fun AbilityRow(a: GameState.Ability, skill: GameState.AbilitySkill, expL
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(a.name, color = colour(a), fontSize = 16.sp, fontWeight = if (owned(a)) FontWeight.SemiBold else FontWeight.Normal,
                  modifier = Modifier.weight(1f))
-            Text("${a.points}", color = Color(0xFF77777D), fontSize = 13.sp)
+            Text("${a.points}", color = Ui.Sub, fontSize = 13.sp)
         }
-        Text(summary(a, skill, expLeft), color = Color(0xFF9A9AA0), fontSize = 12.sp)
+        Text(summary(a, skill, expLeft), color = Ui.Sub, fontSize = 12.sp)
         if (open) {
-            Text(a.description, color = Color(0xFFD0D0D4), fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp))
+            Text(a.description, color = Ui.Body, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp))
             if (a.prereqs.isNotEmpty() && !owned(a))
-                Text("Requires ${a.prereqs}", color = Color(0xFF9A9AA0), fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+                Text("Requires ${a.prereqs}", color = Ui.Sub, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
             Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 when (a.state) {
                     N.ABILITY_AVAILABLE -> Button(onClick = { onAnswer(a.index) }, enabled = a.cost <= expLeft) { Text("Learn (${a.cost} exp)") }
@@ -124,5 +124,5 @@ private fun AbilityRow(a: GameState.Ability, skill: GameState.AbilitySkill, expL
             }
         }
     }
-    Divider(color = Color(0xFF2C2C2E))
+    Divider(color = Ui.Divider)
 }

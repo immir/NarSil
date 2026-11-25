@@ -10,7 +10,7 @@ struct NarSilApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView().environmentObject(game).statusBarHidden(true)
+            RootView().environmentObject(game).statusBarHidden(true).tint(Palette.gold)
         }
         .onChange(of: scenePhase) { phase in
             switch phase {

@@ -41,10 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.io.File
 
-private val BG = Color(0xFF121214)
-private val TEXT = Color(0xFFD8D8DC)
-private val SUB = Color(0xFF9A9AA0)
-private val GOLD = Color(0xFFF3D27A)
 private const val MANUAL = "https://narsil.readthedocs.io/en/latest/"
 
 /** The help files shipped with the game data, read from the installed copy. */
@@ -57,14 +53,14 @@ private fun helpFile(context: Context, name: String): String =
 fun HelpScreen(context: Context, onDismiss: () -> Unit) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf("Touch controls", "Symbols", "Keyboard")
-    Surface(color = BG, modifier = Modifier.fillMaxSize()) {
+    Surface(color = Ui.Screen, modifier = Modifier.fillMaxSize()) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 8.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = onDismiss) { Text("Close") }
-                Text("Help", color = GOLD, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Text("Help", color = Ui.Gold, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                 TextButton(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(MANUAL))) }) { Text("Online manual ↗") }
             }
-            ScrollableTabRow(selectedTabIndex = tab, containerColor = BG, edgePadding = 8.dp) {
+            ScrollableTabRow(selectedTabIndex = tab, containerColor = Ui.Screen, edgePadding = 8.dp) {
                 tabs.forEachIndexed { i, t -> Tab(selected = i == tab, onClick = { tab = i }, text = { Text(t) }) }
             }
             when (tab) {
@@ -80,11 +76,11 @@ fun HelpScreen(context: Context, onDismiss: () -> Unit) {
 private fun Guide() {
     LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         items(TOUCH_GUIDE) { (title, points) ->
-            Text(title, color = GOLD, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 16.dp, bottom = 6.dp))
+            Text(title, color = Ui.Gold, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 16.dp, bottom = 6.dp))
             points.forEach { p ->
                 Row(Modifier.padding(bottom = 6.dp)) {
-                    Text("•  ", color = SUB, fontSize = 15.sp)
-                    Text(p, color = TEXT, fontSize = 15.sp, lineHeight = 20.sp)
+                    Text("•  ", color = Ui.Sub, fontSize = 15.sp)
+                    Text(p, color = Ui.Text, fontSize = 15.sp, lineHeight = 20.sp)
                 }
             }
         }
@@ -149,14 +145,14 @@ private fun HelpFile(text: String) {
     LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         items(blocks) { b ->
             when (b) {
-                is HelpBlock.Heading -> Text(b.text, color = GOLD, fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
+                is HelpBlock.Heading -> Text(b.text, color = Ui.Gold, fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
                                              modifier = Modifier.padding(top = 16.dp, bottom = 6.dp))
-                is HelpBlock.Prose -> Text(b.text, color = TEXT, fontSize = 14.sp, lineHeight = 19.sp, modifier = Modifier.padding(vertical = 4.dp))
-                is HelpBlock.Pre -> Text(b.text, color = TEXT, fontFamily = FontFamily.Monospace, fontSize = 12.sp, lineHeight = 16.sp,
+                is HelpBlock.Prose -> Text(b.text, color = Ui.Text, fontSize = 14.sp, lineHeight = 19.sp, modifier = Modifier.padding(vertical = 4.dp))
+                is HelpBlock.Pre -> Text(b.text, color = Ui.Text, fontFamily = FontFamily.Monospace, fontSize = 12.sp, lineHeight = 16.sp,
                                          softWrap = false, modifier = Modifier.horizontalScroll(rememberScrollState()).padding(vertical = 4.dp))
                 is HelpBlock.Entry -> Row(Modifier.padding(vertical = 3.dp)) {
-                    Text(b.key, color = GOLD, fontFamily = FontFamily.Monospace, fontSize = 15.sp, modifier = Modifier.width(44.dp))
-                    Text(b.text, color = TEXT, fontSize = 14.sp, lineHeight = 18.sp)
+                    Text(b.key, color = Ui.Gold, fontFamily = FontFamily.Monospace, fontSize = 15.sp, modifier = Modifier.width(44.dp))
+                    Text(b.text, color = Ui.Text, fontSize = 14.sp, lineHeight = 18.sp)
                 }
             }
         }
@@ -170,13 +166,13 @@ fun TipsCard(onHelp: () -> Unit, onDismiss: () -> Unit) {
     Box(Modifier.fillMaxSize().background(Color(0x99000000))
             .clickable(remember { MutableInteractionSource() }, indication = null) {},
         contentAlignment = Alignment.Center) {
-        Surface(shape = RoundedCornerShape(16.dp), color = Color(0xFF1C1C1E), modifier = Modifier.padding(24.dp)) {
+        Surface(shape = RoundedCornerShape(16.dp), color = Ui.Sheet, border = Ui.edge, modifier = Modifier.padding(24.dp)) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(FIRST_RUN_TITLE, color = GOLD, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                Text(FIRST_RUN_TITLE, color = Ui.Gold, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                 FIRST_RUN_TIPS.forEach { t ->
                     Row {
-                        Text("•  ", color = SUB, fontSize = 15.sp)
-                        Text(t, color = TEXT, fontSize = 15.sp, lineHeight = 20.sp)
+                        Text("•  ", color = Ui.Sub, fontSize = 15.sp)
+                        Text(t, color = Ui.Text, fontSize = 15.sp, lineHeight = 20.sp)
                     }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {

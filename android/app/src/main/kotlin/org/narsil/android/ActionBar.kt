@@ -1,5 +1,6 @@
 package org.narsil.android
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -116,9 +117,9 @@ fun coreActions(s: GameState.Status, padShown: Boolean, restOptions: () -> Unit)
 
 /** Less frequent but necessary: behind the ☰ button. */
 fun moreActions(s: GameState.Status, router: KeyRouter, showMessages: () -> Unit, showHelp: () -> Unit, toggleMap: () -> Unit,
-                toggleTiles: () -> Unit, tilesOn: Boolean, restOptions: (() -> Unit)?, toggleKeyboard: () -> Unit): List<BarAction> = listOfNotNull(
+                toggleTiles: () -> Unit, tilesOn: Boolean, restOptions: (() -> Unit)?, toggleKeyboard: () -> Unit, tabsOnTop: Boolean = false): List<BarAction> = listOfNotNull(
     /* Pack, gear, character, skills, abilities, knowledge, smithing and game options live in the panel (@). */
-    BarAction("Panel", run = act(N.ACT_PANEL)),
+    BarAction("Panel", run = act(N.ACT_PANEL)).takeIf { !tabsOnTop },
     restOptions?.let { BarAction("Rest…", run = it) },
     BarAction("Pack", pin = N.ACT_INVENTORY, run = act(N.ACT_INVENTORY)),
     BarAction("Map", run = toggleMap),
@@ -153,7 +154,7 @@ fun ActionBar(actions: List<BarAction>, onMore: () -> Unit) {
         seen.clear(); seen.addAll(context)
     }
     Row(
-        Modifier.fillMaxWidth().background(Color(0xFF101012)).horizontalScroll(scroll)
+        Modifier.fillMaxWidth().background(Ui.Chrome).horizontalScroll(scroll)
             .padding(horizontal = 6.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -181,8 +182,8 @@ private fun BarButton(a: BarAction) {
             }
         }
         a.emphasised -> Button(onClick = run, contentPadding = padding) { Text(a.label, fontWeight = FontWeight.SemiBold) }
-        a.active -> Button(onClick = run, contentPadding = padding,
-                           colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A5F8A))) { Text(a.label) }
+        a.active -> Button(onClick = run, contentPadding = padding, border = BorderStroke(1.5.dp, Ui.Gold),
+                           colors = ButtonDefaults.buttonColors(containerColor = Ui.Card, contentColor = Ui.Gold)) { Text(a.label) }
         else -> FilledTonalButton(onClick = run, contentPadding = padding) { Text(a.label) }
     }
 }
@@ -197,8 +198,8 @@ fun MoreSheet(actions: List<BarAction>, pinned: List<Int> = emptyList(), onPin: 
         contentAlignment = Alignment.BottomCenter,
     ) {
         Surface(
-            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            color = Color(0xFF1C1C1E),
+            shape = Ui.SheetTop, border = Ui.edge,
+            color = Ui.Sheet,
             modifier = Modifier.fillMaxWidth().clickable(remember { MutableInteractionSource() }, indication = null) {},
         ) {
             /* Scrolls: in landscape the rows do not all fit above the bottom edge. */
@@ -221,7 +222,7 @@ fun MoreSheet(actions: List<BarAction>, pinned: List<Int> = emptyList(), onPin: 
                         repeat(2 - row.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
-                if (actions.any { it.pin != null }) Text("Long-press a command to pin it to the bar (●).", color = Color(0xFF9A9AA0), fontSize = 12.sp)
+                if (actions.any { it.pin != null }) Text("Long-press a command to pin it to the bar (●).", color = Ui.Sub, fontSize = 12.sp)
             }
         }
     }

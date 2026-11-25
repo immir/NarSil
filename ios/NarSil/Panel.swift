@@ -116,8 +116,11 @@ struct TabsBar: View {
     let onTab: (Int) -> Void
 
     var body: some View {
-        PanelTabs(tab: selected, style: TabStyle(rawValue: tabStyle) ?? .iconsAndNames, onTab: onTab)
-            .frame(height: 56).frame(maxWidth: .infinity).background(Palette.sheet)
+        VStack(spacing: 0) {
+            PanelTabs(tab: selected, style: TabStyle(rawValue: tabStyle) ?? .iconsAndNames, onTab: onTab).frame(height: 56)
+            Palette.divider.frame(height: 1)
+        }
+        .frame(maxWidth: .infinity).background(Palette.sheet)
     }
 }
 
@@ -155,6 +158,7 @@ private struct PanelHost<Content: View>: View {
                     }
                     .frame(width: width).frame(maxHeight: .infinity).background(Palette.sheet)
                     .clipShape(UnevenRoundedRectangle(topLeadingRadius: tabsOnTop ? 0 : 16, bottomLeadingRadius: 16))
+                    .overlay(UnevenRoundedRectangle(topLeadingRadius: tabsOnTop ? 0 : 16, bottomLeadingRadius: 16).strokeBorder(Palette.hairline, lineWidth: 1))
                 }
             }
         }
@@ -203,7 +207,7 @@ struct SkillsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Skills").scaledFont(18, weight: .semibold).foregroundColor(.white)
-                Text("Experience to spend: \(prompt.expLeft)").scaledFont(14).foregroundColor(Color(rgb: 0xFFD54F))
+                Text("Experience to spend: \(prompt.expLeft)").scaledFont(14).foregroundColor(Palette.gold)
                 ForEach(prompt.skills, id: \.index) { sk in
                     HStack(spacing: 8) {
                         VStack(alignment: .leading) {
@@ -213,7 +217,7 @@ struct SkillsView: View {
                         Spacer()
                         Text("\(sk.total)").scaledFont(20, weight: .semibold).foregroundColor(.white).padding(.trailing, 4)
                         Button("−") { answer(NB.SKILL_SELL + sk.index) }.buttonStyle(.bordered).disabled(sk.spent <= 0)
-                        Button("+ \(sk.nextCost)") { answer(NB.SKILL_BUY + sk.index) }.buttonStyle(.borderedProminent)
+                        Button("+ \(sk.nextCost)") { answer(NB.SKILL_BUY + sk.index) }.buttonStyle(GoldButtonStyle())
                             .disabled(sk.nextCost > prompt.expLeft)
                     }.frame(minHeight: 48)
                 }
@@ -221,7 +225,7 @@ struct SkillsView: View {
                     Spacer()
                     Button("Reset") { answer(NB.SKILL_RESET) }
                     Button("Cancel") { answer(-1) }.buttonStyle(.bordered)
-                    Button("Accept") { answer(NB.SKILL_ACCEPT) }.buttonStyle(.borderedProminent)
+                    Button("Accept") { answer(NB.SKILL_ACCEPT) }.buttonStyle(GoldButtonStyle())
                 }.padding(.top, 8)
             }.padding(16)
         }
@@ -235,8 +239,8 @@ private func abilityColour(_ a: Ability) -> Color {
     case NB.ABILITY_ON: return .white
     case NB.ABILITY_OFF, NB.ABILITY_ITEM_OFF: return Color(rgb: 0xEF9A9A)
     case NB.ABILITY_ITEM_ON: return Color(rgb: 0xA5D6A7)
-    case NB.ABILITY_AVAILABLE: return Color(rgb: 0x90CAF9)
-    default: return Color(rgb: 0x77777D)
+    case NB.ABILITY_AVAILABLE: return Palette.summary
+    default: return Palette.sub
     }
 }
 
@@ -265,7 +269,7 @@ struct AbilitiesView: View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading) {
                 Text("Abilities").scaledFont(18, weight: .semibold).foregroundColor(.white)
-                Text("Experience to spend: \(prompt.expLeft)").scaledFont(13).foregroundColor(Color(rgb: 0xFFD54F))
+                Text("Experience to spend: \(prompt.expLeft)").scaledFont(13).foregroundColor(Palette.gold)
             }.padding(.horizontal, 16).padding(.top, 12)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 0) {
@@ -301,7 +305,7 @@ struct AbilitiesView: View {
                 HStack {
                     Text(a.name).scaledFont(16, weight: abilityOwned(a) ? .semibold : .regular).foregroundColor(abilityColour(a))
                     Spacer()
-                    Text("\(a.points)").scaledFont(13).foregroundColor(Color(rgb: 0x77777D))
+                    Text("\(a.points)").scaledFont(13).foregroundColor(Palette.sub)
                 }
                 Text(abilitySummary(a, skill, prompt.expLeft)).scaledFont(12).foregroundColor(Palette.sub)
                 if open {
@@ -310,7 +314,7 @@ struct AbilitiesView: View {
                     HStack {
                         switch a.state {
                         case NB.ABILITY_AVAILABLE:
-                            Button("Learn (\(a.cost) exp)") { answer(a.index) }.buttonStyle(.borderedProminent).disabled(a.cost > prompt.expLeft)
+                            Button("Learn (\(a.cost) exp)") { answer(a.index) }.buttonStyle(GoldButtonStyle()).disabled(a.cost > prompt.expLeft)
                         case NB.ABILITY_ON, NB.ABILITY_ITEM_ON: Button("Switch off") { answer(a.index) }.buttonStyle(.bordered)
                         case NB.ABILITY_OFF, NB.ABILITY_ITEM_OFF: Button("Switch on") { answer(a.index) }.buttonStyle(.bordered)
                         default: EmptyView()

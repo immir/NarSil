@@ -65,14 +65,14 @@ struct KnowledgeView: View {
             HStack(spacing: 12) {
                 glyphText(glyph, attr, size: 24)
                 VStack(alignment: .leading) {
-                    Text(name).scaledFont(16, weight: .semibold).foregroundColor(Color(rgb: 0xE6E6EA))
+                    Text(name).scaledFont(16, weight: .semibold).foregroundColor(Palette.text)
                     if !note.isEmpty { Text(note).scaledFont(13).foregroundColor(Palette.sub) }
                 }
                 Spacer()
                 Text("›").scaledFont(20).foregroundColor(Palette.sub)
             }
             .frame(minHeight: 64).padding(.horizontal, 14).padding(.vertical, 10)
-            .background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 12)).contentShape(Rectangle())
+            .cardSurface(Palette.card).contentShape(Rectangle())
         }.buttonStyle(.plain).padding(.horizontal, 12).padding(.vertical, 4)
     }
 
@@ -82,14 +82,14 @@ struct KnowledgeView: View {
             Button { if expandable { answer(open ? NB.KNOW_COLLAPSE : index) } } label: {
                 HStack(spacing: 10) {
                     glyphText(glyph, attr, size: 20)
-                    Text(name).scaledFont(15, weight: open ? .semibold : .regular).foregroundColor(Color(rgb: 0xE6E6EA))
+                    Text(name).scaledFont(15, weight: open ? .semibold : .regular).foregroundColor(Palette.text)
                         .lineLimit(open || !expandable ? 4 : 2).multilineTextAlignment(.leading)
                     Spacer()
                     if !note.isEmpty { Text(note).scaledFont(12).foregroundColor(Palette.sub) }
                 }.frame(minHeight: 46).padding(.horizontal, 16).padding(.vertical, 6).contentShape(Rectangle())
             }.buttonStyle(.plain)
             if open && !prompt.text.isEmpty {
-                Text(colouredText(prompt.text, colour: colour)).scaledFont(14).foregroundColor(Color(rgb: 0xC8C8CC)).padding(.leading, 50).padding(.trailing, 16).padding(.bottom, 12)
+                Text(colouredText(prompt.text, colour: colour)).scaledFont(14).foregroundColor(Palette.body).padding(.leading, 50).padding(.trailing, 16).padding(.bottom, 12)
             }
             if open && !prompt.actions.isEmpty {
                 HStack(spacing: 8) {
@@ -102,4 +102,4 @@ struct KnowledgeView: View {
     }
 }
 
-private let openRowColour = Color(rgb: 0x26262C)
+private let openRowColour = Palette.raised

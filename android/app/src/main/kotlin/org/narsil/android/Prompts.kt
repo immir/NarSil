@@ -135,8 +135,8 @@ fun ChoiceSheet(prompt: GameState.Prompt.Choice, onAnswer: (Int) -> Unit) {
         contentAlignment = Alignment.BottomCenter,
     ) {
         Surface(
-            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            color = Color(0xFF1C1C1E),
+            shape = Ui.SheetTop, border = Ui.edge,
+            color = Ui.Sheet,
             modifier = Modifier.fillMaxWidth().heightIn(max = 600.dp)
                 .clickable(remember { MutableInteractionSource() }, indication = null) {},
         ) {
@@ -148,7 +148,7 @@ fun ChoiceSheet(prompt: GameState.Prompt.Choice, onAnswer: (Int) -> Unit) {
                 prompt.options.forEach { o ->
                     Column(Modifier.fillMaxWidth().clickable { onAnswer(o.index) }.padding(horizontal = 16.dp, vertical = 10.dp)) {
                         Text(o.label, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                        if (o.description.isNotEmpty()) Text(o.description, color = Color(0xFFB0B0B5), fontSize = 13.sp)
+                        if (o.description.isNotEmpty()) Text(o.description, color = Ui.Sub, fontSize = 13.sp)
                     }
                 }
             }
@@ -165,12 +165,12 @@ fun SkillsSheet(prompt: GameState.Prompt.Skills, onAnswer: (Int) -> Unit) {
     PanelAwareSheet(null) {
             Column(Modifier.padding(16.dp).verticalScroll(rememberScrollPlace("skills")), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Skills", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                Text("Experience to spend: ${prompt.expLeft}", color = Color(0xFFFFD54F), fontSize = 14.sp)
+                Text("Experience to spend: ${prompt.expLeft}", color = Ui.Gold, fontSize = 14.sp)
                 prompt.skills.forEach { sk ->
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Column(Modifier.weight(1f)) {
                             Text(sk.name, color = Color.White, fontSize = 16.sp)
-                            Text("base ${sk.base}" + if (sk.spent > 0) "  (+${sk.spent} exp)" else "", color = Color(0xFF9A9AA0), fontSize = 12.sp)
+                            Text("base ${sk.base}" + if (sk.spent > 0) "  (+${sk.spent} exp)" else "", color = Ui.Sub, fontSize = 12.sp)
                         }
                         Text("${sk.total}", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
                              modifier = Modifier.padding(end = 4.dp))
@@ -204,7 +204,7 @@ fun QuantityDialog(p: GameState.Prompt.Quantity, onAnswer: (Int) -> Unit) {
                     OutlinedButton(onClick = { n = (n + 1).coerceAtMost(p.max) }, enabled = n < p.max) { Text("+", fontSize = 18.sp) }
                 }
                 if (p.max > 5) Slider(n.toFloat(), { n = it.roundToInt().coerceIn(1, p.max) }, valueRange = 1f..p.max.toFloat())
-                Text("of ${p.max}", color = Color(0xFF9A9AA0), fontSize = 13.sp)
+                Text("of ${p.max}", color = Ui.Sub, fontSize = 13.sp)
             }
         },
         confirmButton = { Button(onClick = { onAnswer(n) }) { Text("OK") } },

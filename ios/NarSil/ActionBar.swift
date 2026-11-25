@@ -86,8 +86,8 @@ func coreActions(_ s: Status, padShown: Bool, restOptions: @escaping () -> Void)
 
 /// Less frequent but necessary: behind the ☰ button.  Pack, character, skills and the rest live in the panel (@).
 func moreActions(_ s: Status, messages: @escaping () -> Void, toggleMap: @escaping () -> Void, toggleTiles: @escaping () -> Void, tilesOn: Bool, help: @escaping () -> Void,
-                 restOptions: (() -> Void)? = nil) -> [BarAction] {
-    var out = [BarAction(label: "Panel", run: act(NB.ACT_PANEL))]
+                 restOptions: (() -> Void)? = nil, tabsOnTop: Bool = false) -> [BarAction] {
+    var out = tabsOnTop ? [] : [BarAction(label: "Panel", run: act(NB.ACT_PANEL))]
     if let restOptions { out.append(BarAction(label: "Rest…", run: restOptions)) }
     out.append(BarAction(label: "Pack", pin: NB.ACT_INVENTORY, run: act(NB.ACT_INVENTORY)))
     out.append(BarAction(label: "Map", run: toggleMap))
@@ -137,7 +137,7 @@ struct ActionBar: View {
         .simultaneousGesture(DragGesture(minimumDistance: 12).onEnded { v in
             if abs(v.translation.width) > abs(v.translation.height) { Trace.log("bar.scroll", ("dx", Int(v.translation.width))) }
         })
-        .background(Color(red: 0x10 / 255, green: 0x10 / 255, blue: 0x12 / 255))
+        .background(Palette.chrome)
     }
 }
 
@@ -145,13 +145,14 @@ private struct BarButton: View {
     let action: BarAction
 
     var body: some View {
-        let fill: Color = action.emphasised ? .accentColor : action.active ? Color(red: 0x3A / 255, green: 0x5F / 255, blue: 0x8A / 255) : Color.white.opacity(0.14)
+        let fill: Color = action.emphasised ? Palette.gold : action.active ? Palette.card : Color.white.opacity(0.14)
         Text(action.label)
             .scaledFont(15, weight: action.emphasised ? .semibold : .regular)
-            .foregroundColor(.white)
+            .foregroundColor(action.emphasised ? Palette.onGold : action.active ? Palette.gold : .white)
             .lineLimit(1)
             .padding(.horizontal, 14).frame(minHeight: 40)
             .background(fill, in: Capsule())
+            .overlay { if action.active { Capsule().strokeBorder(Palette.gold, lineWidth: 1.5) } }
             .modifier(HoldMark(shape: Capsule(), enabled: action.longPress != nil))
             .contentShape(Capsule())
             .onTapGesture { Trace.log("bar.tap", ("act", action.label)); action.run() }

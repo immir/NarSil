@@ -61,13 +61,13 @@ private struct Birth: View {
                     }
                     if p.stage == "stats" {
                         Button("Reset") { answer(NB.SKILL_RESET) }
-                        Button("Accept") { answer(NB.SKILL_ACCEPT) }.buttonStyle(.borderedProminent)
+                        Button("Accept") { answer(NB.SKILL_ACCEPT) }.buttonStyle(GoldButtonStyle())
                     }
                     if p.stage == "death", FileManager.default.fileExists(atPath: Saves.characterDump.path) {
                         Button("Share dump") { ShareSheet.present([Saves.characterDump]) }
                     }
-                    if p.stage == "death", let onScum { Button("Restore scum save", action: onScum).buttonStyle(.borderedProminent) }
-                    if p.stage == "text" { Button("Done") { answer(-1) }.buttonStyle(.borderedProminent) }
+                    if p.stage == "death", let onScum { Button("Restore scum save", action: onScum).buttonStyle(GoldButtonStyle()) }
+                    if p.stage == "text" { Button("Done") { answer(-1) }.buttonStyle(GoldButtonStyle()) }
                 }
                 .padding(12)
             }
@@ -89,7 +89,7 @@ private struct OptionCard: View {
                 if !o.description.isEmpty { Text(o.description).scaledFont(13).foregroundColor(Palette.sub) }
             }
             .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading).padding(14)
-            .background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 12))
+            .cardSurface(Palette.card)
         }
         .buttonStyle(.plain).disabled(!enabled)
         .padding(.horizontal, 12).padding(.vertical, 5)
@@ -109,7 +109,7 @@ private struct StatRow: View {
             Spacer()
             Text("\(s.value)").scaledFont(20, weight: .semibold).foregroundColor(.white).padding(.trailing, 4)
             Button("−") { answer(NB.SKILL_SELL + s.index) }.buttonStyle(.bordered).disabled(!s.canSell)
-            Button("+ \(s.nextCost)") { answer(NB.SKILL_BUY + s.index) }.buttonStyle(.borderedProminent).disabled(!s.canBuy)
+            Button("+ \(s.nextCost)") { answer(NB.SKILL_BUY + s.index) }.buttonStyle(GoldButtonStyle()).disabled(!s.canBuy)
         }
         .frame(minHeight: 56).padding(.horizontal, 16)
     }
@@ -137,7 +137,7 @@ private struct Figures: View {
             flow(p.combat)
         }
         .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-        .background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 12))
+        .cardSurface(Palette.card)
         .padding(.horizontal, 12).padding(.vertical, 8)
         .onChange(of: all) { new in previous = Dictionary(new.map { ($0.name, $0.value) }, uniquingKeysWith: { $1 }) }
         .onAppear { previous = Dictionary(all.map { ($0.name, $0.value) }, uniquingKeysWith: { $1 }) }
@@ -182,7 +182,7 @@ private struct Welcome: View {
                     Color.clear.frame(height: 28)
                     if let first = p.options.first {
                         Button { answer(first.index) } label: { Text(first.label).scaledFont(17).frame(maxWidth: .infinity, minHeight: 44) }
-                            .buttonStyle(.borderedProminent).padding(.horizontal, 48)
+                            .buttonStyle(GoldButtonStyle()).padding(.horizontal, 48)
                     }
                     ForEach(Array(p.options.dropFirst()), id: \.index) { o in
                         Button(o.label) { answer(o.index) }.padding(.top, 8)
@@ -218,7 +218,7 @@ private struct Poem: View {
                     Button { answer(p.options.first?.index ?? 0) } label: {
                         Text(p.options.first?.label ?? "Continue").scaledFont(17).frame(maxWidth: .infinity, minHeight: 44)
                     }
-                    .buttonStyle(.borderedProminent).padding(.horizontal, 64).padding(.top, 36)
+                    .buttonStyle(GoldButtonStyle()).padding(.horizontal, 64).padding(.top, 36)
                 }
                 .padding(.horizontal, 24).padding(.bottom, 32).frame(maxWidth: .infinity)
             }
@@ -247,9 +247,9 @@ private struct NoteCard: View {
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(maxHeight: 360)
-                Button(p.options.first?.label ?? "Continue") { answer(0) }.buttonStyle(.borderedProminent).frame(maxWidth: .infinity, alignment: .trailing)
+                Button(p.options.first?.label ?? "Continue") { answer(0) }.buttonStyle(GoldButtonStyle()).frame(maxWidth: .infinity, alignment: .trailing)
             }
-            .padding(16).background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 16)).padding(.horizontal, 8)
+            .padding(16).cardSurface(Palette.card, radius: 16).padding(.horizontal, 8)
         }
         .background(Color.black.opacity(0.33).ignoresSafeArea())
         .preferredColorScheme(.dark)

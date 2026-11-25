@@ -43,8 +43,6 @@ import org.narsil.android.NarSilNative as N
 
 private val SECTION_TITLES = mapOf(0 to "Inventory", 1 to "Equipment", 2 to "On the floor", 3 to "Throwing")
 private val SECTION_ORDER = listOf(0, 1, 2, 3)
-private val SUB = Color(0xFF9A9AA0)
-private val OPEN = Color(0xFF26262C)
 
 /**
  * Where the pack list was scrolled, kept across the pack closing and reopening
@@ -79,14 +77,14 @@ fun PackSheet(p: GameState.Prompt.Pack, colour: (Int) -> Int, onAnswer: (Int) ->
                     Column(Modifier.weight(1f)) {
                         Text("Pack", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                         Text("Carrying ${lb(p.weight)} of ${lb(p.limit)}", fontSize = 12.sp,
-                             color = if (p.weight > p.limit) Color(0xFFFFB74D) else SUB)
+                             color = if (p.weight > p.limit) Ui.Warn else Ui.Sub)
                     }
                     if (!LocalInPanel.current) TextButton(onClick = { onAnswer(-1) }) { Text("Close") }
                 }
                 LazyColumn(Modifier.fillMaxWidth(), state = list) {
                     sections.forEach { (section, items) ->
                         item(key = "h$section") {
-                            Text(SECTION_TITLES[section] ?: "", color = SUB, fontSize = 13.sp,
+                            Text(SECTION_TITLES[section] ?: "", color = Ui.Sub, fontSize = 13.sp,
                                  modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp))
                         }
                         items(items, key = { "${it.section}/${it.label}/${it.name}" }) { item ->
@@ -104,7 +102,7 @@ fun PackSheet(p: GameState.Prompt.Pack, colour: (Int) -> Int, onAnswer: (Int) ->
 private fun PackRow(item: GameState.Item, p: GameState.Prompt.Pack, colour: (Int) -> Int, onAnswer: (Int) -> Unit,
                     pinned: Boolean, onPin: (Int) -> Unit) {
     val open = item.index == p.expanded
-    Column(Modifier.fillMaxWidth().background(if (open) OPEN else Color.Transparent).animateContentSize()) {
+    Column(Modifier.fillMaxWidth().background(if (open) Ui.Raised else Color.Transparent).animateContentSize()) {
         Row(
             Modifier.fillMaxWidth().clickable { onAnswer(if (open) N.PACK_COLLAPSE else N.PACK_EXPAND + item.index) }
                 .heightIn(min = 52.dp).padding(horizontal = 16.dp),
@@ -112,15 +110,15 @@ private fun PackRow(item: GameState.Item, p: GameState.Prompt.Pack, colour: (Int
         ) {
             Text(String(Character.toChars(item.glyph)), color = Color(colour(item.attr)), fontFamily = FontFamily.Monospace,
                  fontSize = 22.sp, modifier = Modifier.width(24.dp))
-            Text(if (item.label == '-') "" else "${item.label})", color = SUB, fontFamily = FontFamily.Monospace,
+            Text(if (item.label == '-') "" else "${item.label})", color = Ui.Sub, fontFamily = FontFamily.Monospace,
                  fontSize = 14.sp, modifier = Modifier.width(24.dp))
             Text(item.name, color = Special.colour(item.special) ?: Color.White, fontSize = 16.sp, fontWeight = if (open) FontWeight.SemiBold else FontWeight.Normal,
                  maxLines = if (open) 3 else 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-            if (item.weightTenthsLb > 0) Text(lb(item.weightTenthsLb), color = SUB, fontSize = 13.sp)
+            if (item.weightTenthsLb > 0) Text(lb(item.weightTenthsLb), color = Ui.Sub, fontSize = 13.sp)
         }
         if (open) {
             Column(Modifier.padding(start = 68.dp, end = 16.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (p.description.isNotEmpty()) Text(colouredText(p.description, colour), color = Color(0xFFC8C8CC), fontSize = 14.sp, lineHeight = 19.sp)
+                if (p.description.isNotEmpty()) Text(colouredText(p.description, colour), color = Ui.Body, fontSize = 14.sp, lineHeight = 19.sp)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     p.actions.forEach { a ->
                         FilledTonalButton(onClick = { onAnswer(N.PACK_ACT + item.index * N.PACK_ACT_STRIDE + a.index) }, enabled = a.valid) {
@@ -132,6 +130,6 @@ private fun PackRow(item: GameState.Item, p: GameState.Prompt.Pack, colour: (Int
                 }
             }
         }
-        Divider(color = Color(0xFF2C2C2E), modifier = Modifier.padding(start = 68.dp))
+        Divider(color = Ui.Divider, modifier = Modifier.padding(start = 68.dp))
     }
 }

@@ -197,7 +197,7 @@ fun ScumSheet(context: Context, onDismiss: () -> Unit) {
             .clickable(remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
         contentAlignment = Alignment.BottomCenter,
     ) {
-        Surface(shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp), color = Color(0xFF1C1C1E),
+        Surface(shape = Ui.SheetTop, border = Ui.edge, color = Ui.Sheet,
                 modifier = Modifier.fillMaxWidth().heightIn(max = 560.dp)
                     .clickable(remember { MutableInteractionSource() }, indication = null) {}) {
             Column(Modifier.padding(vertical = 12.dp)) {
@@ -208,11 +208,11 @@ fun ScumSheet(context: Context, onDismiss: () -> Unit) {
                 }
                 LazyColumn {
                     item {
-                        Text("Your saves in white, the game's autosaves in blue.", color = Color(0xFF9A9AA0), fontSize = 13.sp,
+                        Text("Your saves in white, the game's autosaves in blue.", color = Ui.Sub, fontSize = 13.sp,
                              modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                     }
                     if (all.isEmpty()) item {
-                        Text("None yet. Use the Scum button while playing; autosaves appear every few minutes.", color = Color(0xFF9A9AA0), fontSize = 14.sp, modifier = Modifier.padding(16.dp))
+                        Text("None yet. Use the Scum button while playing; autosaves appear every few minutes.", color = Ui.Sub, fontSize = 14.sp, modifier = Modifier.padding(16.dp))
                     }
                     items(all, key = { it.file.name }) { c ->
                         Row(Modifier.fillMaxWidth().clickable { chosen = c }.padding(horizontal = 16.dp, vertical = 12.dp),

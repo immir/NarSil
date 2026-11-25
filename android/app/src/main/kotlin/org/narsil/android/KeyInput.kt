@@ -80,7 +80,7 @@ internal fun KeyBar(waiting: GameState.Waiting, router: KeyRouter, onKeyboard: (
         GameState.Waiting.MENU -> listOf("Back" to { router.special(Keys.ESCAPE) }, "OK" to { router.special(Keys.ENTER) })
     }
     Row(
-        Modifier.fillMaxWidth().background(Color(0xFF101012)).padding(horizontal = 6.dp, vertical = 6.dp),
+        Modifier.fillMaxWidth().background(Ui.Chrome).padding(horizontal = 6.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         keys.forEachIndexed { i, (label, action) ->

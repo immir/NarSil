@@ -19,13 +19,13 @@ struct InspectSheet: View {
                             glyph(size: 28)
                             VStack(alignment: .leading) {
                                 Text(m.name).scaledFont(18, weight: .semibold).foregroundColor(.white)
-                                if !m.state.isEmpty { Text(m.state).scaledFont(14).foregroundColor(Color(rgb: 0xFFB74D)) }
+                                if !m.state.isEmpty { Text(m.state).scaledFont(14).foregroundColor(Palette.warn) }
                             }
                             Spacer()
                             if isTarget { Button("◎ Clear target") { Native.requestTarget(x: -1, y: -1); dismiss() }.tint(Color(rgb: 0xFF8A80)) }
                             else if targetable { Button("Target") { Native.requestTarget(x: x, y: y) }.buttonStyle(.bordered) }
                         }
-                        if !m.recall.isEmpty { Text(colouredText(m.recall, colour: game.colour)).scaledFont(14).foregroundColor(Color(rgb: 0xC8C8CC)) }
+                        if !m.recall.isEmpty { Text(colouredText(m.recall, colour: game.colour)).scaledFont(14).foregroundColor(Palette.body) }
                     }
                     ForEach(Array(objects.enumerated()), id: \.offset) { _, o in Text(o).scaledFont(16).foregroundColor(.white) }
                     if let t = terrain { Text(t).scaledFont(14).foregroundColor(Palette.sub) }
@@ -160,7 +160,7 @@ struct CharacterView: View {
                                 Text(r.value).scaledFont(15, weight: .semibold).foregroundColor(Color(rgb: game.colour(r.attr % 256 % 32)))
                             }.padding(.horizontal, 16).padding(.vertical, 3)
                         }
-                        if let t = sec.text { Text(t).scaledFont(14).foregroundColor(Color(rgb: 0xC8C8CC)).padding(.horizontal, 16).padding(.vertical, 4) }
+                        if let t = sec.text { Text(t).scaledFont(14).foregroundColor(Palette.body).padding(.horizontal, 16).padding(.vertical, 4) }
                     }
                 }
             }

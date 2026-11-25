@@ -151,8 +151,8 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
         contentAlignment = Alignment.BottomCenter,
     ) {
         Surface(
-            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            color = Color(0xFF1C1C1E),
+            shape = Ui.SheetTop, border = Ui.edge,
+            color = Ui.Sheet,
             modifier = Modifier.fillMaxWidth().heightIn(max = 640.dp)
                 .clickable(remember { MutableInteractionSource() }, indication = null) {},
         ) {
@@ -290,4 +290,4 @@ private fun Scale(label: String, value: Float, set: (Float) -> Unit) {
 }
 
 @Composable private fun Label(text: String) = Text(text, color = Color.White, fontSize = 15.sp)
-@Composable private fun Hint(text: String) = Text(text, color = Color(0xFF9A9AA0), fontSize = 13.sp)
+@Composable private fun Hint(text: String) = Text(text, color = Ui.Sub, fontSize = 13.sp)

@@ -2,7 +2,7 @@ import SwiftUI
 
 private let sectionTitles = [0: "Inventory", 1: "Equipment", 2: "On the floor", 3: "Throwing"]
 private let sectionOrder = [0, 1, 2, 3]
-private let openRow = Color(rgb: 0x26262C)
+private let openRow = Palette.raised
 
 /// The pack (narsil_prompt.c, publish_pack()): every item in one list.  Tapping an item opens it in place with
 /// its description and actions; tapping another closes it and opens that one.  After an action the game reopens the pack.
@@ -24,7 +24,7 @@ struct PackView: View {
                     VStack(alignment: .leading) {
                         Text("Pack").scaledFont(17, weight: .semibold).foregroundColor(.white)
                         Text("Carrying \(pounds(prompt.weight)) of \(pounds(prompt.limit))").scaledFont(12)
-                            .foregroundColor(prompt.weight > prompt.limit ? Color(rgb: 0xFFB74D) : Palette.sub)
+                            .foregroundColor(prompt.weight > prompt.limit ? Palette.warn : Palette.sub)
                     }.padding(.horizontal, 16).padding(.top, 10)
                     LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(sections, id: \.0) { section, items in
@@ -61,7 +61,7 @@ struct PackView: View {
             }.buttonStyle(.plain)
             if open {
                 VStack(alignment: .leading, spacing: 10) {
-                    if !prompt.description.isEmpty { Text(colouredText(prompt.description, colour: colour)).scaledFont(14).foregroundColor(Color(rgb: 0xC8C8CC)) }
+                    if !prompt.description.isEmpty { Text(colouredText(prompt.description, colour: colour)).scaledFont(14).foregroundColor(Palette.body) }
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 90), alignment: .leading)], alignment: .leading, spacing: 6) {
                         ForEach(prompt.actions, id: \.index) { a in
                             Button(a.label) { answer(NB.PACK_ACT + item.index * NB.PACK_ACT_STRIDE + a.index) }

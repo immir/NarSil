@@ -4,14 +4,14 @@ import SwiftUI
 private enum Opt { static let off = 0, on = 1, maybe = 2, chosen = 3, dear = 4, artistry = 5 }
 
 private let bg = Palette.screen
-private let cardHi = Color(rgb: 0x26262C)
+private let cardHi = Palette.raised
 private let line = Color(rgb: 0x2E2E34)
-private let text = Color(rgb: 0xE6E6EA)
-private let dim = Color(rgb: 0x5A5A60)
-private let ok = Color(rgb: 0x81C784)
-private let warn = Color(rgb: 0xFFB74D)
-private let bad = Color(rgb: 0xE57373)
-private let chosenColour = Color(rgb: 0x90CAF9)
+private let text = Palette.text
+private let dim = Palette.dim
+private let ok = Palette.good
+private let warn = Palette.warn
+private let bad = Palette.bad
+private let chosenColour = Palette.summary
 
 private let viewNames = ["tval": "Base item", "sval": "Base item", "special": "Enchant", "artefact": "Artifice",
                         "property": "Artifice", "ability": "Artifice", "numbers": "Numbers", "melt": "Melt"]
@@ -90,7 +90,7 @@ struct SmithView: View {
                 badge(o.state)
             }
             .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading).padding(12)
-            .background(enabled ? cardHi : Palette.card).clipShape(RoundedRectangle(cornerRadius: 12)).contentShape(Rectangle())
+            .cardSurface(enabled ? cardHi : Palette.card).contentShape(Rectangle())
         }.buttonStyle(.plain).disabled(!enabled)
     }
 
@@ -100,7 +100,7 @@ struct SmithView: View {
             if !enabled && !o.detail.isEmpty { Text(o.detail).scaledFont(12).foregroundColor(Palette.sub).frame(maxWidth: .infinity, alignment: .leading) }
             Button { answer(o.index) } label: {
                 Text("Make it").scaledFont(17, weight: .semibold).foregroundColor(Color(rgb: 0x241A00)).frame(maxWidth: .infinity, minHeight: 52)
-                    .background(Palette.gold.opacity(enabled ? 1 : 0.4)).clipShape(RoundedRectangle(cornerRadius: 12))
+                    .background(Palette.gold.opacity(enabled ? 1 : 0.4)).clipShape(RoundedRectangle(cornerRadius: 10))
             }.buttonStyle(.plain).disabled(!enabled)
         }.padding(.horizontal, 12).padding(.vertical, 10).background(Color(rgb: 0x17171A))
     }
@@ -122,7 +122,7 @@ struct SmithView: View {
                 badge(o.state)
             }
             .frame(minHeight: 52).padding(.horizontal, 12).padding(.vertical, 8)
-            .background(chosen ? chosenColour.opacity(0.10) : Palette.card).clipShape(RoundedRectangle(cornerRadius: 10)).contentShape(Rectangle())
+            .cardSurface(chosen ? chosenColour.opacity(0.10) : Palette.card).contentShape(Rectangle())
         }.buttonStyle(.plain).disabled(!enabled).padding(.horizontal, 12).padding(.vertical, 3)
     }
 
@@ -145,7 +145,7 @@ struct SmithView: View {
             Button("+") { answer(inc.index) }.buttonStyle(.bordered).tint(colour(inc.state)).disabled(inc.state == Opt.off)
         }
         .frame(minHeight: 56).padding(.horizontal, 12)
-        .background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 10)).padding(.horizontal, 12).padding(.vertical, 3)
+        .cardSurface(Palette.card).padding(.horizontal, 12).padding(.vertical, 3)
     }
 }
 
@@ -188,7 +188,7 @@ private struct DesignCard: View {
                         }
                     }
                     if !description.isEmpty {
-                        if expanded { ForEach(Array(description.enumerated()), id: \.offset) { _, d in Text(d).scaledFont(13).foregroundColor(Color(rgb: 0xC8C8CC)) } }
+                        if expanded { ForEach(Array(description.enumerated()), id: \.offset) { _, d in Text(d).scaledFont(13).foregroundColor(Palette.body) } }
                         else { Text("\(description[0])  ▸").scaledFont(13).foregroundColor(Palette.sub).lineLimit(1) }
                     }
                 }.padding(14)
@@ -196,7 +196,7 @@ private struct DesignCard: View {
                 Text("Choose a base item to begin.").scaledFont(14).foregroundColor(Palette.sub).padding(14)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading).background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 14))
+        .frame(maxWidth: .infinity, alignment: .leading).cardSurface(Palette.card)
         .padding(.horizontal, 12).padding(.vertical, 8)
         .onTapGesture { if !description.isEmpty { expanded.toggle() } }
     }

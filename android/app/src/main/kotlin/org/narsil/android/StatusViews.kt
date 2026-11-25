@@ -55,15 +55,15 @@ internal fun MessageStrip(state: GameState, lines: Int, panelButton: Boolean = t
     val more = line0.contains("-more-")
     /* The textui joins several messages on its top line; only show it when it is something else (a prompt). */
     val banner = line0.takeIf { it.isNotEmpty() && !more && state.messages.none { m -> line0.contains(m.text) } }
-    Row(Modifier.fillMaxWidth().background(Color(0xFF141414)), verticalAlignment = Alignment.Top) {
+    Row(Modifier.fillMaxWidth().background(Ui.Chrome), verticalAlignment = Alignment.Top) {
     Column(Modifier.weight(1f).clickable(onClick = onTap).padding(horizontal = 10.dp, vertical = 4.dp)) {
         recent.forEachIndexed { i, m ->
             val alpha = 0.45f + 0.55f * (i + 1) / recent.size
             Text(Special.styled(m, if (m.count > 1) " (x${m.count})" else ""),
                  color = Color(state.colour(m.attr)).copy(alpha = alpha), fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)
         }
-        if (banner != null) Text(banner, color = Color(0xFFFFD54F), fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)
-        if (more) Text("▸ tap to continue", color = Color(0xFFFFD54F), fontSize = 13.sp, lineHeight = 16.sp)
+        if (banner != null) Text(banner, color = Ui.Gold, fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)
+        if (more) Text("▸ tap to continue", color = Ui.Gold, fontSize = 13.sp, lineHeight = 16.sp)
         val resting = state.status.has(NarSilNative.CTX_RESTING)
         if (resting) Text("Resting…", color = Color(0xFF8AB4F8), fontSize = 13.sp, lineHeight = 16.sp)
         if (recent.isEmpty() && banner == null && !more && !resting) Text(" ", fontSize = 14.sp)
@@ -79,11 +79,11 @@ private fun depthText(s: GameState.Status): String =
 /** Opens the character panel (pack, character, skills, …) at its last tab. */
 @Composable
 internal fun PanelButton() {
-    Box(Modifier.padding(4.dp).size(40.dp).background(Color(0xFF26262B), RoundedCornerShape(10.dp))
+    Box(Modifier.padding(4.dp).size(40.dp).background(Ui.Raised, Ui.CardShape)
             .semantics { contentDescription = "Character panel"; role = Role.Button }
             .clickable { Trace.log("panel.request", "via" to "button"); NarSilNative.nativeRequestAction(NarSilNative.ACT_PANEL) },
         contentAlignment = Alignment.Center) {
-        PanelGlyph(PANEL_ICON_PATHS[ICON_PANEL], Color(0xFFF3D27A), Modifier.size(26.dp))
+        PanelGlyph(PANEL_ICON_PATHS[ICON_PANEL], Ui.Gold, Modifier.size(26.dp))
     }
 }
 
@@ -94,7 +94,7 @@ internal fun StatusStrip(state: GameState, stacked: Boolean, buzzOnLowHealth: Bo
     LowHealthBuzz(s.lowHp && buzzOnLowHealth)
     if (buzzOnLowHealth) BigHitBuzz(s.hp, s.maxHp)
     val hpColour = if (s.lowHp) Color(0xFFFF3B30) else Color(0xFFD04040)
-    Column(Modifier.fillMaxWidth().background(Color(0xFF141414)).clickable { Trace.log("panel.request", "via" to "status"); NarSilNative.nativeRequestAction(NarSilNative.ACT_CHARACTER) }
+    Column(Modifier.fillMaxWidth().background(Ui.Chrome).clickable { Trace.log("panel.request", "via" to "status"); NarSilNative.nativeRequestAction(NarSilNative.ACT_CHARACTER) }
                .padding(horizontal = 8.dp, vertical = 4.dp)) {
         if (stacked) {
             Meter("HP", s.hp, s.maxHp, hpColour, Modifier.fillMaxWidth(), alarm = s.lowHp)
@@ -184,7 +184,7 @@ internal fun FoeLine(f: GameState.Foe, state: GameState) {
         LinearProgressIndicator(progress = f.healthPct / 100f, color = healthColour, trackColor = healthColour.copy(alpha = 0.25f),
                                 modifier = Modifier.width(80.dp).height(6.dp))
         val morale = if (f.stance >= 4) " ${f.morale}" else ""
-        Text("$stance$morale", color = Color(0xFF90CAF9), fontSize = 12.sp)
+        Text("$stance$morale", color = Ui.Summary, fontSize = 12.sp)
     }
 }
 
@@ -220,7 +220,7 @@ private fun StatusChips(state: GameState) {
     val light = segments.firstOrNull { it.first.startsWith("Light") }
     val others = segments.filter { it !== light }
     FlowRow(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        if (s.newExp > 0) Chip("${s.newExp}", icon = ICON_EXP, colour = if (s.newExp >= 100) Color(0xFF90CAF9) else Color(0xFFB0B0B0)) { NarSilNative.nativeRequestAction(NarSilNative.ACT_SKILLS) }
+        if (s.newExp > 0) Chip("${s.newExp}", icon = ICON_EXP, colour = if (s.newExp >= 100) Ui.Summary else Color(0xFFB0B0B0)) { NarSilNative.nativeRequestAction(NarSilNative.ACT_SKILLS) }
         if (light != null || s.lightTurns >= 0) {
             val turns = s.lightTurns
             val colour = when { turns in 0..99 -> red; turns in 0..299 -> amber; else -> light?.second?.let { Color(it) } ?: Color(0xFFB0B0B0) }
@@ -233,7 +233,7 @@ private fun StatusChips(state: GameState) {
 
 @Composable
 private fun Chip(text: String, colour: Color, icon: Int? = null, onClick: (() -> Unit)? = null) {
-    Row(Modifier.background(colour.copy(alpha = 0.16f), RoundedCornerShape(8.dp))
+    Row(Modifier.background(colour.copy(alpha = 0.16f), Ui.CardShape)
             .let { if (onClick != null) it.clickable(onClick = onClick) else it }.padding(horizontal = 8.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         if (icon != null) PanelGlyph(PANEL_ICON_PATHS[icon], colour, Modifier.size(12.dp), stroke = 3f)

@@ -93,7 +93,6 @@ fun rememberScrollPlace(key: String): ScrollState {
 val LocalInPanel = staticCompositionLocalOf { false }
 
 private val TAB_TITLES = listOf("Pack", "Character", "Skills", "Abilities", "Knowledge", "Smithing", "Options")
-private val PANEL_BG = Color(0xFF1C1C1E)
 
 /** The prompts that are a tab's own screen (anything else, e.g. a yes/no, is asked over it). */
 fun GameState.Prompt.isPanelContent() = when (this) {
@@ -116,7 +115,7 @@ fun PanelAwareSheet(onDismiss: (() -> Unit)?, heightFraction: Float? = null, max
         contentAlignment = Alignment.BottomCenter,
     ) {
         Surface(
-            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp), color = PANEL_BG,
+            shape = Ui.SheetTop, border = Ui.edge, color = Ui.Sheet,
             modifier = Modifier.fillMaxWidth()
                 .then(heightFraction?.let { Modifier.fillMaxHeight(it) } ?: maxHeight?.let { Modifier.heightIn(max = it) } ?: Modifier)
                 .clickable(remember { MutableInteractionSource() }, indication = null) {},
@@ -152,7 +151,7 @@ fun PanelHost(gameTab: Int, tabStyle: Int, tabsOnTop: Boolean, onAnswer: (Int) -
         val width = if (wide) minOf(maxWidth * 0.4f, 560.dp) else if (maxWidth > maxHeight) maxWidth * 0.58f else if (tabsOnTop) maxWidth else maxWidth * 0.94f
         Box(Modifier.fillMaxSize().background(Color(if (wide) 0x33000000 else 0x77000000))
                 .clickable(remember { MutableInteractionSource() }, indication = null) { answer(N.PANEL_CLOSE) })
-            Surface(color = PANEL_BG, shape = RoundedCornerShape(topStart = if (tabsOnTop) 0.dp else 16.dp, bottomStart = 16.dp),
+            Surface(color = Ui.Sheet, border = Ui.edge, shape = RoundedCornerShape(topStart = if (tabsOnTop) 0.dp else 16.dp, bottomStart = 16.dp),
                     modifier = Modifier.align(Alignment.CenterEnd).width(width).fillMaxHeight()
                         .clickable(remember { MutableInteractionSource() }, indication = null) {}) {
                 Column {
@@ -173,7 +172,7 @@ fun PanelHost(gameTab: Int, tabStyle: Int, tabsOnTop: Boolean, onAnswer: (Int) -
 @Composable
 private fun PanelTabs(tab: Int, tabStyle: Int, modifier: Modifier, onTab: (Int) -> Unit) {
     if (tabStyle == Settings.TABS_NAMES) {
-        ScrollableTabRow(selectedTabIndex = tab.coerceIn(0, TAB_TITLES.lastIndex), containerColor = PANEL_BG,
+        ScrollableTabRow(selectedTabIndex = tab.coerceIn(0, TAB_TITLES.lastIndex), containerColor = Ui.Sheet,
                          edgePadding = 4.dp, modifier = modifier) {
             TAB_TITLES.forEachIndexed { i, t -> Tab(selected = i == tab, onClick = { onTab(i) }, text = { Text(t, fontSize = 14.sp) }) }
         }
@@ -188,7 +187,7 @@ private fun PanelTabs(tab: Int, tabStyle: Int, modifier: Modifier, onTab: (Int) 
     }
 }
 
-private val TABS_BAR_HEIGHT = 56.dp
+private val TABS_BAR_HEIGHT = 56.dp  // plus the hairline under it
 
 /**
  * Settings → "Panel tabs along the top": the tabs as a strip across the top of the screen, drawn the same over the map
@@ -196,8 +195,11 @@ private val TABS_BAR_HEIGHT = 56.dp
  */
 @Composable
 fun TabsBar(selected: Int, tabStyle: Int, onTab: (Int) -> Unit) {
-    Row(Modifier.fillMaxWidth().height(TABS_BAR_HEIGHT).background(PANEL_BG), verticalAlignment = Alignment.CenterVertically) {
-        PanelTabs(selected, tabStyle, Modifier.weight(1f), onTab)
+    Column(Modifier.fillMaxWidth().background(Ui.Sheet)) {
+        Row(Modifier.fillMaxWidth().height(TABS_BAR_HEIGHT), verticalAlignment = Alignment.CenterVertically) {
+            PanelTabs(selected, tabStyle, Modifier.weight(1f), onTab)
+        }
+        Box(Modifier.fillMaxWidth().height(1.dp).background(Ui.Divider))
     }
 }
 
@@ -227,7 +229,7 @@ private fun Modifier.swipeBetweenTabs(tab: Int, onAnswer: (Int) -> Unit) = point
 /** One panel tab as an icon with its name under it; no padding, so seven fit across the panel. */
 @Composable
 private fun IconTab(icon: String, name: String, showName: Boolean, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
-    val tint = if (selected) Color(0xFFF3D27A) else Color(0xFF9A9AA0)
+    val tint = if (selected) Ui.Gold else Ui.Sub
     Column(modifier.clickable(onClick = onClick).padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         PanelGlyph(icon, tint, Modifier.size(24.dp).semantics { contentDescription = name })
         if (showName) Text(name, color = tint, fontSize = with(LocalDensity.current) { 8.dp.toSp() }, maxLines = 1, softWrap = false, modifier = Modifier.padding(top = 2.dp))

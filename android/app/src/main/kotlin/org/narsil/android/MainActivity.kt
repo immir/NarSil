@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
@@ -96,7 +95,7 @@ class MainActivity : ComponentActivity() {
         crash = Share.pendingCrash(applicationContext)
         onBackPressedDispatcher.addCallback(this) { router.special(Keys.ESCAPE) }
         setContent {
-            MaterialTheme(colorScheme = darkColorScheme(), typography = compactTypography()) { App() }
+            MaterialTheme(colorScheme = Ui.colorScheme(), typography = compactTypography()) { App() }
         }
     }
 
@@ -219,7 +218,7 @@ class MainActivity : ComponentActivity() {
             }
             if (showMore) MoreSheet(moreActions(state.status, router, { showMessages = true }, { showHelp = true }, { mapView?.toggleOverview() },
                                                 { settings.tiles = !settings.tiles }, settings.tiles,
-                                                { showRest = true }.takeIf { settings.dpad != Settings.DPAD_OFF }) { terminal?.toggleKeyboard() } +
+                                                { showRest = true }.takeIf { settings.dpad != Settings.DPAD_OFF }, { terminal?.toggleKeyboard() }, settings.tabsOnTop) +
                                     listOfNotNull(scumAction(), BarAction("Restore scum save", run = { showScum = true }).takeIf { settings.scumming }),
                                     settings.quickActs, settings::toggleQuickAct) { showMore = false }
             if (showKeys) MoreSheet(extraKeys(router)) { showKeys = false }
@@ -367,7 +366,7 @@ class MainActivity : ComponentActivity() {
                     if (state.mapMode && settings.edgeSwipePanel) EdgeSwipeHandle(Modifier.align(Alignment.CenterEnd))
                 }
                 if (state.mapMode && !rail) TextScale(settings.statusScale) {
-                    if (dpadMode() == Settings.DPAD_DOCKED) Row(Modifier.background(Color(0xFF141414)), verticalAlignment = Alignment.CenterVertically) {
+                    if (dpadMode() == Settings.DPAD_DOCKED) Row(Modifier.background(Ui.Chrome), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.weight(1f)) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
                         Box(Modifier.padding(4.dp)) { Dpad(settings.dpadSizeDp, { dpad(state, it) }, marked = padMarks(state.prompt)) }
                     } else StatusStrip(state, stacked = false, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz)
@@ -375,7 +374,7 @@ class MainActivity : ComponentActivity() {
                 if (state.mapMode && !rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { Trace.log("menu.open"); showMore = true } }
                 if (!state.mapMode) TextScale(settings.buttonScale) { KeyBar(state.waiting, router, { terminal?.toggleKeyboard() }) { showKeys = true } }
             }
-            if (rail) Column(Modifier.width(260.dp).fillMaxHeight().background(Color(0xFF141414))) {
+            if (rail) Column(Modifier.width(260.dp).fillMaxHeight().background(Ui.Chrome)) {
                 TextScale(settings.statusScale) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
                 Spacer(Modifier.weight(1f))
                 if (dpadMode() == Settings.DPAD_DOCKED) Box(Modifier.fillMaxWidth().padding(4.dp), contentAlignment = Alignment.Center) {

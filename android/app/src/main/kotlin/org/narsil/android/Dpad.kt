@@ -127,7 +127,7 @@ private suspend fun AwaitPointerEventScope.awaitRelease(): PointerInputChange {
 
 private val ARROW_ANGLE = mapOf(6 to 0f, 3 to 45f, 2 to 90f, 1 to 135f, 4 to 180f, 7 to 225f, 8 to 270f, 9 to 315f)
 
-private val MARK = Color(0xFFE0B040)
+private val MARK = Ui.Gold
 
 private fun DrawScope.drawPad(lit: Int, marked: Set<Int>) {
     val key = size.minDimension / 3f

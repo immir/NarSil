@@ -169,7 +169,7 @@ struct RootView: View {
     }
     private var more: [BarAction] {
         moreActions(game.status, messages: { showMore = false; showMessages = true }, toggleMap: { map.toggleOverview() }, toggleTiles: { tiles.toggle(); Native.setTiles(tiles) }, tilesOn: tiles, help: { showHelp = true },
-                    restOptions: pad != PadMode.off.rawValue ? { showMore = false; showRest = true } : nil)
+                    restOptions: pad != PadMode.off.rawValue ? { showMore = false; showRest = true } : nil, tabsOnTop: tabsOnTop)
             + (scumming ? [BarAction(label: "Scum", run: { Task { say(await Saves.take()) } }),
                            BarAction(label: "Restore scum save", run: { showScum = true })] : [])
     }
@@ -308,7 +308,7 @@ private struct ExitedCard: View {
             VStack(spacing: 16) {
                 Text(switching ? "Open NarSil again to play \(GameLauncher.game.other.title)." : (message.isEmpty ? "The game has ended." : message))
                     .scaledFont(17).foregroundColor(.white).multilineTextAlignment(.center)
-                Button("Close") { exit(0) }.buttonStyle(.borderedProminent)
+                Button("Close") { exit(0) }.buttonStyle(GoldButtonStyle())
             }.padding(24)
         }
         .onAppear { if switching { GameLauncher.chooseOtherGame() } }

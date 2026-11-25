@@ -20,7 +20,7 @@ struct OptionsView: View {
                         Button(action: onAppSettings) {
                             card(HStack {
                                 VStack(alignment: .leading) {
-                                    Text(UiText.displayLink).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                                    Text(UiText.displayLink).scaledFont(15).foregroundColor(Palette.text)
                                     Text(UiText.displayLinkHint).scaledFont(12).foregroundColor(Palette.sub)
                                 }
                                 Spacer()
@@ -44,19 +44,18 @@ struct OptionsView: View {
     }
 
     private func note(_ t: String) -> some View {
-        Text(t).scaledFont(13).foregroundColor(Color(rgb: 0xFFB74D)).padding(.horizontal, 16).padding(.vertical, 4)
+        Text(t).scaledFont(13).foregroundColor(Palette.warn).padding(.horizontal, 16).padding(.vertical, 4)
     }
 
     private func card<C: View>(_ c: C) -> some View {
-        c.frame(maxWidth: .infinity, alignment: .leading).background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 10))
+        c.frame(maxWidth: .infinity, alignment: .leading).cardSurface(Palette.card)
             .padding(.horizontal, 12).padding(.vertical, 3)
     }
 
     private func toggle(_ a: Int, _ on: Bool, _ locked: Bool, _ description: String, _ name: String) -> some View {
         card(HStack {
             VStack(alignment: .leading) {
-                Text(description).scaledFont(15).foregroundColor(locked ? Palette.sub : Color(rgb: 0xE6E6EA))
-                Text(name).scaledFont(11).foregroundColor(Color(rgb: 0x5A5A60))
+                Text(description).scaledFont(15).foregroundColor(locked ? Palette.sub : Palette.text)
             }
             Spacer()
             Toggle("", isOn: Binding(get: { on }, set: { _ in answer(a) })).labelsHidden().disabled(locked)
@@ -67,7 +66,7 @@ struct OptionsView: View {
         Button { answer(a) } label: {
             card(HStack {
                 VStack(alignment: .leading) {
-                    Text(label).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                    Text(label).scaledFont(15).foregroundColor(Palette.text)
                     if !detail.isEmpty { Text(detail).scaledFont(12).foregroundColor(Palette.sub) }
                 }
                 Spacer()
@@ -88,12 +87,12 @@ private struct NumberRow: View {
         VStack(spacing: 4) {
             HStack(spacing: 8) {
                 VStack(alignment: .leading) {
-                    Text(label).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                    Text(label).scaledFont(15).foregroundColor(Palette.text)
                     Text(detail).scaledFont(12).foregroundColor(Palette.sub)
                 }
                 Spacer()
                 Button("−") { set(value - 1) }.buttonStyle(.bordered).disabled(value <= lo)
-                Text("\(Int(drag.rounded()))").scaledFont(17, weight: .semibold).foregroundColor(Color(rgb: 0xE6E6EA)).frame(minWidth: 36)
+                Text("\(Int(drag.rounded()))").scaledFont(17, weight: .semibold).foregroundColor(Palette.text).frame(minWidth: 36)
                 Button("+") { set(value + 1) }.buttonStyle(.bordered).disabled(value >= hi)
             }
             if hi - lo > 20 {
@@ -101,7 +100,7 @@ private struct NumberRow: View {
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
-        .background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 10)).padding(.horizontal, 12).padding(.vertical, 3)
+        .cardSurface(Palette.card).padding(.horizontal, 12).padding(.vertical, 3)
         .onAppear { drag = Double(value) }
         .onChange(of: value) { drag = Double($0) }
     }

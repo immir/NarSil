@@ -50,8 +50,8 @@ fun ItemSheet(prompt: GameState.Prompt.Items, colour: (Int) -> Int, onAnswer: (I
         contentAlignment = Alignment.BottomCenter,
     ) {
         Surface(
-            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            color = Color(0xFF1C1C1E),
+            shape = Ui.SheetTop, border = Ui.edge,
+            color = Ui.Sheet,
             modifier = Modifier.fillMaxWidth().heightIn(max = 560.dp)
                 .clickable(remember { MutableInteractionSource() }, indication = null) {},
         ) {
@@ -64,7 +64,7 @@ fun ItemSheet(prompt: GameState.Prompt.Items, colour: (Int) -> Int, onAnswer: (I
                 LazyColumn(Modifier.fillMaxWidth()) {
                     sections.forEach { (section, items) ->
                         item(key = "h$section") {
-                            Text(SECTION_TITLES[section] ?: "", color = Color(0xFF9A9AA0), fontSize = 13.sp,
+                            Text(SECTION_TITLES[section] ?: "", color = Ui.Sub, fontSize = 13.sp,
                                  modifier = Modifier.padding(start = 16.dp, top = 10.dp, bottom = 4.dp))
                         }
                         items(items, key = { it.index }) { item -> ItemRow(item, colour) { onAnswer(item.index) } }
@@ -85,12 +85,12 @@ private fun ItemRow(item: GameState.Item, colour: (Int) -> Int, onClick: () -> U
     ) {
         Text(String(Character.toChars(item.glyph)), color = Color(colour(item.attr)), fontFamily = FontFamily.Monospace,
              fontSize = 22.sp, modifier = Modifier.width(24.dp))
-        Text(if (item.label == '-') "" else "${item.label})", color = Color(0xFF9A9AA0), fontFamily = FontFamily.Monospace,
+        Text(if (item.label == '-') "" else "${item.label})", color = Ui.Sub, fontFamily = FontFamily.Monospace,
              fontSize = 14.sp, modifier = Modifier.width(24.dp))
         Text(item.name, color = Special.colour(item.special) ?: Color.White, fontSize = 16.sp, maxLines = 2, overflow = TextOverflow.Ellipsis,
              modifier = Modifier.weight(1f))
         if (item.weightTenthsLb > 0)
-            Text("%d.%d lb".format(item.weightTenthsLb / 10, item.weightTenthsLb % 10), color = Color(0xFF9A9AA0), fontSize = 13.sp)
+            Text("%d.%d lb".format(item.weightTenthsLb / 10, item.weightTenthsLb % 10), color = Ui.Sub, fontSize = 13.sp)
     }
-    Divider(color = Color(0xFF2C2C2E), modifier = Modifier.padding(start = 76.dp))
+    Divider(color = Ui.Divider, modifier = Modifier.padding(start = 76.dp))
 }

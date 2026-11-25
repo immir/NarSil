@@ -39,8 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.narsil.android.NarSilNative as N
 
-private val SUB = Color(0xFF9A9AA0)
-private val GOLD = Color(0xFFF3D27A)
 
 /** Stages whose options are chosen once (race, house, sex): a random pick and birth options are offered. */
 private val CHOICE_STAGES = setOf("race", "house", "sex")
@@ -55,21 +53,21 @@ fun ScreenSheet(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit, onScum: (()
     if (p.stage == "note") { NoteCard(p, onAnswer); return }
     if (p.stage == "poem") { Poem(p, onAnswer); return }
     val canGoBack = p.stage != "death" && p.stage != "race" && p.stage != "quickstart"
-    Surface(color = Color(0xFF121214), modifier = Modifier.fillMaxSize()) {
+    Surface(color = Ui.Screen, modifier = Modifier.fillMaxSize()) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 8.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (canGoBack) TextButton(onClick = { onAnswer(-1) }) { Text("‹ Back") }
-                Text(p.title, color = GOLD, fontSize = 22.sp, fontWeight = FontWeight.SemiBold,
+                Text(p.title, color = Ui.Gold, fontSize = 22.sp, fontWeight = FontWeight.SemiBold,
                      modifier = Modifier.weight(1f).padding(start = if (canGoBack) 0.dp else 16.dp))
                 if (p.stage in CHOICE_STAGES) TextButton(onClick = { onAnswer(N.SCREEN_RANDOM) }) { Text("Random") }
             }
             LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
                 items(p.paragraphs) { t ->
-                    Text(t, color = Color(0xFFD0D0D4), fontSize = 15.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                    Text(t, color = Ui.Body, fontSize = 15.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                 }
                 if (p.stage == "stats") {
                     item {
-                        Text("Points left: ${p.pointsLeft} of ${p.pointsTotal}", color = GOLD, fontSize = 15.sp,
+                        Text("Points left: ${p.pointsLeft} of ${p.pointsTotal}", color = Ui.Gold, fontSize = 15.sp,
                              modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
                     }
                     items(p.stats) { s -> StatRow(s, onAnswer) }
@@ -100,12 +98,12 @@ fun ScreenSheet(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit, onScum: (()
 @Composable
 private fun OptionCard(o: GameState.ScreenOption, onAnswer: (Int) -> Unit) {
     val enabled = o.state != 0
-    Surface(color = Color(0xFF1E1E22), shape = RoundedCornerShape(12.dp),
+    Surface(color = Ui.Card, shape = Ui.CardShape, border = Ui.edge,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 5.dp).clickable(enabled = enabled) { onAnswer(o.index) }) {
         Column(Modifier.heightIn(min = 48.dp).padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(o.label, color = if (enabled) Color.White else Color(0xFF55555A), fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-            if (o.summary.isNotEmpty()) Text(o.summary, color = Color(0xFF90CAF9), fontSize = 13.sp)
-            if (o.description.isNotEmpty()) Text(o.description, color = SUB, fontSize = 13.sp)
+            if (o.summary.isNotEmpty()) Text(o.summary, color = Ui.Summary, fontSize = 13.sp)
+            if (o.description.isNotEmpty()) Text(o.description, color = Ui.Sub, fontSize = 13.sp)
         }
     }
 }
@@ -116,7 +114,7 @@ private fun StatRow(s: GameState.BirthStat, onAnswer: (Int) -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Column(Modifier.weight(1f)) {
             Text(s.name, color = Color.White, fontSize = 16.sp)
-            Text(if (s.spent > 0) "${s.spent} point${if (s.spent == 1) "" else "s"} spent" else "", color = SUB, fontSize = 12.sp)
+            Text(if (s.spent > 0) "${s.spent} point${if (s.spent == 1) "" else "s"} spent" else "", color = Ui.Sub, fontSize = 12.sp)
         }
         Text("${s.value}", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(end = 4.dp))
         OutlinedButton(onClick = { onAnswer(N.SKILL_SELL + s.index) }, enabled = s.canSell,
@@ -143,18 +141,18 @@ private fun Figures(p: GameState.Prompt.Screen) {
     fun Figure(label: String, value: String) {
         val d = delta[label] ?: 0
         Row(Modifier.padding(end = 14.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(label, color = SUB, fontSize = 13.sp)
+            Text(label, color = Ui.Sub, fontSize = 13.sp)
             Text(" $value", fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
-                 color = when { d > 0 -> Color(0xFF81C784); d < 0 -> Color(0xFFE57373); else -> Color.White })
-            if (d != 0) Text(if (d > 0) " ▲" else " ▼", fontSize = 11.sp, color = if (d > 0) Color(0xFF81C784) else Color(0xFFE57373))
+                 color = when { d > 0 -> Ui.Good; d < 0 -> Ui.Bad; else -> Color.White })
+            if (d != 0) Text(if (d > 0) " ▲" else " ▼", fontSize = 11.sp, color = if (d > 0) Ui.Good else Ui.Bad)
         }
     }
-    Surface(color = Color(0xFF1E1E22), shape = RoundedCornerShape(12.dp),
+    Surface(color = Ui.Card, shape = Ui.CardShape, border = Ui.edge,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Skills", color = GOLD, fontSize = 14.sp)
+            Text("Skills", color = Ui.Gold, fontSize = 14.sp)
             FlowRow { p.skills.forEach { (k, v) -> Figure(k, v) } }
-            Text("Combat", color = GOLD, fontSize = 14.sp)
+            Text("Combat", color = Ui.Gold, fontSize = 14.sp)
             FlowRow { p.combat.forEach { (k, v) -> Figure(k, v) } }
         }
     }
@@ -163,17 +161,17 @@ private fun Figures(p: GameState.Prompt.Screen) {
 /** The splash screen: the verse, the welcome, the version, and Continue or New game. */
 @Composable
 private fun Welcome(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
-    Surface(color = Color(0xFF0E0E10), modifier = Modifier.fillMaxSize()) {
+    Surface(color = Ui.Splash, modifier = Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp, vertical = 32.dp),
                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Text(p.title, color = if (N.silq) Color(0xFF7AD3F3) else GOLD, fontSize = 34.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+            Text(p.title, color = if (N.silq) Color(0xFF7AD3F3) else Ui.Gold, fontSize = 34.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
             Box(Modifier.padding(top = 28.dp))
             p.verse.forEach { v ->
-                Text(v, color = Color(0xFF8FC3FF), fontSize = 16.sp, fontStyle = FontStyle.Italic, textAlign = TextAlign.Center)
+                Text(v, color = Ui.Verse, fontSize = 16.sp, fontStyle = FontStyle.Italic, textAlign = TextAlign.Center)
             }
             Box(Modifier.padding(top = 24.dp))
             p.paragraphs.dropLast(1).forEach { t ->
-                Text(t, color = Color(0xFFD0D0D4), fontSize = 16.sp, lineHeight = 23.sp, textAlign = TextAlign.Center,
+                Text(t, color = Ui.Body, fontSize = 16.sp, lineHeight = 23.sp, textAlign = TextAlign.Center,
                      modifier = Modifier.padding(vertical = 4.dp))
             }
             Box(Modifier.padding(top = 36.dp))
@@ -184,9 +182,9 @@ private fun Welcome(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
             }
             p.options.drop(1).forEach { o ->
                 TextButton(onClick = { onAnswer(o.index) }, modifier = Modifier.padding(top = 8.dp)) { Text(o.label, fontSize = 15.sp) }
-                if (o.summary.isNotEmpty()) Text(o.summary, color = SUB, fontSize = 12.sp, textAlign = TextAlign.Center)
+                if (o.summary.isNotEmpty()) Text(o.summary, color = Ui.Sub, fontSize = 12.sp, textAlign = TextAlign.Center)
             }
-            p.paragraphs.lastOrNull()?.let { Text(it, color = SUB, fontSize = 12.sp, modifier = Modifier.padding(top = 16.dp)) }
+            p.paragraphs.lastOrNull()?.let { Text(it, color = Ui.Sub, fontSize = 12.sp, modifier = Modifier.padding(top = 16.dp)) }
         }
     }
 }
@@ -194,15 +192,15 @@ private fun Welcome(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
 /** A poem (entering the dungeon, the throne room): the verse with its indentation, then Continue. */
 @Composable
 private fun Poem(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
-    Surface(color = Color(0xFF0E0E10), modifier = Modifier.fillMaxSize()) {
+    Surface(color = Ui.Splash, modifier = Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 32.dp),
                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Text(p.title, color = if (N.silq) Color(0xFF7AD3F3) else GOLD, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
+            Text(p.title, color = if (N.silq) Color(0xFF7AD3F3) else Ui.Gold, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
             Box(Modifier.padding(top = 24.dp))
             Column(Modifier.width(IntrinsicSize.Max)) {
                 p.verse.forEach { v ->
                     val indent = v.length - v.trimStart().length
-                    Text(v.trimStart(), color = Color(0xFF8FC3FF), fontSize = 16.sp, lineHeight = 24.sp, fontStyle = FontStyle.Italic,
+                    Text(v.trimStart(), color = Ui.Verse, fontSize = 16.sp, lineHeight = 24.sp, fontStyle = FontStyle.Italic,
                          modifier = Modifier.padding(start = (indent * 6).dp))
                 }
             }
@@ -218,15 +216,15 @@ private fun Poem(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
 @Composable
 private fun NoteCard(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
     Box(Modifier.fillMaxSize().background(Color(0x55000000)), contentAlignment = Alignment.BottomCenter) {
-        Surface(color = Color(0xFF1E1E22), shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+        Surface(color = Ui.Card, shape = Ui.SheetTop, border = Ui.edge,
                 modifier = Modifier.fillMaxWidth().heightIn(max = 480.dp)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(p.title, color = GOLD, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Text(p.title, color = Ui.Gold, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                 Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     p.paragraphs.forEach { t ->
                         /* Diagrams (the direction keys) keep their spacing. */
                         val art = t.contains("  ") || t.contains('\\') || t.contains('|')
-                        Text(t, color = Color(0xFFD0D0D4), fontSize = if (art) 13.sp else 15.sp,
+                        Text(t, color = Ui.Body, fontSize = if (art) 13.sp else 15.sp,
                              fontFamily = if (art) androidx.compose.ui.text.font.FontFamily.Monospace else null)
                     }
                 }

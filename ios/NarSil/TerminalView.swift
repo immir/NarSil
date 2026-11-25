@@ -159,7 +159,7 @@ struct KeyBar: View {
 
     @ViewBuilder private func key(_ k: (String, Int), prominent: Bool) -> some View {
         if prominent {
-            Button { keys.special(k.1) } label: { Text(k.0).frame(maxWidth: .infinity, minHeight: 36) }.buttonStyle(.borderedProminent)
+            Button { keys.special(k.1) } label: { Text(k.0).frame(maxWidth: .infinity, minHeight: 36) }.buttonStyle(GoldButtonStyle())
         } else {
             Button { keys.special(k.1) } label: { Text(k.0).frame(maxWidth: .infinity, minHeight: 36) }.buttonStyle(.bordered)
         }

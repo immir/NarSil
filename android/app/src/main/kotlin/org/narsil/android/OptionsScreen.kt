@@ -34,23 +34,17 @@ import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import org.narsil.android.GameState.OptionRow
 
-private val BG = Color(0xFF121214)
-private val CARD = Color(0xFF1E1E22)
-private val TEXT = Color(0xFFE6E6EA)
-private val SUB = Color(0xFF9A9AA0)
-private val DIM = Color(0xFF5A5A60)
-private val GOLD = Color(0xFFF3D27A)
-private val WARN = Color(0xFFFFB74D)
 
 /** The game's own options (narsil_options.c), full screen; changes apply at once. */
 @Composable
 fun OptionsScreen(p: GameState.Prompt.Options, onAnswer: (Int) -> Unit, onAppSettings: (() -> Unit)? = null) {
     val main = p.page == "main"
-    Surface(color = BG, modifier = Modifier.fillMaxSize()) {
+    Surface(color = Ui.Screen, modifier = Modifier.fillMaxSize()) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (!(main && LocalInPanel.current)) TextButton(onClick = { onAnswer(-1) }) { Text(if (main) "Close" else "‹ Back") }
-                Text(p.title, color = GOLD, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Text(p.title, color = Ui.Gold, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
+                     modifier = Modifier.weight(1f).padding(start = if (main && LocalInPanel.current) 12.dp else 0.dp))
             }
             when (p.page) {
                 "birth" -> if (p.rows.any { it is OptionRow.Toggle && it.locked }) Note("Fixed once the character exists.")
@@ -62,7 +56,7 @@ fun OptionsScreen(p: GameState.Prompt.Options, onAnswer: (Int) -> Unit, onAppSet
                 }
                 items(p.rows) { row ->
                     when (row) {
-                        is OptionRow.Heading -> Text(row.text, color = GOLD, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                        is OptionRow.Heading -> Text(row.text, color = Ui.Gold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
                                                      modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 6.dp))
                         is OptionRow.Toggle -> ToggleRow(row, onAnswer)
                         is OptionRow.Number -> NumberRow(row, onAnswer)
@@ -76,12 +70,12 @@ fun OptionsScreen(p: GameState.Prompt.Options, onAnswer: (Int) -> Unit, onAppSet
 
 @Composable
 private fun Note(text: String) {
-    Text(text, color = WARN, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+    Text(text, color = Ui.Warn, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
 }
 
 @Composable
 private fun Card(onClick: (() -> Unit)?, content: @Composable () -> Unit) {
-    Surface(color = CARD, shape = RoundedCornerShape(10.dp),
+    Surface(color = Ui.Card, shape = Ui.CardShape, border = Ui.edge,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp)
                 .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)) { content() }
 }
@@ -91,8 +85,7 @@ private fun ToggleRow(t: OptionRow.Toggle, onAnswer: (Int) -> Unit) {
     Card(if (t.locked) null else ({ onAnswer(t.answer) })) {
         Row(Modifier.heightIn(min = 56.dp).padding(horizontal = 14.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(t.description, color = if (t.locked) SUB else TEXT, fontSize = 15.sp)
-                Text(t.name, color = DIM, fontSize = 11.sp)
+                Text(t.description, color = if (t.locked) Ui.Sub else Ui.Text, fontSize = 15.sp)
             }
             Switch(t.on, { onAnswer(t.answer) }, enabled = !t.locked)
         }
@@ -108,12 +101,12 @@ private fun NumberRow(n: OptionRow.Number, onAnswer: (Int) -> Unit) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Column(Modifier.weight(1f)) {
-                    Text(n.label, color = TEXT, fontSize = 15.sp)
-                    Text(n.detail, color = SUB, fontSize = 12.sp)
+                    Text(n.label, color = Ui.Text, fontSize = 15.sp)
+                    Text(n.detail, color = Ui.Sub, fontSize = 12.sp)
                 }
                 FilledTonalButton(onClick = { set(n.value - 1) }, enabled = n.value > n.min,
                                   contentPadding = PaddingValues(horizontal = 12.dp)) { Text("−", fontSize = 18.sp) }
-                Text("$shown", color = TEXT, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
+                Text("$shown", color = Ui.Text, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
                      modifier = Modifier.widthIn(min = 36.dp))
                 FilledTonalButton(onClick = { set(n.value + 1) }, enabled = n.value < n.max,
                                   contentPadding = PaddingValues(horizontal = 12.dp)) { Text("+", fontSize = 18.sp) }
@@ -129,10 +122,10 @@ private fun LinkRow(l: OptionRow.Link, onAnswer: (Int) -> Unit) {
     Card({ onAnswer(l.answer) }) {
         Row(Modifier.heightIn(min = 56.dp).padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(l.label, color = TEXT, fontSize = 15.sp)
-                if (l.detail.isNotEmpty()) Text(l.detail, color = SUB, fontSize = 12.sp)
+                Text(l.label, color = Ui.Text, fontSize = 15.sp)
+                if (l.detail.isNotEmpty()) Text(l.detail, color = Ui.Sub, fontSize = 12.sp)
             }
-            Text("›", color = SUB, fontSize = 20.sp)
+            Text("›", color = Ui.Sub, fontSize = 20.sp)
         }
     }
 }

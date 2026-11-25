@@ -45,18 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.narsil.android.NarSilNative as N
 
-private val BG = Color(0xFF121214)
-private val CARD = Color(0xFF1E1E22)
-private val CARD_HI = Color(0xFF26262C)
-private val LINE = Color(0xFF2E2E34)
-private val TEXT = Color(0xFFE6E6EA)
-private val SUB = Color(0xFF9A9AA0)
-private val DIM = Color(0xFF5A5A60)
-private val GOLD = Color(0xFFF3D27A)
-private val OK = Color(0xFF81C784)
-private val WARN = Color(0xFFFFB74D)
-private val BAD = Color(0xFFE57373)
-private val CHOSEN = Color(0xFF90CAF9)
 
 private val VIEW_NAMES = mapOf(
     "tval" to "Base item", "sval" to "Base item", "special" to "Enchant", "artefact" to "Artifice",
@@ -72,13 +60,13 @@ private val VIEW_NAMES = mapOf(
 @Composable
 fun SmithSheet(p: GameState.Prompt.Smith, onAnswer: (Int) -> Unit) {
     val main = p.view == "main"
-    Surface(color = BG, modifier = Modifier.fillMaxSize()) {
+    Surface(color = Ui.Screen, modifier = Modifier.fillMaxSize()) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (!(main && LocalInPanel.current)) TextButton(onClick = { onAnswer(-1) }) { Text(if (main) "Close" else "‹ Back") }
                 Column(Modifier.weight(1f)) {
-                    if (!main) VIEW_NAMES[p.view]?.let { Text("Smithing · $it", color = SUB, fontSize = 12.sp) }
-                    Text(p.title, color = GOLD, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (!main) VIEW_NAMES[p.view]?.let { Text("Smithing · $it", color = Ui.Sub, fontSize = 12.sp) }
+                    Text(p.title, color = Ui.Gold, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
             p.notes.forEach { Banner(it) }
@@ -98,9 +86,9 @@ fun SmithSheet(p: GameState.Prompt.Smith, onAnswer: (Int) -> Unit) {
 
 @Composable
 private fun Banner(text: String) {
-    Text(text, color = WARN, fontSize = 13.sp,
+    Text(text, color = Ui.Warn, fontSize = 13.sp,
          modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp)
-             .background(WARN.copy(alpha = 0.10f), RoundedCornerShape(8.dp)).padding(horizontal = 10.dp, vertical = 6.dp))
+             .background(Ui.Warn.copy(alpha = 0.10f), Ui.CardShape).padding(horizontal = 10.dp, vertical = 6.dp))
 }
 
 /** A small coloured label. */
@@ -114,11 +102,11 @@ private fun Pill(text: String, colour: Color) {
 @Composable
 private fun DifficultyMeter(item: GameState.SmithItem) {
     val scale = maxOf(item.difficulty, item.max, 1) * 1.15f
-    val colour = when { item.drains -> CHOSEN; item.difficulty > item.max -> WARN; else -> OK }
-    Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(LINE)) {
+    val colour = when { item.drains -> Ui.Summary; item.difficulty > item.max -> Ui.Warn; else -> Ui.Good }
+    Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(Ui.Divider)) {
         Box(Modifier.fillMaxHeight().fillMaxWidth((item.difficulty / scale).coerceIn(0f, 1f)).background(colour))
         Box(Modifier.fillMaxWidth((item.max / scale).coerceIn(0f, 1f)), contentAlignment = Alignment.CenterEnd) {
-            Box(Modifier.width(2.dp).fillMaxHeight().background(TEXT))
+            Box(Modifier.width(2.dp).fillMaxHeight().background(Ui.Text))
         }
     }
 }
@@ -127,55 +115,55 @@ private fun DifficultyMeter(item: GameState.SmithItem) {
 @Composable
 private fun DesignCard(item: GameState.SmithItem?, costs: List<GameState.SmithCost>, description: List<String>) {
     var expanded by remember { mutableStateOf(false) }
-    Surface(color = CARD, shape = RoundedCornerShape(14.dp),
+    Surface(color = Ui.Card, shape = Ui.CardShape, border = Ui.edge,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
                 .clickable(enabled = description.isNotEmpty()) { expanded = !expanded }) {
         if (item == null) {
-            Text("Choose a base item to begin.", color = SUB, fontSize = 14.sp, modifier = Modifier.padding(14.dp))
+            Text("Choose a base item to begin.", color = Ui.Sub, fontSize = 14.sp, modifier = Modifier.padding(14.dp))
             return@Surface
         }
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(item.name, color = TEXT, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            Text(item.name, color = Ui.Text, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
             DifficultyMeter(item)
             Row {
-                Text("Difficulty ${item.difficulty}", color = when { item.drains -> CHOSEN; item.difficulty > item.max -> WARN; else -> OK },
+                Text("Difficulty ${item.difficulty}", color = when { item.drains -> Ui.Summary; item.difficulty > item.max -> Ui.Warn; else -> Ui.Good },
                      fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                Text("  ·  your skill ${item.max}", color = SUB, fontSize = 13.sp, modifier = Modifier.weight(1f))
-                Text(if (item.turnsLeft > 0) "${item.turnsLeft} of ${item.turns} turns left" else "${item.turns} turns", color = SUB, fontSize = 13.sp)
+                Text("  ·  your skill ${item.max}", color = Ui.Sub, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                Text(if (item.turnsLeft > 0) "${item.turnsLeft} of ${item.turns} turns left" else "${item.turns} turns", color = Ui.Sub, fontSize = 13.sp)
             }
-            if (item.drains) Text("Beyond your skill: making it drains Smithing.", color = CHOSEN, fontSize = 12.sp)
+            if (item.drains) Text("Beyond your skill: making it drains Smithing.", color = Ui.Summary, fontSize = 12.sp)
             if (costs.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 costs.forEach { c ->
                     when (c.state) {
-                        0 -> Pill("${c.label} · short", BAD)
-                        2 -> Pill("${c.label} · needs ability", WARN)
-                        3 -> Pill("drains ${c.label}", CHOSEN)
-                        else -> Pill(c.label, TEXT)
+                        0 -> Pill("${c.label} · short", Ui.Bad)
+                        2 -> Pill("${c.label} · needs ability", Ui.Warn)
+                        3 -> Pill("drains ${c.label}", Ui.Summary)
+                        else -> Pill(c.label, Ui.Text)
                     }
                 }
             }
             if (description.isNotEmpty()) {
-                if (expanded) description.forEach { Text(it, color = Color(0xFFC8C8CC), fontSize = 13.sp) }
-                else Text("${description.first()}  ▸", color = SUB, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (expanded) description.forEach { Text(it, color = Ui.Body, fontSize = 13.sp) }
+                else Text("${description.first()}  ▸", color = Ui.Sub, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }
 }
 
 private fun optionColour(state: Int) = when (state) {
-    N.OPT_OFF -> DIM
-    N.OPT_MAYBE -> WARN
-    N.OPT_CHOSEN -> CHOSEN
-    N.OPT_DEAR -> SUB
-    N.OPT_ARTISTRY -> BAD
-    else -> TEXT
+    N.OPT_OFF -> Ui.Dim
+    N.OPT_MAYBE -> Ui.Warn
+    N.OPT_CHOSEN -> Ui.Summary
+    N.OPT_DEAR -> Ui.Sub
+    N.OPT_ARTISTRY -> Ui.Bad
+    else -> Ui.Text
 }
 
 @Composable
 private fun StateBadge(state: Int) = when (state) {
-    N.OPT_MAYBE -> Pill("needs ability", WARN)
-    N.OPT_DEAR -> Pill("can't afford", SUB)
-    N.OPT_ARTISTRY -> Pill("needs Artistry", BAD)
+    N.OPT_MAYBE -> Pill("needs ability", Ui.Warn)
+    N.OPT_DEAR -> Pill("can't afford", Ui.Sub)
+    N.OPT_ARTISTRY -> Pill("needs Artistry", Ui.Bad)
     else -> Unit
 }
 
@@ -191,11 +179,11 @@ private fun TileRow(row: List<GameState.SmithOption>, onAnswer: (Int) -> Unit) {
 @Composable
 private fun Tile(o: GameState.SmithOption, onAnswer: (Int) -> Unit) {
     val enabled = o.state != N.OPT_OFF
-    Surface(color = if (enabled) CARD_HI else CARD, shape = RoundedCornerShape(12.dp),
+    Surface(color = if (enabled) Ui.Raised else Ui.Card, shape = Ui.CardShape, border = Ui.edge,
             modifier = Modifier.fillMaxWidth().heightIn(min = 92.dp).clickable(enabled = enabled) { onAnswer(o.index) }) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(o.label, color = optionColour(o.state), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-            if (o.detail.isNotEmpty()) Text(o.detail, color = if (enabled) SUB else DIM, fontSize = 12.sp, lineHeight = 15.sp, maxLines = 3)
+            if (o.detail.isNotEmpty()) Text(o.detail, color = if (enabled) Ui.Sub else Ui.Dim, fontSize = 12.sp, lineHeight = 15.sp, maxLines = 3)
             StateBadge(o.state)
         }
     }
@@ -205,9 +193,9 @@ private fun Tile(o: GameState.SmithOption, onAnswer: (Int) -> Unit) {
 private fun MakeBar(o: GameState.SmithOption, onAnswer: (Int) -> Unit) {
     val enabled = o.state != N.OPT_OFF
     Column(Modifier.fillMaxWidth().background(Color(0xFF17171A)).padding(horizontal = 12.dp, vertical = 10.dp)) {
-        if (!enabled && o.detail.isNotEmpty()) Text(o.detail, color = SUB, fontSize = 12.sp, modifier = Modifier.padding(bottom = 6.dp))
+        if (!enabled && o.detail.isNotEmpty()) Text(o.detail, color = Ui.Sub, fontSize = 12.sp, modifier = Modifier.padding(bottom = 6.dp))
         Button(onClick = { onAnswer(o.index) }, enabled = enabled, modifier = Modifier.fillMaxWidth().height(52.dp),
-               colors = ButtonDefaults.buttonColors(containerColor = GOLD, contentColor = Color(0xFF241A00))) {
+               colors = ButtonDefaults.buttonColors(containerColor = Ui.Gold, contentColor = Color(0xFF241A00))) {
             Text("Make it", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
         }
     }
@@ -217,16 +205,16 @@ private fun MakeBar(o: GameState.SmithOption, onAnswer: (Int) -> Unit) {
 private fun OptionRow(o: GameState.SmithOption, toggles: Boolean, onAnswer: (Int) -> Unit) {
     val enabled = o.state != N.OPT_OFF
     val chosen = o.state == N.OPT_CHOSEN
-    Surface(color = if (chosen) CHOSEN.copy(alpha = 0.10f) else CARD, shape = RoundedCornerShape(10.dp),
+    Surface(color = if (chosen) Ui.Summary.copy(alpha = 0.10f) else Ui.Card, shape = Ui.CardShape, border = Ui.edge,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp).clickable(enabled = enabled) { onAnswer(o.index) }) {
         Row(Modifier.heightIn(min = 52.dp).padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             if (toggles) Box(Modifier.size(20.dp).clip(CircleShape)
-                    .then(if (chosen) Modifier.background(CHOSEN) else Modifier.border(1.5.dp, if (enabled) SUB else DIM, CircleShape)),
-                contentAlignment = Alignment.Center) { if (chosen) Text("✓", color = BG, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                    .then(if (chosen) Modifier.background(Ui.Summary) else Modifier.border(1.5.dp, if (enabled) Ui.Sub else Ui.Dim, CircleShape)),
+                contentAlignment = Alignment.Center) { if (chosen) Text("✓", color = Ui.Screen, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(o.label, color = optionColour(o.state), fontSize = 15.sp, fontWeight = if (chosen) FontWeight.SemiBold else FontWeight.Normal)
-                if (o.detail.isNotEmpty()) Text(o.detail, color = SUB, fontSize = 12.sp, maxLines = 3, lineHeight = 15.sp)
+                if (o.detail.isNotEmpty()) Text(o.detail, color = Ui.Sub, fontSize = 12.sp, maxLines = 3, lineHeight = 15.sp)
             }
             StateBadge(o.state)
         }
@@ -240,17 +228,17 @@ private fun NumbersRow(pair: List<GameState.SmithOption>, onAnswer: (Int) -> Uni
     val dec = pair.getOrNull(1)
     val name = inc.label.removePrefix("Increase ").replaceFirstChar { it.uppercase() }
     val usable = inc.state != N.OPT_OFF || (dec != null && dec.state != N.OPT_OFF)
-    Surface(color = CARD, shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp)) {
+    Surface(color = Ui.Card, shape = Ui.CardShape, border = Ui.edge, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp)) {
         Row(Modifier.heightIn(min = 56.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(Modifier.weight(1f)) {
-                Text(name, color = if (usable) TEXT else DIM, fontSize = 15.sp)
+                Text(name, color = if (usable) Ui.Text else Ui.Dim, fontSize = 15.sp)
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     dec?.let { if (it.state != N.OPT_ON && it.state != N.OPT_OFF) StateBadge(it.state) }
                     if (inc.state != N.OPT_ON && inc.state != N.OPT_OFF) StateBadge(inc.state)
                 }
             }
-            Text(inc.detail, color = TEXT, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 4.dp))
+            Text(inc.detail, color = Ui.Text, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 4.dp))
             dec?.let { d ->
                 FilledTonalButton(onClick = { onAnswer(d.index) }, enabled = d.state != N.OPT_OFF,
                                   contentPadding = PaddingValues(horizontal = 12.dp)) { Text("−", color = optionColour(d.state), fontSize = 18.sp) }
@@ -273,7 +261,7 @@ fun TextPrompt(p: GameState.Prompt.Text, onCancel: () -> Unit) {
             OutlinedTextField(text, { t -> if (t.toByteArray().size <= p.maxBytes) text = t.replace('\n', ' ') },
                               singleLine = !long, minLines = if (long) 4 else 1)
         },
-        confirmButton = { TextButton(onClick = { N.nativeAnswerText(text.trim()) }) { Text("OK") } },
+        confirmButton = { TextButton(onClick = { N.nativeAnswerText(text.trim()) }) { Text("Ui.Good") } },
         dismissButton = {
             Row {
                 if (p.random) TextButton(onClick = { N.nativeAnswer(N.TEXT_RANDOM) }) { Text("Random") }

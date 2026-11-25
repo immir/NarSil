@@ -15,6 +15,7 @@ struct BottomSheet<Content: View>: View {
                 .frame(maxWidth: .infinity, maxHeight: maxHeight)
                 .background(Palette.sheet)
                 .clipShape(UnevenRoundedRectangle(topLeadingRadius: 16, topTrailingRadius: 16))
+                .overlay(UnevenRoundedRectangle(topLeadingRadius: 16, topTrailingRadius: 16).strokeBorder(Palette.hairline, lineWidth: 1))
         }
         .preferredColorScheme(.dark)
     }
@@ -35,10 +36,10 @@ struct CheckDialog: View {
                 HStack {
                     Spacer()
                     Button("No") { answer(0) }.buttonStyle(.bordered)
-                    Button("Yes") { answer(1) }.buttonStyle(.borderedProminent)
+                    Button("Yes") { answer(1) }.buttonStyle(GoldButtonStyle())
                 }
             }
-            .padding(20).background(Palette.sheet).clipShape(RoundedRectangle(cornerRadius: 16)).padding(32)
+            .padding(20).cardSurface(Palette.sheet, radius: 16).padding(32)
         }
         .preferredColorScheme(.dark)
     }
@@ -97,10 +98,10 @@ struct QuantityDialog: View {
                     Button("All \(prompt.max)") { answer(prompt.max) }
                     Button("Cancel") { answer(-1) }
                     Spacer()
-                    Button("OK") { answer(n) }.buttonStyle(.borderedProminent)
+                    Button("OK") { answer(n) }.buttonStyle(GoldButtonStyle())
                 }
             }
-            .padding(20).background(Palette.sheet).clipShape(RoundedRectangle(cornerRadius: 16)).padding(32)
+            .padding(20).cardSurface(Palette.sheet, radius: 16).padding(32)
         }
         .preferredColorScheme(.dark)
         .onAppear { n = max(1, min(prompt.max, prompt.initial)) }
@@ -130,10 +131,10 @@ struct TextPromptView: View {
                     if prompt.random { Button("Random") { answer(NB.TEXT_RANDOM) } }
                     Button("Cancel") { answer(-1) }
                     Spacer()
-                    Button("OK") { Native.answerText(text.trimmingCharacters(in: .whitespaces)) }.buttonStyle(.borderedProminent)
+                    Button("OK") { Native.answerText(text.trimmingCharacters(in: .whitespaces)) }.buttonStyle(GoldButtonStyle())
                 }
             }
-            .padding(20).background(Palette.sheet).clipShape(RoundedRectangle(cornerRadius: 16)).padding(24)
+            .padding(20).cardSurface(Palette.sheet, radius: 16).padding(24)
         }
         .preferredColorScheme(.dark)
         .onAppear { text = prompt.initial }
@@ -231,7 +232,7 @@ struct AimBar: View {
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(rgb: 0x1C1C1E).opacity(0.93))
+        .background(Palette.sheet.opacity(0.93))
     }
 }
 
@@ -263,7 +264,7 @@ struct DirectionBar: View {
                 Button("Cancel") { answer(-1) }.buttonStyle(.bordered)
             }
             .padding(.horizontal, 12).padding(.vertical, 4)
-            .background(Color(rgb: 0x1C1C1E).opacity(0.93))
+            .background(Palette.sheet.opacity(0.93))
         } else {
             chips
         }
@@ -283,6 +284,6 @@ struct DirectionBar: View {
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 8).frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(rgb: 0x1C1C1E).opacity(0.93))
+        .background(Palette.sheet.opacity(0.93))
     }
 }

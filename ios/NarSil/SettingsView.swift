@@ -51,7 +51,7 @@ struct SettingsSheet: View {
                         scale(UiText.buttonScale, $buttonScale)
                         scale(UiText.messageScale, $messageScale)
                         card(VStack(alignment: .leading, spacing: 6) {
-                            Text(UiText.colours).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                            Text(UiText.colours).scaledFont(15).foregroundColor(Palette.text)
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 8) {
                                     ForEach(Array(Theme.all.enumerated()), id: \.offset) { i, t in
@@ -81,7 +81,7 @@ struct SettingsSheet: View {
                                $pad, [(PadMode.off.rawValue, "Off"), (PadMode.docked.rawValue, "Beside status"), (PadMode.floating.rawValue, "Floating")])
                         if pad != PadMode.off.rawValue {
                             card(VStack(alignment: .leading, spacing: 2) {
-                                Text("\(UiText.dpadSize)  \(Int(padSize)) pt").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                                Text("\(UiText.dpadSize)  \(Int(padSize)) pt").scaledFont(15).foregroundColor(Palette.text)
                                 Slider(value: $padSize, in: 100...220, step: 5)
                             })
                         }
@@ -95,7 +95,7 @@ struct SettingsSheet: View {
                         toggle(UiText.lowHealthBuzz, UiText.lowHealthBuzzHint, $lowHealthBuzz)
                         toggle(UiText.scumming, UiText.scummingHint, $scumming)
                         card(VStack(alignment: .leading, spacing: 6) {
-                            Text(UiText.saves).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                            Text(UiText.saves).scaledFont(15).foregroundColor(Palette.text)
                             Text(UiText.savesHint).scaledFont(12).foregroundColor(Palette.sub)
                             HStack(spacing: 8) {
                                 button("Export save") { dismiss(); onExportSave() }
@@ -103,7 +103,7 @@ struct SettingsSheet: View {
                             }
                         })
                         card(VStack(alignment: .leading, spacing: 6) {
-                            Text(UiText.problems).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                            Text(UiText.problems).scaledFont(15).foregroundColor(Palette.text)
                             Text(UiText.problemsHint).scaledFont(12).foregroundColor(Palette.sub)
                             button("Send logs") { dismiss(); onSendLogs() }
                         })
@@ -116,7 +116,7 @@ struct SettingsSheet: View {
 
     private func scale(_ title: String, _ value: Binding<Double>) -> some View {
         card(VStack(alignment: .leading, spacing: 2) {
-            Text("\(title)  \(Int((value.wrappedValue * 100).rounded()))%").scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+            Text("\(title)  \(Int((value.wrappedValue * 100).rounded()))%").scaledFont(15).foregroundColor(Palette.text)
             Slider(value: value, in: 0.8...1.8, step: 0.05)
         })
     }
@@ -128,13 +128,13 @@ struct SettingsSheet: View {
 
     private func card<C: View>(_ c: C) -> some View {
         c.padding(.horizontal, 14).padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading)
-            .background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 10)).padding(.horizontal, 12)
+            .cardSurface(Palette.card).padding(.horizontal, 12)
     }
 
     private func toggle(_ title: String, _ detail: String, _ value: Binding<Bool>, enabled: Bool = true) -> some View {
         card(HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+                Text(title).scaledFont(15).foregroundColor(Palette.text)
                 Text(detail).scaledFont(12).foregroundColor(Palette.sub)
             }
             Spacer()
@@ -144,7 +144,7 @@ struct SettingsSheet: View {
 
     private func choice(_ title: String, _ detail: String?, _ value: Binding<Int>, _ options: [(Int, String)]) -> some View {
         card(VStack(alignment: .leading, spacing: 6) {
-            Text(title).scaledFont(15).foregroundColor(Color(rgb: 0xE6E6EA))
+            Text(title).scaledFont(15).foregroundColor(Palette.text)
             Picker(title, selection: value) { ForEach(options, id: \.0) { Text($0.1).tag($0.0) } }.pickerStyle(.segmented)
             if let detail { Text(detail).scaledFont(12).foregroundColor(Palette.sub) }
         })

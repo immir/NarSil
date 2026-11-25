@@ -143,7 +143,7 @@ struct TipsCard: View {
                 HStack(spacing: 12) {
                     Spacer()
                     Button("Open Help", action: onHelp)
-                    Button("Got it", action: dismiss).buttonStyle(.borderedProminent)
+                    Button("Got it", action: dismiss).buttonStyle(GoldButtonStyle())
                 }.padding(.top, 4)
             }
             .padding(20).background(Palette.sheet, in: RoundedRectangle(cornerRadius: 16)).padding(24)

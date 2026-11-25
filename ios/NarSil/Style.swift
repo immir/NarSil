@@ -14,6 +14,19 @@ enum Palette {
     static let good = Color(rgb: 0x81C784)
     static let bad = Color(rgb: 0xE57373)
     static let divider = Color(rgb: 0x2C2C2E)
+    static let text = Color(rgb: 0xE6E6EA)
+    /// Text and icons on a gold fill.
+    static let onGold = Color(rgb: 0x241A00)
+    static let warn = Color(rgb: 0xFFB74D)
+    /// Switched off, locked, out of reach.
+    static let dim = Color(rgb: 0x5A5A60)
+    /// The strips (messages, status, buttons) and raised buttons.
+    static let chrome = Color(rgb: 0x141414)
+    static let raised = Color(rgb: 0x26262B)
+    /// Blue means pressed; gold means selected or active.
+    static let pressed = Color(rgb: 0x3A5F8A)
+    /// A faint edge where one surface meets another.
+    static let hairline = Color.white.opacity(0.10)
 }
 
 extension Color {
@@ -48,5 +61,25 @@ struct ScreenHeader: View {
             if let trailing { Text(trailing).scaledFont(13).foregroundColor(Palette.sub) }
         }
         .padding(.horizontal, 8).padding(.top, 8).padding(.bottom, 4)
+    }
+}
+
+extension View {
+    /// A card or dialog: its fill, rounded, with the faint edge.
+    func cardSurface(_ fill: Color = Palette.card, radius: CGFloat = 10) -> some View {
+        background(fill).clipShape(RoundedRectangle(cornerRadius: radius))
+            .overlay(RoundedRectangle(cornerRadius: radius).strokeBorder(Palette.hairline, lineWidth: 1))
+    }
+}
+
+/// The app's prominent button: gold with dark text (the system's would be its blue).
+struct GoldButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var enabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .fontWeight(.semibold).foregroundColor(Palette.onGold)
+            .padding(.horizontal, 16).padding(.vertical, 8).frame(minHeight: 36)
+            .background(Palette.gold.opacity(enabled ? (configuration.isPressed ? 0.75 : 1) : 0.35), in: RoundedRectangle(cornerRadius: 10))
     }
 }
