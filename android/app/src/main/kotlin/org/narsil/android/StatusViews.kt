@@ -145,7 +145,7 @@ internal fun CombatBuzz(seq: Int, bits: Int) = OnFeel(seq) {
     when {
         bits and NarSilNative.FEEL_KILL != 0 -> pulse(it, longArrayOf(0, 40, 50, 90), intArrayOf(0, 200, 0, 255))
         bits and NarSilNative.FEEL_HIT != 0 -> pulse(it, longArrayOf(0, 35), intArrayOf(0, 200))
-        bits and NarSilNative.FEEL_MISS != 0 -> pulse(it, longArrayOf(0, 15), intArrayOf(0, 70))
+        bits and NarSilNative.FEEL_MISS != 0 -> pulse(it, longArrayOf(0, 25), intArrayOf(0, 150))
     }
 }
 

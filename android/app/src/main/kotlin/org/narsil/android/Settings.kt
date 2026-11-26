@@ -67,6 +67,7 @@ class Settings(context: Context) {
     private val details = mutableStateOf(prefs.getBoolean("itemDetails", false))
     private val buzz = mutableStateOf(prefs.getBoolean("lowHealthBuzz", true))
     private val combat = mutableStateOf(prefs.getBoolean("combatBuzz", true))
+    private val taps = mutableStateOf(prefs.getBoolean("tapBuzz", true))
     private val tracing = mutableStateOf(prefs.getBoolean("traceUsage", false))
     private val msgLines = mutableIntStateOf(prefs.getInt("messageLines", 3))
     private val panelTabStyle = mutableIntStateOf(prefs.getInt("panelTabs", TABS_ICONS_AND_NAMES))
@@ -90,6 +91,8 @@ class Settings(context: Context) {
     var edgeSwipePanel: Boolean get() = edge.value; set(v) { edge.value = v; prefs.edit().putBoolean("edgeSwipePanel", v).apply() }
     /** A short buzz when health falls below the game's hitpoint warning. */
     /** A tick when the player's blow lands, a stronger one for a kill. */
+    /** A light keyboard-style tick under every touch. */
+    var tapBuzz: Boolean get() = taps.value; set(v) { taps.value = v; prefs.edit().putBoolean("tapBuzz", v).apply() }
     var combatBuzz: Boolean get() = combat.value; set(v) { combat.value = v; prefs.edit().putBoolean("combatBuzz", v).apply() }
     /** Records a usage trace on the device (Trace.kt); off until a tester turns it on. */
     var traceUsage: Boolean get() = tracing.value; set(v) { tracing.value = v; prefs.edit().putBoolean("traceUsage", v).apply() }
@@ -236,6 +239,13 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                         Hint(UiText.TRACE_USAGE_HINT)
                     }
                     Switch(settings.traceUsage, { settings.traceUsage = it })
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Label(UiText.TAP_BUZZ)
+                        Hint(UiText.TAP_BUZZ_HINT)
+                    }
+                    Switch(settings.tapBuzz, { settings.tapBuzz = it })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {

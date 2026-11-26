@@ -30,6 +30,7 @@ struct SettingsSheet: View {
     @Binding var itemDetails: Bool
     @Binding var lowHealthBuzz: Bool
     @Binding var combatBuzz: Bool
+    @Binding var tapBuzz: Bool
     @Binding var traceUsage: Bool
     @Binding var scumming: Bool
     let onExportSave: () -> Void
@@ -87,6 +88,7 @@ struct SettingsSheet: View {
                                Binding(get: { autoMore }, set: onAutoMore), enabled: autoMoreEnabled)
                         toggle(UiText.itemDetails, UiText.itemDetailsHint, $itemDetails)
                         toggle(UiText.traceUsage, UiText.traceUsageHint, $traceUsage)
+                        toggle(UiText.tapBuzz, UiText.tapBuzzHint, $tapBuzz)
                         toggle(UiText.combatBuzz, UiText.combatBuzzHint, $combatBuzz)
                         toggle(UiText.lowHealthBuzz, UiText.lowHealthBuzzHint, $lowHealthBuzz)
                         toggle(UiText.scumming, UiText.scummingHint, $scumming)

@@ -34,6 +34,7 @@ internal val TOUCH_GUIDE: List<Pair<String, List<String>>> = listOf(
         "☰ holds the rest: the panel, the whole-level map, messages, bash, tunnel, disarm, exchange, app options and help.",
         "Tap the message strip to scroll back through old messages; Options sets how many recent messages it shows. When it says \"tap to continue\", a tap dismisses -more-. Known ego items and artefacts are highlighted (cyan and gold) in the pack and wherever a message names them; items with properties still to discover (marked ??) are lilac in the pack.",
         "Options → Item details in the pack (off by default) adds, to an expanded pack item, what a known ego gives in general and what each ability it grants does.",
+        "Every touch gives a light tick, like the keyboard (Options → Buzz on taps).",
         "The phone buzzes as you fight: a faint tick for a miss, a firmer one when a blow lands, a double pulse for a kill, and a stronger buzz whenever you are hurt (stronger still for a big hit). Big moments buzz harder: health falling below the game's hitpoint warning (the HP bar turns red), a level gained, poison or paralysis, a summons, death. Options turns the two groups off separately.",
     ),
     "Menus and prompts" to listOf(
@@ -96,6 +97,8 @@ internal object UiText {
     const val ITEM_DETAILS_HINT = "Says what an ego item gives in general, and what each ability an item grants does, when you open it in the pack."
     const val TRACE_USAGE = "Record usage trace"
     const val TRACE_USAGE_HINT = "Keeps a log on this device of which buttons, panels and tabs you use, never what you type or the game's text, to help improve the controls. Nothing leaves the phone unless you choose Options → Send logs."
+    const val TAP_BUZZ = "Buzz on taps"
+    const val TAP_BUZZ_HINT = "A light tick under every touch, like the keyboard. Follows the system's touch-feedback setting on Android."
     const val COMBAT_BUZZ = "Buzz in combat"
     const val COMBAT_BUZZ_HINT = "A faint tick when you swing and miss, a firmer one when your blow lands, a double pulse when it kills, and a stronger buzz whenever you are hurt, the more so the more it costs you."
     const val LOW_HEALTH_BUZZ = "Buzz on big moments"

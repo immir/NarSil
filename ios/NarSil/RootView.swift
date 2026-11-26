@@ -32,6 +32,7 @@ struct RootView: View {
     @AppStorage("dpad") private var pad = PadMode.docked.rawValue
     @AppStorage("lowHealthBuzz") private var lowHealthBuzz = true
     @AppStorage("combatBuzz") private var combatBuzz = true
+    @AppStorage("tapBuzz") private var tapBuzz = true
     @AppStorage("traceUsage") private var traceUsage = false
     @State private var lastFeel = 0
     @AppStorage("panelTabs") private var panelTabs = TabStyle.iconsAndNames.rawValue
@@ -95,7 +96,7 @@ struct RootView: View {
         .textScale(buttonScale)
         .onChange(of: theme) { game.themeIndex = $0 }
         .onChange(of: quickKinds) { Native.setQuickKinds(QuickPins.decode($0)) }
-        .onAppear { game.themeIndex = theme; Native.setQuickKinds(QuickPins.decode(quickKinds)); Native.setTiles(tiles); Native.setItemDetails(itemDetails); Trace.setEnabled(traceUsage, header: GameLauncher.traceHeader); game.start() }
+        .onAppear { TapHaptics.install(); game.themeIndex = theme; Native.setQuickKinds(QuickPins.decode(quickKinds)); Native.setTiles(tiles); Native.setItemDetails(itemDetails); Trace.setEnabled(traceUsage, header: GameLauncher.traceHeader); game.start() }
         .onChange(of: tiles) { Native.setTiles($0) }
         .onChange(of: traceUsage) { Trace.setEnabled($0, header: GameLauncher.traceHeader) }
         .onChange(of: itemDetails) { Native.setItemDetails($0) }
@@ -108,7 +109,7 @@ struct RootView: View {
             if combatBuzz {
                 if bits & NB.FEEL_KILL != 0 { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
                 else if bits & NB.FEEL_HIT != 0 { UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
-                else if bits & NB.FEEL_MISS != 0 { UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.4) }
+                else if bits & NB.FEEL_MISS != 0 { UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.7) }
             }
             guard lowHealthBuzz else { return }
             if bits & NB.FEEL_DEATH != 0 { UINotificationFeedbackGenerator().notificationOccurred(.error) }
@@ -227,7 +228,7 @@ struct RootView: View {
         if showSettings { SettingsSheet(buttonScale: $buttonScale, messageScale: $messageScale, itemScale: $itemScale, statusScale: $statusScale,
                           theme: $theme, gamePalette: game.gamePalette, messageLines: $messageLines, panelTabs: $panelTabs, tabsOnTop: $tabsOnTop, tiles: $tiles, pad: $pad, padSize: $dpadSize, swipeMode: $swipeMode,
                           autoMore: game.status.autoMore, autoMoreEnabled: game.atPrompt && game.prompt == nil, onAutoMore: Native.setAutoMore,
-                          itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, combatBuzz: $combatBuzz, traceUsage: $traceUsage, scumming: $scumming,
+                          itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, combatBuzz: $combatBuzz, tapBuzz: $tapBuzz, traceUsage: $traceUsage, scumming: $scumming,
                           onExportSave: { Task { if let url = await Saves.export() { ShareSheet.present([url]) } else { say(Saves.cantSave) } } },
                           onImportSave: { importing = true },
                           onSendLogs: { ShareSheet.present(Saves.reportFiles) },
