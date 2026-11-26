@@ -16,8 +16,14 @@ final class TapHaptics: UIGestureRecognizer {
         generator.prepare()
     }
 
+    /// One tick at the strength chosen in Options (a multiple of the default; the motor tops out at full intensity).
+    @MainActor static func sample() {
+        let scale = UserDefaults.standard.object(forKey: "tapStrength") as? Double ?? 1
+        generator.impactOccurred(intensity: min(1, 0.6 * scale))
+    }
+
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
-        if UserDefaults.standard.object(forKey: "tapBuzz") as? Bool ?? true { Self.generator.impactOccurred(intensity: 0.6) }
+        if UserDefaults.standard.object(forKey: "tapBuzz") as? Bool ?? true { Self.sample() }
         state = .failed
     }
 }

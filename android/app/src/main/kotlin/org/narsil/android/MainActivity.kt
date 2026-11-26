@@ -6,12 +6,10 @@ import android.os.Bundle
 import android.os.Process
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
-import android.view.HapticFeedbackConstants
 import androidx.activity.compose.setContent
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.changedToDown
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -95,6 +93,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Haptics.init(applicationContext)
         settings = Settings(applicationContext)
         Trace.start(GameLauncher.dataDir(applicationContext), settings.traceUsage, traceHeader())
         crash = Share.pendingCrash(applicationContext)
@@ -156,13 +155,12 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        val view = LocalView.current
         /* Watches the initial pass of every touch without consuming it: a keyboard-style tick on each finger-down. */
         val tapTick = Modifier.pointerInput(Unit) {
             awaitPointerEventScope {
                 while (true) {
                     val e = awaitPointerEvent(PointerEventPass.Initial)
-                    if (settings.tapBuzz && e.changes.any { it.changedToDown() }) view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    if (settings.tapBuzz && e.changes.any { it.changedToDown() }) Haptics.tap()
                 }
             }
         }

@@ -54,6 +54,8 @@ class Settings(context: Context) {
     private val messageText = float("messageScale", 1f)
     private val itemText = float("itemScale", 1f)
     private val statusText = float("statusScale", 1f)
+    private val tapStrengthState = float("tapStrength", 1f)
+    private val fightStrengthState = float("fightStrength", 1f)
     private val padSize = float("dpadSize", 144f)
     private val padX = float("dpadX", 1f)
     private val padY = float("dpadY", 1f)
@@ -91,6 +93,11 @@ class Settings(context: Context) {
     var edgeSwipePanel: Boolean get() = edge.value; set(v) { edge.value = v; prefs.edit().putBoolean("edgeSwipePanel", v).apply() }
     /** A short buzz when health falls below the game's hitpoint warning. */
     /** A tick when the player's blow lands, a stronger one for a kill. */
+    /** How strong the tap tick and presses are, as a multiple of the default; 1 is the default. */
+    var tapStrength: Float get() = tapStrengthState.floatValue; set(v) { tapStrengthState.floatValue = v; Haptics.tapScale = v; save("tapStrength", v) }
+    /** The same for the fight and big-moment buzzes. */
+    var fightStrength: Float get() = fightStrengthState.floatValue; set(v) { fightStrengthState.floatValue = v; Haptics.fightScale = v; save("fightStrength", v) }
+    init { Haptics.tapScale = tapStrengthState.floatValue; Haptics.fightScale = fightStrengthState.floatValue }
     /** A light keyboard-style tick under every touch. */
     var tapBuzz: Boolean get() = taps.value; set(v) { taps.value = v; prefs.edit().putBoolean("tapBuzz", v).apply() }
     var combatBuzz: Boolean get() = combat.value; set(v) { combat.value = v; prefs.edit().putBoolean("combatBuzz", v).apply() }
@@ -247,12 +254,21 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                     }
                     Switch(settings.tapBuzz, { settings.tapBuzz = it })
                 }
+                if (settings.tapBuzz) {
+                    Label("${UiText.TAP_STRENGTH}  ${(settings.tapStrength * 100).roundToInt()}%")
+                    Slider(settings.tapStrength, { settings.tapStrength = (it * 10).roundToInt() / 10f }, valueRange = 0.2f..4f, onValueChangeFinished = { Haptics.tap() })
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Label(UiText.COMBAT_BUZZ)
                         Hint(UiText.COMBAT_BUZZ_HINT)
                     }
                     Switch(settings.combatBuzz, { settings.combatBuzz = it })
+                }
+                if (settings.combatBuzz || settings.lowHealthBuzz) {
+                    Label("${UiText.FIGHT_STRENGTH}  ${(settings.fightStrength * 100).roundToInt()}%")
+                    Slider(settings.fightStrength, { settings.fightStrength = (it * 10).roundToInt() / 10f }, valueRange = 0.2f..4f,
+                           onValueChangeFinished = { Haptics.pulse(longArrayOf(0, 60), intArrayOf(0, 230)) })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {

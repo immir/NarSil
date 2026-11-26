@@ -169,22 +169,10 @@ private fun OnFeel(seq: Int, act: (Context) -> Unit) {
     }
 }
 
-private fun pulse(context: Context, timings: LongArray, amplitudes: IntArray) {
-    val vibrator = if (Build.VERSION.SDK_INT >= 31) context.getSystemService(VibratorManager::class.java)?.defaultVibrator
-                   else @Suppress("DEPRECATION") context.getSystemService(Vibrator::class.java)
-    if (vibrator?.hasVibrator() != true) return
-    if (Build.VERSION.SDK_INT >= 26 && vibrator.hasAmplitudeControl()) vibrator.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
-    else if (Build.VERSION.SDK_INT >= 26) vibrator.vibrate(VibrationEffect.createWaveform(timings, -1))
-    else @Suppress("DEPRECATION") vibrator.vibrate(timings, -1)
-}
+private fun pulse(context: Context, timings: LongArray, amplitudes: IntArray) = Haptics.pulse(timings, amplitudes)
 
-private fun buzz(context: Context, pattern: LongArray = longArrayOf(0, 70, 90, 70)) {
-    val vibrator = if (Build.VERSION.SDK_INT >= 31) context.getSystemService(VibratorManager::class.java)?.defaultVibrator
-                   else @Suppress("DEPRECATION") context.getSystemService(Vibrator::class.java)
-    if (vibrator?.hasVibrator() != true) return
-    if (Build.VERSION.SDK_INT >= 26) vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
-    else @Suppress("DEPRECATION") vibrator.vibrate(pattern, -1)
-}
+private fun buzz(context: Context, pattern: LongArray = longArrayOf(0, 70, 90, 70)) =
+    Haptics.pulse(pattern, IntArray(pattern.size) { if (it % 2 == 1) 255 else 0 })
 
 /** Tracked monster: glyph, name, health, alertness/morale; tap to inspect. */
 @Composable

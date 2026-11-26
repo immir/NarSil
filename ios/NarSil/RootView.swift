@@ -33,6 +33,8 @@ struct RootView: View {
     @AppStorage("lowHealthBuzz") private var lowHealthBuzz = true
     @AppStorage("combatBuzz") private var combatBuzz = true
     @AppStorage("tapBuzz") private var tapBuzz = true
+    @AppStorage("tapStrength") private var tapStrength = 1.0
+    @AppStorage("fightStrength") private var fightStrength = 1.0
     @AppStorage("traceUsage") private var traceUsage = false
     @State private var lastFeel = 0
     @AppStorage("panelTabs") private var panelTabs = TabStyle.iconsAndNames.rawValue
@@ -107,9 +109,9 @@ struct RootView: View {
             guard seq != lastFeel else { return }
             let bits = game.status.feelBits
             if combatBuzz {
-                if bits & NB.FEEL_KILL != 0 { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
-                else if bits & NB.FEEL_HIT != 0 { UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
-                else if bits & NB.FEEL_MISS != 0 { UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.7) }
+                if bits & NB.FEEL_KILL != 0 { UIImpactFeedbackGenerator(style: .heavy).impactOccurred(intensity: min(1, fightStrength)) }
+                else if bits & NB.FEEL_HIT != 0 { UIImpactFeedbackGenerator(style: .medium).impactOccurred(intensity: min(1, 0.8 * fightStrength)) }
+                else if bits & NB.FEEL_MISS != 0 { UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: min(1, 0.7 * fightStrength)) }
             }
             guard lowHealthBuzz else { return }
             if bits & NB.FEEL_DEATH != 0 { UINotificationFeedbackGenerator().notificationOccurred(.error) }
@@ -120,9 +122,9 @@ struct RootView: View {
             /* Being hurt is felt harder than anything you do, more so as the share of health lost grows. */
             let lost = lastHp - hp, most = game.status.maxHp
             if combatBuzz, most > 0, lost > 0 {
-                if lost * 5 >= most { UIImpactFeedbackGenerator(style: .heavy).impactOccurred(intensity: 1) }
-                else if lost * 10 >= most { UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: 1) }
-                else { UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: 0.7) }
+                if lost * 5 >= most { UIImpactFeedbackGenerator(style: .heavy).impactOccurred(intensity: min(1, fightStrength)) }
+                else if lost * 10 >= most { UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: min(1, fightStrength)) }
+                else { UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: min(1, 0.7 * fightStrength)) }
             }
             lastHp = hp
         }
@@ -228,7 +230,7 @@ struct RootView: View {
         if showSettings { SettingsSheet(buttonScale: $buttonScale, messageScale: $messageScale, itemScale: $itemScale, statusScale: $statusScale,
                           theme: $theme, gamePalette: game.gamePalette, messageLines: $messageLines, panelTabs: $panelTabs, tabsOnTop: $tabsOnTop, tiles: $tiles, pad: $pad, padSize: $dpadSize, swipeMode: $swipeMode,
                           autoMore: game.status.autoMore, autoMoreEnabled: game.atPrompt && game.prompt == nil, onAutoMore: Native.setAutoMore,
-                          itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, combatBuzz: $combatBuzz, tapBuzz: $tapBuzz, traceUsage: $traceUsage, scumming: $scumming,
+                          itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, combatBuzz: $combatBuzz, tapBuzz: $tapBuzz, tapStrength: $tapStrength, fightStrength: $fightStrength, traceUsage: $traceUsage, scumming: $scumming,
                           onExportSave: { Task { if let url = await Saves.export() { ShareSheet.present([url]) } else { say(Saves.cantSave) } } },
                           onImportSave: { importing = true },
                           onSendLogs: { ShareSheet.present(Saves.reportFiles) },

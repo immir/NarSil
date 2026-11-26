@@ -13,7 +13,6 @@ import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.view.GestureDetector
-import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
@@ -330,7 +329,7 @@ class MapView(context: Context, private val state: GameState, private val router
         override fun onLongPress(e: MotionEvent) {
             if (multiTouch || aim != null || direction != null) return
             gridAt(e.x, e.y)?.let { (x, y) ->
-                performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                Haptics.press()
                 Trace.log("map.hold", "kind" to "inspect")
                 N.nativeRequestInspect(x, y)
             }

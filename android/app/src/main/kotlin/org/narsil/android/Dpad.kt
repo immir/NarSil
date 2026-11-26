@@ -20,12 +20,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
@@ -56,7 +54,6 @@ private val PAD_NAMES = listOf(8 to "north", 9 to "north-east", 6 to "east", 3 t
 @Composable
 fun Dpad(sizeDp: Float, onAction: (PadAction) -> Unit, onMove: ((Offset) -> Unit)? = null, marked: Set<Int> = emptySet()) {
     var lit by remember { mutableIntStateOf(0) }
-    val haptics = LocalHapticFeedback.current
     val action by rememberUpdatedState(onAction)
     val move by rememberUpdatedState(onMove)
     val movable = onMove != null
@@ -75,7 +72,7 @@ fun Dpad(sizeDp: Float, onAction: (PadAction) -> Unit, onMove: ((Offset) -> Unit
                 val centre = Offset(size.width / 2f, size.height / 2f)
                 fun dirAt(p: Offset) = PAD[(p.y / key).toInt().coerceIn(0, 2)][(p.x / key).toInt().coerceIn(0, 2)]
                 fun fire(a: PadAction) {
-                    if (a is PadAction.Run || a == PadAction.Rest) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (a is PadAction.Run || a == PadAction.Rest) Haptics.press()
                     action(a)
                 }
                 val start = dirAt(down.position)
@@ -100,7 +97,7 @@ fun Dpad(sizeDp: Float, onAction: (PadAction) -> Unit, onMove: ((Offset) -> Unit
                         PadAction.Wait -> fire(PadAction.Wait)
                         is PadAction.Run -> { lit = outcome.dir; fire(outcome); awaitRelease() }
                         else -> {  // held
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            Haptics.press()
                             var moved = false
                             while (true) {
                                 val c = awaitPointerEvent().changes.first()

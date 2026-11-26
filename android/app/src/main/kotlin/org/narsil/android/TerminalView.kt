@@ -7,7 +7,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.text.InputType
 import android.view.GestureDetector
-import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -106,7 +105,7 @@ class TerminalView(context: Context, private val state: GameState, private val r
         override fun onLongPress(e: MotionEvent) {
             if (multiTouch) return
             cellAt(e.x, e.y)?.let { (x, y) ->
-                performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                Haptics.press()
                 router.mouse(x, y, MOUSE_RIGHT)
             }
         }

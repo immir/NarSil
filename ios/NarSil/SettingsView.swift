@@ -31,6 +31,8 @@ struct SettingsSheet: View {
     @Binding var lowHealthBuzz: Bool
     @Binding var combatBuzz: Bool
     @Binding var tapBuzz: Bool
+    @Binding var tapStrength: Double
+    @Binding var fightStrength: Double
     @Binding var traceUsage: Bool
     @Binding var scumming: Bool
     let onExportSave: () -> Void
@@ -89,8 +91,10 @@ struct SettingsSheet: View {
                         toggle(UiText.itemDetails, UiText.itemDetailsHint, $itemDetails)
                         toggle(UiText.traceUsage, UiText.traceUsageHint, $traceUsage)
                         toggle(UiText.tapBuzz, UiText.tapBuzzHint, $tapBuzz)
+                        if tapBuzz { strength(UiText.tapStrength, $tapStrength) { TapHaptics.sample() } }
                         toggle(UiText.combatBuzz, UiText.combatBuzzHint, $combatBuzz)
                         toggle(UiText.lowHealthBuzz, UiText.lowHealthBuzzHint, $lowHealthBuzz)
+                        if combatBuzz || lowHealthBuzz { strength(UiText.fightStrength, $fightStrength) { UIImpactFeedbackGenerator(style: .medium).impactOccurred(intensity: min(1, 0.8 * fightStrength)) } }
                         toggle(UiText.scumming, UiText.scummingHint, $scumming)
                         card(VStack(alignment: .leading, spacing: 6) {
                             Text(UiText.saves).scaledFont(15).foregroundColor(Palette.text)
@@ -110,6 +114,14 @@ struct SettingsSheet: View {
                 }
             }
         }
+    }
+
+    /// A buzz-strength slider: 20% to 400% of the default, with a sample when the finger lifts.
+    private func strength(_ title: String, _ value: Binding<Double>, sample: @escaping () -> Void) -> some View {
+        card(VStack(alignment: .leading, spacing: 2) {
+            Text("\(title)  \(Int((value.wrappedValue * 100).rounded()))%").scaledFont(15).foregroundColor(Palette.text)
+            Slider(value: value, in: 0.2...4, step: 0.1, onEditingChanged: { editing in if !editing { sample() } })
+        })
     }
 
     private func scale(_ title: String, _ value: Binding<Double>) -> some View {
