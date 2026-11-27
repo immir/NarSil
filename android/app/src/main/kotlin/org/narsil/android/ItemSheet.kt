@@ -75,7 +75,7 @@ fun ItemSheet(prompt: GameState.Prompt.Items, colour: (Int) -> Int, onAnswer: (I
 @Composable
 private fun ItemRow(item: GameState.Item, colour: (Int) -> Int, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).heightIn(min = 52.dp).padding(horizontal = 16.dp),
+        Modifier.fillMaxWidth().clickable(onClick = onClick).heightIn(min = 40.dp).padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {

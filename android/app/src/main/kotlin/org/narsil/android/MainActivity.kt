@@ -8,7 +8,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.changedToDown
+import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -155,12 +157,19 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        /* Watches the initial pass of every touch without consuming it: a keyboard-style tick on each finger-down. */
+        /* Watches the initial pass of every touch without consuming it: a tick when a finger lifts having stayed put, so a drag (scrolling, panning) is silent. */
         val tapTick = Modifier.pointerInput(Unit) {
             awaitPointerEventScope {
+                var from: Offset? = null
                 while (true) {
                     val e = awaitPointerEvent(PointerEventPass.Initial)
-                    if (settings.tapBuzz && e.changes.any { it.changedToDown() }) Haptics.tap()
+                    val c = e.changes.singleOrNull()
+                    when {
+                        c == null -> from = null
+                        c.changedToDown() -> from = c.position
+                        from != null && (c.position - from!!).getDistance() > viewConfiguration.touchSlop -> from = null
+                        c.changedToUp() && from != null -> { from = null; if (settings.tapBuzz) Haptics.tap() }
+                    }
                 }
             }
         }

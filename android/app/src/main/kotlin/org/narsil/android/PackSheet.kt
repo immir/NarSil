@@ -100,7 +100,7 @@ private fun PackRow(item: GameState.Item, p: GameState.Prompt.Pack, colour: (Int
     Column(Modifier.fillMaxWidth().background(if (open) Ui.Raised else Color.Transparent).animateContentSize()) {
         Row(
             Modifier.fillMaxWidth().clickable { onAnswer(if (open) N.PACK_COLLAPSE else N.PACK_EXPAND + item.index) }
-                .heightIn(min = 52.dp).padding(horizontal = 16.dp),
+                .heightIn(min = 40.dp).padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(String(Character.toChars(item.glyph)), color = Color(colour(item.attr)), fontFamily = FontFamily.Monospace,

@@ -1,6 +1,6 @@
 import UIKit
 
-/// A light tick under every finger-down, like the system keyboard: one recognizer on the window that never
+/// A light tick under every tap, like the system keyboard: one recognizer on the window that never
 /// recognises anything, so it only watches and does not take touches from the controls.
 final class TapHaptics: UIGestureRecognizer {
     private static let generator = UIImpactFeedbackGenerator(style: .light)
@@ -22,8 +22,23 @@ final class TapHaptics: UIGestureRecognizer {
         generator.impactOccurred(intensity: min(1, 0.6 * scale))
     }
 
+    private var start: CGPoint?
+
+    /// A tick when a finger lifts having stayed put, so dragging (scrolling, panning) is silent.
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
-        if UserDefaults.standard.object(forKey: "tapBuzz") as? Bool ?? true { Self.sample() }
+        start = touches.count == 1 && (event.allTouches?.count ?? 1) == 1 ? touches.first?.location(in: nil) : nil
+    }
+
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
+        guard let from = start, let to = touches.first?.location(in: nil) else { return }
+        if hypot(to.x - from.x, to.y - from.y) > 10 { start = nil }
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
+        if start != nil, UserDefaults.standard.object(forKey: "tapBuzz") as? Bool ?? true { Self.sample() }
+        start = nil
         state = .failed
     }
+
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) { start = nil; state = .failed }
 }

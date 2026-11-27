@@ -183,7 +183,7 @@ struct ItemSheet: View {
                     Text("\(item.weightTenthsLb / 10).\(item.weightTenthsLb % 10) lb").scaledFont(13).foregroundColor(Palette.sub)
                 }
             }
-            .frame(minHeight: 52).padding(.horizontal, 16)
+            .frame(minHeight: 40).padding(.horizontal, 16)
         }.buttonStyle(.plain)
     }
 }

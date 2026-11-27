@@ -57,7 +57,7 @@ struct PackView: View {
                     Spacer()
                     if item.weightTenthsLb > 0 { Text(pounds(item.weightTenthsLb)).scaledFont(13).foregroundColor(Palette.sub) }
                 }
-                .frame(minHeight: 52).padding(.horizontal, 16).contentShape(Rectangle())
+                .frame(minHeight: 40).padding(.horizontal, 16).contentShape(Rectangle())
             }.buttonStyle(.plain)
             if open {
                 VStack(alignment: .leading, spacing: 10) {
