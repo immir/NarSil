@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import android.content.res.Configuration
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -141,10 +143,13 @@ fun PanelHost(gameTab: Int, tabStyle: Int, tabsOnTop: Boolean, onAnswer: (Int) -
         if (a >= N.PANEL_TAB && a < N.PANEL_CLOSE) asked = a - N.PANEL_TAB
         onAnswer(a)
     }
+    /* Landscape: the tabs stay in the column down the right edge, where they were over the map. */
+    val sideTabs = tabsOnTop && LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     Column(Modifier.fillMaxSize()) {
     /* Tabs along the top: the same strip as over the map, now showing the open tab; its tab again closes. */
-    if (tabsOnTop) TabsBar(tab, tabStyle) { i -> answer(if (i == tab) N.PANEL_CLOSE else N.PANEL_TAB + i) }
-    BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+    if (tabsOnTop && !sideTabs) TabsBar(tab, tabStyle) { i -> answer(if (i == tab) N.PANEL_CLOSE else N.PANEL_TAB + i) }
+    Row(Modifier.weight(1f).fillMaxWidth()) {
+    BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
         /* A wide window (tablet, foldable): a side column of a readable width, the map still showing beside it. */
         val wide = maxWidth >= 840.dp
         /* With the tabs along the top the panel fills a portrait screen; in landscape it keeps a share of the width. */
@@ -164,6 +169,8 @@ fun PanelHost(gameTab: Int, tabStyle: Int, tabsOnTop: Boolean, onAnswer: (Int) -
                     }
                 }
             }
+    }
+    if (sideTabs) TabsRail(tab) { i -> answer(if (i == tab) N.PANEL_CLOSE else N.PANEL_TAB + i) }
     }
     }
 }

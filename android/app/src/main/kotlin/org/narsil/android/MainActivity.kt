@@ -399,10 +399,10 @@ class MainActivity : ComponentActivity() {
             }
             if (rail) Column(Modifier.width(224.dp).fillMaxHeight().background(Ui.Chrome)) {
                 TextScale(settings.statusScale) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
-                Spacer(Modifier.weight(1f))
-                if (dpadMode() == Settings.DPAD_DOCKED) Box(Modifier.fillMaxWidth().padding(4.dp), contentAlignment = Alignment.Center) {
-                    Dpad(settings.dpadSizeDp.coerceAtMost(130f), { dpad(state, it) }, marked = padMarks(state.prompt))
-                }
+                /* Whatever is left under the status is the d-pad's: it grows to the largest square that fits. */
+                if (dpadMode() == Settings.DPAD_DOCKED) BoxWithConstraints(Modifier.fillMaxWidth().weight(1f).padding(4.dp), contentAlignment = Alignment.Center) {
+                    Dpad(minOf(maxWidth, maxHeight).value.coerceAtLeast(60f), { dpad(state, it) }, marked = padMarks(state.prompt))
+                } else Spacer(Modifier.weight(1f))
             }
             if (rail && settings.tabsOnTop) TabsRail(-1) { i -> Trace.log("panel.request", "via" to "tabs", "tab" to i); NarSilNative.nativeRequestAction(TAB_ACTIONS[i]) }
         }

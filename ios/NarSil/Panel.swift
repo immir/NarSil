@@ -155,9 +155,13 @@ private struct PanelHost<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
+        GeometryReader { screen in
+        /* Landscape: the tabs stay in the column down the right edge, where they were over the map. */
+        let sideTabs = tabsOnTop && screen.size.width > screen.size.height
         VStack(spacing: 0) {
             /* Tabs along the top: the same strip as over the map, now showing the open tab; its tab again closes. */
-            if tabsOnTop { TabsBar(selected: tab) { i in answer(i == tab ? NB.PANEL_CLOSE : NB.PANEL_TAB + i) } }
+            if tabsOnTop && !sideTabs { TabsBar(selected: tab) { i in answer(i == tab ? NB.PANEL_CLOSE : NB.PANEL_TAB + i) } }
+            HStack(spacing: 0) {
             GeometryReader { g in
                 // A wide window (iPad): a side column of a readable width, the map still showing beside it.
                 let wide = g.size.width >= 840
@@ -184,6 +188,9 @@ private struct PanelHost<Content: View>: View {
                     .overlay(UnevenRoundedRectangle(topLeadingRadius: tabsOnTop ? 0 : 16, bottomLeadingRadius: 16).strokeBorder(Palette.hairline, lineWidth: 1))
                 }
             }
+            if sideTabs { TabsRail(selected: tab) { i in answer(i == tab ? NB.PANEL_CLOSE : NB.PANEL_TAB + i) } }
+            }
+        }
         }
         .preferredColorScheme(.dark)
     }

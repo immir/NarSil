@@ -153,8 +153,13 @@ struct RootView: View {
             }
             VStack(spacing: 0) {
                 StatusStrip(game: game, stacked: true).textScale(statusScale)
-                Spacer(minLength: 0)
-                if pad == PadMode.docked.rawValue { Dpad(size: min(padSize, 130), onAction: padAction, marked: padMarks(game.prompt)).padding(4) }
+                /* Whatever is left under the status is the d-pad's: it grows to the largest square that fits. */
+                if pad == PadMode.docked.rawValue {
+                    GeometryReader { g in
+                        Dpad(size: max(60, min(g.size.width, g.size.height) - 8), onAction: padAction, marked: padMarks(game.prompt))
+                            .frame(width: g.size.width, height: g.size.height)
+                    }
+                } else { Spacer(minLength: 0) }
             }
             .frame(width: 224).background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
             if tabsOnTop { TabsRail(selected: -1) { i in Trace.log("panel.request", ("via", "tabs"), ("tab", i)); Native.requestAction(tabActions[i]) } }
