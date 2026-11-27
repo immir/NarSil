@@ -359,14 +359,15 @@ class MainActivity : ComponentActivity() {
         /* Landscape: the status moves to a rail on the right and the buttons run along the whole bottom edge. */
         val rail = state.mapMode && LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
         Column(Modifier.fillMaxSize()) {
-        if (state.mapMode && settings.tabsOnTop) TabsBar(-1, settings.panelTabs) { i ->
+        if (state.mapMode && settings.tabsOnTop && !rail) TabsBar(-1, settings.panelTabs) { i ->
             Trace.log("panel.request", "via" to "tabs", "tab" to i); NarSilNative.nativeRequestAction(TAB_ACTIONS[i])
         }
         Row(Modifier.weight(1f).fillMaxWidth()) {
+            if (rail) TextScale(settings.buttonScale) { ActionRail(barActions(state), (124 * settings.buttonScale).dp) { Trace.log("menu.open"); showMore = true } }
             Column(Modifier.weight(1f).fillMaxHeight()) {
                 /* At -more- a tap continues; otherwise it opens the scrollable history. */
                 if (state.mapMode) TextScale(settings.messageScale) {
-                    MessageStrip(state, settings.messageLines, panelButton = !settings.tabsOnTop) { if (state.messageLine.contains("-more-")) { Trace.log("more.tap"); router.special(Keys.ENTER) } else { Trace.log("messages.open", "via" to "strip"); showMessages = true } }
+                    MessageStrip(state, if (rail) minOf(2, settings.messageLines) else settings.messageLines, panelButton = !settings.tabsOnTop) { if (state.messageLine.contains("-more-")) { Trace.log("more.tap"); router.special(Keys.ENTER) } else { Trace.log("messages.open", "via" to "strip"); showMessages = true } }
                 }
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     AndroidView(
@@ -396,15 +397,15 @@ class MainActivity : ComponentActivity() {
                 if (state.mapMode && !rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { Trace.log("menu.open"); showMore = true } }
                 if (!state.mapMode) TextScale(settings.buttonScale) { KeyBar(state.waiting, router, { terminal?.toggleKeyboard() }) { showKeys = true } }
             }
-            if (rail) Column(Modifier.width(260.dp).fillMaxHeight().background(Ui.Chrome)) {
+            if (rail) Column(Modifier.width(224.dp).fillMaxHeight().background(Ui.Chrome)) {
                 TextScale(settings.statusScale) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
                 Spacer(Modifier.weight(1f))
                 if (dpadMode() == Settings.DPAD_DOCKED) Box(Modifier.fillMaxWidth().padding(4.dp), contentAlignment = Alignment.Center) {
-                    Dpad(settings.dpadSizeDp.coerceAtMost(150f), { dpad(state, it) }, marked = padMarks(state.prompt))
+                    Dpad(settings.dpadSizeDp.coerceAtMost(130f), { dpad(state, it) }, marked = padMarks(state.prompt))
                 }
             }
+            if (rail && settings.tabsOnTop) TabsRail(-1) { i -> Trace.log("panel.request", "via" to "tabs", "tab" to i); NarSilNative.nativeRequestAction(TAB_ACTIONS[i]) }
         }
-        if (rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { Trace.log("menu.open"); showMore = true } }
         }
     }
 

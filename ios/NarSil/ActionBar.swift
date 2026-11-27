@@ -141,8 +141,27 @@ struct ActionBar: View {
     }
 }
 
+/// Landscape: the same buttons in a column down the left edge, under the thumb; it scrolls when they do not all fit.
+struct ActionRail: View {
+    let actions: [BarAction]
+    let width: CGFloat
+    let onMore: () -> Void
+
+    var body: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 6) {
+                ForEach(actions) { BarButton(action: $0, compact: true) }
+                Button(action: onMore) { Text("☰").scaledFont(18).frame(maxWidth: .infinity, minHeight: 40) }
+                    .buttonStyle(.plain).background(Color.white.opacity(0.14), in: Capsule())
+            }.padding(6)
+        }
+        .frame(width: width).background(Palette.chrome)
+    }
+}
+
 private struct BarButton: View {
     let action: BarAction
+    var compact = false
 
     var body: some View {
         let fill: Color = action.emphasised ? Palette.gold : action.active ? Palette.card : Color.white.opacity(0.14)
@@ -150,7 +169,7 @@ private struct BarButton: View {
             .scaledFont(15, weight: action.emphasised ? .semibold : .regular)
             .foregroundColor(action.emphasised ? Palette.onGold : action.active ? Palette.gold : .white)
             .lineLimit(1)
-            .padding(.horizontal, 14).frame(minHeight: 40)
+            .padding(.horizontal, compact ? 6 : 14).frame(maxWidth: compact ? .infinity : nil, minHeight: 40)
             .background(fill, in: Capsule())
             .overlay { if action.active { Capsule().strokeBorder(Palette.gold, lineWidth: 1.5) } }
             .modifier(HoldMark(shape: Capsule(), enabled: action.longPress != nil))

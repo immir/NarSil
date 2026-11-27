@@ -54,7 +54,7 @@ struct RootView: View {
                 Color.black.ignoresSafeArea()
                 HardwareKeys(active: keysActive, onKey: hardwareKey).frame(width: 0, height: 0)
                 VStack(spacing: 0) {
-                    if tabsOnTop && game.mapMode {
+                    if tabsOnTop && game.mapMode && !rail {
                         TabsBar(selected: -1) { i in Trace.log("panel.request", ("via", "tabs"), ("tab", i)); Native.requestAction(tabActions[i]) }
                     }
                     if rail { landscape } else { portrait }
@@ -145,18 +145,19 @@ struct RootView: View {
 
     private var landscape: some View {
         HStack(spacing: 0) {
+            ActionRail(actions: bar, width: 124 * CGFloat(buttonScale)) { Trace.log("menu.open"); showMore = true }.textScale(buttonScale)
             VStack(spacing: 0) {
-                MessageStrip(game: game, lines: messageLines, onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, panelButton: !tabsOnTop, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
+                MessageStrip(game: game, lines: min(2, messageLines), onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, panelButton: !tabsOnTop, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
                 MapView(game: game, handle: map, swipeMode: swipeMode, tiles: tiles, padShown: pad != PadMode.off.rawValue).overlay(floatingPad)
                 promptBar
-                ActionBar(actions: bar) { Trace.log("menu.open"); showMore = true }
             }
             VStack(spacing: 0) {
                 StatusStrip(game: game, stacked: true).textScale(statusScale)
                 Spacer(minLength: 0)
-                if pad == PadMode.docked.rawValue { Dpad(size: min(padSize, 150), onAction: padAction, marked: padMarks(game.prompt)).padding(4) }
+                if pad == PadMode.docked.rawValue { Dpad(size: min(padSize, 130), onAction: padAction, marked: padMarks(game.prompt)).padding(4) }
             }
-            .frame(width: 260).background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
+            .frame(width: 224).background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
+            if tabsOnTop { TabsRail(selected: -1) { i in Trace.log("panel.request", ("via", "tabs"), ("tab", i)); Native.requestAction(tabActions[i]) } }
         }
     }
 

@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.LaunchedEffect
@@ -164,27 +167,37 @@ fun ActionBar(actions: List<BarAction>, onMore: () -> Unit) {
     }
 }
 
+/** Landscape: the same buttons in a column down the left edge, under the thumb; it scrolls when they do not all fit. */
+@Composable
+fun ActionRail(actions: List<BarAction>, width: Dp, onMore: () -> Unit) {
+    Column(Modifier.width(width).fillMaxHeight().background(Ui.Chrome).verticalScroll(rememberScrollState()).padding(6.dp),
+           verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        actions.forEach { BarButton(it, Modifier.fillMaxWidth(), compact = true) }
+        FilledTonalButton(onClick = onMore, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 6.dp)) { Text("☰", fontSize = 18.sp) }
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun BarButton(a: BarAction) {
-    val padding = PaddingValues(horizontal = 14.dp)
+private fun BarButton(a: BarAction, modifier: Modifier = Modifier, compact: Boolean = false) {
+    val padding = PaddingValues(horizontal = if (compact) 6.dp else 14.dp)
     val run = { Trace.log("bar.tap", "act" to a.label); a.run() }
     when {
         /* Material buttons take no long press: the same look, drawn by hand. */
         a.longPress != null -> Surface(shape = RoundedCornerShape(50),
                 color = if (a.emphasised) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = if (a.emphasised) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.heightIn(min = 40.dp)
+                modifier = modifier.heightIn(min = 40.dp)
                     .holdMark(if (a.emphasised) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer)
                     .combinedClickable(onLongClick = { Trace.log("bar.longpress", "act" to a.label); a.longPress?.invoke() }, onClick = run)) {
-            Box(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.padding(horizontal = if (compact) 6.dp else 14.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
                 Text(a.label, style = MaterialTheme.typography.labelLarge, fontWeight = if (a.emphasised) FontWeight.SemiBold else null)
             }
         }
-        a.emphasised -> Button(onClick = run, contentPadding = padding) { Text(a.label, fontWeight = FontWeight.SemiBold) }
-        a.active -> Button(onClick = run, contentPadding = padding, border = BorderStroke(1.5.dp, Ui.Gold),
+        a.emphasised -> Button(onClick = run, modifier = modifier, contentPadding = padding) { Text(a.label, fontWeight = FontWeight.SemiBold) }
+        a.active -> Button(onClick = run, modifier = modifier, contentPadding = padding, border = BorderStroke(1.5.dp, Ui.Gold),
                            colors = ButtonDefaults.buttonColors(containerColor = Ui.Card, contentColor = Ui.Gold)) { Text(a.label) }
-        else -> FilledTonalButton(onClick = run, contentPadding = padding) { Text(a.label) }
+        else -> FilledTonalButton(onClick = run, modifier = modifier, contentPadding = padding) { Text(a.label) }
     }
 }
 

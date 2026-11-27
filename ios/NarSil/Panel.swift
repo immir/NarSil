@@ -124,6 +124,29 @@ struct TabsBar: View {
     }
 }
 
+/// Landscape: the seven tabs as a column of icons down the right edge, `selected` in gold.
+struct TabsRail: View {
+    let selected: Int
+    let onTab: (Int) -> Void
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Palette.divider.frame(width: 1)
+            VStack(spacing: 0) {
+                ForEach(Array(tabTitles.enumerated()), id: \.offset) { i, t in
+                    Button { onTab(i) } label: {
+                        PanelIcon(index: i).stroke(style: StrokeStyle(lineWidth: 1.8 * 24 / 24, lineCap: .round, lineJoin: .round)).frame(width: 24, height: 24)
+                            .foregroundColor(i == selected ? Palette.gold : Palette.sub)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain).accessibilityLabel(t)
+                }
+            }
+        }
+        .frame(width: 48).background(Palette.sheet)
+    }
+}
+
 private struct PanelHost<Content: View>: View {
     @AppStorage("panelTabs") private var tabStyle = TabStyle.iconsAndNames.rawValue
     @AppStorage("tabsOnTop") private var tabsOnTop = false

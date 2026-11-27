@@ -203,6 +203,21 @@ fun TabsBar(selected: Int, tabStyle: Int, onTab: (Int) -> Unit) {
     }
 }
 
+/** Landscape: the seven tabs as a column of icons down the right edge, [selected] in gold. */
+@Composable
+fun TabsRail(selected: Int, onTab: (Int) -> Unit) {
+    Row(Modifier.width(48.dp).fillMaxHeight().background(Ui.Sheet)) {
+        Box(Modifier.width(1.dp).fillMaxHeight().background(Ui.Divider))
+        Column(Modifier.weight(1f).fillMaxHeight()) {
+            TAB_TITLES.forEachIndexed { i, t ->
+                Box(Modifier.weight(1f).fillMaxWidth().clickable { onTab(i) }, contentAlignment = Alignment.Center) {
+                    PanelGlyph(PANEL_ICON_PATHS[i], if (i == selected) Ui.Gold else Ui.Sub, Modifier.size(24.dp).semantics { contentDescription = t })
+                }
+            }
+        }
+    }
+}
+
 /** What opens each tab, by tab index: the same actions as the pack, character and the rest have elsewhere. */
 val TAB_ACTIONS = intArrayOf(N.ACT_INVENTORY, N.ACT_CHARACTER, N.ACT_SKILLS, N.ACT_ABILITIES, N.ACT_KNOWLEDGE, N.ACT_SMITH, N.ACT_OPTIONS)
 
