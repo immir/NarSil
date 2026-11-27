@@ -155,66 +155,105 @@ private struct Figures: View {
     }
 }
 
-/// The splash screen: the verse, the welcome, the version, and Continue or New game.
+/// The splash screen: the verse, the welcome, the version, and Continue or New game.  Landscape: two columns, the button on the left.
 private struct Welcome: View {
     let p: ScreenPrompt
     let answer: (Int) -> Void
 
+    private var title: some View {
+        Text(p.title).scaledFont(34, weight: .semibold).tracking(2).foregroundColor(GameLauncher.game == .silq ? Color(rgb: 0x7AD3F3) : Palette.gold)
+    }
+    private var verse: some View {
+        ForEach(Array(p.verse.enumerated()), id: \.offset) { _, v in
+            Text(v).font(.system(size: 16).italic()).foregroundColor(Palette.verse).multilineTextAlignment(.center)
+        }
+    }
+    private var welcome: some View {
+        ForEach(Array(p.paragraphs.dropLast().enumerated()), id: \.offset) { _, t in
+            Text(t).scaledFont(16).foregroundColor(Palette.body).multilineTextAlignment(.center).padding(.vertical, 4)
+        }
+    }
+    @ViewBuilder private func begin(_ inset: CGFloat) -> some View {
+        if let first = p.options.first {
+            Button { answer(first.index) } label: { Text(first.label).scaledFont(17).frame(maxWidth: .infinity, minHeight: 44) }
+                .buttonStyle(GoldButtonStyle()).padding(.horizontal, inset)
+        }
+    }
+    @ViewBuilder private var others: some View {
+        ForEach(Array(p.options.dropFirst()), id: \.index) { o in
+            Button(o.label) { answer(o.index) }.padding(.top, 8)
+            if !o.summary.isEmpty { Text(o.summary).scaledFont(12).foregroundColor(Palette.sub).multilineTextAlignment(.center) }
+        }
+        if let last = p.paragraphs.last { Text(last).scaledFont(12).foregroundColor(Palette.sub).padding(.top, 16) }
+    }
+
     var body: some View {
-        ZStack {
-            Palette.splash.ignoresSafeArea()
-            ScrollView {
-                VStack(spacing: 4) {
-                    Text(p.title).scaledFont(34, weight: .semibold).tracking(2).foregroundColor(GameLauncher.game == .silq ? Color(rgb: 0x7AD3F3) : Palette.gold).padding(.top, 28)
-                    ForEach(Array(p.verse.enumerated()), id: \.offset) { _, v in
-                        Text(v).font(.system(size: 16).italic()).foregroundColor(Palette.verse).multilineTextAlignment(.center)
+        GeometryReader { g in
+            ZStack {
+                Palette.splash.ignoresSafeArea()
+                if g.size.width > g.size.height {
+                    HStack(spacing: 32) {
+                        ScrollView { VStack(spacing: 4) { title; Color.clear.frame(height: 12); verse; Color.clear.frame(height: 16); begin(24); others }.frame(maxWidth: .infinity, minHeight: g.size.height) }
+                        ScrollView { VStack(spacing: 4) { welcome }.frame(maxWidth: .infinity, minHeight: g.size.height) }
+                    }.padding(.horizontal, 28)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 4) {
+                            title.padding(.top, 28); verse
+                            Color.clear.frame(height: 20); welcome
+                            Color.clear.frame(height: 28); begin(48); others
+                        }
+                        .padding(.horizontal, 28).padding(.bottom, 32).frame(maxWidth: .infinity)
                     }
-                    Color.clear.frame(height: 20)
-                    ForEach(Array(p.paragraphs.dropLast().enumerated()), id: \.offset) { _, t in
-                        Text(t).scaledFont(16).foregroundColor(Palette.body).multilineTextAlignment(.center).padding(.vertical, 4)
-                    }
-                    Color.clear.frame(height: 28)
-                    if let first = p.options.first {
-                        Button { answer(first.index) } label: { Text(first.label).scaledFont(17).frame(maxWidth: .infinity, minHeight: 44) }
-                            .buttonStyle(GoldButtonStyle()).padding(.horizontal, 48)
-                    }
-                    ForEach(Array(p.options.dropFirst()), id: \.index) { o in
-                        Button(o.label) { answer(o.index) }.padding(.top, 8)
-                        if !o.summary.isEmpty { Text(o.summary).scaledFont(12).foregroundColor(Palette.sub).multilineTextAlignment(.center) }
-                    }
-                    if let last = p.paragraphs.last { Text(last).scaledFont(12).foregroundColor(Palette.sub).padding(.top, 16) }
                 }
-                .padding(.horizontal, 28).padding(.bottom, 32).frame(maxWidth: .infinity)
             }
         }
         .preferredColorScheme(.dark)
     }
 }
 
-/// A poem (entering the dungeon, the throne room): the verse with its indentation, then Continue.
+/// A poem (entering the dungeon, the throne room): the verse with its indentation, then Continue.  Landscape: verse beside the button.
 private struct Poem: View {
     let p: ScreenPrompt
     let answer: (Int) -> Void
 
+    private var title: some View {
+        Text(p.title).scaledFont(24, weight: .semibold).tracking(1).foregroundColor(GameLauncher.game == .silq ? Color(rgb: 0x7AD3F3) : Palette.gold)
+    }
+    private var verse: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(Array(p.verse.enumerated()), id: \.offset) { _, v in
+                let line = v.drop(while: { $0 == " " })
+                Text(String(line)).font(.system(size: 16).italic()).foregroundColor(Palette.verse)
+                    .padding(.leading, CGFloat(v.count - line.count) * 6)
+            }
+        }
+    }
+    private var next: some View {
+        Button { answer(p.options.first?.index ?? 0) } label: {
+            Text(p.options.first?.label ?? "Continue").scaledFont(17).frame(maxWidth: .infinity, minHeight: 44)
+        }.buttonStyle(GoldButtonStyle())
+    }
+
     var body: some View {
-        ZStack {
-            Palette.splash.ignoresSafeArea()
-            ScrollView {
-                VStack(spacing: 0) {
-                    Text(p.title).scaledFont(24, weight: .semibold).tracking(1).foregroundColor(GameLauncher.game == .silq ? Color(rgb: 0x7AD3F3) : Palette.gold).padding(.top, 32).padding(.bottom, 24)
-                    VStack(alignment: .leading, spacing: 4) {
-                        ForEach(Array(p.verse.enumerated()), id: \.offset) { _, v in
-                            let line = v.drop(while: { $0 == " " })
-                            Text(String(line)).font(.system(size: 16).italic()).foregroundColor(Palette.verse)
-                                .padding(.leading, CGFloat(v.count - line.count) * 6)
+        GeometryReader { g in
+            ZStack {
+                Palette.splash.ignoresSafeArea()
+                if g.size.width > g.size.height {
+                    HStack(spacing: 32) {
+                        ScrollView { verse.frame(maxWidth: .infinity, minHeight: g.size.height) }
+                        VStack(spacing: 24) { title; next }.frame(width: g.size.width * 0.3)
+                    }.padding(.horizontal, 28)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            title.padding(.top, 32).padding(.bottom, 24)
+                            verse
+                            next.padding(.horizontal, 64).padding(.top, 36)
                         }
+                        .padding(.horizontal, 24).padding(.bottom, 32).frame(maxWidth: .infinity)
                     }
-                    Button { answer(p.options.first?.index ?? 0) } label: {
-                        Text(p.options.first?.label ?? "Continue").scaledFont(17).frame(maxWidth: .infinity, minHeight: 44)
-                    }
-                    .buttonStyle(GoldButtonStyle()).padding(.horizontal, 64).padding(.top, 36)
                 }
-                .padding(.horizontal, 24).padding(.bottom, 32).frame(maxWidth: .infinity)
             }
         }
         .preferredColorScheme(.dark)

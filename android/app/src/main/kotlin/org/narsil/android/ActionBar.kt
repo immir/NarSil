@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -170,10 +171,10 @@ fun ActionBar(actions: List<BarAction>, onMore: () -> Unit) {
 /** Landscape: the same buttons in a column down the left edge, under the thumb; it scrolls when they do not all fit. */
 @Composable
 fun ActionRail(actions: List<BarAction>, width: Dp, onMore: () -> Unit) {
-    Column(Modifier.width(width).fillMaxHeight().background(Ui.Chrome).verticalScroll(rememberScrollState()).padding(6.dp),
-           verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        actions.forEach { BarButton(it, Modifier.fillMaxWidth(), compact = true) }
-        FilledTonalButton(onClick = onMore, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 6.dp)) { Text("☰", fontSize = 18.sp) }
+    Column(Modifier.width(width).fillMaxHeight().background(Ui.Chrome).verticalScroll(rememberScrollState()).padding(horizontal = 6.dp, vertical = 4.dp),
+           verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        actions.forEach { BarButton(it, Modifier.fillMaxWidth().height(34.dp), compact = true) }
+        FilledTonalButton(onClick = onMore, modifier = Modifier.fillMaxWidth().height(34.dp), contentPadding = PaddingValues(horizontal = 6.dp)) { Text("☰", fontSize = 18.sp) }
     }
 }
 
@@ -187,10 +188,10 @@ private fun BarButton(a: BarAction, modifier: Modifier = Modifier, compact: Bool
         a.longPress != null -> Surface(shape = RoundedCornerShape(50),
                 color = if (a.emphasised) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = if (a.emphasised) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = modifier.heightIn(min = 40.dp)
+                modifier = modifier.then(if (compact) Modifier else Modifier.heightIn(min = 40.dp))
                     .holdMark(if (a.emphasised) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer)
                     .combinedClickable(onLongClick = { Trace.log("bar.longpress", "act" to a.label); a.longPress?.invoke() }, onClick = run)) {
-            Box(Modifier.padding(horizontal = if (compact) 6.dp else 14.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
+            Box((if (compact) Modifier.fillMaxSize() else Modifier).padding(horizontal = if (compact) 6.dp else 14.dp, vertical = if (compact) 0.dp else 10.dp), contentAlignment = Alignment.Center) {
                 Text(a.label, style = MaterialTheme.typography.labelLarge, fontWeight = if (a.emphasised) FontWeight.SemiBold else null)
             }
         }

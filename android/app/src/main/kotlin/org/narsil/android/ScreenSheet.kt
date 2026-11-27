@@ -6,6 +6,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.clickable
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -31,6 +33,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -155,56 +158,76 @@ private fun Figures(p: GameState.Prompt.Screen) {
     }
 }
 
-/** The splash screen: the verse, the welcome, the version, and Continue or New game. */
+/** The splash screen: the verse, the welcome, the version, and Continue or New game.  Landscape: two columns, the button on the left. */
 @Composable
 private fun Welcome(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
+    val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val title: @Composable () -> Unit = {
+        Text(p.title, color = if (N.silq) Color(0xFF7AD3F3) else Ui.Gold, fontSize = 34.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
+    }
+    val verse: @Composable () -> Unit = {
+        p.verse.forEach { v -> Text(v, color = Ui.Verse, fontSize = 16.sp, fontStyle = FontStyle.Italic, textAlign = TextAlign.Center) }
+    }
+    val welcome: @Composable () -> Unit = {
+        p.paragraphs.dropLast(1).forEach { t ->
+            Text(t, color = Ui.Body, fontSize = 16.sp, lineHeight = 23.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(vertical = 4.dp))
+        }
+    }
+    val begin: @Composable (Float) -> Unit = { width ->
+        p.options.firstOrNull()?.let { o ->
+            Button(onClick = { onAnswer(o.index) }, modifier = Modifier.fillMaxWidth(width).heightIn(min = 52.dp)) { Text(o.label, fontSize = 17.sp) }
+        }
+    }
+    val others: @Composable () -> Unit = {
+        p.options.drop(1).forEach { o ->
+            TextButton(onClick = { onAnswer(o.index) }, modifier = Modifier.padding(top = 8.dp)) { Text(o.label, fontSize = 15.sp) }
+            if (o.summary.isNotEmpty()) Text(o.summary, color = Ui.Sub, fontSize = 12.sp, textAlign = TextAlign.Center)
+        }
+        p.paragraphs.lastOrNull()?.let { Text(it, color = Ui.Sub, fontSize = 12.sp, modifier = Modifier.padding(top = 16.dp)) }
+    }
     Surface(color = Ui.Splash, modifier = Modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp, vertical = 32.dp),
-               horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Text(p.title, color = if (N.silq) Color(0xFF7AD3F3) else Ui.Gold, fontSize = 34.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp)
-            Box(Modifier.padding(top = 28.dp))
-            p.verse.forEach { v ->
-                Text(v, color = Ui.Verse, fontSize = 16.sp, fontStyle = FontStyle.Italic, textAlign = TextAlign.Center)
+        if (landscape) Row(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+            Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                title(); Box(Modifier.padding(top = 16.dp)); verse(); Box(Modifier.padding(top = 20.dp)); begin(0.8f); others()
             }
-            Box(Modifier.padding(top = 24.dp))
-            p.paragraphs.dropLast(1).forEach { t ->
-                Text(t, color = Ui.Body, fontSize = 16.sp, lineHeight = 23.sp, textAlign = TextAlign.Center,
-                     modifier = Modifier.padding(vertical = 4.dp))
+            Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                welcome()
             }
-            Box(Modifier.padding(top = 36.dp))
-            p.options.firstOrNull()?.let { o ->
-                Button(onClick = { onAnswer(o.index) }, modifier = Modifier.fillMaxWidth(0.7f).heightIn(min = 52.dp)) {
-                    Text(o.label, fontSize = 17.sp)
-                }
-            }
-            p.options.drop(1).forEach { o ->
-                TextButton(onClick = { onAnswer(o.index) }, modifier = Modifier.padding(top = 8.dp)) { Text(o.label, fontSize = 15.sp) }
-                if (o.summary.isNotEmpty()) Text(o.summary, color = Ui.Sub, fontSize = 12.sp, textAlign = TextAlign.Center)
-            }
-            p.paragraphs.lastOrNull()?.let { Text(it, color = Ui.Sub, fontSize = 12.sp, modifier = Modifier.padding(top = 16.dp)) }
+        } else Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp, vertical = 32.dp),
+                      horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            title(); Box(Modifier.padding(top = 28.dp)); verse(); Box(Modifier.padding(top = 24.dp)); welcome(); Box(Modifier.padding(top = 36.dp)); begin(0.7f); others()
         }
     }
 }
 
-/** A poem (entering the dungeon, the throne room): the verse with its indentation, then Continue. */
+/** A poem (entering the dungeon, the throne room): the verse with its indentation, then Continue.  Landscape: verse beside the button. */
 @Composable
 private fun Poem(p: GameState.Prompt.Screen, onAnswer: (Int) -> Unit) {
+    val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val title: @Composable () -> Unit = {
+        Text(p.title, color = if (N.silq) Color(0xFF7AD3F3) else Ui.Gold, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
+    }
+    val verse: @Composable () -> Unit = {
+        Column(Modifier.width(IntrinsicSize.Max)) {
+            p.verse.forEach { v ->
+                val indent = v.length - v.trimStart().length
+                Text(v.trimStart(), color = Ui.Verse, fontSize = 16.sp, lineHeight = 24.sp, fontStyle = FontStyle.Italic,
+                     modifier = Modifier.padding(start = (indent * 6).dp))
+            }
+        }
+    }
+    val next: @Composable (Float) -> Unit = { width ->
+        Button(onClick = { onAnswer(p.options.firstOrNull()?.index ?: 0) }, modifier = Modifier.fillMaxWidth(width).heightIn(min = 52.dp)) {
+            Text(p.options.firstOrNull()?.label ?: "Continue", fontSize = 17.sp)
+        }
+    }
     Surface(color = Ui.Splash, modifier = Modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 32.dp),
-               horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Text(p.title, color = if (N.silq) Color(0xFF7AD3F3) else Ui.Gold, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
-            Box(Modifier.padding(top = 24.dp))
-            Column(Modifier.width(IntrinsicSize.Max)) {
-                p.verse.forEach { v ->
-                    val indent = v.length - v.trimStart().length
-                    Text(v.trimStart(), color = Ui.Verse, fontSize = 16.sp, lineHeight = 24.sp, fontStyle = FontStyle.Italic,
-                         modifier = Modifier.padding(start = (indent * 6).dp))
-                }
-            }
-            Box(Modifier.padding(top = 36.dp))
-            Button(onClick = { onAnswer(p.options.firstOrNull()?.index ?: 0) }, modifier = Modifier.fillMaxWidth(0.6f).heightIn(min = 52.dp)) {
-                Text(p.options.firstOrNull()?.label ?: "Continue", fontSize = 17.sp)
-            }
+        if (landscape) Row(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(32.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) { verse() }
+            Column(Modifier.weight(0.7f), horizontalAlignment = Alignment.CenterHorizontally) { title(); Box(Modifier.padding(top = 24.dp)); next(1f) }
+        } else Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 32.dp),
+                      horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            title(); Box(Modifier.padding(top = 24.dp)); verse(); Box(Modifier.padding(top = 36.dp)); next(0.6f)
         }
     }
 }
