@@ -132,7 +132,7 @@ fun PanelAwareSheet(onDismiss: (() -> Unit)?, heightFraction: Float? = null, max
  * draws the open tab's screen.
  */
 @Composable
-fun PanelHost(gameTab: Int, tabStyle: Int, tabsOnTop: Boolean, onAnswer: (Int) -> Unit, content: @Composable () -> Unit) {
+fun PanelHost(gameTab: Int, tabStyle: Int, tabsOnTop: Boolean, mirror: Boolean = false, onAnswer: (Int) -> Unit, content: @Composable () -> Unit) {
     /* The tab asked for shows at once; the game's answer (its new screen) follows. */
     var asked by remember { mutableStateOf(-1) }
     LaunchedEffect(gameTab) { asked = -1 }
@@ -144,11 +144,15 @@ fun PanelHost(gameTab: Int, tabStyle: Int, tabsOnTop: Boolean, onAnswer: (Int) -
         onAnswer(a)
     }
     /* Landscape: the tabs stay in the column down the right edge, where they were over the map. */
-    val sideTabs = tabsOnTop && LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val sideTabs = tabsOnTop && landscape
+    /* Left-handed: everything on the other side. */
+    val left = mirror && landscape
     Column(Modifier.fillMaxSize()) {
     /* Tabs along the top: the same strip as over the map, now showing the open tab; its tab again closes. */
     if (tabsOnTop && !sideTabs) TabsBar(tab, tabStyle) { i -> answer(if (i == tab) N.PANEL_CLOSE else N.PANEL_TAB + i) }
     Row(Modifier.weight(1f).fillMaxWidth()) {
+    if (sideTabs && left) TabsRail(tab, onLeft = true) { i -> answer(if (i == tab) N.PANEL_CLOSE else N.PANEL_TAB + i) }
     BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
         /* A wide window (tablet, foldable): a side column of a readable width, the map still showing beside it. */
         val wide = maxWidth >= 840.dp
@@ -156,8 +160,8 @@ fun PanelHost(gameTab: Int, tabStyle: Int, tabsOnTop: Boolean, onAnswer: (Int) -
         val width = if (wide) minOf(maxWidth * 0.4f, 560.dp) else if (maxWidth > maxHeight) maxWidth * 0.58f else if (tabsOnTop) maxWidth else maxWidth * 0.94f
         Box(Modifier.fillMaxSize().background(Color(if (wide) 0x33000000 else 0x77000000))
                 .clickable(remember { MutableInteractionSource() }, indication = null) { answer(N.PANEL_CLOSE) })
-            Surface(color = Ui.Sheet, border = Ui.edge, shape = RoundedCornerShape(topStart = if (tabsOnTop) 0.dp else 16.dp, bottomStart = 16.dp),
-                    modifier = Modifier.align(Alignment.CenterEnd).width(width).fillMaxHeight()
+            Surface(color = Ui.Sheet, border = Ui.edge, shape = if (left) RoundedCornerShape(topEnd = if (tabsOnTop) 0.dp else 16.dp, bottomEnd = 16.dp) else RoundedCornerShape(topStart = if (tabsOnTop) 0.dp else 16.dp, bottomStart = 16.dp),
+                    modifier = Modifier.align(if (left) Alignment.CenterStart else Alignment.CenterEnd).width(width).fillMaxHeight()
                         .clickable(remember { MutableInteractionSource() }, indication = null) {}) {
                 Column {
                     if (!tabsOnTop) Row(Modifier.fillMaxWidth().swipeRightToClose { answer(N.PANEL_CLOSE) }, verticalAlignment = Alignment.CenterVertically) {
@@ -170,7 +174,7 @@ fun PanelHost(gameTab: Int, tabStyle: Int, tabsOnTop: Boolean, onAnswer: (Int) -
                 }
             }
     }
-    if (sideTabs) TabsRail(tab) { i -> answer(if (i == tab) N.PANEL_CLOSE else N.PANEL_TAB + i) }
+    if (sideTabs && !left) TabsRail(tab) { i -> answer(if (i == tab) N.PANEL_CLOSE else N.PANEL_TAB + i) }
     }
     }
 }
@@ -212,9 +216,9 @@ fun TabsBar(selected: Int, tabStyle: Int, onTab: (Int) -> Unit) {
 
 /** Landscape: the seven tabs as a column of icons down the right edge, [selected] in gold. */
 @Composable
-fun TabsRail(selected: Int, onTab: (Int) -> Unit) {
+fun TabsRail(selected: Int, onLeft: Boolean = false, onTab: (Int) -> Unit) {
     Row(Modifier.width(48.dp).fillMaxHeight().background(Ui.Sheet)) {
-        Box(Modifier.width(1.dp).fillMaxHeight().background(Ui.Divider))
+        if (!onLeft) Box(Modifier.width(1.dp).fillMaxHeight().background(Ui.Divider))
         Column(Modifier.weight(1f).fillMaxHeight()) {
             TAB_TITLES.forEachIndexed { i, t ->
                 Box(Modifier.weight(1f).fillMaxWidth().clickable { onTab(i) }, contentAlignment = Alignment.Center) {
@@ -222,6 +226,7 @@ fun TabsRail(selected: Int, onTab: (Int) -> Unit) {
                 }
             }
         }
+        if (onLeft) Box(Modifier.width(1.dp).fillMaxHeight().background(Ui.Divider))
     }
 }
 

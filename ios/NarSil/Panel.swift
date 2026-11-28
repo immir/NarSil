@@ -127,11 +127,12 @@ struct TabsBar: View {
 /// Landscape: the seven tabs as a column of icons down the right edge, `selected` in gold.
 struct TabsRail: View {
     let selected: Int
+    var onLeft = false
     let onTab: (Int) -> Void
 
     var body: some View {
         HStack(spacing: 0) {
-            Palette.divider.frame(width: 1)
+            if !onLeft { Palette.divider.frame(width: 1) }
             VStack(spacing: 0) {
                 ForEach(Array(tabTitles.enumerated()), id: \.offset) { i, t in
                     Button { onTab(i) } label: {
@@ -142,6 +143,7 @@ struct TabsRail: View {
                     .buttonStyle(.plain).accessibilityLabel(t)
                 }
             }
+            if onLeft { Palette.divider.frame(width: 1) }
         }
         .frame(width: 48).background(Palette.sheet)
     }
@@ -150,24 +152,35 @@ struct TabsRail: View {
 private struct PanelHost<Content: View>: View {
     @AppStorage("panelTabs") private var tabStyle = TabStyle.iconsAndNames.rawValue
     @AppStorage("tabsOnTop") private var tabsOnTop = false
+    @AppStorage("layoutMirror") private var layoutMirror = false
     let tab: Int
     let answer: (Int) -> Void
     @ViewBuilder let content: Content
+
+    /// The panel's rounded edge: on the side it opens from, square beside the tabs along the top.
+    private func panelShape(left: Bool) -> UnevenRoundedRectangle {
+        let top: CGFloat = tabsOnTop ? 0 : 16
+        return left ? UnevenRoundedRectangle(bottomTrailingRadius: 16, topTrailingRadius: top)
+                    : UnevenRoundedRectangle(topLeadingRadius: top, bottomLeadingRadius: 16)
+    }
 
     var body: some View {
         GeometryReader { screen in
         /* Landscape: the tabs stay in the column down the right edge, where they were over the map. */
         let sideTabs = tabsOnTop && screen.size.width > screen.size.height
+        /* Left-handed: everything on the other side. */
+        let left = layoutMirror && screen.size.width > screen.size.height
         VStack(spacing: 0) {
             /* Tabs along the top: the same strip as over the map, now showing the open tab; its tab again closes. */
             if tabsOnTop && !sideTabs { TabsBar(selected: tab) { i in answer(i == tab ? NB.PANEL_CLOSE : NB.PANEL_TAB + i) } }
             HStack(spacing: 0) {
+            if sideTabs && left { TabsRail(selected: tab, onLeft: true) { i in answer(i == tab ? NB.PANEL_CLOSE : NB.PANEL_TAB + i) } }
             GeometryReader { g in
                 // A wide window (iPad): a side column of a readable width, the map still showing beside it.
                 let wide = g.size.width >= 840
                 // With the tabs along the top the panel fills a portrait screen; in landscape it keeps a share of the width.
                 let width = wide ? min(g.size.width * 0.4, 560) : g.size.width > g.size.height ? g.size.width * 0.58 : tabsOnTop ? g.size.width : g.size.width * 0.94
-                ZStack(alignment: .trailing) {
+                ZStack(alignment: left ? .leading : .trailing) {
                     Color.black.opacity(wide ? 0.2 : 0.47).ignoresSafeArea().onTapGesture { answer(NB.PANEL_CLOSE) }
                     VStack(spacing: 0) {
                         if !tabsOnTop {
@@ -184,11 +197,11 @@ private struct PanelHost<Content: View>: View {
                             })
                     }
                     .frame(width: width).frame(maxHeight: .infinity).background(Palette.sheet)
-                    .clipShape(UnevenRoundedRectangle(topLeadingRadius: tabsOnTop ? 0 : 16, bottomLeadingRadius: 16))
-                    .overlay(UnevenRoundedRectangle(topLeadingRadius: tabsOnTop ? 0 : 16, bottomLeadingRadius: 16).strokeBorder(Palette.hairline, lineWidth: 1))
+                    .clipShape(panelShape(left: left))
+                    .overlay(panelShape(left: left).strokeBorder(Palette.hairline, lineWidth: 1))
                 }
             }
-            if sideTabs { TabsRail(selected: tab) { i in answer(i == tab ? NB.PANEL_CLOSE : NB.PANEL_TAB + i) } }
+            if sideTabs && !left { TabsRail(selected: tab) { i in answer(i == tab ? NB.PANEL_CLOSE : NB.PANEL_TAB + i) } }
             }
         }
         }

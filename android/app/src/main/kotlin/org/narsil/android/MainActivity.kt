@@ -6,6 +6,12 @@ import android.os.Bundle
 import android.os.Process
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.activity.compose.setContent
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.geometry.Offset
@@ -75,6 +81,8 @@ class MainActivity : ComponentActivity() {
     private var mapView: MapView? = null
     private var game: GameState? = null
     private var showMore by mutableStateOf(false)
+    /** ☰ → Adjust layout: handles on the pane boundaries (LayoutMode.kt). */
+    private var layoutMode by mutableStateOf(false)
     private var showMessages by mutableStateOf(false)
     private var showOptions by mutableStateOf(false)
     private var showKeys by mutableStateOf(false)
@@ -240,7 +248,7 @@ class MainActivity : ComponentActivity() {
             }
             if (showMore) MoreSheet(moreActions(state.status, router, { showMessages = true }, { showHelp = true }, { mapView?.toggleOverview() },
                                                 { settings.tiles = !settings.tiles }, settings.tiles,
-                                                { showRest = true }.takeIf { settings.dpad != Settings.DPAD_OFF }, { terminal?.toggleKeyboard() }, settings.tabsOnTop) +
+                                                { showRest = true }.takeIf { settings.dpad != Settings.DPAD_OFF }, { terminal?.toggleKeyboard() }, settings.tabsOnTop, adjustLayout = { showMore = false; layoutMode = true }) +
                                     listOfNotNull(scumAction(), BarAction("Restore scum save", run = { showScum = true }).takeIf { settings.scumming }),
                                     settings.quickActs, settings::toggleQuickAct) { showMore = false }
             if (showKeys) MoreSheet(extraKeys(router)) { showKeys = false }
@@ -342,7 +350,7 @@ class MainActivity : ComponentActivity() {
         val interactive = prompt?.isPanelContent() == true
         /* Dimmed under a question asked over it; not in the moment between two tabs (no prompt yet). */
         val dimmed = prompt != null && !interactive
-        if (live) PanelHost(tab, settings.panelTabs, settings.tabsOnTop, answer) {
+        if (live) PanelHost(tab, settings.panelTabs, settings.tabsOnTop, settings.layoutMirror, answer) {
             (if (interactive) prompt else shown)?.let { c ->
                 Box(Modifier.fillMaxSize()) {
                     PromptUi(state, c, if (interactive) answer else { _ -> })
@@ -358,12 +366,22 @@ class MainActivity : ComponentActivity() {
         SideEffect { state.themeIndex = settings.theme }
         /* Landscape: the status moves to a rail on the right and the buttons run along the whole bottom edge. */
         val rail = state.mapMode && LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+        Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
         if (state.mapMode && settings.tabsOnTop && !rail) TabsBar(-1, settings.panelTabs) { i ->
             Trace.log("panel.request", "via" to "tabs", "tab" to i); NarSilNative.nativeRequestAction(TAB_ACTIONS[i])
         }
-        Row(Modifier.weight(1f).fillMaxWidth()) {
-            if (rail) TextScale(settings.buttonScale) { ActionRail(barActions(state), (124 * settings.buttonScale).dp) { Trace.log("menu.open"); showMore = true } }
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+            val widthPx = constraints.maxWidth.toFloat()
+            val density = LocalDensity.current
+            val mirror = settings.layoutMirror && rail
+            val screenWidth = maxWidth.value
+            val railWidth = (settings.layoutRail * screenWidth).dp
+            val buttonsWidth = (settings.layoutButtons * screenWidth).dp
+            val buttonsColumn: @Composable () -> Unit = {
+                TextScale(settings.buttonScale) { ActionRail(barActions(state), buttonsWidth) { Trace.log("menu.open"); showMore = true } }
+            }
+            val mapColumn: @Composable RowScope.() -> Unit = {
             Column(Modifier.weight(1f).fillMaxHeight()) {
                 /* At -more- a tap continues; otherwise it opens the scrollable history. */
                 if (state.mapMode) TextScale(settings.messageScale) {
@@ -386,25 +404,69 @@ class MainActivity : ComponentActivity() {
                         Box(Modifier.align(Alignment.BottomCenter)) { DirectionBar(d, dpadMode() != Settings.DPAD_OFF, NarSilNative::nativeAnswer) }
                     }
                     if (state.mapMode && dpadMode() == Settings.DPAD_FLOATING) FloatingDpad(settings, padMarks(state.prompt)) { dpad(state, it) }
-                    if (state.mapMode && settings.edgeSwipePanel) EdgeSwipeHandle(Modifier.align(Alignment.CenterEnd))
+                    if (state.mapMode && settings.edgeSwipePanel) EdgeSwipeHandle(Modifier.align(if (mirror) Alignment.CenterStart else Alignment.CenterEnd))
                 }
                 if (state.mapMode && !rail) TextScale(settings.statusScale) {
                     if (dpadMode() == Settings.DPAD_DOCKED) Row(Modifier.background(Ui.Chrome), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.weight(1f)) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
-                        Box(Modifier.padding(4.dp)) { Dpad(settings.dpadSizeDp, { dpad(state, it) }, marked = padMarks(state.prompt)) }
+                        /* Dragged: the d-pad's share of the width. */
+                        val padDp = if (settings.layoutPad > 0) settings.layoutPad * screenWidth - 8 else settings.dpadSizeDp
+                        if (layoutMode) ResizeHandle(horizontalBar = false) { dx -> settings.layoutPad = ((padDp + 8) * density.density - dx) / widthPx }
+                        Box(Modifier.padding(4.dp)) { Dpad(padDp, { dpad(state, it) }, marked = padMarks(state.prompt)) }
                     } else StatusStrip(state, stacked = false, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz)
                 }
                 if (state.mapMode && !rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { Trace.log("menu.open"); showMore = true } }
                 if (!state.mapMode) TextScale(settings.buttonScale) { KeyBar(state.waiting, router, { terminal?.toggleKeyboard() }) { showKeys = true } }
             }
-            if (rail) Column(Modifier.width(224.dp).fillMaxHeight().background(Ui.Chrome)) {
-                TextScale(settings.statusScale) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
-                /* Whatever is left under the status is the d-pad's: it grows to the largest square that fits. */
-                if (dpadMode() == Settings.DPAD_DOCKED) BoxWithConstraints(Modifier.fillMaxWidth().weight(1f).padding(4.dp), contentAlignment = Alignment.Center) {
-                    Dpad(minOf(maxWidth, maxHeight).value.coerceAtLeast(60f), { dpad(state, it) }, marked = padMarks(state.prompt))
-                } else Spacer(Modifier.weight(1f))
             }
-            if (rail && settings.tabsOnTop) TabsRail(-1) { i -> Trace.log("panel.request", "via" to "tabs", "tab" to i); NarSilNative.nativeRequestAction(TAB_ACTIONS[i]) }
+            val statusColumn: @Composable () -> Unit = {
+                BoxWithConstraints(Modifier.width(railWidth).fillMaxHeight().background(Ui.Chrome)) {
+                    val columnPx = constraints.maxHeight.toFloat()
+                    var statusPx by remember { mutableFloatStateOf(0f) }
+                    val split = settings.layoutSplit
+                    val docked = dpadMode() == Settings.DPAD_DOCKED
+                    Column(Modifier.fillMaxSize()) {
+                        /* The status takes what it needs, or, once the split is dragged, a share of the column (and scrolls if that is less). */
+                        Box(if (split > 0 && docked) Modifier.weight(split).verticalScroll(rememberScrollState()) else Modifier.onSizeChanged { statusPx = it.height.toFloat() }) {
+                            TextScale(settings.statusScale) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
+                        }
+                        if (layoutMode && docked) ResizeHandle(horizontalBar = true) { dy ->
+                            settings.layoutSplit = ((if (split > 0) split else statusPx / columnPx) + dy / columnPx)
+                        }
+                        /* Whatever is left under the status is the d-pad's: it grows to the largest square that fits. */
+                        if (docked) BoxWithConstraints(Modifier.fillMaxWidth().weight(if (split > 0) 1 - split else 1f).padding(4.dp), contentAlignment = Alignment.Center) {
+                            Dpad(minOf(maxWidth, maxHeight).value.coerceAtLeast(60f), { dpad(state, it) }, marked = padMarks(state.prompt))
+                        } else Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+            val tabsColumn: @Composable () -> Unit = {
+                if (settings.tabsOnTop) TabsRail(-1, onLeft = mirror) { i -> Trace.log("panel.request", "via" to "tabs", "tab" to i); NarSilNative.nativeRequestAction(TAB_ACTIONS[i]) }
+            }
+            Row(Modifier.fillMaxSize()) {
+                when {
+                    !rail -> mapColumn()
+                    !mirror -> {
+                        buttonsColumn()
+                        if (layoutMode) ResizeHandle(horizontalBar = false) { dx -> settings.layoutButtons = settings.layoutButtons + dx / widthPx }
+                        mapColumn()
+                        if (layoutMode) ResizeHandle(horizontalBar = false) { dx -> settings.layoutRail = settings.layoutRail - dx / widthPx }
+                        statusColumn(); tabsColumn()
+                    }
+                    else -> {
+                        tabsColumn(); statusColumn()
+                        if (layoutMode) ResizeHandle(horizontalBar = false) { dx -> settings.layoutRail = settings.layoutRail + dx / widthPx }
+                        mapColumn()
+                        if (layoutMode) ResizeHandle(horizontalBar = false) { dx -> settings.layoutButtons = settings.layoutButtons - dx / widthPx }
+                        buttonsColumn()
+                    }
+                }
+            }
+        }
+        }
+        if (layoutMode) {
+            BackHandler { layoutMode = false }
+            Box(Modifier.align(Alignment.Center)) { LayoutBar(settings) { layoutMode = false } }
         }
         }
     }

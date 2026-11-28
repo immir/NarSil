@@ -36,6 +36,13 @@ struct RootView: View {
     @AppStorage("tapStrength") private var tapStrength = 1.0
     @AppStorage("fightStrength") private var fightStrength = 1.0
     @AppStorage("traceUsage") private var traceUsage = false
+    @AppStorage("layoutRail") private var layoutRail = LayoutPresets.defaultRail
+    @AppStorage("layoutButtons") private var layoutButtons = LayoutPresets.defaultButtons
+    @AppStorage("layoutSplit") private var layoutSplit = -1.0
+    @AppStorage("layoutPad") private var layoutPad = -1.0
+    @AppStorage("layoutMirror") private var layoutMirror = false
+    @State private var layoutMode = false
+    @State private var statusHeight: CGFloat = 0
     @State private var lastFeel = 0
     @AppStorage("panelTabs") private var panelTabs = TabStyle.iconsAndNames.rawValue
     @AppStorage("tabsOnTop") private var tabsOnTop = false
@@ -57,7 +64,7 @@ struct RootView: View {
                     if tabsOnTop && game.mapMode && !rail {
                         TabsBar(selected: -1) { i in Trace.log("panel.request", ("via", "tabs"), ("tab", i)); Native.requestAction(tabActions[i]) }
                     }
-                    if rail { landscape } else { portrait }
+                    if rail { landscape } else { portrait(width: g.size.width) }
                 }
                 if !game.mapMode { TerminalScreen(game: game) }
                 promptLayer
@@ -68,6 +75,9 @@ struct RootView: View {
                         .background(Color(rgb: 0x333338), in: Capsule()).padding(.bottom, 120).allowsHitTesting(false)
                 }
                 if let message = game.exited { ExitedCard(message: message) }
+                if layoutMode {
+                    LayoutBar(rail: $layoutRail, buttons: $layoutButtons, split: $layoutSplit, pad: $layoutPad, mirror: $layoutMirror) { layoutMode = false }
+                }
                 if showMore { sheet(MoreSheet(actions: more, pinned: QuickPins.decode(quickActs), onPin: { quickActs = QuickPins.toggled(quickActs, $0) }, dismiss: { showMore = false })) }
                 if showRest { sheet(RestSheet(dismiss: { showRest = false })) }
             }
@@ -130,13 +140,18 @@ struct RootView: View {
         }
     }
 
-    private var portrait: some View {
+    private func portrait(width: CGFloat) -> some View {
         VStack(spacing: 0) {
             MessageStrip(game: game, lines: messageLines, onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, panelButton: !tabsOnTop, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
             MapView(game: game, handle: map, swipeMode: swipeMode, tiles: tiles, padShown: pad != PadMode.off.rawValue).overlay(floatingPad)
             HStack(alignment: .center, spacing: 0) {
                 StatusStrip(game: game, stacked: true).textScale(statusScale)
-                if pad == PadMode.docked.rawValue { Dpad(size: padSize, onAction: padAction, marked: padMarks(game.prompt)).padding(4) }
+                if pad == PadMode.docked.rawValue {
+                    /* Dragged: the d-pad's share of the width. */
+                    let dpadSide = layoutPad > 0 ? layoutPad * width - 8 : padSize
+                    if layoutMode { ResizeHandle(horizontalBar: false) { dx in layoutPad = LayoutPresets.clamp((dpadSide + 8 - dx) / width, 0.2, 0.5) } }
+                    Dpad(size: dpadSide, onAction: padAction, marked: padMarks(game.prompt)).padding(4)
+                }
             }.background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
             promptBar
             ActionBar(actions: bar) { Trace.log("menu.open"); showMore = true }
@@ -144,26 +159,74 @@ struct RootView: View {
     }
 
     private var landscape: some View {
-        HStack(spacing: 0) {
-            ActionRail(actions: bar, width: 124 * CGFloat(buttonScale)) { Trace.log("menu.open"); showMore = true }.textScale(buttonScale)
-            VStack(spacing: 0) {
-                MessageStrip(game: game, lines: min(2, messageLines), onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, panelButton: !tabsOnTop, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
-                MapView(game: game, handle: map, swipeMode: swipeMode, tiles: tiles, padShown: pad != PadMode.off.rawValue).overlay(floatingPad)
-                promptBar
+        GeometryReader { g in
+            let w = g.size.width
+            HStack(spacing: 0) {
+                if layoutMirror {
+                    tabsColumn; statusColumn(w)
+                    handle { dx in layoutRail = LayoutPresets.clamp(layoutRail + dx / w, 0.12, 0.4) }
+                    mapColumn
+                    handle { dx in layoutButtons = LayoutPresets.clamp(layoutButtons - dx / w, 0.07, 0.25) }
+                    buttonsColumn(w)
+                } else {
+                    buttonsColumn(w)
+                    handle { dx in layoutButtons = LayoutPresets.clamp(layoutButtons + dx / w, 0.07, 0.25) }
+                    mapColumn
+                    handle { dx in layoutRail = LayoutPresets.clamp(layoutRail - dx / w, 0.12, 0.4) }
+                    statusColumn(w); tabsColumn
+                }
             }
+        }
+    }
+
+    @ViewBuilder private func handle(_ onDrag: @escaping (CGFloat) -> Void) -> some View {
+        if layoutMode { ResizeHandle(horizontalBar: false, onDrag: onDrag) }
+    }
+
+    private func buttonsColumn(_ w: CGFloat) -> some View {
+        ActionRail(actions: bar, width: CGFloat(layoutButtons) * w) { Trace.log("menu.open"); showMore = true }.textScale(buttonScale)
+    }
+
+    private var mapColumn: some View {
+        VStack(spacing: 0) {
+            MessageStrip(game: game, lines: min(2, messageLines), onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, panelButton: !tabsOnTop, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
+            MapView(game: game, handle: map, swipeMode: swipeMode, tiles: tiles, padShown: pad != PadMode.off.rawValue).overlay(floatingPad)
+            promptBar
+        }
+    }
+
+    /// The status takes what it needs, or, once the split is dragged, a share of the column (and scrolls if that is less);
+    /// whatever is left under it is the d-pad's, which grows to the largest square that fits.
+    private func statusColumn(_ w: CGFloat) -> some View {
+        GeometryReader { c in
+            let docked = pad == PadMode.docked.rawValue
             VStack(spacing: 0) {
-                StatusStrip(game: game, stacked: true).textScale(statusScale)
-                /* Whatever is left under the status is the d-pad's: it grows to the largest square that fits. */
-                if pad == PadMode.docked.rawValue {
+                if layoutSplit > 0 && docked {
+                    ScrollView { StatusStrip(game: game, stacked: true).textScale(statusScale) }.frame(height: c.size.height * layoutSplit)
+                } else {
+                    StatusStrip(game: game, stacked: true).textScale(statusScale)
+                        .background(GeometryReader { s in Color.clear.preference(key: StatusHeightKey.self, value: s.size.height) })
+                }
+                if layoutMode && docked {
+                    ResizeHandle(horizontalBar: true) { dy in
+                        let base = layoutSplit > 0 ? layoutSplit : statusHeight / max(c.size.height, 1)
+                        layoutSplit = LayoutPresets.clamp(base + dy / max(c.size.height, 1), 0.15, 0.85)
+                    }
+                }
+                if docked {
                     GeometryReader { g in
                         Dpad(size: max(60, min(g.size.width, g.size.height) - 8), onAction: padAction, marked: padMarks(game.prompt))
                             .frame(width: g.size.width, height: g.size.height)
                     }
                 } else { Spacer(minLength: 0) }
             }
-            .frame(width: 224).background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
-            if tabsOnTop { TabsRail(selected: -1) { i in Trace.log("panel.request", ("via", "tabs"), ("tab", i)); Native.requestAction(tabActions[i]) } }
+            .onPreferenceChange(StatusHeightKey.self) { statusHeight = $0 }
         }
+        .frame(width: CGFloat(layoutRail) * w).background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
+    }
+
+    @ViewBuilder private var tabsColumn: some View {
+        if tabsOnTop { TabsRail(selected: -1, onLeft: layoutMirror) { i in Trace.log("panel.request", ("via", "tabs"), ("tab", i)); Native.requestAction(tabActions[i]) } }
     }
 
     /// Settings → D-pad → Floating: over the map, moved by holding its centre and dragging; the position is kept
@@ -189,7 +252,7 @@ struct RootView: View {
     }
     private var more: [BarAction] {
         moreActions(game.status, messages: { showMore = false; showMessages = true }, toggleMap: { map.toggleOverview() }, toggleTiles: { tiles.toggle(); Native.setTiles(tiles) }, tilesOn: tiles, help: { showHelp = true },
-                    restOptions: pad != PadMode.off.rawValue ? { showMore = false; showRest = true } : nil, tabsOnTop: tabsOnTop)
+                    restOptions: pad != PadMode.off.rawValue ? { showMore = false; showRest = true } : nil, tabsOnTop: tabsOnTop, adjustLayout: { showMore = false; layoutMode = true })
             + (scumming ? [BarAction(label: "Scum", run: { Task { say(await Saves.take()) } }),
                            BarAction(label: "Restore scum save", run: { showScum = true })] : [])
     }

@@ -121,7 +121,7 @@ fun coreActions(s: GameState.Status, padShown: Boolean, restOptions: () -> Unit)
 
 /** Less frequent but necessary: behind the ☰ button. */
 fun moreActions(s: GameState.Status, router: KeyRouter, showMessages: () -> Unit, showHelp: () -> Unit, toggleMap: () -> Unit,
-                toggleTiles: () -> Unit, tilesOn: Boolean, restOptions: (() -> Unit)?, toggleKeyboard: () -> Unit, tabsOnTop: Boolean = false): List<BarAction> = listOfNotNull(
+                toggleTiles: () -> Unit, tilesOn: Boolean, restOptions: (() -> Unit)?, toggleKeyboard: () -> Unit, tabsOnTop: Boolean = false, adjustLayout: (() -> Unit)? = null): List<BarAction> = listOfNotNull(
     /* Pack, gear, character, skills, abilities, knowledge, smithing and game options live in the panel (@). */
     BarAction("Panel", run = act(N.ACT_PANEL)).takeIf { !tabsOnTop },
     restOptions?.let { BarAction("Rest…", run = it) },
@@ -138,6 +138,7 @@ fun moreActions(s: GameState.Status, router: KeyRouter, showMessages: () -> Unit
     BarAction("Help", run = showHelp),
     BarAction("Options", run = act(N.ACT_OPTIONS)),
     BarAction(if (tilesOn) "Tiles: on" else "Tiles: off", run = toggleTiles),
+    adjustLayout?.let { BarAction("Adjust layout", run = it) },
     BarAction("Keyboard", run = toggleKeyboard),
     BarAction("Retire character", run = { router.char('Q'.code) }),
     BarAction("Esc", run = { router.special(Keys.ESCAPE) }),

@@ -86,7 +86,7 @@ func coreActions(_ s: Status, padShown: Bool, restOptions: @escaping () -> Void)
 
 /// Less frequent but necessary: behind the ☰ button.  Pack, character, skills and the rest live in the panel (@).
 func moreActions(_ s: Status, messages: @escaping () -> Void, toggleMap: @escaping () -> Void, toggleTiles: @escaping () -> Void, tilesOn: Bool, help: @escaping () -> Void,
-                 restOptions: (() -> Void)? = nil, tabsOnTop: Bool = false) -> [BarAction] {
+                 restOptions: (() -> Void)? = nil, tabsOnTop: Bool = false, adjustLayout: (() -> Void)? = nil) -> [BarAction] {
     var out = tabsOnTop ? [] : [BarAction(label: "Panel", run: act(NB.ACT_PANEL))]
     if let restOptions { out.append(BarAction(label: "Rest…", run: restOptions)) }
     out.append(BarAction(label: "Pack", pin: NB.ACT_INVENTORY, run: act(NB.ACT_INVENTORY)))
@@ -103,6 +103,7 @@ func moreActions(_ s: Status, messages: @escaping () -> Void, toggleMap: @escapi
         BarAction(label: "Help", run: help),
         BarAction(label: "Options", run: act(NB.ACT_OPTIONS)),
         BarAction(label: tilesOn ? "Tiles: on" : "Tiles: off", run: toggleTiles),
+    ] + (adjustLayout.map { [BarAction(label: "Adjust layout", run: $0)] } ?? []) + [
         BarAction(label: "Retire character", run: { Native.pushKey(Int(UnicodeScalar("Q").value)) }),
         BarAction(label: "Esc", run: { Native.pushKey(Keys.escape) }),
     ]

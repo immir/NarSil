@@ -56,6 +56,11 @@ class Settings(context: Context) {
     private val statusText = float("statusScale", 1f)
     private val tapStrengthState = float("tapStrength", 1f)
     private val fightStrengthState = float("fightStrength", 1f)
+    private val railState = float("layoutRail", LAYOUT_RAIL)
+    private val buttonsState = float("layoutButtons", LAYOUT_BUTTONS)
+    private val splitState = float("layoutSplit", -1f)
+    private val padShareState = float("layoutPad", -1f)
+    private val mirrorState = mutableStateOf(prefs.getBoolean("layoutMirror", false))
     private val padSize = float("dpadSize", 144f)
     private val padX = float("dpadX", 1f)
     private val padY = float("dpadY", 1f)
@@ -98,6 +103,25 @@ class Settings(context: Context) {
     /** The same for the fight and big-moment buzzes. */
     var fightStrength: Float get() = fightStrengthState.floatValue; set(v) { fightStrengthState.floatValue = v; Haptics.fightScale = v; save("fightStrength", v) }
     init { Haptics.tapScale = tapStrengthState.floatValue; Haptics.fightScale = fightStrengthState.floatValue }
+    /*
+     * The arrangement of the main screen, as fractions of its width (height for the split) so it survives rotation and other
+     * phones.  Landscape: the right column (status and d-pad) and the button column; [layoutSplit], the share of the right
+     * column the status takes (-1: as much as it needs); portrait: [layoutPad], the share of the width the docked d-pad takes (-1: the
+     * d-pad size above).  [layoutMirror] swaps the sides for a left-handed grip.
+     */
+    var layoutRail: Float get() = railState.floatValue; set(v) { railState.floatValue = v.coerceIn(0.12f, 0.4f); save("layoutRail", railState.floatValue) }
+    var layoutButtons: Float get() = buttonsState.floatValue; set(v) { buttonsState.floatValue = v.coerceIn(0.07f, 0.25f); save("layoutButtons", buttonsState.floatValue) }
+    var layoutSplit: Float get() = splitState.floatValue; set(v) { splitState.floatValue = if (v < 0) -1f else v.coerceIn(0.15f, 0.85f); save("layoutSplit", splitState.floatValue) }
+    var layoutPad: Float get() = padShareState.floatValue; set(v) { padShareState.floatValue = if (v < 0) -1f else v.coerceIn(0.2f, 0.5f); save("layoutPad", padShareState.floatValue) }
+    var layoutMirror: Boolean get() = mirrorState.value; set(v) { mirrorState.value = v; prefs.edit().putBoolean("layoutMirror", v).apply() }
+    /** The preset the sizes match, or null once a handle has been dragged. */
+    val layoutPreset: String? get() = LAYOUT_PRESETS.firstOrNull { (_, p) -> p.first == layoutRail && p.second == layoutButtons && layoutSplit < 0 && layoutPad < 0 }?.first
+    fun applyLayoutPreset(name: String) {
+        val (rail, buttons) = LAYOUT_PRESETS.first { it.first == name }.second
+        layoutRail = rail; layoutButtons = buttons; layoutSplit = -1f; layoutPad = -1f
+    }
+    fun resetLayout() { applyLayoutPreset("Balanced"); layoutMirror = false }
+
     /** A light keyboard-style tick under every touch. */
     var tapBuzz: Boolean get() = taps.value; set(v) { taps.value = v; prefs.edit().putBoolean("tapBuzz", v).apply() }
     var combatBuzz: Boolean get() = combat.value; set(v) { combat.value = v; prefs.edit().putBoolean("combatBuzz", v).apply() }
@@ -131,6 +155,10 @@ class Settings(context: Context) {
     var itemDetails: Boolean get() = details.value; set(v) { details.value = v; prefs.edit().putBoolean("itemDetails", v).apply(); NarSilNative.nativeSetItemDetails(v) }
 
     companion object {
+        const val LAYOUT_RAIL = 0.19f
+        const val LAYOUT_BUTTONS = 0.108f
+        /** The presets: name to (right column, button column) as fractions of the width. */
+        val LAYOUT_PRESETS = listOf("Compact" to (0.17f to 0.095f), "Balanced" to (LAYOUT_RAIL to LAYOUT_BUTTONS), "Big" to (0.24f to 0.14f))
         const val TABS_ICONS_AND_NAMES = 0
         const val TABS_ICONS = 1
         const val TABS_NAMES = 2
