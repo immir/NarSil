@@ -429,7 +429,9 @@ class MainActivity : ComponentActivity() {
                         val padDp = (if (fixed) minOf(sectionDp - 8, padShareDp) else padShareDp).coerceAtLeast(60f)
                         Row(Modifier.then(if (fixed) Modifier.height(sectionDp.dp) else Modifier.onSizeChanged { sectionPx = it.height.toFloat() }).background(Ui.Chrome),
                             verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.weight(1f).then(if (fixed) Modifier.verticalScroll(rememberScrollState()) else Modifier)) {
+                            if (fixed) ScrollFade(Modifier.weight(1f)) {
+                                StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz)
+                            } else Box(Modifier.weight(1f)) {
                                 StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz)
                             }
                             /* Dragged: how the width is shared between the status and the d-pad. */
@@ -450,7 +452,9 @@ class MainActivity : ComponentActivity() {
                     val docked = dpadMode() == Settings.DPAD_DOCKED
                     Column(Modifier.fillMaxSize()) {
                         /* The status takes what it needs, or, once the split is dragged, a share of the column (and scrolls if that is less). */
-                        Box(if (split > 0 && docked) Modifier.weight(split).verticalScroll(rememberScrollState()) else Modifier.onSizeChanged { statusPx = it.height.toFloat() }) {
+                        if (split > 0 && docked) ScrollFade(Modifier.weight(split)) {
+                            TextScale(settings.statusScale) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
+                        } else Box(Modifier.onSizeChanged { statusPx = it.height.toFloat() }) {
                             TextScale(settings.statusScale) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
                         }
                         if (layoutMode && docked) ResizeHandle(horizontalBar = true) { dy ->

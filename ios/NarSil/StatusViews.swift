@@ -85,10 +85,12 @@ struct StatusStrip: View {
         let hp = s.lowHp ? Color(red: 1, green: 0x3B / 255, blue: 0x30 / 255) : Color(red: 0xD0 / 255, green: 0x40 / 255, blue: 0x40 / 255)
         let voice = Color(red: 0x40 / 255, green: 0x80 / 255, blue: 0xE0 / 255)
         VStack(alignment: .leading, spacing: 4) {
+            /* Most urgent first: the two meters side by side, then the target, then the chips (danger before information). */
             if stacked {
-                Meter(label: "HP", value: s.hp, max: s.maxHp, colour: hp, alarm: s.lowHp)
-                Meter(label: "Voice", value: s.voice, max: s.maxVoice, colour: voice, alarm: false)
-                Text(depthText(s)).scaledFont(13)
+                HStack(spacing: 10) {
+                    Meter(label: "HP", value: s.hp, max: s.maxHp, colour: hp, alarm: s.lowHp)
+                    Meter(label: "Voice", value: s.voice, max: s.maxVoice, colour: voice, alarm: false)
+                }
             } else {
                 HStack(spacing: 12) {
                     Meter(label: "HP", value: s.hp, max: s.maxHp, colour: hp, alarm: s.lowHp)
@@ -96,8 +98,8 @@ struct StatusStrip: View {
                     Text(depthText(s)).scaledFont(13)
                 }
             }
-            Chips(game: game)
             if let foe = s.foe { FoeLine(foe: foe, game: game) }
+            Chips(game: game, depth: stacked ? depthText(s) : nil)
         }
         .foregroundColor(.white)
         .padding(.horizontal, 8).padding(.vertical, 4)
@@ -159,6 +161,13 @@ private struct FoeLine: View {
 /// Experience to spend, the light, the game's own status-line pieces (hunger, fear, …) and monsters in view (StatusViews.kt).
 private struct Chips: View {
     @ObservedObject var game: GameState
+    let depth: String?
+
+    /// Plain colours (the floor underfoot, a neutral note) carry no urgency.
+    private func isGrey(_ rgb: UInt32) -> Bool {
+        let r = Int((rgb >> 16) & 0xFF), g = Int((rgb >> 8) & 0xFF), b = Int(rgb & 0xFF)
+        return max(r, g, b) - min(r, g, b) < 28
+    }
 
     var body: some View {
         let s = game.status
@@ -166,14 +175,19 @@ private struct Chips: View {
         let segments = game.statusSegments().filter { $0.0.range(of: #"^\d+'?\s*(ft)?$"#, options: .regularExpression) == nil }
         let light = segments.first { $0.0.hasPrefix("Light") }
         let others = segments.filter { !$0.0.hasPrefix("Light") }
+        /* Information (hunger satisfied, the floor underfoot) goes after what needs attention (poison, fear, and the like). */
+        let info = others.filter { $0.0.hasPrefix("Fed") || $0.0.hasPrefix("Full") || isGrey($0.1) }
+        let effects = others.filter { !($0.0.hasPrefix("Fed") || $0.0.hasPrefix("Full") || isGrey($0.1)) }
         FlowLayout(spacing: 6) {
-            if s.newExp > 0 { Chip(icon: IconIndex.exp, text: "\(s.newExp)", colour: s.newExp >= 100 ? Color(red: 0x90 / 255, green: 0xCA / 255, blue: 0xF9 / 255) : grey) { Native.requestAction(NB.ACT_SKILLS) } }
+            if s.threats > 0 { Chip(icon: IconIndex.threats, text: "\(s.threats) · \(s.threatNearest) away", colour: s.threatsAlert > 0 ? red : grey) { Native.requestLookMonsters() } }
+            ForEach(Array(effects.enumerated()), id: \.offset) { _, seg in Chip(text: seg.0, colour: Color(rgb: seg.1)) }
             if light != nil || turns >= 0 {
                 let colour = turns >= 0 && turns < 100 ? red : turns >= 0 && turns < 300 ? amber : light.map { Color(rgb: $0.1) } ?? grey
                 Chip(icon: IconIndex.light, text: [light?.0, turns >= 0 ? "\(turns)t" : nil].compactMap { $0 }.joined(separator: " · "), colour: colour)
             }
-            ForEach(Array(others.enumerated()), id: \.offset) { _, seg in Chip(text: seg.0, colour: Color(rgb: seg.1)) }
-            if s.threats > 0 { Chip(icon: IconIndex.threats, text: "\(s.threats) · \(s.threatNearest) away", colour: s.threatsAlert > 0 ? red : grey) { Native.requestLookMonsters() } }
+            if s.newExp > 0 { Chip(icon: IconIndex.exp, text: "\(s.newExp)", colour: s.newExp >= 100 ? Color(red: 0x90 / 255, green: 0xCA / 255, blue: 0xF9 / 255) : grey) { Native.requestAction(NB.ACT_SKILLS) } }
+            if let depth { Chip(text: depth, colour: Color(white: 0.88)) }
+            ForEach(Array(info.enumerated()), id: \.offset) { _, seg in Chip(text: seg.0, colour: Color(rgb: seg.1)) }
         }
     }
 }
@@ -227,4 +241,32 @@ private struct Chip: View {
 /// The depth, and in NarSil-Q (as in Sil-Q) the minimum depth the depth clock now allows going up to.
 func depthText(_ s: Status) -> String {
     GameLauncher.game == .silq && s.minDepth > 0 ? "\(s.depth * 50) ft · min \(s.minDepth * 50) ft" : "\(s.depth * 50) ft"
+}
+
+
+/// A box that scrolls its content up and down, with a fade and ▾ at the bottom while there is more below, so it is clear that there is.
+struct ScrollFade<Content: View>: View {
+    @ViewBuilder let content: Content
+    @State private var boxHeight: CGFloat = 0
+    @State private var contentBottom: CGFloat = 0
+
+    var body: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            content.background(GeometryReader { c in Color.clear.preference(key: ContentBottomKey.self, value: c.frame(in: .named("scrollFade")).maxY) })
+        }
+        .coordinateSpace(name: "scrollFade")
+        .background(GeometryReader { b in Color.clear.onAppear { boxHeight = b.size.height }.onChange(of: b.size.height) { boxHeight = $0 } })
+        .onPreferenceChange(ContentBottomKey.self) { contentBottom = $0 }
+        .overlay(alignment: .bottom) {
+            if contentBottom > boxHeight + 2 {
+                Text("▾").font(.system(size: 13)).foregroundColor(Palette.gold).frame(maxWidth: .infinity).frame(height: 22, alignment: .bottom)
+                    .background(LinearGradient(colors: [.clear, Palette.chrome], startPoint: .top, endPoint: .bottom)).allowsHitTesting(false)
+            }
+        }
+    }
+}
+
+private struct ContentBottomKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }

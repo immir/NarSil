@@ -163,7 +163,7 @@ struct RootView: View {
                 }
                 HStack(alignment: .center, spacing: 0) {
                     Group {
-                        if fixed { ScrollView { StatusStrip(game: game, stacked: true) } } else { StatusStrip(game: game, stacked: true) }
+                        if fixed { ScrollFade { StatusStrip(game: game, stacked: true) } } else { StatusStrip(game: game, stacked: true) }
                     }.textScale(statusScale)
                     /* Dragged: how the width is shared between the status and the d-pad. */
                     if layoutMode { ResizeHandle(horizontalBar: false, length: fixed ? sectionHeight : statusHeight) { dx in layoutPad = LayoutPresets.clamp(layoutPad - Double(dx / width), 0.2, 0.5) } }
@@ -233,7 +233,7 @@ struct RootView: View {
             let docked = pad == PadMode.docked.rawValue
             VStack(spacing: 0) {
                 if layoutSplit > 0 && docked {
-                    ScrollView { StatusStrip(game: game, stacked: true).textScale(statusScale) }.frame(height: c.size.height * layoutSplit)
+                    ScrollFade { StatusStrip(game: game, stacked: true).textScale(statusScale) }.frame(height: c.size.height * layoutSplit)
                 } else {
                     StatusStrip(game: game, stacked: true).textScale(statusScale)
                         .background(GeometryReader { s in Color.clear.preference(key: StatusHeightKey.self, value: s.size.height) })

@@ -45,6 +45,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -109,17 +112,19 @@ internal fun StatusStrip(state: GameState, stacked: Boolean, buzzOnLowHealth: Bo
     val hpColour = if (s.lowHp) Color(0xFFFF3B30) else Color(0xFFD04040)
     Column(Modifier.fillMaxWidth().background(Ui.Chrome).clickable { Trace.log("panel.request", "via" to "status"); NarSilNative.nativeRequestAction(NarSilNative.ACT_CHARACTER) }
                .padding(horizontal = 8.dp, vertical = 4.dp)) {
+        /* Most urgent first: the two meters side by side, then the target, then the chips (danger before information). */
         if (stacked) {
-            Meter("HP", s.hp, s.maxHp, hpColour, Modifier.fillMaxWidth(), alarm = s.lowHp)
-            Meter("Voice", s.voice, s.maxVoice, Color(0xFF4080E0), Modifier.fillMaxWidth().padding(top = 4.dp))
-            Text(depthText(s), color = Color.White, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Meter("HP", s.hp, s.maxHp, hpColour, Modifier.weight(1f), alarm = s.lowHp)
+                Meter("Voice", s.voice, s.maxVoice, Color(0xFF4080E0), Modifier.weight(1f))
+            }
         } else Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Meter("HP", s.hp, s.maxHp, hpColour, Modifier.weight(1f), alarm = s.lowHp)
             Meter("Voice", s.voice, s.maxVoice, Color(0xFF4080E0), Modifier.weight(1f))
             Text(depthText(s), color = Color.White, fontSize = 13.sp)
         }
-        StatusChips(state)
         s.foe?.let { FoeLine(it, state) }
+        StatusChips(state, depth = if (stacked) depthText(s) else null)
     }
 }
 
@@ -231,22 +236,44 @@ internal fun Centered(text: String, action: String? = null, onAction: () -> Unit
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun StatusChips(state: GameState) {
+private fun StatusChips(state: GameState, depth: String?) {
     val s = state.status
     val amber = Color(0xFFFFCA28)
     val red = Color(0xFFEF5350)
     val segments = state.statusSegments().filterNot { (text, _) -> text.matches(Regex("""\d+'?\s*(ft)?""")) }
     val light = segments.firstOrNull { it.first.startsWith("Light") }
     val others = segments.filter { it !== light }
+    /* Information (hunger satisfied, the floor underfoot: grey or plain) goes after what needs attention (poison, fear, and the like). */
+    val (info, effects) = others.partition { (text, colour) -> text.startsWith("Fed") || text.startsWith("Full") || isGrey(colour) }
     FlowRow(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        if (s.newExp > 0) Chip("${s.newExp}", icon = ICON_EXP, colour = if (s.newExp >= 100) Ui.Summary else Color(0xFFB0B0B0)) { NarSilNative.nativeRequestAction(NarSilNative.ACT_SKILLS) }
+        if (s.threats > 0) Chip("${s.threats} · ${s.threatNearest} away", if (s.threatsAlert > 0) red else Color(0xFFB0B0B0), icon = ICON_THREATS) { NarSilNative.nativeRequestLookMonsters() }
+        effects.forEach { (text, colour) -> Chip(text, Color(colour)) }
         if (light != null || s.lightTurns >= 0) {
             val turns = s.lightTurns
             val colour = when { turns in 0..99 -> red; turns in 0..299 -> amber; else -> light?.second?.let { Color(it) } ?: Color(0xFFB0B0B0) }
             Chip(listOfNotNull(light?.first, if (turns >= 0) "${turns}t" else null).joinToString(" · "), colour, icon = ICON_LIGHT)
         }
-        others.forEach { (text, colour) -> Chip(text, Color(colour)) }
-        if (s.threats > 0) Chip("${s.threats} · ${s.threatNearest} away", if (s.threatsAlert > 0) red else Color(0xFFB0B0B0), icon = ICON_THREATS) { NarSilNative.nativeRequestLookMonsters() }
+        if (s.newExp > 0) Chip("${s.newExp}", icon = ICON_EXP, colour = if (s.newExp >= 100) Ui.Summary else Color(0xFFB0B0B0)) { NarSilNative.nativeRequestAction(NarSilNative.ACT_SKILLS) }
+        if (depth != null) Chip(depth, Color(0xFFE0E0E0))
+        info.forEach { (text, colour) -> Chip(text, Color(colour)) }
+    }
+}
+
+private fun isGrey(argb: Int): Boolean {
+    val r = (argb shr 16) and 0xFF; val g = (argb shr 8) and 0xFF; val b = argb and 0xFF
+    return maxOf(r, g, b) - minOf(r, g, b) < 28
+}
+
+/** A box that scrolls its content up and down, with a fade and ▾ at the bottom while there is more below, so it is clear that there is. */
+@Composable
+internal fun ScrollFade(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val scroll = rememberScrollState()
+    Box(modifier) {
+        Box(Modifier.verticalScroll(scroll)) { content() }
+        if (scroll.canScrollForward) Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(22.dp)
+                .background(Brush.verticalGradient(listOf(Color.Transparent, Ui.Chrome))), contentAlignment = Alignment.BottomCenter) {
+            Text("▾", color = Ui.Gold, fontSize = 13.sp)
+        }
     }
 }
 
