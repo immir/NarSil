@@ -53,8 +53,8 @@ import androidx.compose.ui.unit.sp
 
 /**
  * The messages (older ones dimmer, in their game colours), newest at the bottom, plus the textui's top line when it holds something
- * else: a prompt, or -more- (tap = Enter).  The area scrolls up through the older ones and stays on the newest unless it has been
- * scrolled; a tap opens the full history.
+ * else: a prompt, or -more- (tap = Enter).  The area scrolls up through the older ones and returns to the newest when a message arrives; a tap
+ * opens the full history.
  */
 @Composable
 internal fun MessageStrip(state: GameState, height: Dp, panelButton: Boolean = true, onTap: () -> Unit) {
@@ -65,10 +65,8 @@ internal fun MessageStrip(state: GameState, height: Dp, panelButton: Boolean = t
     val banner = line0.takeIf { it.isNotEmpty() && !more && state.messages.none { m -> line0.contains(m.text) } }
     val resting = state.status.has(NarSilNative.CTX_RESTING)
     val list = rememberLazyListState()
-    /* A new message or line while the newest was in view: keep it in view. */
-    LaunchedEffect(state.messages.size, state.messages.lastOrNull(), banner, more, resting) {
-        if (list.firstVisibleItemIndex <= 1) list.scrollToItem(0)
-    }
+    /* A new message or line: back to the newest, wherever the list had been scrolled to. */
+    LaunchedEffect(state.messages.size, state.messages.lastOrNull(), banner, more, resting) { list.scrollToItem(0) }
     Row(Modifier.fillMaxWidth().height(height).clipToBounds().background(Ui.Chrome), verticalAlignment = Alignment.Top) {
         /* Reversed: the first item is at the bottom. */
         LazyColumn(Modifier.weight(1f).fillMaxHeight().clickable(onClick = onTap), state = list, reverseLayout = true,

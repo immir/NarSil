@@ -29,7 +29,7 @@ struct MessageStrip: View {
         let banner = (!line0.isEmpty && !more && !game.messages.contains { line0.contains($0.text) }) ? line0 : nil
         let resting = game.status.has(NB.CTX_RESTING)
         HStack(alignment: .top, spacing: 0) {
-            /* Newest at the bottom; scrolls up through the older ones and stays on the newest unless it has been scrolled. */
+            /* Newest at the bottom; scrolls up through the older ones, and goes back to the newest when a message arrives. */
             ScrollViewReader { proxy in
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
@@ -49,6 +49,7 @@ struct MessageStrip: View {
                 }
                 .defaultBottomAnchor()
                 .onChange(of: game.messages.count) { _ in proxy.scrollTo("end", anchor: .bottom) }
+                .onChange(of: game.messages.last.map { "\($0.text)\($0.count)" }) { _ in proxy.scrollTo("end", anchor: .bottom) }
                 .onChange(of: banner) { _ in proxy.scrollTo("end", anchor: .bottom) }
                 .onChange(of: more) { _ in proxy.scrollTo("end", anchor: .bottom) }
                 .onAppear { proxy.scrollTo("end", anchor: .bottom) }
