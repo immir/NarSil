@@ -1,4 +1,4 @@
-# NarSil for iPhone: beta 0.4
+# NarSil for iPhone: beta 0.5
 
 Thanks for trying it. This build isn't on the App Store. You install it yourself with **Sideloadly**, signing it
 with your own Apple ID. It's free, but iOS only trusts the install for **7 days** at a time.
@@ -41,6 +41,24 @@ is on. See its settings.
   songs (Delvings, Challenge, Thresholds), Impale, the horns, betrayal items and thralls. If something behaves
   differently from Sil-Q, that's worth reporting too.
 
+## New in 0.5
+
+- **Landscape:** a new layout. The map gets the full height, the buttons run down the left, and the status and d-pad
+  sit in a column on the right with the panel tabs beside it.
+- **Adjust layout (☰ → Adjust layout):** drag the gold guides to resize the panes, in portrait and landscape: the
+  message area, the status/d-pad split, the button and status columns, the d-pad size. Compact, Balanced and Big
+  presets, a left-handed mirror, and Reset. The guides are an overlay, so the panes keep their true size while you
+  drag.
+- **Messages:** scrollable, always pinned to the newest line (a new message scrolls you back to it). While a panel is
+  open (using an item from the pack), new messages show in a small box that fades after a few seconds.
+- **Status:** the target and the monsters in view come first, then effects and light; a fade and ▾ show when more is
+  hidden below. The target's name now has the whole width.
+- **Buzzes:** a tick on every tap (not on scroll or drag), a buzz when your blow lands, a heavier one when you are
+  hit, and stronger ones for deaths, level changes and alarms. Options has strength sliders for the tap and the fight
+  buzzes.
+- **Lists:** tighter rows in the pack and other item lists.
+- **NarSil-Q:** correct plurals ("wolves", not "wolfs").
+
 ## New in 0.4
 
 - **Seeds:** every game has a seed, shown on the Character tab and the death screen. Tick "Choose the dungeon's
@@ -60,7 +78,7 @@ is on. See its settings.
 ## Reporting problems
 
 Please send:
-1. the version, shown on the welcome screen as "Version 0.4 (engine …)";
+1. the version, shown on the welcome screen as "Version 0.5 (engine …)";
 2. what you did and what happened, plus a screenshot if you can;
 3. the save file, if a character is affected.
    - Files app → On My iPhone → NarSil → `data` (NarSil) or `data-silq` (NarSil-Q) → `save`.
