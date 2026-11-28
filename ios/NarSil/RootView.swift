@@ -75,9 +75,6 @@ struct RootView: View {
                         .background(Color(rgb: 0x333338), in: Capsule()).padding(.bottom, 120).allowsHitTesting(false)
                 }
                 if let message = game.exited { ExitedCard(message: message) }
-                if layoutMode {
-                    LayoutBar(rail: $layoutRail, buttons: $layoutButtons, split: $layoutSplit, pad: $layoutPad, mirror: $layoutMirror) { layoutMode = false }
-                }
                 if showMore { sheet(MoreSheet(actions: more, pinned: QuickPins.decode(quickActs), onPin: { quickActs = QuickPins.toggled(quickActs, $0) }, dismiss: { showMore = false })) }
                 if showRest { sheet(RestSheet(dismiss: { showRest = false })) }
             }
@@ -143,7 +140,7 @@ struct RootView: View {
     private func portrait(width: CGFloat) -> some View {
         VStack(spacing: 0) {
             MessageStrip(game: game, lines: messageLines, onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, panelButton: !tabsOnTop, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
-            MapView(game: game, handle: map, swipeMode: swipeMode, tiles: tiles, padShown: pad != PadMode.off.rawValue).overlay(floatingPad)
+            MapView(game: game, handle: map, swipeMode: swipeMode, tiles: tiles, padShown: pad != PadMode.off.rawValue).overlay(floatingPad).overlay(alignment: .top) { layoutBar }
             HStack(alignment: .center, spacing: 0) {
                 StatusStrip(game: game, stacked: true).textScale(statusScale)
                 if pad == PadMode.docked.rawValue {
@@ -190,9 +187,14 @@ struct RootView: View {
     private var mapColumn: some View {
         VStack(spacing: 0) {
             MessageStrip(game: game, lines: min(2, messageLines), onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, panelButton: !tabsOnTop, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
-            MapView(game: game, handle: map, swipeMode: swipeMode, tiles: tiles, padShown: pad != PadMode.off.rawValue).overlay(floatingPad)
+            MapView(game: game, handle: map, swipeMode: swipeMode, tiles: tiles, padShown: pad != PadMode.off.rawValue).overlay(floatingPad).overlay(alignment: .top) { layoutBar }
             promptBar
         }
+    }
+
+    /// At the top of the map, clear of the handles (they have their grips halfway down the boundaries).
+    @ViewBuilder private var layoutBar: some View {
+        if layoutMode { LayoutBar(rail: $layoutRail, buttons: $layoutButtons, split: $layoutSplit, pad: $layoutPad, mirror: $layoutMirror) { layoutMode = false } }
     }
 
     /// The status takes what it needs, or, once the split is dragged, a share of the column (and scrolls if that is less);

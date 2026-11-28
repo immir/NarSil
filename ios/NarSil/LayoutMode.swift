@@ -60,16 +60,14 @@ struct LayoutBar: View {
                         .foregroundColor(matches(p) ? Palette.gold : .white).buttonStyle(.plain)
                 }
                 Toggle("Left-handed", isOn: $mirror).scaledFont(14).fixedSize()
-            }
-            HStack(spacing: 12) {
                 Button("Reset") { apply(LayoutPresets.all[1]); mirror = false }
                 Button("Done", action: done).buttonStyle(GoldButtonStyle())
             }
         }
-        .padding(12).foregroundColor(.white)
+        .padding(.horizontal, 12).padding(.vertical, 6).foregroundColor(.white)
         .background(Palette.sheet, in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Palette.hairline, lineWidth: 1))
-        .padding(12)
+        .padding(8)
     }
 }
 

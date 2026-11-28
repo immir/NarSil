@@ -53,10 +53,10 @@ fun ResizeHandle(horizontalBar: Boolean, onDrag: (Float) -> Unit) {
 @OptIn(ExperimentalLayoutApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun LayoutBar(settings: Settings, onDone: () -> Unit) {
-    Surface(shape = Ui.CardShape, color = Ui.Sheet, border = Ui.edge, modifier = Modifier.padding(12.dp)) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Surface(shape = Ui.CardShape, color = Ui.Sheet, border = Ui.edge, modifier = Modifier.padding(8.dp)) {
+        Column(Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text("Drag the gold handles to resize the panes", color = Ui.Sub, fontSize = 13.sp)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(0.dp)) {
                 Settings.LAYOUT_PRESETS.forEach { (name, _) ->
                     FilterChip(selected = settings.layoutPreset == name, onClick = { settings.applyLayoutPreset(name) }, label = { Text(name) })
                 }
@@ -64,8 +64,6 @@ fun LayoutBar(settings: Settings, onDone: () -> Unit) {
                     Text("Left-handed", color = Ui.Text, fontSize = 14.sp, modifier = Modifier.padding(end = 6.dp))
                     Switch(settings.layoutMirror, { settings.layoutMirror = it })
                 }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(onClick = { settings.resetLayout() }) { Text("Reset") }
                 Button(onClick = onDone) { Text("Done") }
             }

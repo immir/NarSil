@@ -404,6 +404,8 @@ class MainActivity : ComponentActivity() {
                         Box(Modifier.align(Alignment.BottomCenter)) { DirectionBar(d, dpadMode() != Settings.DPAD_OFF, NarSilNative::nativeAnswer) }
                     }
                     if (state.mapMode && dpadMode() == Settings.DPAD_FLOATING) FloatingDpad(settings, padMarks(state.prompt)) { dpad(state, it) }
+                    /* At the top of the map, clear of the handles (they have their grips halfway down the boundaries). */
+                    if (layoutMode) Box(Modifier.align(Alignment.TopCenter)) { LayoutBar(settings) { layoutMode = false } }
                     if (state.mapMode && settings.edgeSwipePanel) EdgeSwipeHandle(Modifier.align(if (mirror) Alignment.CenterStart else Alignment.CenterEnd))
                 }
                 if (state.mapMode && !rail) TextScale(settings.statusScale) {
@@ -464,10 +466,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         }
-        if (layoutMode) {
-            BackHandler { layoutMode = false }
-            Box(Modifier.align(Alignment.Center)) { LayoutBar(settings) { layoutMode = false } }
-        }
+        if (layoutMode) BackHandler { layoutMode = false }
         }
     }
 

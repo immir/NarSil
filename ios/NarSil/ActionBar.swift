@@ -186,12 +186,19 @@ struct MoreSheet: View {
     var pinned: [Int] = []
     var onPin: (Int) -> Void = { _ in }
     let dismiss: () -> Void
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    /// Landscape: four to a row, so little of the short screen is used.
+    private var columns: Int { verticalSizeClass == .compact ? 4 : 2 }
 
     var body: some View {
         /* Scrolls when the rows do not all fit above the bottom edge (landscape). */
-        ViewThatFits(in: .vertical) {
-            grid
-            ScrollView { grid }
+        VStack(spacing: 0) {
+            ScreenHeader(title: "Commands", onClose: dismiss)
+            ViewThatFits(in: .vertical) {
+                grid
+                ScrollView { grid }
+            }
         }
         .frame(maxWidth: .infinity)
         .background(Color(red: 0x1C / 255, green: 0x1C / 255, blue: 0x1E / 255))
@@ -199,9 +206,9 @@ struct MoreSheet: View {
 
     private var grid: some View {
         VStack(spacing: 8) {
-            ForEach(Array(stride(from: 0, to: actions.count, by: 2)), id: \.self) { i in
+            ForEach(Array(stride(from: 0, to: actions.count, by: columns)), id: \.self) { i in
                 HStack(spacing: 8) {
-                    ForEach(actions[i..<min(i + 2, actions.count)]) { a in
+                    ForEach(actions[i..<min(i + columns, actions.count)]) { a in
                         Text((a.pin.map { pinned.contains($0) } == true ? "● " : "") + a.label).lineLimit(1).frame(maxWidth: .infinity, minHeight: 44)
                             .background(Color.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 10))
                             .modifier(HoldMark(shape: RoundedRectangle(cornerRadius: 10), enabled: a.pin != nil))
@@ -209,14 +216,14 @@ struct MoreSheet: View {
                             .onTapGesture { Trace.log("menu.pick", ("act", a.label)); dismiss(); a.run() }
                             .onLongPressGesture(minimumDuration: 0.5) { if let id = a.pin { Trace.log("menu.pin", ("act", a.label)); onPin(id) } }
                     }
-                    if i + 1 >= actions.count { Spacer().frame(maxWidth: .infinity) }
+                    ForEach(0..<max(0, i + columns - actions.count), id: \.self) { _ in Spacer().frame(maxWidth: .infinity) }
                 }
             }
             if actions.contains(where: { $0.pin != nil }) {
                 Text("Long-press a command to pin it to the bar (●).").scaledFont(12).foregroundColor(Palette.sub)
             }
         }
-        .padding(16).foregroundColor(.white)
+        .padding(.horizontal, 16).padding(.bottom, 16).foregroundColor(.white)
         .frame(maxWidth: .infinity)
     }
 }

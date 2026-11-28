@@ -1,5 +1,7 @@
 package org.narsil.android
 
+import android.content.res.Configuration
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -217,9 +219,11 @@ fun MoreSheet(actions: List<BarAction>, pinned: List<Int> = emptyList(), onPin: 
             color = Ui.Sheet,
             modifier = Modifier.fillMaxWidth().clickable(remember { MutableInteractionSource() }, indication = null) {},
         ) {
-            /* Scrolls: in landscape the rows do not all fit above the bottom edge. */
-            Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                actions.chunked(2).forEach { row ->
+            /* Landscape: four to a row, so little of the short screen is used; it still scrolls if the rows do not fit. */
+            val columns = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) 4 else 2
+            Column(Modifier.verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                ScreenHeader("Commands", onClose = onDismiss)
+                actions.chunked(columns).forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         row.forEach { a ->
                             val mark = if (a.pin != null && a.pin in pinned) "● " else ""
@@ -234,7 +238,7 @@ fun MoreSheet(actions: List<BarAction>, pinned: List<Int> = emptyList(), onPin: 
                                 }
                             }
                         }
-                        repeat(2 - row.size) { Spacer(Modifier.weight(1f)) }
+                        repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
                 if (actions.any { it.pin != null }) Text("Long-press a command to pin it to the bar (●).", color = Ui.Sub, fontSize = 12.sp)
