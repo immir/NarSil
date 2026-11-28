@@ -1,5 +1,12 @@
 package org.narsil.android
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,17 +45,23 @@ fun padMarks(p: GameState.Prompt?): Set<Int> = (p as? GameState.Prompt.Direction
 
 /** Draggable by its centre; the position is kept as a fraction of the free space. */
 @Composable
-fun FloatingDpad(settings: Settings, marked: Set<Int>, onAction: (PadAction) -> Unit) {
+fun FloatingDpad(settings: Settings, marked: Set<Int>, resizing: Boolean = false, onAction: (PadAction) -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val density = LocalDensity.current
-        val pad = with(density) { settings.dpadSizeDp.dp.toPx() }
+        val screen = LocalConfiguration.current
+        val shorterDp = minOf(screen.screenWidthDp, screen.screenHeightDp)
+        val sideDp = settings.layoutPad * shorterDp
+        val pad = with(density) { sideDp.dp.toPx() }
         val freeW = (constraints.maxWidth - pad).coerceAtLeast(1f)
         val freeH = (constraints.maxHeight - pad).coerceAtLeast(1f)
         Box(Modifier.offset { IntOffset((settings.dpadX * freeW).roundToInt(), (settings.dpadY * freeH).roundToInt()) }) {
-            Dpad(settings.dpadSizeDp, onAction, { delta ->
+            Dpad(sideDp, onAction, { delta ->
                 settings.dpadX = (settings.dpadX + delta.x / freeW).coerceIn(0f, 1f)
                 settings.dpadY = (settings.dpadY + delta.y / freeH).coerceIn(0f, 1f)
             }, marked)
+            /* Laying out: a gold grip on the corner resizes it. */
+            if (resizing) Box(Modifier.align(Alignment.BottomEnd).size(32.dp).background(Ui.Gold, CircleShape)
+                .pointerInput(Unit) { detectDragGestures { change, drag -> change.consume(); settings.layoutPad += drag.x / (shorterDp * density.density) } })
         }
     }
 }

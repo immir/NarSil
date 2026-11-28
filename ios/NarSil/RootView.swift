@@ -39,7 +39,7 @@ struct RootView: View {
     @AppStorage("layoutRail") private var layoutRail = LayoutPresets.defaultRail
     @AppStorage("layoutButtons") private var layoutButtons = LayoutPresets.defaultButtons
     @AppStorage("layoutSplit") private var layoutSplit = -1.0
-    @AppStorage("layoutPad") private var layoutPad = -1.0
+    @AppStorage("layoutPad") private var layoutPad = LayoutPresets.defaultPad
     @AppStorage("layoutMirror") private var layoutMirror = false
     @State private var layoutMode = false
     @State private var statusHeight: CGFloat = 0
@@ -49,10 +49,11 @@ struct RootView: View {
     @StateObject private var abilities = AbilitiesNav()
     private let map = MapHandle()
 
-    @AppStorage("dpadSize") private var dpadSize = 140.0
     @AppStorage("dpadX") private var padX = 1.0
     @AppStorage("dpadY") private var padY = 1.0
-    private var padSize: CGFloat { CGFloat(dpadSize) }
+    /// The d-pad's side where it is not fitted to a column (portrait docked, floating): a share of the shorter screen side.
+    private var padShare: Double { layoutPad > 0 ? layoutPad : LayoutPresets.defaultPad }
+    private var padSize: CGFloat { CGFloat(padShare) * min(UIScreen.main.bounds.width, UIScreen.main.bounds.height) }
 
     var body: some View {
         GeometryReader { g in
@@ -145,8 +146,8 @@ struct RootView: View {
                 StatusStrip(game: game, stacked: true).textScale(statusScale)
                 if pad == PadMode.docked.rawValue {
                     /* Dragged: the d-pad's share of the width. */
-                    let dpadSide = layoutPad > 0 ? layoutPad * width - 8 : padSize
-                    if layoutMode { ResizeHandle(horizontalBar: false) { dx in layoutPad = LayoutPresets.clamp((dpadSide + 8 - dx) / width, 0.2, 0.5) } }
+                    let dpadSide = CGFloat(padShare) * width - 8
+                    if layoutMode { ResizeHandle(horizontalBar: false, length: dpadSide + 8) { dx in layoutPad = LayoutPresets.clamp(Double((dpadSide + 8 - dx) / width), 0.2, 0.5) } }
                     Dpad(size: dpadSide, onAction: padAction, marked: padMarks(game.prompt)).padding(4)
                 }
             }.background(Color(red: 0x14 / 255, green: 0x14 / 255, blue: 0x14 / 255))
@@ -241,6 +242,12 @@ struct RootView: View {
                     padX = min(max(padX + Double(d.width / freeW), 0), 1)
                     padY = min(max(padY + Double(d.height / freeH), 0), 1)
                 }
+                .overlay(alignment: .bottomTrailing) {
+                    /* Laying out: a gold grip on the corner resizes it. */
+                    if layoutMode {
+                        CornerGrip { dx in layoutPad = LayoutPresets.clamp(padShare + Double(dx / min(UIScreen.main.bounds.width, UIScreen.main.bounds.height)), 0.2, 0.5) }
+                    }
+                }
                 .offset(x: CGFloat(padX) * freeW, y: CGFloat(padY) * freeH)
             }
         }
@@ -299,7 +306,7 @@ struct RootView: View {
             }
         }
         if showSettings { SettingsSheet(buttonScale: $buttonScale, messageScale: $messageScale, itemScale: $itemScale, statusScale: $statusScale,
-                          theme: $theme, gamePalette: game.gamePalette, messageLines: $messageLines, panelTabs: $panelTabs, tabsOnTop: $tabsOnTop, tiles: $tiles, pad: $pad, padSize: $dpadSize, swipeMode: $swipeMode,
+                          theme: $theme, gamePalette: game.gamePalette, messageLines: $messageLines, panelTabs: $panelTabs, tabsOnTop: $tabsOnTop, tiles: $tiles, pad: $pad, swipeMode: $swipeMode,
                           autoMore: game.status.autoMore, autoMoreEnabled: game.atPrompt && game.prompt == nil, onAutoMore: Native.setAutoMore,
                           itemDetails: $itemDetails, lowHealthBuzz: $lowHealthBuzz, combatBuzz: $combatBuzz, tapBuzz: $tapBuzz, tapStrength: $tapStrength, fightStrength: $fightStrength, traceUsage: $traceUsage, scumming: $scumming,
                           onExportSave: { Task { if let url = await Saves.export() { ShareSheet.present([url]) } else { say(Saves.cantSave) } } },

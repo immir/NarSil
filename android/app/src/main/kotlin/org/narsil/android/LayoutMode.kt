@@ -26,6 +26,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -40,10 +41,12 @@ import androidx.compose.ui.unit.sp
  * otherwise it stands upright (dragged left and right).  [onDrag] gets the movement in pixels along the drag axis.
  */
 @Composable
-fun ResizeHandle(horizontalBar: Boolean, onDrag: (Float) -> Unit) {
+fun ResizeHandle(horizontalBar: Boolean, length: Dp? = null, onDrag: (Float) -> Unit) {
     val update by rememberUpdatedState(onDrag)
     val grip = Modifier.pointerInput(Unit) { detectDragGestures { change, drag -> change.consume(); update(if (horizontalBar) drag.y else drag.x) } }
-    Box((if (horizontalBar) Modifier.fillMaxWidth().height(24.dp) else Modifier.fillMaxHeight().width(24.dp))
+    /* In a row that is only as tall as its content (portrait, beside the d-pad) the handle takes a [length], or it would stretch the row. */
+    val along = when { length != null -> Modifier.height(length); horizontalBar -> Modifier.fillMaxWidth(); else -> Modifier.fillMaxHeight() }
+    Box((if (horizontalBar) along.height(24.dp) else along.width(24.dp))
             .background(Ui.Gold.copy(alpha = 0.14f)).then(grip), contentAlignment = Alignment.Center) {
         Box((if (horizontalBar) Modifier.width(40.dp).height(4.dp) else Modifier.height(40.dp).width(4.dp)).background(Ui.Gold, RoundedCornerShape(2.dp)))
     }

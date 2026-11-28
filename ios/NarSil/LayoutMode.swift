@@ -8,7 +8,7 @@ import SwiftUI
 enum LayoutPresets {
     /// Name, right column and button column as fractions of the width.
     static let all: [(name: String, rail: Double, buttons: Double)] = [("Compact", 0.17, 0.095), ("Balanced", 0.19, 0.108), ("Big", 0.24, 0.14)]
-    static let defaultRail = 0.19, defaultButtons = 0.108
+    static let defaultRail = 0.19, defaultButtons = 0.108, defaultPad = 0.34
 
     static func clamp(_ v: Double, _ lo: Double, _ hi: Double) -> Double { min(max(v, lo), hi) }
 }
@@ -17,6 +17,8 @@ enum LayoutPresets {
 /// upright (dragged left and right).  `onDrag` gets each step of movement along the drag axis.
 struct ResizeHandle: View {
     let horizontalBar: Bool
+    /// In a row only as tall as its content (portrait, beside the d-pad) the handle takes a length, or it would stretch the row.
+    var length: CGFloat?
     let onDrag: (CGFloat) -> Void
     @State private var last: CGFloat = 0
 
@@ -25,7 +27,7 @@ struct ResizeHandle: View {
             Palette.gold.opacity(0.14)
             RoundedRectangle(cornerRadius: 2).fill(Palette.gold).frame(width: horizontalBar ? 40 : 4, height: horizontalBar ? 4 : 40)
         }
-        .frame(width: horizontalBar ? nil : 24, height: horizontalBar ? 24 : nil)
+        .frame(width: horizontalBar ? nil : 24, height: horizontalBar ? 24 : length)
         .contentShape(Rectangle())
         .gesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
             .onChanged { v in
@@ -33,6 +35,19 @@ struct ResizeHandle: View {
                 onDrag(t - last); last = t
             }
             .onEnded { _ in last = 0 })
+    }
+}
+
+/// A round gold grip, dragged to resize the floating d-pad from its corner; `onDrag` gets each step of horizontal movement.
+struct CornerGrip: View {
+    let onDrag: (CGFloat) -> Void
+    @State private var last: CGFloat = 0
+
+    var body: some View {
+        Circle().fill(Palette.gold).frame(width: 32, height: 32)
+            .gesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
+                .onChanged { v in onDrag(v.translation.width - last); last = v.translation.width }
+                .onEnded { _ in last = 0 })
     }
 }
 
@@ -45,8 +60,8 @@ struct LayoutBar: View {
     @Binding var mirror: Bool
     let done: () -> Void
 
-    private func apply(_ p: (name: String, rail: Double, buttons: Double)) { rail = p.rail; buttons = p.buttons; split = -1; pad = -1 }
-    private func matches(_ p: (name: String, rail: Double, buttons: Double)) -> Bool { rail == p.rail && buttons == p.buttons && split < 0 && pad < 0 }
+    private func apply(_ p: (name: String, rail: Double, buttons: Double)) { rail = p.rail; buttons = p.buttons; split = -1; pad = LayoutPresets.defaultPad }
+    private func matches(_ p: (name: String, rail: Double, buttons: Double)) -> Bool { rail == p.rail && buttons == p.buttons && split < 0 && pad == LayoutPresets.defaultPad }
 
     var body: some View {
         VStack(spacing: 8) {

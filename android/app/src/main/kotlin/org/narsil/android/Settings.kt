@@ -59,9 +59,8 @@ class Settings(context: Context) {
     private val railState = float("layoutRail", LAYOUT_RAIL)
     private val buttonsState = float("layoutButtons", LAYOUT_BUTTONS)
     private val splitState = float("layoutSplit", -1f)
-    private val padShareState = float("layoutPad", -1f)
+    private val padShareState = float("layoutPad", LAYOUT_PAD).also { if (it.floatValue < 0) it.floatValue = LAYOUT_PAD }
     private val mirrorState = mutableStateOf(prefs.getBoolean("layoutMirror", false))
-    private val padSize = float("dpadSize", 144f)
     private val padX = float("dpadX", 1f)
     private val padY = float("dpadY", 1f)
     private val pad = mutableIntStateOf(prefs.getInt("dpad", DPAD_DOCKED))
@@ -87,7 +86,6 @@ class Settings(context: Context) {
     var messageScale: Float get() = messageText.floatValue; set(v) { messageText.floatValue = v; save("messageScale", v) }
     var itemScale: Float get() = itemText.floatValue; set(v) { itemText.floatValue = v; save("itemScale", v) }
     var statusScale: Float get() = statusText.floatValue; set(v) { statusText.floatValue = v; save("statusScale", v) }
-    var dpadSizeDp: Float get() = padSize.floatValue; set(v) { padSize.floatValue = v; save("dpadSize", v) }
     /** Floating d-pad position as fractions (0..1) of the free space in the map area. */
     var dpadX: Float get() = padX.floatValue; set(v) { padX.floatValue = v; save("dpadX", v) }
     var dpadY: Float get() = padY.floatValue; set(v) { padY.floatValue = v; save("dpadY", v) }
@@ -106,19 +104,19 @@ class Settings(context: Context) {
     /*
      * The arrangement of the main screen, as fractions of its width (height for the split) so it survives rotation and other
      * phones.  Landscape: the right column (status and d-pad) and the button column; [layoutSplit], the share of the right
-     * column the status takes (-1: as much as it needs); portrait: [layoutPad], the share of the width the docked d-pad takes (-1: the
-     * d-pad size above).  [layoutMirror] swaps the sides for a left-handed grip.
+     * column the status takes (-1: as much as it needs); [layoutPad], the d-pad's side as a share of the shorter screen side (the docked
+     * d-pad in portrait, the floating one; in landscape the docked one fills its column).  [layoutMirror] swaps the sides for a left-handed grip.
      */
     var layoutRail: Float get() = railState.floatValue; set(v) { railState.floatValue = v.coerceIn(0.12f, 0.4f); save("layoutRail", railState.floatValue) }
     var layoutButtons: Float get() = buttonsState.floatValue; set(v) { buttonsState.floatValue = v.coerceIn(0.07f, 0.25f); save("layoutButtons", buttonsState.floatValue) }
     var layoutSplit: Float get() = splitState.floatValue; set(v) { splitState.floatValue = if (v < 0) -1f else v.coerceIn(0.15f, 0.85f); save("layoutSplit", splitState.floatValue) }
-    var layoutPad: Float get() = padShareState.floatValue; set(v) { padShareState.floatValue = if (v < 0) -1f else v.coerceIn(0.2f, 0.5f); save("layoutPad", padShareState.floatValue) }
+    var layoutPad: Float get() = padShareState.floatValue; set(v) { padShareState.floatValue = v.coerceIn(0.2f, 0.5f); save("layoutPad", padShareState.floatValue) }
     var layoutMirror: Boolean get() = mirrorState.value; set(v) { mirrorState.value = v; prefs.edit().putBoolean("layoutMirror", v).apply() }
     /** The preset the sizes match, or null once a handle has been dragged. */
-    val layoutPreset: String? get() = LAYOUT_PRESETS.firstOrNull { (_, p) -> p.first == layoutRail && p.second == layoutButtons && layoutSplit < 0 && layoutPad < 0 }?.first
+    val layoutPreset: String? get() = LAYOUT_PRESETS.firstOrNull { (_, p) -> p.first == layoutRail && p.second == layoutButtons && layoutSplit < 0 && layoutPad == LAYOUT_PAD }?.first
     fun applyLayoutPreset(name: String) {
         val (rail, buttons) = LAYOUT_PRESETS.first { it.first == name }.second
-        layoutRail = rail; layoutButtons = buttons; layoutSplit = -1f; layoutPad = -1f
+        layoutRail = rail; layoutButtons = buttons; layoutSplit = -1f; layoutPad = LAYOUT_PAD
     }
     fun resetLayout() { applyLayoutPreset("Balanced"); layoutMirror = false }
 
@@ -157,6 +155,7 @@ class Settings(context: Context) {
     companion object {
         const val LAYOUT_RAIL = 0.19f
         const val LAYOUT_BUTTONS = 0.108f
+        const val LAYOUT_PAD = 0.34f
         /** The presets: name to (right column, button column) as fractions of the width. */
         val LAYOUT_PRESETS = listOf("Compact" to (0.17f to 0.095f), "Balanced" to (LAYOUT_RAIL to LAYOUT_BUTTONS), "Big" to (0.24f to 0.14f))
         const val TABS_ICONS_AND_NAMES = 0
@@ -242,10 +241,6 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                         }
                 }
                 Hint(UiText.DPAD_HINT)
-                if (settings.dpad != Settings.DPAD_OFF) {
-                    Label("${UiText.DPAD_SIZE}  ${settings.dpadSizeDp.roundToInt()} dp")
-                    Slider(settings.dpadSizeDp, { settings.dpadSizeDp = it }, valueRange = 100f..220f)
-                }
                 Label(UiText.SWIPE)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(Settings.SWIPE_PAN to "Pan", Settings.SWIPE_STEP to "Step", Settings.SWIPE_RUN to "Run")

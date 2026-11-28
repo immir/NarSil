@@ -22,7 +22,6 @@ struct SettingsSheet: View {
     @Binding var tabsOnTop: Bool
     @Binding var tiles: Bool
     @Binding var pad: Int
-    @Binding var padSize: Double
     @Binding var swipeMode: Int
     let autoMore: Bool
     let autoMoreEnabled: Bool
@@ -78,12 +77,6 @@ struct SettingsSheet: View {
                         toggle(UiText.tiles, UiText.tilesHint, $tiles)
                         choice(UiText.dpad, UiText.dpadHint,
                                $pad, [(PadMode.off.rawValue, "Off"), (PadMode.docked.rawValue, "Beside status"), (PadMode.floating.rawValue, "Floating")])
-                        if pad != PadMode.off.rawValue {
-                            card(VStack(alignment: .leading, spacing: 2) {
-                                Text("\(UiText.dpadSize)  \(Int(padSize)) pt").scaledFont(15).foregroundColor(Palette.text)
-                                Slider(value: $padSize, in: 100...220, step: 5)
-                            })
-                        }
                         choice(UiText.swipe, UiText.swipeHint,
                                $swipeMode, [(SwipeMode.pan.rawValue, "Pan"), (SwipeMode.step.rawValue, "Step"), (SwipeMode.run.rawValue, "Run")])
                         toggle(UiText.autoMore, UiText.autoMoreHint + (autoMoreEnabled ? "" : "  " + UiText.autoMoreLockedHint),

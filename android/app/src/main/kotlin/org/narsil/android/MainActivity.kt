@@ -403,7 +403,7 @@ class MainActivity : ComponentActivity() {
                     (state.prompt as? GameState.Prompt.Direction)?.let { d ->
                         Box(Modifier.align(Alignment.BottomCenter)) { DirectionBar(d, dpadMode() != Settings.DPAD_OFF, NarSilNative::nativeAnswer) }
                     }
-                    if (state.mapMode && dpadMode() == Settings.DPAD_FLOATING) FloatingDpad(settings, padMarks(state.prompt)) { dpad(state, it) }
+                    if (state.mapMode && dpadMode() == Settings.DPAD_FLOATING) FloatingDpad(settings, padMarks(state.prompt), resizing = layoutMode) { dpad(state, it) }
                     /* At the top of the map, clear of the handles (they have their grips halfway down the boundaries). */
                     if (layoutMode) Box(Modifier.align(Alignment.TopCenter)) { LayoutBar(settings) { layoutMode = false } }
                     if (state.mapMode && settings.edgeSwipePanel) EdgeSwipeHandle(Modifier.align(if (mirror) Alignment.CenterStart else Alignment.CenterEnd))
@@ -412,8 +412,8 @@ class MainActivity : ComponentActivity() {
                     if (dpadMode() == Settings.DPAD_DOCKED) Row(Modifier.background(Ui.Chrome), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.weight(1f)) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
                         /* Dragged: the d-pad's share of the width. */
-                        val padDp = if (settings.layoutPad > 0) settings.layoutPad * screenWidth - 8 else settings.dpadSizeDp
-                        if (layoutMode) ResizeHandle(horizontalBar = false) { dx -> settings.layoutPad = ((padDp + 8) * density.density - dx) / widthPx }
+                        val padDp = settings.layoutPad * screenWidth - 8
+                        if (layoutMode) ResizeHandle(horizontalBar = false, length = (padDp + 8).dp) { dx -> settings.layoutPad = ((padDp + 8) * density.density - dx) / widthPx }
                         Box(Modifier.padding(4.dp)) { Dpad(padDp, { dpad(state, it) }, marked = padMarks(state.prompt)) }
                     } else StatusStrip(state, stacked = false, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz)
                 }

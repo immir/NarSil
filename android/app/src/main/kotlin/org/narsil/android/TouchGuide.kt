@@ -19,7 +19,7 @@ internal val TOUCH_GUIDE: List<Pair<String, List<String>>> = listOf(
         "Tap an arrow to step; hold it to run.",
         "From the centre key, drag towards a direction to run that way.",
         "Centre key: tap to wait a turn, hold to rest.",
-        "A floating pad moves if you hold the centre key and then drag. Its size is in Options. Docked, it sits under the status in portrait and in the side column in landscape.",
+        "A floating pad moves if you hold the centre key and then drag. Its size is set in ☰ → Adjust layout. Docked, it sits under the status in portrait and in the side column in landscape.",
     ),
     "Buttons" to listOf(
         "The action bar shows what fits where you stand first (stairs, items, doors, a forge, a target); Pick up gets a ✦ when something underfoot is special or has properties still to find, and long-pressing it opens the pack at what is on the floor, then Rest, Explore, Wait, Stealth, Song, Look and Again. In landscape the status moves to a column beside the map.",
@@ -87,7 +87,6 @@ internal object UiText {
     const val TILES_HINT = "MicroChasm's pictures instead of letters. Lists and menus keep the letters."
     const val DPAD = "D-pad"
     const val DPAD_HINT = "Tap a key to step; hold it, or drag from the centre key towards it, to run.  Centre: tap to wait, hold to rest; on a floating pad hold the centre then drag to move it.  Beside status sits under the status in portrait and in the side column in landscape."
-    const val DPAD_SIZE = "D-pad size"
     const val SWIPE = "Swipe on the map"
     const val SWIPE_HINT = "Pan drags the map with one finger, as two fingers always do; Step takes one step that way; Run runs. Aiming and \"Which way?\" take a swipe in every mode."
     const val AUTO_MORE = "Skip -more- prompts"
