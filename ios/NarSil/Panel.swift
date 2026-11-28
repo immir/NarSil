@@ -36,18 +36,45 @@ struct PanelLayer: View {
     /// The tab asked for shows at once; the game's answer (its new screen) follows.
     @State private var asked = -1
 
+    /// What the game says while the panel covers the message strip (using an item from the pack): the newest lines, for a few seconds.
+    @State private var recent: [Message] = []
+    @State private var seen: [Message] = []
+    @State private var fading = false
+    @State private var stamp = 0
+
     var body: some View {
         let live = game.panelTab >= 0
-        Group {
+        ZStack(alignment: .bottom) {
             if live {
                 let interactive = game.prompt != nil && game.prompt == shown
                 let dimmed = game.prompt != nil && game.prompt != shown
                 host(interactive: interactive, dimmed: dimmed)
+                if !recent.isEmpty {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(Array(recent.enumerated()), id: \.offset) { _, m in Text(m.text + (m.count > 1 ? " (x\(m.count))" : "")).scaledFont(14).foregroundColor(Palette.text) }
+                    }
+                    .padding(.horizontal, 12).padding(.vertical, 8)
+                    .background(Palette.sheet.opacity(0.95), in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.gold.opacity(0.6), lineWidth: 1))
+                    .padding(.horizontal, 12).padding(.bottom, 16)
+                    .opacity(fading ? 0 : 1).animation(.easeOut(duration: 0.6), value: fading)
+                    .allowsHitTesting(false)
+                }
             }
         }
+        .onChange(of: game.messages) { now in
+            let fresh = now == seen ? 0 : min(max(now.count - seen.count, 1), 3)
+            seen = now
+            guard game.panelTab >= 0, fresh > 0 else { return }
+            recent = Array(now.suffix(fresh)); fading = false; stamp += 1
+            let mine = stamp
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) { if stamp == mine { fading = true } }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.7) { if stamp == mine { recent = [] } }
+        }
+        .onChange(of: game.panelTab) { t in if t < 0 { recent = [] } }
         .onChange(of: game.panelTab) { t in if t >= 0 { tab = t }; asked = -1 }
         .onChange(of: game.prompt) { p in if game.panelTab >= 0, let p, p.isPanelContent { shown = p } }
-        .onAppear { if game.panelTab >= 0 { tab = game.panelTab; if let p = game.prompt, p.isPanelContent { shown = p } } }
+        .onAppear { seen = game.messages; if game.panelTab >= 0 { tab = game.panelTab; if let p = game.prompt, p.isPanelContent { shown = p } } }
     }
 
     private func host(interactive: Bool, dimmed: Bool) -> some View {

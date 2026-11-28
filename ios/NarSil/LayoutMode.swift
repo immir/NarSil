@@ -23,29 +23,103 @@ enum LayoutPresets {
     static func clamp(_ v: Double, _ lo: Double, _ hi: Double) -> Double { min(max(v, lo), hi) }
 }
 
-/// A handle on a boundary: a thin bar to drag.  `horizontalBar` lies across the screen (dragged up and down); otherwise it stands
-/// upright (dragged left and right).  `onDrag` gets each step of movement along the drag axis.
+/// One boundary that can be dragged (`horizontal` set), or an area that must keep its own touches, such as the card (`horizontal` nil).
+struct Guide {
+    static let zoneID = UUID()
+    let id: UUID
+    let horizontal: Bool?
+    let frame: CGRect
+    var onDrag: (CGFloat) -> Void = { _ in }
+}
+
+struct GuideKey: PreferenceKey {
+    static var defaultValue: [Guide] = []
+    static func reduce(value: inout [Guide], nextValue: () -> [Guide]) { value += nextValue() }
+}
+
+/// A handle on a boundary.  `horizontalBar` lies across the screen (dragged up and down); otherwise it stands upright
+/// (dragged left and right).  `onDrag` gets each step of movement along the drag axis.  It takes no room in the layout: it only
+/// reports where its boundary lies, and `GuideLayer` draws and drags it, so what is being resized keeps its true size.
+/// In a row only as tall as its content (portrait, beside the d-pad) it takes a `length`.
 struct ResizeHandle: View {
     let horizontalBar: Bool
-    /// In a row only as tall as its content (portrait, beside the d-pad) the handle takes a length, or it would stretch the row.
     var length: CGFloat?
     let onDrag: (CGFloat) -> Void
+    @State private var id = UUID()
+
+    var body: some View {
+        Group {
+            if horizontalBar { Color.clear.frame(maxWidth: .infinity).frame(height: 0) }
+            else if let length { Color.clear.frame(width: 0, height: length) }
+            else { Color.clear.frame(width: 0).frame(maxHeight: .infinity) }
+        }
+        .background(GeometryReader { g in
+            Color.clear.preference(key: GuideKey.self, value: [Guide(id: id, horizontal: horizontalBar, frame: g.frame(in: .named("guides")), onDrag: onDrag)])
+        })
+    }
+}
+
+/// The translucent guides over everything, and the one gesture that drags them: a touch beginning within reach of a guide
+/// (and not on the card) takes that guide.
+struct GuideLayer: View {
+    let guides: [Guide]
+    @State private var active: UUID?
     @State private var last: CGFloat = 0
+    private let reach: CGFloat = 18
+
+    private var movable: [Guide] { guides.filter { $0.horizontal != nil } }
+
+    private func strip(_ g: Guide) -> CGRect {
+        g.horizontal == true ? CGRect(x: g.frame.minX, y: g.frame.minY - reach, width: g.frame.width, height: 2 * reach)
+                             : CGRect(x: g.frame.minX - reach, y: g.frame.minY, width: 2 * reach, height: g.frame.height)
+    }
+
+    /// The strips, less the areas that keep their own touches (the strip is cut into the pieces around each).
+    private var touchable: Path {
+        let zones = guides.filter { $0.horizontal == nil }.map(\.frame)
+        let pieces = zones.reduce(movable.map(strip)) { rects, zone in rects.flatMap { Self.cut($0, around: zone) } }
+        return pieces.reduce(Path()) { var p = $0; p.addRect($1); return p }
+    }
+
+    private static func cut(_ r: CGRect, around z: CGRect) -> [CGRect] {
+        guard r.intersects(z) else { return [r] }
+        let i = r.intersection(z)
+        return [CGRect(x: r.minX, y: r.minY, width: r.width, height: i.minY - r.minY),
+                CGRect(x: r.minX, y: i.maxY, width: r.width, height: r.maxY - i.maxY),
+                CGRect(x: r.minX, y: i.minY, width: i.minX - r.minX, height: i.height),
+                CGRect(x: i.maxX, y: i.minY, width: r.maxX - i.maxX, height: i.height)].filter { $0.width > 0 && $0.height > 0 }
+    }
 
     var body: some View {
         ZStack {
-            Palette.gold.opacity(0.14)
-            RoundedRectangle(cornerRadius: 2).fill(Palette.gold).frame(width: horizontalBar ? 40 : 4, height: horizontalBar ? 4 : 40)
+            Canvas { ctx, _ in
+                movable.forEach { g in
+                    let f = g.frame
+                    let horizontal = g.horizontal == true
+                    let band = horizontal ? CGRect(x: f.minX, y: f.minY - 9, width: f.width, height: 18) : CGRect(x: f.minX - 9, y: f.minY, width: 18, height: f.height)
+                    let line = horizontal ? CGRect(x: f.minX, y: f.minY - 1, width: f.width, height: 2) : CGRect(x: f.minX - 1, y: f.minY, width: 2, height: f.height)
+                    let grip = horizontal ? CGRect(x: f.midX - 20, y: f.minY - 2.5, width: 40, height: 5) : CGRect(x: f.minX - 2.5, y: f.midY - 20, width: 5, height: 40)
+                    ctx.fill(Path(band), with: .color(Palette.gold.opacity(0.16)))
+                    ctx.fill(Path(line), with: .color(Palette.gold.opacity(0.7)))
+                    ctx.fill(Path(roundedRect: grip, cornerRadius: 2.5), with: .color(Palette.gold))
+                }
+            }.allowsHitTesting(false)
+            Color.clear.contentShape(touchable)
+                .gesture(DragGesture(minimumDistance: 0, coordinateSpace: .local)
+                    .onChanged { v in
+                        if active == nil {
+                            active = movable.min { distance(v.startLocation, $0) < distance(v.startLocation, $1) }?.id
+                            last = 0
+                        }
+                        guard let g = movable.first(where: { $0.id == active }) else { return }
+                        let t = g.horizontal == true ? v.translation.height : v.translation.width
+                        g.onDrag(t - last); last = t
+                    }
+                    .onEnded { _ in active = nil; last = 0 })
         }
-        .frame(width: horizontalBar ? nil : 24, height: horizontalBar ? 24 : length)
-        .contentShape(Rectangle())
-        .gesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
-            .onChanged { v in
-                let t = horizontalBar ? v.translation.height : v.translation.width
-                onDrag(t - last); last = t
-            }
-            .onEnded { _ in last = 0 })
     }
+
+    private func distance(_ p: CGPoint, _ g: Guide) -> CGFloat { g.horizontal == true ? abs(p.y - g.frame.minY) : abs(p.x - g.frame.minX) }
 }
 
 /// A round gold grip, dragged to resize the floating d-pad from its corner; `onDrag` gets each step of horizontal movement.
@@ -103,6 +177,9 @@ struct LayoutBar: View {
         .background(Palette.sheet, in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.hairline, lineWidth: 1))
         .padding(4)
+        .background(GeometryReader { g in
+            Color.clear.preference(key: GuideKey.self, value: [Guide(id: Guide.zoneID, horizontal: nil, frame: g.frame(in: .named("guides")))])
+        })
     }
 }
 

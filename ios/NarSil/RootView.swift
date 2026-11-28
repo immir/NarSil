@@ -81,6 +81,8 @@ struct RootView: View {
                 if showMore { sheet(MoreSheet(actions: more, pinned: QuickPins.decode(quickActs), onPin: { quickActs = QuickPins.toggled(quickActs, $0) }, dismiss: { showMore = false })) }
                 if showRest { sheet(RestSheet(dismiss: { showRest = false })) }
             }
+            .coordinateSpace(name: "guides")
+            .overlayPreferenceValue(GuideKey.self) { guides in if layoutMode { GuideLayer(guides: guides) } }
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.data, .item]) { result in
             if case .success(let url) = result {
