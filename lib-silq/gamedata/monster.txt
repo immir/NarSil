@@ -568,6 +568,7 @@ desc:He is one of Morgoth's grim mockeries of the firstborn.
 desc: He carries a crude sword and bow.
 
 name:White wolf
+plural:White wolves
 base:wolf
 depth:5
 rarity:1
@@ -1223,6 +1224,7 @@ desc: this place, far from Mandos' halls. He is arrayed in
 desc: finery and holds a long blade in ghostly fingers.
 
 name:Easterling spy
+plural:Easterling spies
 base:person
 depth:12
 rarity:3
@@ -1347,6 +1349,7 @@ desc: Duruin, Flame of the Night, a great figure wrapped in fire
 desc: and shadow. He wields fiery sword and whip.
 
 name:Werewolf
+plural:Werewolves
 base:wolf
 depth:13
 rarity:1
@@ -1778,6 +1781,7 @@ desc: Some have made their way North to Angband, and crept down
 desc: to the very darkest parts of the stronghold.
 
 name:Greater werewolf
+plural:Greater werewolves
 base:wolf
 depth:17
 rarity:1
@@ -2748,6 +2752,7 @@ color:g
 flags:MALE
 
 name:Ent-wife
+plural:Ent-wives
 base:hallucinatory
 depth:30
 rarity:10

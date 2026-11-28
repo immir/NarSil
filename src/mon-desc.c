@@ -30,9 +30,18 @@ void plural_aux(char *name, size_t max)
 	size_t name_len = strlen(name);
 	assert(name_len != 0);
 
-	if (name[name_len - 1] == 's')
+	const char last = name[name_len - 1];
+	const char before = name_len > 1 ? name[name_len - 2] : 'a';
+
+	if (last == 's')
 		my_strcat(name, "es", max);
-	else
+	else if (last == 'y' && !strchr("aeiou", before)) {
+		name[name_len - 1] = '\0';
+		my_strcat(name, "ies", max);
+	} else if (name_len > 3 && !strcmp(name + name_len - 4, "wolf")) {
+		name[name_len - 1] = '\0';
+		my_strcat(name, "ves", max);
+	} else
 		my_strcat(name, "s", max);
 }
 
