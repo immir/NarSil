@@ -373,6 +373,9 @@ class MainActivity : ComponentActivity() {
         }
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
             val widthPx = constraints.maxWidth.toFloat()
+            val heightPx = constraints.maxHeight.toFloat()
+            val screenHeight = maxHeight.value
+            var sectionPx by remember { mutableFloatStateOf(0f) }
             val density = LocalDensity.current
             val mirror = settings.layoutMirror && rail
             val screenWidth = maxWidth.value
@@ -385,7 +388,12 @@ class MainActivity : ComponentActivity() {
             Column(Modifier.weight(1f).fillMaxHeight()) {
                 /* At -more- a tap continues; otherwise it opens the scrollable history. */
                 if (state.mapMode) TextScale(settings.messageScale) {
-                    MessageStrip(state, if (rail) minOf(2, settings.messageLines) else settings.messageLines, panelButton = !settings.tabsOnTop) { if (state.messageLine.contains("-more-")) { Trace.log("more.tap"); router.special(Keys.ENTER) } else { Trace.log("messages.open", "via" to "strip"); showMessages = true } }
+                    val messages = if (rail) settings.layoutMsgLandscape else settings.layoutMsgPortrait
+                    MessageStrip(state, (messages * screenHeight).dp, panelButton = !settings.tabsOnTop) { if (state.messageLine.contains("-more-")) { Trace.log("more.tap"); router.special(Keys.ENTER) } else { Trace.log("messages.open", "via" to "strip"); showMessages = true } }
+                }
+                /* Dragged: the message area's height. */
+                if (state.mapMode && layoutMode) ResizeHandle(horizontalBar = true) { dy ->
+                    if (rail) settings.layoutMsgLandscape += dy / heightPx else settings.layoutMsgPortrait += dy / heightPx
                 }
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     AndroidView(
@@ -409,12 +417,21 @@ class MainActivity : ComponentActivity() {
                     if (state.mapMode && settings.edgeSwipePanel) EdgeSwipeHandle(Modifier.align(if (mirror) Alignment.CenterStart else Alignment.CenterEnd))
                 }
                 if (state.mapMode && !rail) TextScale(settings.statusScale) {
-                    if (dpadMode() == Settings.DPAD_DOCKED) Row(Modifier.background(Ui.Chrome), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f)) { StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz) }
-                        /* Dragged: the d-pad's share of the width. */
-                        val padDp = settings.layoutPad * screenWidth - 8
-                        if (layoutMode) ResizeHandle(horizontalBar = false, length = (padDp + 8).dp) { dx -> settings.layoutPad = ((padDp + 8) * density.density - dx) / widthPx }
-                        Box(Modifier.padding(4.dp)) { Dpad(padDp, { dpad(state, it) }, marked = padMarks(state.prompt)) }
+                    if (dpadMode() == Settings.DPAD_DOCKED) Column {
+                        /* Dragged: the height of this section; the d-pad grows with it, and the status scrolls if it no longer fits. */
+                        val fixed = settings.layoutBottom > 0
+                        val sectionDp = settings.layoutBottom * screenHeight
+                        if (layoutMode) ResizeHandle(horizontalBar = true) { dy ->
+                            settings.layoutBottom = (if (fixed) settings.layoutBottom else sectionPx / heightPx) - dy / heightPx
+                        }
+                        val padDp = if (fixed) minOf(sectionDp - 8, 0.6f * screenWidth).coerceAtLeast(60f) else settings.layoutPad * screenWidth - 8
+                        Row(Modifier.then(if (fixed) Modifier.height(sectionDp.dp) else Modifier.onSizeChanged { sectionPx = it.height.toFloat() }).background(Ui.Chrome),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.weight(1f).then(if (fixed) Modifier.verticalScroll(rememberScrollState()) else Modifier)) {
+                                StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz)
+                            }
+                            Box(Modifier.padding(4.dp)) { Dpad(padDp, { dpad(state, it) }, marked = padMarks(state.prompt)) }
+                        }
                     } else StatusStrip(state, stacked = false, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz)
                 }
                 if (state.mapMode && !rail) TextScale(settings.buttonScale) { ActionBar(barActions(state)) { Trace.log("menu.open"); showMore = true } }

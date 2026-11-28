@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -39,6 +41,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -49,16 +52,17 @@ import androidx.compose.ui.unit.sp
  * textui's top line when it holds something else: a prompt, or -more- (tap = Enter).
  */
 @Composable
-internal fun MessageStrip(state: GameState, lines: Int, panelButton: Boolean = true, onTap: () -> Unit) {
-    val recent = state.messages.takeLast(lines)
+internal fun MessageStrip(state: GameState, height: Dp, panelButton: Boolean = true, onTap: () -> Unit) {
+    /* As many of the latest as fit: the newest sit at the bottom and older ones run off the top. */
+    val recent = state.messages.takeLast(12)
     val line0 = state.messageLine
     val more = line0.contains("-more-")
     /* The textui joins several messages on its top line; only show it when it is something else (a prompt). */
     val banner = line0.takeIf { it.isNotEmpty() && !more && state.messages.none { m -> line0.contains(m.text) } }
-    Row(Modifier.fillMaxWidth().background(Ui.Chrome), verticalAlignment = Alignment.Top) {
-    Column(Modifier.weight(1f).clickable(onClick = onTap).padding(horizontal = 10.dp, vertical = 4.dp)) {
+    Row(Modifier.fillMaxWidth().height(height).clipToBounds().background(Ui.Chrome), verticalAlignment = Alignment.Top) {
+    Column(Modifier.weight(1f).fillMaxHeight().clickable(onClick = onTap).padding(horizontal = 10.dp, vertical = 4.dp), verticalArrangement = Arrangement.Bottom) {
         recent.forEachIndexed { i, m ->
-            val alpha = 0.45f + 0.55f * (i + 1) / recent.size
+            val alpha = (1f - 0.12f * (recent.size - 1 - i)).coerceAtLeast(0.45f)
             Text(Special.styled(m, if (m.count > 1) " (x${m.count})" else ""),
                  color = Color(state.colour(m.attr)).copy(alpha = alpha), fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)
         }

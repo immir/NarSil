@@ -77,7 +77,6 @@ enum UiText {
     static let coloursHint = "Bright lifts the game's dark blues and reds so they read on black; Original is the game's own palette."
     static let itemScale = "Inventory and items"
     static let statusScale = "Status"
-    static let messageLines = "Messages shown"
     static let panelTabs = "Panel tabs"
     static let panelTabsHint = "Icons fit the panel without scrolling; names are the scrolling strip."
     static let tabsOnTop = "Panel tabs along the top"

@@ -15,13 +15,14 @@ private func color(_ rgb: UInt32) -> Color {
 /// something else: a prompt, or -more- (tap = Enter).
 struct MessageStrip: View {
     @ObservedObject var game: GameState
-    let lines: Int
+    /// The height of the area: as many of the latest messages as fit, the newest at the bottom, older ones running off the top.
+    let height: CGFloat
     let onPanel: () -> Void
     var panelButton = true
     let onMessages: () -> Void
 
     var body: some View {
-        let recent = Array(game.messages.suffix(lines))
+        let recent = Array(game.messages.suffix(12))
         let line0 = game.topLine
         let more = line0.contains("-more-")
         /* The textui joins several messages on its top line; only show it when it is something else (a prompt). */
@@ -29,7 +30,7 @@ struct MessageStrip: View {
         HStack(alignment: .top, spacing: 0) {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(recent.enumerated()), id: \.offset) { i, m in
-                    let alpha = 0.45 + 0.55 * Double(i + 1) / Double(recent.count)
+                    let alpha = max(0.45, 1 - 0.12 * Double(recent.count - 1 - i))
                     Text(m.count > 1 ? "\(m.text) (x\(m.count))" : m.text)
                         .scaledFont(14).lineLimit(2)
                         .foregroundColor(color(game.colour(m.attr % 256 % 32)).opacity(alpha))
@@ -40,7 +41,7 @@ struct MessageStrip: View {
                 if resting { Text("Resting…").scaledFont(13).foregroundColor(Color(red: 0x8A / 255, green: 0xB4 / 255, blue: 0xF8 / 255)) }
                 if recent.isEmpty && banner == nil && !more && !resting { Text(" ").scaledFont(14) }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
             .padding(.horizontal, 10).padding(.vertical, 4)
             .contentShape(Rectangle())
             .onTapGesture { if more { Trace.log("more.tap"); Native.pushKey(Keys.enter) } else { onMessages() } }
@@ -52,6 +53,7 @@ struct MessageStrip: View {
                     .background(Color(red: 0x26 / 255, green: 0x26 / 255, blue: 0x2B / 255), in: RoundedRectangle(cornerRadius: 10))
             }.buttonStyle(.plain).padding(4).accessibilityLabel("Character panel") }
         }
+        .frame(height: height).clipped()
         .background(stripBackground)
     }
 }

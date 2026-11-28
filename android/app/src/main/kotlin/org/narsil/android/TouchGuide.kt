@@ -78,7 +78,6 @@ internal object UiText {
     const val COLOURS_HINT = "Bright lifts the game's dark blues and reds so they read on black; Original is the game's own palette."
     const val ITEM_SCALE = "Inventory and items"
     const val STATUS_SCALE = "Status"
-    const val MESSAGE_LINES = "Messages shown"
     const val PANEL_TABS = "Panel tabs"
     const val PANEL_TABS_HINT = "Icons fit the panel without scrolling; names are the scrolling strip."
     const val TABS_ON_TOP = "Panel tabs along the top"

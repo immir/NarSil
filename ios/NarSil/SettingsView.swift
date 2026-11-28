@@ -17,7 +17,6 @@ struct SettingsSheet: View {
     @Binding var statusScale: Double
     @Binding var theme: Int
     let gamePalette: [UInt32]
-    @Binding var messageLines: Int
     @Binding var panelTabs: Int
     @Binding var tabsOnTop: Bool
     @Binding var tiles: Bool
@@ -70,7 +69,6 @@ struct SettingsSheet: View {
                         })
                         scale(UiText.itemScale, $itemScale)
                         scale(UiText.statusScale, $statusScale)
-                        choice(UiText.messageLines, nil, $messageLines, [(2, "2"), (3, "3"), (4, "4"), (5, "5")])
                         choice(UiText.panelTabs, UiText.panelTabsHint, $panelTabs,
                                [(TabStyle.iconsAndNames.rawValue, "Icons and names"), (TabStyle.iconsOnly.rawValue, "Icons"), (TabStyle.names.rawValue, "Names")])
                         toggle(UiText.tabsOnTop, UiText.tabsOnTopHint, $tabsOnTop)

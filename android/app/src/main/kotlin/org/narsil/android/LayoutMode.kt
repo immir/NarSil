@@ -2,6 +2,9 @@ package org.narsil.android
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,24 +55,28 @@ fun ResizeHandle(horizontalBar: Boolean, length: Dp? = null, onDrag: (Float) -> 
     }
 }
 
-/** The card over the map while laying out: the presets, the mirror, Reset and Done. */
-@OptIn(ExperimentalLayoutApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
+/** The strip over the map while laying out: the presets, the mirror, Reset and Done, as small as will hold them; it wraps on a narrow screen. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun LayoutBar(settings: Settings, onDone: () -> Unit) {
-    Surface(shape = Ui.CardShape, color = Ui.Sheet, border = Ui.edge, modifier = Modifier.padding(8.dp)) {
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(2.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Drag the gold handles to resize the panes", color = Ui.Sub, fontSize = 13.sp)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                Settings.LAYOUT_PRESETS.forEach { (name, _) ->
-                    FilterChip(selected = settings.layoutPreset == name, onClick = { settings.applyLayoutPreset(name) }, label = { Text(name) })
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Left-handed", color = Ui.Text, fontSize = 14.sp, modifier = Modifier.padding(end = 6.dp))
-                    Switch(settings.layoutMirror, { settings.layoutMirror = it })
-                }
-                TextButton(onClick = { settings.resetLayout() }) { Text("Reset") }
-                Button(onClick = onDone) { Text("Done") }
+    val small = 11.sp
+    Surface(shape = RoundedCornerShape(12.dp), color = Ui.Sheet, border = Ui.edge, modifier = Modifier.padding(4.dp)) {
+        FlowRow(Modifier.padding(horizontal = 6.dp, vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Settings.LAYOUT_PRESETS.forEach { p ->
+                val on = settings.layoutPreset == p.name
+                Text(p.name, color = if (on) Ui.Gold else Ui.Text, fontSize = small, maxLines = 1, softWrap = false,
+                     modifier = Modifier.background(if (on) Ui.Gold.copy(alpha = 0.2f) else Ui.Raised, RoundedCornerShape(50))
+                         .clickable { settings.applyLayoutPreset(p.name) }.padding(horizontal = 8.dp, vertical = 5.dp))
             }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Left-handed", color = Ui.Text, fontSize = small, maxLines = 1, softWrap = false)
+                Switch(settings.layoutMirror, { settings.layoutMirror = it }, modifier = Modifier.scale(0.6f).size(width = 34.dp, height = 22.dp))
+            }
+            Text("Reset", color = Ui.Gold, fontSize = small, maxLines = 1, softWrap = false,
+                 modifier = Modifier.clickable { settings.resetLayout() }.padding(horizontal = 8.dp, vertical = 5.dp))
+            Text("Done", color = Ui.OnGold, fontSize = small, maxLines = 1, softWrap = false, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                 modifier = Modifier.background(Ui.Gold, RoundedCornerShape(50)).clickable(onClick = onDone).padding(horizontal = 10.dp, vertical = 5.dp))
         }
     }
 }

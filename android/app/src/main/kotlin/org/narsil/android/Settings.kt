@@ -59,6 +59,9 @@ class Settings(context: Context) {
     private val railState = float("layoutRail", LAYOUT_RAIL)
     private val buttonsState = float("layoutButtons", LAYOUT_BUTTONS)
     private val splitState = float("layoutSplit", -1f)
+    private val bottomState = float("layoutBottom", -1f)
+    private val msgPortraitState = float("layoutMsgP", LAYOUT_MSG_PORTRAIT)
+    private val msgLandscapeState = float("layoutMsgL", LAYOUT_MSG_LANDSCAPE)
     private val padShareState = float("layoutPad", LAYOUT_PAD).also { if (it.floatValue < 0) it.floatValue = LAYOUT_PAD }
     private val mirrorState = mutableStateOf(prefs.getBoolean("layoutMirror", false))
     private val padX = float("dpadX", 1f)
@@ -75,7 +78,6 @@ class Settings(context: Context) {
     private val combat = mutableStateOf(prefs.getBoolean("combatBuzz", true))
     private val taps = mutableStateOf(prefs.getBoolean("tapBuzz", true))
     private val tracing = mutableStateOf(prefs.getBoolean("traceUsage", false))
-    private val msgLines = mutableIntStateOf(prefs.getInt("messageLines", 3))
     private val panelTabStyle = mutableIntStateOf(prefs.getInt("panelTabs", TABS_ICONS_AND_NAMES))
     private val themeChoice = mutableIntStateOf(prefs.getInt("theme", 0))
     private val tipsSeen = mutableStateOf(prefs.getBoolean("seenTips", false))
@@ -110,13 +112,21 @@ class Settings(context: Context) {
     var layoutRail: Float get() = railState.floatValue; set(v) { railState.floatValue = v.coerceIn(0.12f, 0.4f); save("layoutRail", railState.floatValue) }
     var layoutButtons: Float get() = buttonsState.floatValue; set(v) { buttonsState.floatValue = v.coerceIn(0.07f, 0.25f); save("layoutButtons", buttonsState.floatValue) }
     var layoutSplit: Float get() = splitState.floatValue; set(v) { splitState.floatValue = if (v < 0) -1f else v.coerceIn(0.15f, 0.85f); save("layoutSplit", splitState.floatValue) }
+    /** Portrait: the height of the status and d-pad section as a share of the screen height (-1: as tall as its content). */
+    var layoutBottom: Float get() = bottomState.floatValue; set(v) { bottomState.floatValue = if (v < 0) -1f else v.coerceIn(0.12f, 0.45f); save("layoutBottom", bottomState.floatValue) }
+    /** The message area's height as a share of the screen height, in portrait and in landscape. */
+    var layoutMsgPortrait: Float get() = msgPortraitState.floatValue; set(v) { msgPortraitState.floatValue = v.coerceIn(0.05f, 0.4f); save("layoutMsgP", msgPortraitState.floatValue) }
+    var layoutMsgLandscape: Float get() = msgLandscapeState.floatValue; set(v) { msgLandscapeState.floatValue = v.coerceIn(0.05f, 0.4f); save("layoutMsgL", msgLandscapeState.floatValue) }
     var layoutPad: Float get() = padShareState.floatValue; set(v) { padShareState.floatValue = v.coerceIn(0.2f, 0.5f); save("layoutPad", padShareState.floatValue) }
     var layoutMirror: Boolean get() = mirrorState.value; set(v) { mirrorState.value = v; prefs.edit().putBoolean("layoutMirror", v).apply() }
     /** The preset the sizes match, or null once a handle has been dragged. */
-    val layoutPreset: String? get() = LAYOUT_PRESETS.firstOrNull { (_, p) -> p.first == layoutRail && p.second == layoutButtons && layoutSplit < 0 && layoutPad == LAYOUT_PAD }?.first
+    val layoutPreset: String? get() = LAYOUT_PRESETS.firstOrNull { p ->
+        p.rail == layoutRail && p.buttons == layoutButtons && p.bottom == layoutBottom && p.messagesPortrait == layoutMsgPortrait &&
+            p.messagesLandscape == layoutMsgLandscape && layoutSplit < 0 && layoutPad == LAYOUT_PAD }?.name
     fun applyLayoutPreset(name: String) {
-        val (rail, buttons) = LAYOUT_PRESETS.first { it.first == name }.second
-        layoutRail = rail; layoutButtons = buttons; layoutSplit = -1f; layoutPad = LAYOUT_PAD
+        val p = LAYOUT_PRESETS.first { it.name == name }
+        layoutRail = p.rail; layoutButtons = p.buttons; layoutBottom = p.bottom; layoutMsgPortrait = p.messagesPortrait; layoutMsgLandscape = p.messagesLandscape
+        layoutSplit = -1f; layoutPad = LAYOUT_PAD
     }
     fun resetLayout() { applyLayoutPreset("Balanced"); layoutMirror = false }
 
@@ -143,7 +153,6 @@ class Settings(context: Context) {
     /** Index into [Theme.ALL]. */
     var theme: Int get() = themeChoice.intValue; set(v) { themeChoice.intValue = v; prefs.edit().putInt("theme", v).apply() }
     /** How many recent messages the strip shows (2..5). */
-    var messageLines: Int get() = msgLines.intValue; set(v) { msgLines.intValue = v.coerceIn(2, 5); prefs.edit().putInt("messageLines", msgLines.intValue).apply() }
     /** MicroChasm tiles on the map (the game is told by NarSilNative.nativeSetTiles). */
     /** The panel's tabs always across the top of the screen (experimental). */
     var tabsOnTop: Boolean get() = topTabs.value; set(v) { topTabs.value = v; prefs.edit().putBoolean("tabsOnTop", v).apply() }
@@ -156,8 +165,14 @@ class Settings(context: Context) {
         const val LAYOUT_RAIL = 0.19f
         const val LAYOUT_BUTTONS = 0.108f
         const val LAYOUT_PAD = 0.34f
-        /** The presets: name to (right column, button column) as fractions of the width. */
-        val LAYOUT_PRESETS = listOf("Compact" to (0.17f to 0.095f), "Balanced" to (LAYOUT_RAIL to LAYOUT_BUTTONS), "Big" to (0.24f to 0.14f))
+        const val LAYOUT_MSG_PORTRAIT = 0.12f
+        const val LAYOUT_MSG_LANDSCAPE = 0.14f
+        /** A preset: landscape columns (shares of the width), portrait status section (share of the height, -1 as tall as its content), message area (shares of the height). */
+        data class LayoutPreset(val name: String, val rail: Float, val buttons: Float, val bottom: Float, val messagesPortrait: Float, val messagesLandscape: Float)
+        val LAYOUT_PRESETS = listOf(
+            LayoutPreset("Compact", 0.17f, 0.095f, 0.15f, 0.08f, 0.10f),
+            LayoutPreset("Balanced", LAYOUT_RAIL, LAYOUT_BUTTONS, -1f, LAYOUT_MSG_PORTRAIT, LAYOUT_MSG_LANDSCAPE),
+            LayoutPreset("Big", 0.24f, 0.14f, 0.27f, 0.16f, 0.20f))
         const val TABS_ICONS_AND_NAMES = 0
         const val TABS_ICONS = 1
         const val TABS_NAMES = 2
@@ -207,10 +222,6 @@ fun OptionsSheet(settings: Settings, gamePalette: IntArray, autoMore: Boolean, a
                 Hint(UiText.COLOURS_HINT)
                 Scale(UiText.ITEM_SCALE, settings.itemScale) { settings.itemScale = it }
                 Scale(UiText.STATUS_SCALE, settings.statusScale) { settings.statusScale = it }
-                Label(UiText.MESSAGE_LINES)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    (2..5).forEach { n -> FilterChip(selected = settings.messageLines == n, onClick = { settings.messageLines = n }, label = { Text("$n") }) }
-                }
                 Label(UiText.PANEL_TABS)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(Settings.TABS_ICONS_AND_NAMES to "Icons and names", Settings.TABS_ICONS to "Icons", Settings.TABS_NAMES to "Names")

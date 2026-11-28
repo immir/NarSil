@@ -5,10 +5,20 @@ import SwiftUI
  dragged to resize them, with a few presets and a left-handed mirror.  The sizes are fractions of the screen and are
  kept in the user defaults, so they carry across rotation and other devices.  (Settings.kt on Android.)
 */
+/// A preset: landscape columns (shares of the width), portrait status section (share of the height, -1 as tall as its content),
+/// message area (shares of the height).
+struct LayoutPreset {
+    let name: String
+    let rail: Double, buttons: Double, bottom: Double, messagesPortrait: Double, messagesLandscape: Double
+}
+
 enum LayoutPresets {
-    /// Name, right column and button column as fractions of the width.
-    static let all: [(name: String, rail: Double, buttons: Double)] = [("Compact", 0.17, 0.095), ("Balanced", 0.19, 0.108), ("Big", 0.24, 0.14)]
-    static let defaultRail = 0.19, defaultButtons = 0.108, defaultPad = 0.34
+    static let defaultRail = 0.19, defaultButtons = 0.108, defaultPad = 0.34, defaultMessagesPortrait = 0.12, defaultMessagesLandscape = 0.14
+    static let all = [
+        LayoutPreset(name: "Compact", rail: 0.17, buttons: 0.095, bottom: 0.15, messagesPortrait: 0.08, messagesLandscape: 0.10),
+        LayoutPreset(name: "Balanced", rail: defaultRail, buttons: defaultButtons, bottom: -1, messagesPortrait: defaultMessagesPortrait, messagesLandscape: defaultMessagesLandscape),
+        LayoutPreset(name: "Big", rail: 0.24, buttons: 0.14, bottom: 0.27, messagesPortrait: 0.16, messagesLandscape: 0.20),
+    ]
 
     static func clamp(_ v: Double, _ lo: Double, _ hi: Double) -> Double { min(max(v, lo), hi) }
 }
@@ -51,38 +61,48 @@ struct CornerGrip: View {
     }
 }
 
-/// The card over the map while laying out: the presets, the mirror, Reset and Done.
+/// The strip over the map while laying out: the presets, the mirror, Reset and Done, as small as will hold them.
 struct LayoutBar: View {
     @Binding var rail: Double
     @Binding var buttons: Double
     @Binding var split: Double
     @Binding var pad: Double
+    @Binding var bottom: Double
+    @Binding var messagesPortrait: Double
+    @Binding var messagesLandscape: Double
     @Binding var mirror: Bool
     let done: () -> Void
 
-    private func apply(_ p: (name: String, rail: Double, buttons: Double)) { rail = p.rail; buttons = p.buttons; split = -1; pad = LayoutPresets.defaultPad }
-    private func matches(_ p: (name: String, rail: Double, buttons: Double)) -> Bool { rail == p.rail && buttons == p.buttons && split < 0 && pad == LayoutPresets.defaultPad }
+    private func apply(_ p: LayoutPreset) {
+        rail = p.rail; buttons = p.buttons; bottom = p.bottom; messagesPortrait = p.messagesPortrait; messagesLandscape = p.messagesLandscape
+        split = -1; pad = LayoutPresets.defaultPad
+    }
+    private func matches(_ p: LayoutPreset) -> Bool {
+        rail == p.rail && buttons == p.buttons && bottom == p.bottom && messagesPortrait == p.messagesPortrait && messagesLandscape == p.messagesLandscape
+            && split < 0 && pad == LayoutPresets.defaultPad
+    }
 
     var body: some View {
-        VStack(spacing: 8) {
-            Text("Drag the gold handles to resize the panes").scaledFont(13).foregroundColor(Palette.sub)
-            HStack(spacing: 8) {
+        VStack(spacing: 2) {
+            HStack(spacing: 4) {
                 ForEach(LayoutPresets.all, id: \.name) { p in
                     Button(p.name) { apply(p) }
-                        .scaledFont(14).padding(.horizontal, 12).frame(minHeight: 34)
-                        .background(matches(p) ? Palette.gold.opacity(0.25) : Color.white.opacity(0.14), in: Capsule())
-                        .overlay { if matches(p) { Capsule().strokeBorder(Palette.gold, lineWidth: 1.5) } }
+                        .font(.system(size: 11)).padding(.horizontal, 8).padding(.vertical, 5)
+                        .background(matches(p) ? Palette.gold.opacity(0.25) : Palette.raised, in: Capsule())
                         .foregroundColor(matches(p) ? Palette.gold : .white).buttonStyle(.plain)
                 }
-                Toggle("Left-handed", isOn: $mirror).scaledFont(14).fixedSize()
-                Button("Reset") { apply(LayoutPresets.all[1]); mirror = false }
-                Button("Done", action: done).buttonStyle(GoldButtonStyle())
+            }
+            HStack(spacing: 6) {
+                Toggle("Left-handed", isOn: $mirror).font(.system(size: 11)).fixedSize().scaleEffect(0.8)
+                Button("Reset") { apply(LayoutPresets.all[1]); mirror = false }.font(.system(size: 11)).foregroundColor(Palette.gold)
+                Button(action: done) { Text("Done").font(.system(size: 11, weight: .semibold)).padding(.horizontal, 10).padding(.vertical, 5) }
+                    .background(Palette.gold, in: Capsule()).foregroundColor(Palette.onGold).buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 12).padding(.vertical, 6).foregroundColor(.white)
-        .background(Palette.sheet, in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Palette.hairline, lineWidth: 1))
-        .padding(8)
+        .padding(.horizontal, 8).padding(.vertical, 3).foregroundColor(.white)
+        .background(Palette.sheet, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Palette.hairline, lineWidth: 1))
+        .padding(4)
     }
 }
 
