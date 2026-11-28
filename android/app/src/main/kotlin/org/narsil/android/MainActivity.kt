@@ -52,6 +52,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.unit.toSize
@@ -354,12 +358,35 @@ class MainActivity : ComponentActivity() {
         val interactive = prompt?.isPanelContent() == true
         /* Dimmed under a question asked over it; not in the moment between two tabs (no prompt yet). */
         val dimmed = prompt != null && !interactive
-        if (live) PanelHost(tab, settings.panelTabs, settings.tabsOnTop, settings.layoutMirror, answer) {
-            (if (interactive) prompt else shown)?.let { c ->
-                Box(Modifier.fillMaxSize()) {
-                    PromptUi(state, c, if (interactive) answer else { _ -> })
-                    if (dimmed) Box(Modifier.fillMaxSize().background(Color(0x55000000))
-                                              .clickable(remember { MutableInteractionSource() }, indication = null) {})
+        /* What the game says while a panel covers the message strip (using an item from the pack): the newest lines, shown for a few seconds. */
+        var recent by remember { mutableStateOf<List<GameState.Message>>(emptyList()) }
+        var seen by remember { mutableStateOf(state.messages) }
+        var fading by remember { mutableStateOf(false) }
+        LaunchedEffect(state.messages, live) {
+            val fresh = if (state.messages == seen) 0 else (state.messages.size - seen.size).coerceIn(1, 3)
+            seen = state.messages
+            if (!live) { recent = emptyList(); return@LaunchedEffect }
+            if (fresh > 0) {
+                recent = state.messages.takeLast(fresh); fading = false
+                delay(3000); fading = true; delay(700); recent = emptyList()
+            }
+        }
+        val alpha by androidx.compose.animation.core.animateFloatAsState(if (fading) 0f else 1f, androidx.compose.animation.core.tween(600), label = "toast")
+        if (live) Box(Modifier.fillMaxSize()) {
+            PanelHost(tab, settings.panelTabs, settings.tabsOnTop, settings.layoutMirror, answer) {
+                (if (interactive) prompt else shown)?.let { c ->
+                    Box(Modifier.fillMaxSize()) {
+                        PromptUi(state, c, if (interactive) answer else { _ -> })
+                        if (dimmed) Box(Modifier.fillMaxSize().background(Color(0x55000000))
+                                                  .clickable(remember { MutableInteractionSource() }, indication = null) {})
+                    }
+                }
+            }
+            if (recent.isNotEmpty()) TextScale(settings.messageScale) {
+                Column(Modifier.align(Alignment.BottomCenter).padding(horizontal = 12.dp, vertical = 16.dp).graphicsLayer { this.alpha = alpha }
+                        .background(Ui.Sheet.copy(alpha = 0.95f), RoundedCornerShape(12.dp)).border(1.dp, Ui.Gold.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp)) {
+                    recent.forEach { m -> Text(m.text + if (m.count > 1) " (x${m.count})" else "", color = Ui.Text, fontSize = 14.sp) }
                 }
             }
         }
