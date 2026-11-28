@@ -424,12 +424,16 @@ class MainActivity : ComponentActivity() {
                         if (layoutMode) ResizeHandle(horizontalBar = true) { dy ->
                             settings.layoutBottom = (if (fixed) settings.layoutBottom else sectionPx / heightPx) - dy / heightPx
                         }
-                        val padDp = if (fixed) minOf(sectionDp - 8, 0.6f * screenWidth).coerceAtLeast(60f) else settings.layoutPad * screenWidth - 8
+                        /* The d-pad's share of the width, and no taller than a section of fixed height. */
+                        val padShareDp = settings.layoutPad * screenWidth - 8
+                        val padDp = (if (fixed) minOf(sectionDp - 8, padShareDp) else padShareDp).coerceAtLeast(60f)
                         Row(Modifier.then(if (fixed) Modifier.height(sectionDp.dp) else Modifier.onSizeChanged { sectionPx = it.height.toFloat() }).background(Ui.Chrome),
                             verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.weight(1f).then(if (fixed) Modifier.verticalScroll(rememberScrollState()) else Modifier)) {
                                 StatusStrip(state, stacked = true, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz)
                             }
+                            /* Dragged: how the width is shared between the status and the d-pad. */
+                            if (layoutMode) ResizeHandle(horizontalBar = false, length = if (fixed) sectionDp.dp else (sectionPx / density.density).dp) { dx -> settings.layoutPad -= dx / widthPx }
                             Box(Modifier.padding(4.dp)) { Dpad(padDp, { dpad(state, it) }, marked = padMarks(state.prompt)) }
                         }
                     } else StatusStrip(state, stacked = false, buzzOnLowHealth = settings.lowHealthBuzz, buzzInCombat = settings.combatBuzz)

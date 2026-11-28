@@ -122,11 +122,11 @@ class Settings(context: Context) {
     /** The preset the sizes match, or null once a handle has been dragged. */
     val layoutPreset: String? get() = LAYOUT_PRESETS.firstOrNull { p ->
         p.rail == layoutRail && p.buttons == layoutButtons && p.bottom == layoutBottom && p.messagesPortrait == layoutMsgPortrait &&
-            p.messagesLandscape == layoutMsgLandscape && layoutSplit < 0 && layoutPad == LAYOUT_PAD }?.name
+            p.messagesLandscape == layoutMsgLandscape && layoutSplit < 0 && layoutPad == p.pad }?.name
     fun applyLayoutPreset(name: String) {
         val p = LAYOUT_PRESETS.first { it.name == name }
         layoutRail = p.rail; layoutButtons = p.buttons; layoutBottom = p.bottom; layoutMsgPortrait = p.messagesPortrait; layoutMsgLandscape = p.messagesLandscape
-        layoutSplit = -1f; layoutPad = LAYOUT_PAD
+        layoutSplit = -1f; layoutPad = p.pad
     }
     fun resetLayout() { applyLayoutPreset("Balanced"); layoutMirror = false }
 
@@ -168,11 +168,11 @@ class Settings(context: Context) {
         const val LAYOUT_MSG_PORTRAIT = 0.12f
         const val LAYOUT_MSG_LANDSCAPE = 0.14f
         /** A preset: landscape columns (shares of the width), portrait status section (share of the height, -1 as tall as its content), message area (shares of the height). */
-        data class LayoutPreset(val name: String, val rail: Float, val buttons: Float, val bottom: Float, val messagesPortrait: Float, val messagesLandscape: Float)
+        data class LayoutPreset(val name: String, val rail: Float, val buttons: Float, val bottom: Float, val messagesPortrait: Float, val messagesLandscape: Float, val pad: Float)
         val LAYOUT_PRESETS = listOf(
-            LayoutPreset("Compact", 0.17f, 0.095f, 0.15f, 0.08f, 0.10f),
-            LayoutPreset("Balanced", LAYOUT_RAIL, LAYOUT_BUTTONS, -1f, LAYOUT_MSG_PORTRAIT, LAYOUT_MSG_LANDSCAPE),
-            LayoutPreset("Big", 0.24f, 0.14f, 0.27f, 0.16f, 0.20f))
+            LayoutPreset("Compact", 0.17f, 0.095f, 0.15f, 0.08f, 0.10f, 0.28f),
+            LayoutPreset("Balanced", LAYOUT_RAIL, LAYOUT_BUTTONS, -1f, LAYOUT_MSG_PORTRAIT, LAYOUT_MSG_LANDSCAPE, LAYOUT_PAD),
+            LayoutPreset("Big", 0.24f, 0.14f, 0.27f, 0.16f, 0.20f, 0.5f))
         const val TABS_ICONS_AND_NAMES = 0
         const val TABS_ICONS = 1
         const val TABS_NAMES = 2

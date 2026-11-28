@@ -145,7 +145,9 @@ struct RootView: View {
         let docked = pad == PadMode.docked.rawValue
         let fixed = layoutBottom > 0
         let sectionHeight = CGFloat(layoutBottom) * height
-        let dpadSide = fixed ? max(60, min(sectionHeight - 8, 0.6 * width)) : CGFloat(padShare) * width - 8
+        /* The d-pad's share of the width, and no taller than a section of fixed height. */
+        let padShareSide = CGFloat(padShare) * width - 8
+        let dpadSide = max(60, fixed ? min(sectionHeight - 8, padShareSide) : padShareSide)
         return VStack(spacing: 0) {
             MessageStrip(game: game, height: CGFloat(layoutMsgP) * height, onPanel: { Trace.log("panel.request", ("via", "button")); Native.requestAction(NB.ACT_PANEL) }, panelButton: !tabsOnTop, onMessages: { Trace.log("messages.open", ("via", "strip")); showMessages = true }).textScale(messageScale)
             /* Dragged: the message area's height. */
@@ -163,6 +165,8 @@ struct RootView: View {
                     Group {
                         if fixed { ScrollView { StatusStrip(game: game, stacked: true) } } else { StatusStrip(game: game, stacked: true) }
                     }.textScale(statusScale)
+                    /* Dragged: how the width is shared between the status and the d-pad. */
+                    if layoutMode { ResizeHandle(horizontalBar: false, length: fixed ? sectionHeight : statusHeight) { dx in layoutPad = LayoutPresets.clamp(layoutPad - Double(dx / width), 0.2, 0.5) } }
                     Dpad(size: dpadSide, onAction: padAction, marked: padMarks(game.prompt)).padding(4)
                 }
                 .frame(height: fixed ? sectionHeight : nil)

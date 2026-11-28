@@ -9,15 +9,15 @@ import SwiftUI
 /// message area (shares of the height).
 struct LayoutPreset {
     let name: String
-    let rail: Double, buttons: Double, bottom: Double, messagesPortrait: Double, messagesLandscape: Double
+    let rail: Double, buttons: Double, bottom: Double, messagesPortrait: Double, messagesLandscape: Double, pad: Double
 }
 
 enum LayoutPresets {
     static let defaultRail = 0.19, defaultButtons = 0.108, defaultPad = 0.34, defaultMessagesPortrait = 0.12, defaultMessagesLandscape = 0.14
     static let all = [
-        LayoutPreset(name: "Compact", rail: 0.17, buttons: 0.095, bottom: 0.15, messagesPortrait: 0.08, messagesLandscape: 0.10),
-        LayoutPreset(name: "Balanced", rail: defaultRail, buttons: defaultButtons, bottom: -1, messagesPortrait: defaultMessagesPortrait, messagesLandscape: defaultMessagesLandscape),
-        LayoutPreset(name: "Big", rail: 0.24, buttons: 0.14, bottom: 0.27, messagesPortrait: 0.16, messagesLandscape: 0.20),
+        LayoutPreset(name: "Compact", rail: 0.17, buttons: 0.095, bottom: 0.15, messagesPortrait: 0.08, messagesLandscape: 0.10, pad: 0.28),
+        LayoutPreset(name: "Balanced", rail: defaultRail, buttons: defaultButtons, bottom: -1, messagesPortrait: defaultMessagesPortrait, messagesLandscape: defaultMessagesLandscape, pad: defaultPad),
+        LayoutPreset(name: "Big", rail: 0.24, buttons: 0.14, bottom: 0.27, messagesPortrait: 0.16, messagesLandscape: 0.20, pad: 0.5),
     ]
 
     static func clamp(_ v: Double, _ lo: Double, _ hi: Double) -> Double { min(max(v, lo), hi) }
@@ -75,11 +75,11 @@ struct LayoutBar: View {
 
     private func apply(_ p: LayoutPreset) {
         rail = p.rail; buttons = p.buttons; bottom = p.bottom; messagesPortrait = p.messagesPortrait; messagesLandscape = p.messagesLandscape
-        split = -1; pad = LayoutPresets.defaultPad
+        split = -1; pad = p.pad
     }
     private func matches(_ p: LayoutPreset) -> Bool {
         rail == p.rail && buttons == p.buttons && bottom == p.bottom && messagesPortrait == p.messagesPortrait && messagesLandscape == p.messagesLandscape
-            && split < 0 && pad == LayoutPresets.defaultPad
+            && split < 0 && pad == p.pad
     }
 
     var body: some View {

@@ -22,29 +22,39 @@ struct MessageStrip: View {
     let onMessages: () -> Void
 
     var body: some View {
-        let recent = Array(game.messages.suffix(12))
+        let messages = Array(game.messages.suffix(200).reversed())
         let line0 = game.topLine
         let more = line0.contains("-more-")
         /* The textui joins several messages on its top line; only show it when it is something else (a prompt). */
         let banner = (!line0.isEmpty && !more && !game.messages.contains { line0.contains($0.text) }) ? line0 : nil
+        let resting = game.status.has(NB.CTX_RESTING)
         HStack(alignment: .top, spacing: 0) {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(Array(recent.enumerated()), id: \.offset) { i, m in
-                    let alpha = max(0.45, 1 - 0.12 * Double(recent.count - 1 - i))
-                    Text(m.count > 1 ? "\(m.text) (x\(m.count))" : m.text)
-                        .scaledFont(14).lineLimit(2)
-                        .foregroundColor(color(game.colour(m.attr % 256 % 32)).opacity(alpha))
+            /* Newest at the bottom; scrolls up through the older ones and stays on the newest unless it has been scrolled. */
+            ScrollViewReader { proxy in
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(Array(messages.reversed().enumerated()), id: \.offset) { i, m in
+                            let alpha = max(0.45, 1 - 0.12 * Double(messages.count - 1 - i))
+                            Text(m.count > 1 ? "\(m.text) (x\(m.count))" : m.text)
+                                .scaledFont(14).lineLimit(2)
+                                .foregroundColor(color(game.colour(m.attr % 256 % 32)).opacity(alpha))
+                        }
+                        if let banner { Text(banner).scaledFont(14).lineLimit(2).foregroundColor(Color(red: 1, green: 0xD5 / 255, blue: 0x4F / 255)) }
+                        if more { Text("▸ tap to continue").scaledFont(13).foregroundColor(Color(red: 1, green: 0xD5 / 255, blue: 0x4F / 255)) }
+                        if resting { Text("Resting…").scaledFont(13).foregroundColor(Color(red: 0x8A / 255, green: 0xB4 / 255, blue: 0xF8 / 255)) }
+                        Color.clear.frame(height: 1).id("end")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
                 }
-                if let banner { Text(banner).scaledFont(14).lineLimit(2).foregroundColor(Color(red: 1, green: 0xD5 / 255, blue: 0x4F / 255)) }
-                if more { Text("▸ tap to continue").scaledFont(13).foregroundColor(Color(red: 1, green: 0xD5 / 255, blue: 0x4F / 255)) }
-                let resting = game.status.has(NB.CTX_RESTING)
-                if resting { Text("Resting…").scaledFont(13).foregroundColor(Color(red: 0x8A / 255, green: 0xB4 / 255, blue: 0xF8 / 255)) }
-                if recent.isEmpty && banner == nil && !more && !resting { Text(" ").scaledFont(14) }
+                .defaultBottomAnchor()
+                .onChange(of: game.messages.count) { _ in proxy.scrollTo("end", anchor: .bottom) }
+                .onChange(of: banner) { _ in proxy.scrollTo("end", anchor: .bottom) }
+                .onChange(of: more) { _ in proxy.scrollTo("end", anchor: .bottom) }
+                .onAppear { proxy.scrollTo("end", anchor: .bottom) }
+                .contentShape(Rectangle())
+                .onTapGesture { if more { Trace.log("more.tap"); Native.pushKey(Keys.enter) } else { onMessages() } }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-            .padding(.horizontal, 10).padding(.vertical, 4)
-            .contentShape(Rectangle())
-            .onTapGesture { if more { Trace.log("more.tap"); Native.pushKey(Keys.enter) } else { onMessages() } }
             if panelButton { Button(action: onPanel) {
                 PanelIcon(index: IconIndex.panel).stroke(style: StrokeStyle(lineWidth: 1.8 * 26 / 24, lineCap: .round, lineJoin: .round))
                     .frame(width: 26, height: 26)
@@ -55,6 +65,13 @@ struct MessageStrip: View {
         }
         .frame(height: height).clipped()
         .background(stripBackground)
+    }
+}
+
+private extension View {
+    /// Keeps a short list at the bottom of its box (a tall one scrolls to its end).
+    @ViewBuilder func defaultBottomAnchor() -> some View {
+        if #available(iOS 17.0, *) { self.defaultScrollAnchor(.bottom) } else { self }
     }
 }
 

@@ -41,6 +41,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.role
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,30 +52,35 @@ import androidx.compose.ui.unit.sp
 /* The status strip, message strip and their pieces, below and above the map. */
 
 /**
- * The last few messages (older ones dimmer, in their game colours), plus the
- * textui's top line when it holds something else: a prompt, or -more- (tap = Enter).
+ * The messages (older ones dimmer, in their game colours), newest at the bottom, plus the textui's top line when it holds something
+ * else: a prompt, or -more- (tap = Enter).  The area scrolls up through the older ones and stays on the newest unless it has been
+ * scrolled; a tap opens the full history.
  */
 @Composable
 internal fun MessageStrip(state: GameState, height: Dp, panelButton: Boolean = true, onTap: () -> Unit) {
-    /* As many of the latest as fit: the newest sit at the bottom and older ones run off the top. */
-    val recent = state.messages.takeLast(12)
+    val messages = state.messages.takeLast(200).asReversed()
     val line0 = state.messageLine
     val more = line0.contains("-more-")
     /* The textui joins several messages on its top line; only show it when it is something else (a prompt). */
     val banner = line0.takeIf { it.isNotEmpty() && !more && state.messages.none { m -> line0.contains(m.text) } }
-    Row(Modifier.fillMaxWidth().height(height).clipToBounds().background(Ui.Chrome), verticalAlignment = Alignment.Top) {
-    Column(Modifier.weight(1f).fillMaxHeight().clickable(onClick = onTap).padding(horizontal = 10.dp, vertical = 4.dp), verticalArrangement = Arrangement.Bottom) {
-        recent.forEachIndexed { i, m ->
-            val alpha = (1f - 0.12f * (recent.size - 1 - i)).coerceAtLeast(0.45f)
-            Text(Special.styled(m, if (m.count > 1) " (x${m.count})" else ""),
-                 color = Color(state.colour(m.attr)).copy(alpha = alpha), fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)
-        }
-        if (banner != null) Text(banner, color = Ui.Gold, fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)
-        if (more) Text("▸ tap to continue", color = Ui.Gold, fontSize = 13.sp, lineHeight = 16.sp)
-        val resting = state.status.has(NarSilNative.CTX_RESTING)
-        if (resting) Text("Resting…", color = Color(0xFF8AB4F8), fontSize = 13.sp, lineHeight = 16.sp)
-        if (recent.isEmpty() && banner == null && !more && !resting) Text(" ", fontSize = 14.sp)
+    val resting = state.status.has(NarSilNative.CTX_RESTING)
+    val list = rememberLazyListState()
+    /* A new message or line while the newest was in view: keep it in view. */
+    LaunchedEffect(state.messages.size, state.messages.lastOrNull(), banner, more, resting) {
+        if (list.firstVisibleItemIndex <= 1) list.scrollToItem(0)
     }
+    Row(Modifier.fillMaxWidth().height(height).clipToBounds().background(Ui.Chrome), verticalAlignment = Alignment.Top) {
+        /* Reversed: the first item is at the bottom. */
+        LazyColumn(Modifier.weight(1f).fillMaxHeight().clickable(onClick = onTap), state = list, reverseLayout = true,
+                   contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)) {
+            if (resting) item(key = "resting") { Text("Resting…", color = Color(0xFF8AB4F8), fontSize = 13.sp, lineHeight = 16.sp) }
+            if (more) item(key = "more") { Text("▸ tap to continue", color = Ui.Gold, fontSize = 13.sp, lineHeight = 16.sp) }
+            if (banner != null) item(key = "banner") { Text(banner, color = Ui.Gold, fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2) }
+            itemsIndexed(messages) { i, m ->
+                Text(Special.styled(m, if (m.count > 1) " (x${m.count})" else ""),
+                     color = Color(state.colour(m.attr)).copy(alpha = (1f - 0.12f * i).coerceAtLeast(0.45f)), fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2)
+            }
+        }
         if (panelButton) PanelButton()
     }
 }
