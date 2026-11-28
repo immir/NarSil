@@ -51,6 +51,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -371,7 +375,8 @@ class MainActivity : ComponentActivity() {
         if (state.mapMode && settings.tabsOnTop && !rail) TabsBar(-1, settings.panelTabs) { i ->
             Trace.log("panel.request", "via" to "tabs", "tab" to i); NarSilNative.nativeRequestAction(TAB_ACTIONS[i])
         }
-        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+        val guides = remember { Guides() }
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().then(if (layoutMode) Modifier.guideDrag(guides) else Modifier)) {
             val widthPx = constraints.maxWidth.toFloat()
             val heightPx = constraints.maxHeight.toFloat()
             val screenHeight = maxHeight.value
@@ -413,7 +418,7 @@ class MainActivity : ComponentActivity() {
                     }
                     if (state.mapMode && dpadMode() == Settings.DPAD_FLOATING) FloatingDpad(settings, padMarks(state.prompt), resizing = layoutMode) { dpad(state, it) }
                     /* At the top of the map, clear of the handles (they have their grips halfway down the boundaries). */
-                    if (layoutMode) Box(Modifier.align(Alignment.TopCenter)) { LayoutBar(settings) { layoutMode = false } }
+                    if (layoutMode) Box(Modifier.align(Alignment.TopCenter).onGloballyPositioned { guides.exclude = androidx.compose.ui.geometry.Rect(it.positionInRoot(), it.size.toSize()) }) { LayoutBar(settings) { layoutMode = false } }
                     if (state.mapMode && settings.edgeSwipePanel) EdgeSwipeHandle(Modifier.align(if (mirror) Alignment.CenterStart else Alignment.CenterEnd))
                 }
                 if (state.mapMode && !rail) TextScale(settings.statusScale) {
@@ -470,7 +475,7 @@ class MainActivity : ComponentActivity() {
             val tabsColumn: @Composable () -> Unit = {
                 if (settings.tabsOnTop) TabsRail(-1, onLeft = mirror) { i -> Trace.log("panel.request", "via" to "tabs", "tab" to i); NarSilNative.nativeRequestAction(TAB_ACTIONS[i]) }
             }
-            Row(Modifier.fillMaxSize()) {
+            CompositionLocalProvider(LocalGuides provides guides) { Row(Modifier.fillMaxSize()) {
                 when {
                     !rail -> mapColumn()
                     !mirror -> {
@@ -488,7 +493,8 @@ class MainActivity : ComponentActivity() {
                         buttonsColumn()
                     }
                 }
-            }
+            } }
+            if (layoutMode) GuideLayer(guides)
         }
         }
         if (layoutMode) BackHandler { layoutMode = false }
