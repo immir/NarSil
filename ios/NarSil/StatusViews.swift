@@ -141,16 +141,23 @@ private struct FoeLine: View {
         let health = foe.healthPct >= 60 ? Color(red: 0x66 / 255, green: 0xBB / 255, blue: 0x6A / 255)
             : foe.healthPct >= 25 ? amber : red
         let stance = Self.stanceNames.indices.contains(foe.stance) ? Self.stanceNames[foe.stance] : ""
-        HStack(spacing: 8) {
-            Text(cell.flatMap { Unicode.Scalar(UInt32($0.glyph)) }.map { String($0) } ?? "?")
-                .scaledFont(16, design: .monospaced).foregroundColor(color(game.colour((cell?.attr ?? 15) % 256 % 32)))
-            Text(foe.name).scaledFont(13).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
-            ZStack(alignment: .leading) {
-                Rectangle().fill(health.opacity(0.25))
-                Rectangle().fill(health).frame(width: 80 * CGFloat(min(max(foe.healthPct, 0), 100)) / 100)
-            }.frame(width: 80, height: 6)
-            Text(stance + (foe.stance >= 4 ? " \(foe.morale)" : "")).scaledFont(12)
-                .foregroundColor(Color(red: 0x90 / 255, green: 0xCA / 255, blue: 0xF9 / 255))
+        /* Two lines, so the name has the whole width: the glyph and name, then the health bar and the stance. */
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 8) {
+                Text(cell.flatMap { Unicode.Scalar(UInt32($0.glyph)) }.map { String($0) } ?? "?")
+                    .scaledFont(16, design: .monospaced).foregroundColor(color(game.colour((cell?.attr ?? 15) % 256 % 32)))
+                Text(foe.name).scaledFont(13).lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
+            }
+            HStack(spacing: 8) {
+                GeometryReader { g in
+                    ZStack(alignment: .leading) {
+                        Rectangle().fill(health.opacity(0.25))
+                        Rectangle().fill(health).frame(width: g.size.width * CGFloat(min(max(foe.healthPct, 0), 100)) / 100)
+                    }
+                }.frame(height: 6)
+                Text(stance + (foe.stance >= 4 ? " \(foe.morale)" : "")).scaledFont(12).lineLimit(1)
+                    .foregroundColor(Color(red: 0x90 / 255, green: 0xCA / 255, blue: 0xF9 / 255))
+            }
         }
         .padding(.top, 4)
         .contentShape(Rectangle())
